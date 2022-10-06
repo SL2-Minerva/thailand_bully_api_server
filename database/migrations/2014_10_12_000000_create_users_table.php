@@ -20,7 +20,13 @@ class CreateUsersTable extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->unsignedBigInteger('role_id');
+            $table->unsignedBigInteger('organization_id');
+            $table->smallInteger('is_admin');
             $table->timestamps();
+            $table->unsignedBigInteger('created_by');
+            $table->unsignedBigInteger('update_by');
+            $table->smallInteger('status');
         });
     }
 
