@@ -77,6 +77,10 @@ class PermissionController extends Controller
         return $res;
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function show(Request $request)
     {
         $permission_id = $request->id;
