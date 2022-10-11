@@ -7,6 +7,7 @@ use App\Models\BaseModel;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use PHPUnit\Exception;
 
 class AuthController extends Controller
@@ -16,12 +17,17 @@ class AuthController extends Controller
         $username = $request->username;
         $password = $request->password;
 
-        $user = User::find('email', $username);
+        $user = User::where('email', $username)->first();
 
         if ($user) {
-            if ( !Hash::check($password, $user->password)) return parent::handleRespond(null, [], 405, 'Username or Password not mach');
+            if ( !Hash::check($password, $user->password)) {
+                return parent::handleRespond(null, [], 405, 'Username or Password not mach');
+            }
+
             //todo return token for auth
-            parent::handleRespond($user);
+
+
+            return parent::handleRespond($user);
         }
 
         return parent::handleRespond(null, [], 404, 'User not found');
@@ -60,4 +66,5 @@ class AuthController extends Controller
             return parent::handleRespond($request->all(), [], 500, 'Error');
         }
     }
+
 }
