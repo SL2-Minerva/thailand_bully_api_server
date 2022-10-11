@@ -12,25 +12,21 @@ use PHPUnit\Exception;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', ['except' => ['login', 'register']]);
+    }
+
     public function login(Request $request)
     {
         $username = $request->username;
         $password = $request->password;
 
-        $user = User::where('email', $username)->first();
-
-        if ($user) {
-            if ( !Hash::check($password, $user->password)) {
-                return parent::handleRespond(null, [], 405, 'Username or Password not mach');
-            }
-
-            //todo return token for auth
-
-
-            return parent::handleRespond($user);
+        if (!$token = auth('api')->attempt(['email' => $username, 'password' => $password])) {
+            return parent::handleRespond(null, [], 404, 'Unauthorized');
         }
 
-        return parent::handleRespond(null, [], 404, 'User not found');
+        return $this->respondWithToken($token);
     }
 
     public function register(Request $request)
@@ -65,6 +61,55 @@ class AuthController extends Controller
         } catch (Exception $exception) {
             return parent::handleRespond($request->all(), [], 500, 'Error');
         }
+    }
+
+    /**
+     * Get the authenticated User.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function me(Request $request)
+    {
+
+        return response()->json(auth('api')->user());
+    }
+
+    /**
+     * Log the user out (Invalidate the token).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        auth()->logout();
+        return parent::handleRespond([], [], 200, 'Successfully logged out');
+    }
+
+    /**
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function refresh()
+    {
+        return $this->respondWithToken(auth()->refresh());
+    }
+
+    /**
+     * Get the token array structure.
+     *
+     * @param string $token
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithToken($token)
+    {
+
+        return parent::handleRespond([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60
+        ]);
     }
 
 }
