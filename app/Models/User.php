@@ -38,8 +38,8 @@ class User extends Authenticatable implements JWTSubject
         BaseModel::CREATED_AT,
         BaseModel::UPDATED_AT,
         BaseModel::CREATED_BY,
+        BaseModel::UPDATED_BY,
         'email_verified_at',
-        BaseModel::ID,
         'is_admin',
     ];
 
