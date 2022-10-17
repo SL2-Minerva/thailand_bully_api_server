@@ -106,10 +106,10 @@ class AuthController extends Controller
     {
 
         return parent::handleRespond([
-            'access_token' => $token,
+            'accessToken' => $token,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60
-        ]);
+        ], null);
     }
 
 }
