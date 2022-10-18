@@ -45,9 +45,9 @@ class CampaignController extends Controller
                 Keyword::create([
                     Keyword::CAMPAIGN_ID => $campaign->id,
                     Keyword::LABEL => $keyword[Keyword::LABEL] ?? '',
-                    Keyword::KEYWORD_OR => json_decode($keyword[Keyword::KEYWORD_OR] ?? []),
+                    Keyword::KEYWORD_OR => json_encode($keyword[Keyword::KEYWORD_OR] ?? []),
                     Keyword::KEYWORD_AND => json_encode($keyword[Keyword::KEYWORD_AND] ?? []) ,
-                    Keyword::KEYWORD_EXCLUDE => json_decode($keyword[Keyword::KEYWORD_EXCLUDE]?? []),
+                    Keyword::KEYWORD_EXCLUDE => json_encode($keyword[Keyword::KEYWORD_EXCLUDE]?? []),
                     BaseModel::STATUS => 1,
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
