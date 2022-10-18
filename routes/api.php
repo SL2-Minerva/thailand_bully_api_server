@@ -4,6 +4,7 @@ use App\Http\Controllers\auth\AuthController;
 use App\Http\Controllers\main\CampaignController;
 use App\Http\Controllers\main\DomainController;
 use App\Http\Controllers\main\KeywordController;
+use App\Http\Controllers\main\SourceController;
 use App\Http\Controllers\permission\PermissionController;
 use App\Http\Controllers\permission\RoleController;
 use App\Http\Controllers\user\OrganizationController;
@@ -109,6 +110,13 @@ Route::group(['middleware' => ['api']], function () {
             Route::put('/update', [KeywordController::class, 'update']);
             Route::put('/delete', [KeywordController::class, 'destroy']);
         });
+
+
+        Route::group(['prefix' => 'source'], function () {
+            Route::get('/list', [SourceController::class, 'index']);
+      
+        });
+
     });
 });
 
