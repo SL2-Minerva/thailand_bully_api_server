@@ -13,7 +13,15 @@ class CampaignController extends Controller
 {
     public function index(Request $request)
     {
-//        Cam
+        $campaigns = Campaign::all();
+        $data = [];
+        foreach ($campaigns as $campaign) {
+            $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->get();
+            $campaign->organization = 'test';
+            $data[] = $campaigns;
+
+        }
+        return parent::handleRespond($data);
     }
 
     public function show(Request $request)
@@ -42,16 +50,20 @@ class CampaignController extends Controller
 
         if ($request->keywords) {
             foreach ($request->keywords as $keyword) {
-                Keyword::create([
+
+
+                $data_submit_keyword = [
                     Keyword::CAMPAIGN_ID => $campaign->id,
-                    Keyword::LABEL => $keyword[Keyword::LABEL] ?? '',
-                    Keyword::KEYWORD_OR => json_encode($keyword[Keyword::KEYWORD_OR] ?? []),
-                    Keyword::KEYWORD_AND => json_encode($keyword[Keyword::KEYWORD_AND] ?? []) ,
-                    Keyword::KEYWORD_EXCLUDE => json_encode($keyword[Keyword::KEYWORD_EXCLUDE]?? []),
+                    BaseModel::NAME => $keyword[BaseModel::NAME] ?? '',
+                    Keyword::KEYWORD_OR => collect($keyword[Keyword::KEYWORD_OR] ?? [])->implode(','),
+                    Keyword::KEYWORD_AND => collect($keyword[Keyword::KEYWORD_AND] ?? [])->implode(','),
+                    Keyword::KEYWORD_EXCLUDE => collect($keyword[Keyword::KEYWORD_EXCLUDE] ?? [])->implode(','),
                     BaseModel::STATUS => 1,
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
-                ]);
+                ];
+                
+                Keyword::create($data_submit_keyword);
             }
         }
 
