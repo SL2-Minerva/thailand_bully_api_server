@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class UserOrganizationGroup extends BaseModel
 {
     use HasFactory;
-    protected $table = 'tbl_user_organization_groups';
+    protected $table = 'user_organization_groups';
     protected $guarded = [];
 
     public const ORGANIZATION_GROUP_NAME =  'organization_group_name';

@@ -9,6 +9,6 @@ class Domain extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_domains';
+    protected $table = 'domains';
     protected $guarded = [];
 }

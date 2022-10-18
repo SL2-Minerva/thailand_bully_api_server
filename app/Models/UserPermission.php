@@ -9,7 +9,7 @@ class UserPermission extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_user_permissions';
+    protected $table = 'user_permissions';
     protected $guarded = [];
 
     public const AUTHORIZED_CREATE = 'authorized_create';

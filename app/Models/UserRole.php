@@ -9,7 +9,7 @@ class UserRole extends Model
 {
     use HasFactory;
 
-    protected $table = 'tbl_user_roles';
+    protected $table = 'user_roles';
     protected $guarded = [];
 
     protected $casts = [

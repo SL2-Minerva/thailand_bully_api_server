@@ -9,6 +9,6 @@ class Message extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_messages';
+    protected $table = 'messages';
     protected $guarded = [];
 }

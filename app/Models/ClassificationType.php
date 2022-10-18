@@ -9,6 +9,6 @@ class ClassificationType extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_user_classification_types';
+    protected $table = 'user_classification_types';
     protected $guarded = [];
 }

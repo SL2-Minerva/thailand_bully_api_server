@@ -9,7 +9,7 @@ class Organization extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_organizations';
+    protected $table = 'organizations';
     protected $guarded = [];
 
     public const GROUP_ID = 'organization_group_id';

@@ -8,6 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class MessageResult extends BaseModel
 {
     use HasFactory;
-    protected $table = 'tbl_message_results';
+    protected $table = 'message_results';
     protected $guarded = [];
 }

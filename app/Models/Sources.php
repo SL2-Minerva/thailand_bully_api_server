@@ -9,6 +9,6 @@ class Sources extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_sources';
+    protected $table = 'sources';
     protected $guarded = [];
 }

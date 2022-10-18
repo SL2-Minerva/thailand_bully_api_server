@@ -9,6 +9,6 @@ class Campaign extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_user_campaigns';
+    protected $table = 'user_campaigns';
     protected $guarded = [];
 }

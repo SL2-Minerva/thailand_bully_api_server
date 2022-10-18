@@ -9,6 +9,6 @@ class UserOrganizationType extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_user_organization_types';
+    protected $table = 'user_organization_types';
     protected $guarded = [];
 }

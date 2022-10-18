@@ -8,6 +8,6 @@ class Keyword extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'tbl_keywords';
+    protected $table = 'keywords';
     protected $guarded = [];
 }
