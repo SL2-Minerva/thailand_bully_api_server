@@ -114,7 +114,7 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'source'], function () {
             Route::get('/list', [SourceController::class, 'index']);
-      
+
         });
 
     });

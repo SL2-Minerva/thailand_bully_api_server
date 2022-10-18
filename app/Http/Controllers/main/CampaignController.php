@@ -5,15 +5,18 @@ namespace App\Http\Controllers\main;
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\Campaign;
+use App\Models\Domain;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
 {
-    public function index (Request $request) {
+    public function index(Request $request)
+    {
 //        Cam
     }
 
-    public function show(Request $request) {
+    public function show(Request $request)
+    {
         $id = $request->id;
 
         $res = $this->find($id);
@@ -22,11 +25,28 @@ class CampaignController extends Controller
         return parent::handleRespond($res);
     }
 
-    public function store() {
+    public function store(Request $request)
+    {
+        $data_submit = [
+            BaseModel::NAME => $request->name ?? '',
+            BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
+            Campaign::DOMAIN_ID => $request->domain_id ?? 1,
+            Campaign::KEYWORD_OR => $request->keyword_or ?? [],
+            Campaign::KEYWORD_AND => $request->keyword_and ?? [],
+            Campaign::KEYWORD_EXCLUDE => $request->keyword_and ?? [],
+            BaseModel::STATUS => 1,
+            BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+            BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+        ];
+
+        $campaign = Campaign::create($data_submit);
+
+        parent::handleRespond($campaign);
 
     }
 
-    public function update(Request $request, $action = null) {
+    public function update(Request $request, $action = null)
+    {
         $id = $request->id;
         try {
             $res = $this->find($id);
@@ -46,7 +66,8 @@ class CampaignController extends Controller
         }
     }
 
-    public function destroy(Request $request) {
+    public function destroy(Request $request)
+    {
         return $this->update($request, BaseModel::DELETE_TEXT);
     }
 
