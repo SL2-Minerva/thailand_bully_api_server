@@ -11,7 +11,8 @@ use PHPUnit\Util\Exception;
 class DomainController extends Controller
 {
     public function index (Request $request) {
-//        Cam
+        $domains = Domain::all();
+        return parent::handleRespond($domains);
     }
 
     public function show(Request $request) {
@@ -23,7 +24,20 @@ class DomainController extends Controller
         return parent::handleRespond($res);
     }
 
-    public function store() {
+    public function store(Request $request) {
+
+
+        if (!$request->name) {
+            return parent::handleNotFound(null);
+        }
+
+        $data_submit = [
+            "name" => $request->name
+        ];
+
+        $domain = Domain::create($data_submit);
+
+        return parent::handleRespond($domain);
 
     }
 
