@@ -40,15 +40,31 @@ class CampaignController extends Controller
 
         $campaign = Campaign::create($data_submit);
 
+//        $dump = [
+        
+//            'keywords' => [
+//                {
+//                  'label' : 'asdada',
+//                  'KEYWORD_OR' : 'dasdasdas' ,
+//                  ....
+//                },
+//                 {
+//             'label' : 'asdada',
+//                  'KEYWORD_OR' : 'dasdasdas' ,
+//                  ....
+//                },
+//            ]
+//        ]
 
-        if ($request->keyword) {
-            foreach ($request->keyword as $keyword) {
-                $keyword = Keyword::create([
+
+        if ($request->keywords) {
+            foreach ($request->keywords as $keyword) {
+                Keyword::create([
                     Keyword::CAMPAIGN_ID => $campaign->id,
-                    Keyword::LABEL => $keyword->label ?? '',
-                    Keyword::KEYWORD_OR => $keyword->keyword_or ?? [],
-                    Keyword::KEYWORD_AND => $keyword->keyword_and ?? [],
-                    Keyword::KEYWORD_EXCLUDE => $keyword->keyword_and ?? [],
+                    Keyword::LABEL => $keyword[Keyword::LABEL] ?? '',
+                    Keyword::KEYWORD_OR => $keyword[Keyword::KEYWORD_OR] ?? [],
+                    Keyword::KEYWORD_AND => $keyword[Keyword::KEYWORD_AND] ?? [],
+                    Keyword::KEYWORD_EXCLUDE => $keyword[Keyword::KEYWORD_EXCLUDE]?? [],
                     BaseModel::STATUS => 1,
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
