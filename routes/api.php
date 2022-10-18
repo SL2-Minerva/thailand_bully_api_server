@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\auth\AuthController;
+use App\Http\Controllers\user\OrganizationGroupController;
+use App\Http\Controllers\user\OrganizationTypeController;
 use App\Http\Controllers\user\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +34,26 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['middleware' => ['api', 'auth:api']], function () {
         Route::group(['prefix' => 'user'], function () {
+            Route::get('/info', [UserController::class, 'info']);
+        });
+        // organization-type
+        Route::group(['prefix' => 'organization-type'], function () {
+            Route::post('/', [OrganizationTypeController::class, 'show']);
+            Route::post('/create', [OrganizationTypeController::class, 'store']);
+            Route::put('/update', [OrganizationTypeController::class, 'update']);
+            Route::put('/delete', [OrganizationTypeController::class, 'delete']);
+        });
+
+        // organization-group
+        Route::group(['prefix' => 'organization-type'], function () {
+            Route::post('/', [OrganizationGroupController::class, 'show']);
+            Route::post('/create', [OrganizationGroupController::class, 'store']);
+            Route::put('/update', [OrganizationGroupController::class, 'update']);
+            Route::put('/delete', [OrganizationGroupController::class, 'delete']);
+        });
+
+        // organization
+        Route::group(['prefix' => 'organization'], function () {
             Route::get('/info', [UserController::class, 'info']);
         });
     });
