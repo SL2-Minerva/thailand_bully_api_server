@@ -34,27 +34,10 @@ class CampaignController extends Controller
             BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
             Campaign::DOMAIN_ID => $request->domain_id ?? 1,
             BaseModel::STATUS => 1,
-            BaseModel::CREATED_BY => auth('api')->id() ?? 1,
-            BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+
         ];
 
         $campaign = Campaign::create($data_submit);
-
-//        $dump = [
-        
-//            'keywords' => [
-//                {
-//                  'label' : 'asdada',
-//                  'KEYWORD_OR' : 'dasdasdas' ,
-//                  ....
-//                },
-//                 {
-//             'label' : 'asdada',
-//                  'KEYWORD_OR' : 'dasdasdas' ,
-//                  ....
-//                },
-//            ]
-//        ]
 
 
         if ($request->keywords) {
