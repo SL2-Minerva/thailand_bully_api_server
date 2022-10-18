@@ -7,6 +7,7 @@ use App\Models\BaseModel;
 use App\Models\Campaign;
 use App\Models\Domain;
 use App\Models\Keyword;
+use App\Models\Organization;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
@@ -17,7 +18,7 @@ class CampaignController extends Controller
         $data = [];
         foreach ($campaigns as $campaign) {
             $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->get();
-            $campaign->organization = 'test';
+            $campaign->organization = Organization::find($campaign->organization_id)->name;
             $data[] = $campaigns;
 
         }
