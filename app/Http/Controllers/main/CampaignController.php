@@ -29,6 +29,7 @@ class CampaignController extends Controller
     {
         $data_submit = [
             BaseModel::NAME => $request->name ?? '',
+            Campaign::LABEL => $request->label ?? '',
             BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
             Campaign::DOMAIN_ID => $request->domain_id ?? 1,
             Campaign::KEYWORD_OR => $request->keyword_or ?? [],
