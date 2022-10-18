@@ -22,7 +22,7 @@ class CampaignController extends Controller
             $data[] = $campaigns;
 
         }
-        return parent::handleRespond($data);
+        return parent::handleRespond($campaigns);
     }
 
     public function show(Request $request)
