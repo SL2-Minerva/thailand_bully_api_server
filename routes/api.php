@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\auth\AuthController;
+use App\Http\Controllers\main\CampaignController;
+use App\Http\Controllers\main\DomainController;
+use App\Http\Controllers\main\KeywordController;
 use App\Http\Controllers\permission\PermissionController;
 use App\Http\Controllers\permission\RoleController;
 use App\Http\Controllers\user\OrganizationController;
@@ -20,10 +23,6 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
 
 
 Route::group(['middleware' => ['api']], function () {
@@ -64,7 +63,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/list', [OrganizationController::class, 'list']);
             Route::post('/create', [OrganizationController::class, 'store']);
             Route::put('/update', [OrganizationController::class, 'update']);
-            Route::put('/delete', [OrganizationController::class, 'delete']);
+            Route::put('/delete', [OrganizationController::class, 'destroy']);
         });
 
         Route::group(['prefix' => 'permission'], function () {
@@ -72,7 +71,7 @@ Route::group(['middleware' => ['api']], function () {
 //            Route::get('/list', [PermissionController::class, 'list']);
             Route::post('/create', [PermissionController::class, 'store']);
             Route::put('/update', [PermissionController::class, 'update']);
-            Route::put('/delete', [PermissionController::class, 'delete']);
+            Route::put('/delete', [PermissionController::class, 'destroy']);
         });
 
 
@@ -81,7 +80,34 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/list', [RoleController::class, 'list']);
             Route::post('/create', [RoleController::class, 'store']);
             Route::put('/update', [RoleController::class, 'update']);
-            Route::put('/delete', [RoleController::class, 'delete']);
+            Route::put('/delete', [RoleController::class, 'destroy']);
+        });
+
+
+        Route::group(['prefix' => 'campaign'], function () {
+            Route::get('/', [CampaignController::class, 'show']);
+            Route::get('/list', [CampaignController::class, 'index']);
+            Route::post('/create', [CampaignController::class, 'store']);
+            Route::put('/update', [CampaignController::class, 'update']);
+            Route::put('/delete', [CampaignController::class, 'destroy']);
+        });
+
+
+        Route::group(['prefix' => 'domain'], function () {
+            Route::get('/', [DomainController::class, 'show']);
+            Route::get('/list', [DomainController::class, 'index']);
+            Route::post('/create', [DomainController::class, 'store']);
+            Route::put('/update', [DomainController::class, 'update']);
+            Route::put('/delete', [DomainController::class, 'destroy']);
+        });
+
+
+        Route::group(['prefix' => 'keyword'], function () {
+            Route::get('/', [KeywordController::class, 'show']);
+            Route::get('/list', [KeywordController::class, 'index']);
+            Route::post('/create', [KeywordController::class, 'store']);
+            Route::put('/update', [KeywordController::class, 'update']);
+            Route::put('/delete', [KeywordController::class, 'destroy']);
         });
     });
 });

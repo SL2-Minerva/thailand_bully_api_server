@@ -56,7 +56,7 @@ class OrganizationController extends Controller
        return $this->update($request);
     }
 
-    public function update(Request $request)
+    public function update(Request $request, $action = null)
     {
         $organization = Organization::find('id', $request->id);
 
@@ -72,6 +72,11 @@ class OrganizationController extends Controller
                     $exception->getMessage());
             }
         }
+    }
+
+
+    public function destroy(Request $request) {
+        return $this->update($request, BaseModel::DELETE_TEXT);
     }
 
 }
