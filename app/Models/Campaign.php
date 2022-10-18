@@ -9,7 +9,7 @@ class Campaign extends BaseModel
 {
     use HasFactory;
 
-    protected $table = 'user_campaigns';
+    protected $table = 'campaigns';
     protected $guarded = [];
 
     public const DOMAIN_ID = 'domain_id';
