@@ -12,9 +12,12 @@ class UserController extends Controller
 //        $this->middleware('auth:api', ['except' => ['login', 'register']]);
     }
 
+
     public function index() {
 
     }
+
+
 
     public function create() {
 

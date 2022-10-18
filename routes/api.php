@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\auth\AuthController;
+use App\Http\Controllers\permission\PermissionController;
+use App\Http\Controllers\permission\RoleController;
+use App\Http\Controllers\user\OrganizationController;
 use App\Http\Controllers\user\OrganizationGroupController;
 use App\Http\Controllers\user\OrganizationTypeController;
 use App\Http\Controllers\user\UserController;
@@ -35,10 +38,12 @@ Route::group(['middleware' => ['api']], function () {
     Route::group(['middleware' => ['api', 'auth:api']], function () {
         Route::group(['prefix' => 'user'], function () {
             Route::get('/info', [UserController::class, 'info']);
+            Route::get('/list', [UserController::class, 'data']);
         });
         // organization-type
         Route::group(['prefix' => 'organization-type'], function () {
             Route::post('/', [OrganizationTypeController::class, 'show']);
+            Route::get('/list', [OrganizationTypeController::class, 'data']);
             Route::post('/create', [OrganizationTypeController::class, 'store']);
             Route::put('/update', [OrganizationTypeController::class, 'update']);
             Route::put('/delete', [OrganizationTypeController::class, 'delete']);
@@ -47,6 +52,7 @@ Route::group(['middleware' => ['api']], function () {
         // organization-group
         Route::group(['prefix' => 'organization-type'], function () {
             Route::post('/', [OrganizationGroupController::class, 'show']);
+            Route::get('/list', [OrganizationGroupController::class, 'list']);
             Route::post('/create', [OrganizationGroupController::class, 'store']);
             Route::put('/update', [OrganizationGroupController::class, 'update']);
             Route::put('/delete', [OrganizationGroupController::class, 'delete']);
@@ -54,7 +60,28 @@ Route::group(['middleware' => ['api']], function () {
 
         // organization
         Route::group(['prefix' => 'organization'], function () {
-            Route::get('/info', [UserController::class, 'info']);
+            Route::get('/', [OrganizationController::class, 'show']);
+            Route::get('/list', [OrganizationController::class, 'list']);
+            Route::post('/create', [OrganizationController::class, 'store']);
+            Route::put('/update', [OrganizationController::class, 'update']);
+            Route::put('/delete', [OrganizationController::class, 'delete']);
+        });
+
+        Route::group(['prefix' => 'permission'], function () {
+            Route::get('/', [PermissionController::class, 'show']);
+//            Route::get('/list', [PermissionController::class, 'list']);
+            Route::post('/create', [PermissionController::class, 'store']);
+            Route::put('/update', [PermissionController::class, 'update']);
+            Route::put('/delete', [PermissionController::class, 'delete']);
+        });
+
+
+        Route::group(['prefix' => 'role'], function () {
+            Route::get('/', [RoleController::class, 'show']);
+            Route::get('/list', [RoleController::class, 'list']);
+            Route::post('/create', [RoleController::class, 'store']);
+            Route::put('/update', [RoleController::class, 'update']);
+            Route::put('/delete', [RoleController::class, 'delete']);
         });
     });
 });
