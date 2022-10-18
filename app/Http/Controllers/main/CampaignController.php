@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\Campaign;
 use App\Models\Domain;
+use App\Models\Keyword;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
@@ -29,12 +30,9 @@ class CampaignController extends Controller
     {
         $data_submit = [
             BaseModel::NAME => $request->name ?? '',
-            Campaign::LABEL => $request->label ?? '',
+
             BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
             Campaign::DOMAIN_ID => $request->domain_id ?? 1,
-            Campaign::KEYWORD_OR => $request->keyword_or ?? [],
-            Campaign::KEYWORD_AND => $request->keyword_and ?? [],
-            Campaign::KEYWORD_EXCLUDE => $request->keyword_and ?? [],
             BaseModel::STATUS => 1,
             BaseModel::CREATED_BY => auth('api')->id() ?? 1,
             BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
@@ -42,7 +40,18 @@ class CampaignController extends Controller
 
         $campaign = Campaign::create($data_submit);
 
-        parent::handleRespond($campaign);
+        $keyword = Keyword::create([
+            Keyword::CAMPAIGN_ID => $campaign->id,
+            Keyword::LABEL => $request->label ?? '',
+            Keyword::KEYWORD_OR => $request->keyword_or ?? [],
+            Keyword::KEYWORD_AND => $request->keyword_and ?? [],
+            Keyword::KEYWORD_EXCLUDE => $request->keyword_and ?? [],
+            BaseModel::STATUS => 1,
+            BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+            BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+        ]);
+
+        parent::handleRespond($campaign, $keyword);
 
     }
 
