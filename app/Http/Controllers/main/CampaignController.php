@@ -62,8 +62,8 @@ class CampaignController extends Controller
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                 ];
-                
-                Keyword::create($data_submit_keyword);
+
+               return  Keyword::create($data_submit_keyword);
             }
         }
 
