@@ -64,12 +64,12 @@ class CampaignController extends Controller
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                 ];
 
-               return  Keyword::create($data_submit_keyword);
+                Keyword::create($data_submit_keyword);
             }
         }
 
 
-        parent::handleRespond($campaign);
+        return parent::handleRespond($campaign);
 
     }
 
