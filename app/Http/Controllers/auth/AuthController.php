@@ -22,20 +22,32 @@ class AuthController extends Controller
         $username = $request->username;
         $password = $request->password;
 
-        if (!$token = auth('api')->attempt(['email' => $username, 'password' => $password])) {
-            return parent::handleRespond(null, [], 404, 'Unauthorized');
+        $user = User::where(BaseModel::EMAIL, $username)
+            ->where('password', $password)
+            ->where('status', 1)
+            ->orWhere('is_admin', 1)
+            ->first();
+
+        if ($user) {
+            if (!$token = auth('api')->attempt(['email' => $username, 'password' => $password])) {
+                return parent::handleRespond(null, [], 404, 'Unauthorized');
+            }
+
+            return $this->respondWithToken($token);
         }
 
-        return $this->respondWithToken($token);
+        return parent::handleNotFound(['email' => $username]);
     }
+
 
     public function register(Request $request)
     {
         $rules = [
-            'name' => 'required',
+            'username' => 'required',
             'company' => 'required',
             'email' => 'required',
-            'phone' => 'required',
+            'mobile' => 'required',
+            'password' => 'required',
         ];
 
         $request_data = parent::validate($request, $rules);
@@ -44,19 +56,33 @@ class AuthController extends Controller
             return parent::handleRespond($request_data, [], 500, 'Error');
         }
 
+
+        // todo check company and email and phone
+
+
         try {
+            $request_data['password'] = Hash::make($request_data['password']);
+            $request_data['name'] = $request_data['username'];
+            unset($request_data['username']);
+            $request_data['role_id'] = 1; // temp
+            $request_data['organization_id'] = 1; // temp
+            $request_data['is_admin'] = 0; // temp
+            $request_data['created_by'] = 0; // temp
+            $request_data['update_by'] = 0; // temp
+            $request_data['status'] = 2; // temp
+
             $user = User::create($request_data);
-            //todo userid
-            $user_id = 1;
             parent::audi_log(
                 $request,
                 BaseModel::CREATE_TEXT,
+                'user_id',
                 $user->id,
-                $user_id,
                 'USER',
                 null,
-                $request->all()
+                $request_data
             );
+
+            return parent::handleRespond($user);
 
         } catch (Exception $exception) {
             return parent::handleRespond($request->all(), [], 500, 'Error');

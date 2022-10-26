@@ -4,6 +4,7 @@ namespace App\Http\Controllers\permission;
 
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
+use App\Models\UserPermission;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,9 +13,12 @@ use PHPUnit\Exception;
 class RoleController extends Controller
 {
 
+
     public function index(Request $request)
     {
-        $data = parent::list($request, UserRole::class);
+        $data = UserRole::all();
+
+        return parent::handleRespond($data);
     }
 
     public function update(Request $request, $action = null)
@@ -55,16 +59,30 @@ class RoleController extends Controller
 
     public function store(Request $request)
     {
+
+        $user = auth('api')->user();
         $data = [
-            BaseModel::ROLE_NAME => $request->name,
-            BaseModel::ROLE_DESCRIPTION => $request->description,
-            BaseModel::CREATED_BY => Auth::id() ?? 1,
-            BaseModel::UPDATED_BY => Auth::id() ?? 1,
+            BaseModel::ROLE_NAME => $request->role_name,
+            BaseModel::ROLE_DESCRIPTION => $request->role_description,
+            BaseModel::CREATED_BY => $user->id ?? 1,
+            BaseModel::UPDATED_BY => $user->id ?? 1,
             BaseModel::AUTHORIZED_MENU => ['all']
         ];
 
+
         try {
             $role = UserRole::create($data);
+
+            $permissions = $request->permission;
+            if ($permissions) {
+                foreach ($permissions as $key => $permission) {
+                    $permission[BaseModel::STATUS] = 1;
+                    $permission['role_id'] = $role->id ?? 2;
+                    $permission[BaseModel::CREATED_BY] = $user->id;
+                    $permission[BaseModel::UPDATED_BY] = $user->id;
+                }
+            }
+
             return parent::handleRespond($role);
 
         } catch (Exception $exception) {
@@ -72,9 +90,10 @@ class RoleController extends Controller
         }
     }
 
-    public function destroy(Request $request) {
+    public function destroy(Request $request)
+    {
 
-        
+
         return $this->update($request, BaseModel::UPDATE_TEXT);
     }
 }

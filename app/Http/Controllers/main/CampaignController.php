@@ -37,13 +37,16 @@ class CampaignController extends Controller
 
     public function store(Request $request)
     {
+
         $data_submit = [
             BaseModel::NAME => $request->name ?? '',
-
+            Campaign::DESCRIPTION => $request->description,
             BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
             Campaign::DOMAIN_ID => $request->domain_id ?? 1,
             BaseModel::STATUS => 1,
-
+            Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
+            Campaign::START_AT => $request->start_at,
+            Campaign::END_AT => $request->end_at,
         ];
 
         $campaign = Campaign::create($data_submit);

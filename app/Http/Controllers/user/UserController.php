@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\user;
 
 use App\Http\Controllers\Controller;
+use App\Models\BaseModel;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -17,15 +19,32 @@ class UserController extends Controller
 
     }
 
+    public function update(Request $request) {
+        dd($request->all());
+        if (!$request->id) {
+            return parent::handleNotFound($request->id);
+        }
+        $user = User::where('id', $request->id)->first();
+
+        if ($user) {
+            $user->update([BaseModel::STATUS => 1]);
+            return parent::handleRespond($user);
+        }
+
+        return parent::handleNotFound($request->id);
+    }
+
+    public function data(Request $request) {
+       $users = User::where(BaseModel::STATUS, 2)->get();
+       return parent::handleRespond($users);
+    }
+
 
 
     public function create() {
 
     }
 
-    public function update() {
-
-    }
     public function delete() {
 
     }

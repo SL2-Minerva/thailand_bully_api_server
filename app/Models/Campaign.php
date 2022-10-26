@@ -13,6 +13,10 @@ class Campaign extends BaseModel
     protected $guarded = [];
 
     public const DOMAIN_ID = 'domain_id';
+    public const EXCLUDE_CAMPAIGN = 'exclude_campaign';
+    public const START_AT = 'start_at';
+    public const END_AT = 'end_at';
+    public const DESCRIPTION = 'description';
 
 
 

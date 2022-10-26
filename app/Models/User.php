@@ -20,12 +20,14 @@ class User extends Authenticatable implements JWTSubject
      *
      * @var array<int, string>
      */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
+//    protected $fillable = [
+//        'name',
+//        'email',
+//        'password',
+//
+//    ];
 
-    ];
+    protected $guarded = [];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -35,7 +37,7 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
-        BaseModel::CREATED_AT,
+//        BaseModel::CREATED_AT,
         BaseModel::UPDATED_AT,
         BaseModel::CREATED_BY,
         BaseModel::UPDATED_BY,

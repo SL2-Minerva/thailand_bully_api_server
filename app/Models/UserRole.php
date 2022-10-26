@@ -13,7 +13,7 @@ class UserRole extends Model
     protected $guarded = [];
 
     protected $casts = [
-        BaseModel::AUTHORIZED_MENU => array()
+        BaseModel::AUTHORIZED_MENU => 'array'
     ];
 
     protected $hidden = ['id'];

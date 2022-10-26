@@ -39,6 +39,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::group(['prefix' => 'user'], function () {
             Route::get('/info', [UserController::class, 'info']);
             Route::get('/list', [UserController::class, 'data']);
+            Route::post('/update', [UserController::class, 'update']);
         });
         // organization-type
         Route::group(['prefix' => 'organization-type'], function () {
@@ -78,7 +79,7 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'role'], function () {
             Route::get('/', [RoleController::class, 'show']);
-            Route::get('/list', [RoleController::class, 'list']);
+            Route::get('/list', [RoleController::class, 'index']);
             Route::post('/create', [RoleController::class, 'store']);
             Route::put('/update', [RoleController::class, 'update']);
             Route::put('/delete', [RoleController::class, 'destroy']);

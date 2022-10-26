@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Validator;
 use PHPUnit\Exception;
 
 class Controller extends BaseController
@@ -98,20 +99,16 @@ class Controller extends BaseController
         $changed = null
     )
     {
+        $datasubmit = [
+            AuditLog::TRANSACTION => $transaction,
+            AuditLog::PRIMARY_KEY => $primary_key,
+            BaseModel::USER_ID => $user_id,
+            BaseModel::SOURCE => $source,
+            AuditLog::ORIGINAL => $original,
+            AuditLog::CHANGED => $changed
+        ];
+        AuditLog::create($datasubmit);
 
-        try {
-            AuditLog::create([
-                AuditLog::TRANSACTION => $transaction,
-                AuditLog::PRIMARY_KEY => $primary_key,
-                BaseModel::USER_ID => $user_id,
-                BaseModel::SOURCE => $source,
-                AuditLog::ORIGINAL => $original,
-                AuditLog::CHANGED => $changed
-            ]);
-
-        } catch (Exception $exception) {
-
-        }
 
     }
 
@@ -120,13 +117,14 @@ class Controller extends BaseController
         return (boolean)$mode::find($id);
     }
 
-    public static function list($request, $model, $condition = null) {
+    public static function list($request, $model, $condition = null)
+    {
 
         $page = $request->page ?? null;
         $limit = $request->limit ?? 5;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start - 1;
 
-        return  $model::offset($start)->limit($limit)->orderBy('created', 'desc');
+        return $model::offset($start)->limit($limit)->orderBy('created', 'desc');
     }
 }
