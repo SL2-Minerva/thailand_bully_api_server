@@ -51,7 +51,7 @@ Route::group(['middleware' => ['api']], function () {
         });
 
         // organization-group
-        Route::group(['prefix' => 'organization-type'], function () {
+        Route::group(['prefix' => 'organization-group'], function () {
             Route::post('/', [OrganizationGroupController::class, 'show']);
             Route::get('/list', [OrganizationGroupController::class, 'list']);
             Route::post('/create', [OrganizationGroupController::class, 'store']);

@@ -16,7 +16,16 @@ class OrganizationTypeController extends Controller
     public function store(Request $request)
     {
         try {
-            $organization_group = UserOrganizationType::create($request->all());
+            $user = auth('api')->user();
+            $data = [
+                'organization_type_name' => $request->type ?? '',
+                'organization_type_description' => $request->description ?? '',
+                BaseModel::CREATED_BY => $user->id ?? 1,
+                BaseModel::UPDATED_BY => $user->id ?? 1,
+                BaseModel::STATUS => (boolean)$request->status
+
+            ];
+            $organization_group = UserOrganizationType::create($data);
             return parent::handleRespond($organization_group);
 
         } catch (Exception $exception) {
