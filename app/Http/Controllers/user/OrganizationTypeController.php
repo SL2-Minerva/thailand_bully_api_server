@@ -11,7 +11,15 @@ use PHPUnit\Exception;
 
 class OrganizationTypeController extends Controller
 {
-
+    public function data(Request $request)
+    {
+        try {
+            $organizationType = UserOrganizationType::all();
+            return parent::handleRespond($organizationType);
+        } catch (Exception $exception) {
+            return parent::handleErrorRespond($exception, $exception->getCode());
+        }
+    }
 
     public function store(Request $request)
     {
@@ -57,5 +65,20 @@ class OrganizationTypeController extends Controller
         }
 
         return parent::handleRespond($res);
+    }
+
+    public function update(Request $request)
+    {
+        try {
+            UserOrganizationType::Where('id', $request->id)->update([
+                'organization_type_name' => $request->type ?? '',
+                'organization_type_description' => $request->description ?? '',
+                BaseModel::UPDATED_BY => auth('api')->user()->id ?? 1,
+                BaseModel::STATUS => (boolean)$request->status
+            ]);
+
+        } catch (Exception $exception) {
+            return parent::handleErrorRespond($exception, $exception->getCode());
+        }
     }
 }

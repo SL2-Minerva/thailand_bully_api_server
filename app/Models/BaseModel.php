@@ -39,8 +39,8 @@ class BaseModel extends Model
     public const AUTHORIZED_MENU = 'authorized_menu';
 
     protected $hidden = [
-        BaseModel::UUID,
-        BaseModel::STATUS,
-        BaseModel::CREATED_BY
+//        BaseModel::UUID,
+//        BaseModel::STATUS,
+//        BaseModel::CREATED_BY
     ];
 }
