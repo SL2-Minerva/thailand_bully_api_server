@@ -70,12 +70,19 @@ class OrganizationTypeController extends Controller
     public function update(Request $request)
     {
         try {
-            UserOrganizationType::Where('id', $request->id)->update([
-                'organization_type_name' => $request->type ?? '',
-                'organization_type_description' => $request->description ?? '',
-                BaseModel::UPDATED_BY => auth('api')->user()->id ?? 1,
-                BaseModel::STATUS => (boolean)$request->status
-            ]);
+            $req = [];
+
+            if ($request->type) {
+                $req['organization_type_name'] = $request->type;
+            }
+            if ($request->description) {
+                $req['organization_type_description'] = $request->description;
+            }
+
+            $req[BaseModel::STATUS] = (boolean)$request->status;
+
+            UserOrganizationType::Where('id', $request->id)->update($req);
+            return parent::handleRespond(UserOrganizationType::find($request->id));
 
         } catch (Exception $exception) {
             return parent::handleErrorRespond($exception, $exception->getCode());
