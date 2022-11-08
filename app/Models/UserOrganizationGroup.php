@@ -20,7 +20,7 @@ class UserOrganizationGroup extends BaseModel
     public const CUSTOMER_SERVICE = 'customer_service';
 
     protected $casts = [
-        'domains' => array(),
-        'platform' => array(),
+        'domains' => 'array',
+        'platform' => 'array',
     ];
 }

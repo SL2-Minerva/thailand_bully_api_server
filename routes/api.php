@@ -39,6 +39,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::group(['prefix' => 'user'], function () {
             Route::get('/info', [UserController::class, 'info']);
             Route::get('/list', [UserController::class, 'data']);
+            Route::get('/list-active', [UserController::class, 'list_active']);
             Route::post('/update', [UserController::class, 'update']);
         });
         // organization-type
@@ -53,7 +54,7 @@ Route::group(['middleware' => ['api']], function () {
         // organization-group
         Route::group(['prefix' => 'organization-group'], function () {
             Route::post('/', [OrganizationGroupController::class, 'show']);
-            Route::get('/list', [OrganizationGroupController::class, 'list']);
+            Route::get('/list', [OrganizationGroupController::class, 'data']);
             Route::post('/create', [OrganizationGroupController::class, 'store']);
             Route::put('/update', [OrganizationGroupController::class, 'update']);
             Route::put('/delete', [OrganizationGroupController::class, 'delete']);
@@ -62,10 +63,18 @@ Route::group(['middleware' => ['api']], function () {
         // organization
         Route::group(['prefix' => 'organization'], function () {
             Route::get('/', [OrganizationController::class, 'show']);
-            Route::get('/list', [OrganizationController::class, 'list']);
+            Route::get('/list', [OrganizationController::class, 'data']);
             Route::post('/create', [OrganizationController::class, 'store']);
             Route::put('/update', [OrganizationController::class, 'update']);
             Route::put('/delete', [OrganizationController::class, 'destroy']);
+        });
+
+        Route::group(['prefix' => 'source'], function () {
+            Route::get('/', [SourceController::class, 'show']);
+            Route::get('/list', [SourceController::class, 'data']);
+            Route::post('/create', [SourceController::class, 'store']);
+            Route::put('/update', [SourceController::class, 'update']);
+            Route::put('/delete', [SourceController::class, 'destroy']);
         });
 
         Route::group(['prefix' => 'permission'], function () {

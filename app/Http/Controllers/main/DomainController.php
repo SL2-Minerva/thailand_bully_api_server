@@ -45,16 +45,16 @@ class DomainController extends Controller
         $id = $request->id;
         try {
             $res = $this->find($id);
-            if ($res[BaseModel::STATUS] !== 200) {
-                $permission = $res[BaseModel::DATA_TEXT];
+            if ($res[BaseModel::STATUS] === 200) {
+                $data = $res[BaseModel::DATA_TEXT];
 
-                if ($action === BaseModel::UPDATE_TEXT) {
-                    $permission->update($request->all());
-                    return parent::handleRespond($permission);
-                }
-                $permission->update([BaseModel::STATUS => false]);
-                return parent::handleRespond(null);
+                $data->update($request->all());
+                return parent::handleRespond($data);
+            } else {
+
             }
+
+            return parent::handleNotFound($res, $res[BaseModel::STATUS]);
 
         } catch (Exception $exception) {
             return parent::handleErrorRespond($exception, $exception->getCode());

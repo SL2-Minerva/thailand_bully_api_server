@@ -75,6 +75,7 @@ class OrganizationTypeController extends Controller
             if ($request->type) {
                 $req['organization_type_name'] = $request->type;
             }
+
             if ($request->description) {
                 $req['organization_type_description'] = $request->description;
             }

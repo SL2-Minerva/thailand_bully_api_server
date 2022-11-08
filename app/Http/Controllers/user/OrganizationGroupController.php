@@ -11,12 +11,30 @@ use PHPUnit\Exception;
 
 class OrganizationGroupController extends Controller
 {
-
+    public function data(Request $request)
+    {
+        try {
+            $organizationGroup = UserOrganizationGroup::all();
+            return parent::handleRespond($organizationGroup);
+        } catch (Exception $exception) {
+            return parent::handleErrorRespond($exception, $exception->getCode());
+        }
+    }
 
     public function store(OrganizationGroupRequest $request)
     {
+
         try {
-            $organization_group = UserOrganizationGroup::create($request->all());
+            $data = $request->all();
+            $user = auth('api')->user();
+
+            $data[BaseModel::CREATED_BY] = $user->id ?? 1;
+            $data[BaseModel::UPDATED_BY] = $user->id ?? 1;
+            $data[UserOrganizationGroup::CUSTOMER_SERVICE] = $request->customer_service === 'true';
+            $data[BaseModel::STATUS] = (boolean)$request->status;
+            $organization_group = UserOrganizationGroup::create($data);
+
+
             return parent::handleRespond($organization_group);
 
         } catch (Exception $exception) {
@@ -36,7 +54,12 @@ class OrganizationGroupController extends Controller
 
         if ($organizationGroup) {
             //todo dd check update
-            $organizationGroup->update($request->all());
+            $data = $request->all();
+            $data[UserOrganizationGroup::CUSTOMER_SERVICE] = $request->customer_service === 'true';
+            $data[BaseModel::UPDATED_BY]= auth('api')->user()->id ?? 1;
+            $organizationGroup->update($data);
+
+            return parent::handleRespond($res);
         }
     }
 
