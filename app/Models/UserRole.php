@@ -16,5 +16,5 @@ class UserRole extends Model
         BaseModel::AUTHORIZED_MENU => 'array'
     ];
 
-    protected $hidden = ['id'];
+//    protected $hidden = ['id'];
 }

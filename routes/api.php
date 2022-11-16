@@ -40,7 +40,9 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/info', [UserController::class, 'info']);
             Route::get('/list', [UserController::class, 'data']);
             Route::get('/list-active', [UserController::class, 'list_active']);
-            Route::post('/update', [UserController::class, 'update']);
+            Route::post('/create', [UserController::class, 'create']);
+            Route::put('/update/{user}', [UserController::class, 'update']);
+            Route::delete('/delete/{user}', [UserController::class, 'delete']);
         });
         // organization-type
         Route::group(['prefix' => 'organization-type'], function () {

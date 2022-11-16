@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -19,19 +20,12 @@ class UserController extends Controller
 
     }
 
-    public function update(Request $request)
+    public function update(User $user, Request $request)
     {
-        if (!$request->id) {
-            return parent::handleNotFound($request->id);
-        }
-        $user = User::where('id', $request->id)->first();
-
-        if ($user) {
-            $user->update([BaseModel::STATUS => 1]);
-            return parent::handleRespond($user);
-        }
-
-        return parent::handleNotFound($request->id);
+        $data = $request->all();
+        $data[BaseModel::UPDATED_BY] =  auth('api')->id() ?? 1;
+        $user->update($data);
+        return parent::handleRespond($request->id);
     }
 
     public function data(Request $request)
@@ -45,6 +39,7 @@ class UserController extends Controller
         $users = User::join('organizations', 'users.organization_id', '=', 'organizations.id')
             ->join('user_organization_groups', 'organizations.organization_group_id', '=', 'user_organization_groups.id')
             ->where('users.status', 1)
+            ->where('users.is_admin', '!=', 1)
             ->orWhere('users.status', 0)
             ->where('organizations.status', 1)
             ->select('users.*', 'organizations.name as organization', 'user_organization_groups.organization_group_name as group')
@@ -54,14 +49,21 @@ class UserController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
-
+        $data = $request->all();
+        $data['password'] = Hash::make('welcome');
+        $data[BaseModel::CREATED_BY] =  auth('api')->id() ?? 1;
+        $data[BaseModel::UPDATED_BY] =  auth('api')->id() ?? 1;
+        $data['is_admin'] = 0;
+        $user = User::create($data);
+        return parent::handleRespond($user);
     }
 
-    public function delete()
+    public function delete(User $user, Request $request)
     {
-
+        $user->update([BaseModel::STATUS => 0]);
+        return parent::handleRespond($user);
     }
 
     public function info()
