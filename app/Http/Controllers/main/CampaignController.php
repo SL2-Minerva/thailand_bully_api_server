@@ -14,7 +14,32 @@ class CampaignController extends Controller
 {
     public function index(Request $request)
     {
+
+
         $campaigns = Campaign::all();
+
+        if ($request->organization_id) {
+            $campaigns = $campaigns->where('organization_id', $request->organization_id);
+        }
+
+        if ($request->status) {
+            $campaigns = $campaigns->where('status', $request->status);
+        }
+
+        if ($request->name) {
+            $campaigns = $campaigns->where('name', $request->name);
+        }
+
+
+//        if ($request->start_date) {
+//            $start = date($request->start_date);
+//            $end = date($request->end_date);
+//
+//            $campaigns->whereBetween('reservation_from', [$start, $end])->get();
+//        }
+
+
+
         $data = [];
         foreach ($campaigns as $campaign) {
             $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->get();
@@ -39,6 +64,8 @@ class CampaignController extends Controller
     public function show(Request $request)
     {
         $id = $request->id;
+
+
 
         $res = $this->find($id);
         if ($res[BaseModel::STATUS] !== 200) return parent::handleNotFound($res, $res[BaseModel::STATUS]);
