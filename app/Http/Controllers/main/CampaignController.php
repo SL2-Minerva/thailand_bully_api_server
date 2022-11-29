@@ -31,13 +31,6 @@ class CampaignController extends Controller
         }
 
 
-//        if ($request->start_date) {
-//            $start = date($request->start_date);
-//            $end = date($request->end_date);
-//
-//            $campaigns->whereBetween('reservation_from', [$start, $end])->get();
-//        }
-
 
 
         $data = [];
@@ -55,10 +48,10 @@ class CampaignController extends Controller
 //                $item->keyword_exclude = json_decode($item->keyword_exclude);
             }
             $campaign->organization = Organization::find($campaign->organization_id)->name;
-            $data[] = $campaigns;
+            $data[] = $campaign;
 
         }
-        return parent::handleRespond($campaigns);
+        return parent::handleRespond($data);
     }
 
     public function show(Request $request)
