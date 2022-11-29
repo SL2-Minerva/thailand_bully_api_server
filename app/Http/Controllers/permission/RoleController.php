@@ -18,9 +18,24 @@ class RoleController extends Controller
     {
         $data = UserRole::where(BaseModel::ID, '!=', 0)->get();
         foreach ($data as $item) {
-            $item->permission = UserPermission::where('role_id', $item->id)->get([
-                'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu'
+
+            $row_permissions = UserPermission::where('role_id', $item->id)->get([
+                'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu', 'id'
             ]);
+
+            $permissions = [];
+            foreach ($row_permissions as $permission) {
+                $permissions[$permission->menu] = [
+                    'authorized_create' => $permission->authorized_create,
+                    'authorized_view' => $permission->authorized_view,
+                    'authorized_edit' => $permission->authorized_edit,
+                    'authorized_delete' => $permission->authorized_delete,
+                    'authorized_export' => $permission->authorized_export,
+                    'id' => $permission->id
+                ];
+            }
+
+            $item->permission = $permissions;
         }
 
 
@@ -30,9 +45,9 @@ class RoleController extends Controller
     public function update(Request $request)
     {
         $id = $request->id;
+        $user = auth('api')->user();
         try {
             $res = $this->find($id);
-
 
             if ($res[BaseModel::STATUS] === 200) {
                 $data = $res[BaseModel::DATA_TEXT];
@@ -40,7 +55,7 @@ class RoleController extends Controller
 
                 $handle_data = [];
                 if (!$request->status || $request->status) {
-                    $handle_data[BaseModel::STATUS] = $request->status;
+                    $handle_data[BaseModel::STATUS] = $request->status ?? 1;
                 }
 
                 if ($request->name) {
@@ -54,9 +69,19 @@ class RoleController extends Controller
 
                 $data->update($handle_data);
 
-                return parent::handleRespond($data);
-            } else {
 
+                $permissions = $request->permission;
+                if ($permissions) {
+                    foreach ($permissions as $key => $permission) {
+                        $permission[BaseModel::STATUS] = 1;
+                        $permission['menu'] = $key;
+                        $permission['role_id'] = $id;
+                        $permission[BaseModel::UPDATED_BY] = $user->id;
+                        UserPermission::where(BaseModel::ID, $permission['id'])->update($permission);
+                    }
+                }
+
+                return parent::handleRespond($data);
             }
 
             return parent::handleRespond(null);
