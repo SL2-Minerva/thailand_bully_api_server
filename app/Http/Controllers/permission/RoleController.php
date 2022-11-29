@@ -23,7 +23,7 @@ class RoleController extends Controller
                 'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu', 'id'
             ]);
 
-            $permissions = [];
+            $permissions = null;
             foreach ($row_permissions as $permission) {
                 $permissions[$permission->menu] = [
                     'authorized_create' => $permission->authorized_create,
