@@ -77,7 +77,15 @@ class RoleController extends Controller
                         $permission['menu'] = $key;
                         $permission['role_id'] = $id;
                         $permission[BaseModel::UPDATED_BY] = $user->id;
-                        UserPermission::where(BaseModel::ID, $permission['id'])->update($permission);
+
+                        if (isset($permission['id'])) {
+                            UserPermission::where(BaseModel::ID, $permission['id'])->update($permission);;
+                        } else {
+                            unset($permission['id']);
+                            $permission[BaseModel::CREATED_BY] = $user->id;
+                            UserPermission::create($permission);
+                        }
+
                     }
                 }
 
