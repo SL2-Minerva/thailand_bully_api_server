@@ -17,7 +17,5 @@ class Campaign extends BaseModel
     public const START_AT = 'start_at';
     public const END_AT = 'end_at';
     public const DESCRIPTION = 'description';
-
-
-
+    public const FREQUENCY = 'frequency';
 }

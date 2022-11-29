@@ -16,26 +16,50 @@ class RoleController extends Controller
 
     public function index(Request $request)
     {
-        $data = UserRole::all();
+        $data = UserRole::where(BaseModel::ID, '!=', 0)->get();
+        foreach ($data as $item) {
+            $item->permission = UserPermission::where('role_id', $item->id)->get([
+                'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu'
+            ]);
+        }
 
-        return parent::handleRespond($data);
+
+        return parent::handleRespond($data ?? []);
     }
 
-    public function update(Request $request, $action = null)
+    public function update(Request $request)
     {
         $id = $request->id;
         try {
             $res = $this->find($id);
-            if ($res[BaseModel::STATUS] !== 200) {
+
+
+            if ($res[BaseModel::STATUS] === 200) {
                 $data = $res[BaseModel::DATA_TEXT];
 
-                if ($action === BaseModel::UPDATE_TEXT) {
-                    $data->update($request->all());
-                    return parent::handleRespond($data);
+
+                $handle_data = [];
+                if (!$request->status || $request->status) {
+                    $handle_data[BaseModel::STATUS] = $request->status;
                 }
-                $data->update([BaseModel::STATUS => false]);
-                return parent::handleRespond(null);
+
+                if ($request->name) {
+                    $handle_data[BaseModel::NAME] = $request->name;
+                }
+
+                if ($request->description) {
+                    $handle_data[BaseModel::DESCRIPTION] = $request->description;
+                }
+
+
+                $data->update($handle_data);
+
+                return parent::handleRespond($data);
+            } else {
+
             }
+
+            return parent::handleRespond(null);
 
         } catch (Exception $exception) {
             return parent::handleErrorRespond($exception, $exception->getCode());
@@ -77,9 +101,12 @@ class RoleController extends Controller
             if ($permissions) {
                 foreach ($permissions as $key => $permission) {
                     $permission[BaseModel::STATUS] = 1;
+                    $permission['menu'] = $key;
                     $permission['role_id'] = $role->id ?? 2;
                     $permission[BaseModel::CREATED_BY] = $user->id;
                     $permission[BaseModel::UPDATED_BY] = $user->id;
+
+                    UserPermission::create($permission);
                 }
             }
 

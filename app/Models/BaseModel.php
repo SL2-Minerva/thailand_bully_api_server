@@ -17,6 +17,7 @@ class BaseModel extends Model
     public const UPDATED_AT = "updated_at";
     public const CREATED_BY = "created_by";
     public const UPDATED_BY = "updated_by";
+    public const DESCRIPTION = "description";
     public const NAME = 'name';
     public const EMAIL = 'email';
     public const COMPANY = 'company';

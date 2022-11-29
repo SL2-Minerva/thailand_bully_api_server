@@ -85,6 +85,7 @@ class CampaignController extends Controller
             Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
             Campaign::START_AT => $request->start_at,
             Campaign::END_AT => $request->end_at,
+            Campaign::FREQUENCY => $request->frequency ?? 120,
         ];
 
         $campaign = Campaign::create($data_submit);
@@ -131,24 +132,60 @@ class CampaignController extends Controller
 
 
 
-                return parent::handleRespond($data_submit);
+                return parent::handleErrorRespond($request->all());
             }
 
             $data = $campaign[BaseModel::DATA_TEXT];
 
             $data_submit = [
-                BaseModel::NAME => $request->name ?? '',
-                Campaign::DESCRIPTION => $request->description,
-                BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
-                Campaign::DOMAIN_ID => $request->domain_id ?? 1,
-                BaseModel::STATUS => 1,
-                Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
-                Campaign::START_AT => $request->start_at,
-                Campaign::END_AT => $request->end_at,
+//                BaseModel::NAME => $request->name ?? '',
+//                Campaign::DESCRIPTION => $request->description,
+//                BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
+//                Campaign::DOMAIN_ID => $request->domain_id ?? 1,
+//                BaseModel::STATUS => $request->status ?? 1,
+//                Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
+//                Campaign::START_AT => $request->start_at,
+//                Campaign::END_AT => $request->end_at,
             ];
 
-            $data->update($data_submit);
+            if ($request->name) {
+                $data_submit[BaseModel::NAME] = $request->name;
+            }
 
+            if ($request->description) {
+                $data_submit[Campaign::DESCRIPTION] = $request->description;
+            }
+
+            if ($request->organization_id) {
+                $data_submit[BaseModel::ORGANIZATION_ID] = $request->organization_id;
+            }
+
+            if ($request->domain_id) {
+                $data_submit[Campaign::DOMAIN_ID] = $request->domain_id;
+            }
+
+            if ($request->status || !$request->status) {
+                $data_submit[BaseModel::STATUS] = $request->status;
+            }
+
+            if ($request->exclude_campaign) {
+                $data_submit[Campaign::EXCLUDE_CAMPAIGN] = collect($request->exclude_campaign)->implode(',');
+            }
+
+            if ($request->start_at) {
+                $data_submit[Campaign::START_AT] = $request->start_at;
+            }
+
+            if ($request->end_at) {
+                $data_submit[Campaign::END_AT] = $request->end_at;
+            }
+
+            if ($request->frequency) {
+                $data_submit[Campaign::FREQUENCY] = $request->frequency;
+            }
+
+
+            $data->update($data_submit);
 
             if ($request->keywords) {
                 foreach ($request->keywords as $keyword) {
