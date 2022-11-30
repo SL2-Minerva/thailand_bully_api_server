@@ -76,7 +76,7 @@ class DashboardController extends Controller
             }
         }
 
-        return $data;
+        return [$data];
 
     }
 
