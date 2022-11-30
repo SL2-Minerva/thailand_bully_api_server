@@ -8,6 +8,7 @@ use App\Models\Campaign;
 
 use App\Models\DailyMessage;
 use App\Models\Keyword;
+use App\Models\PercentageOfMessages;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -21,24 +22,61 @@ class DashboardController extends Controller
         }
 
         $data = null;
-        $data['daily_message_current'] = $this->dailyMessage($campaign_id);
-        $data['daily_message_previous'] = $this->dailyMessage($campaign_id, '2022-11-30', '2022-11-30','daily');
+        $data['daily_message'] = $this->dailyMessage($campaign_id, '2022-11-30', '2022-11-30');
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, '2022-11-30', '2022-11-30');
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, '2022-11-30', '2022-11-30');
 
         return parent::handleRespond($data);
     }
 
-    private function dailyMessage($campaign_id, $start_date, $end_date, $period = 'current') {
-        $daily_messages = DailyMessage::where('campaign_id', $campaign_id)->get();
-//        foreach ($daily_messages as $daily_message) {
-////
-//            $daily_message->keyword = Keyword::where('campaign_id', $campaign_id)->get();
-//        }
-//            $daily_message->campaign = Campaign::find($daily_message->campaign_id);
+    private function dailyMessage($campaign_id, $start_date, $end_date) {
+        $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
 
-        return  $daily_messages;
+//        else {
+//            $daily_messages = $daily_messages->whereBetween('date', [$start_date, $end_date]);
+//        }
+        $data = null;
+
+        foreach ($daily_messages->get() as $daily_message) {
+
+           $nestData = [
+                'keyword_id' => $daily_message->keyword_id,
+                'keyword_name' => $daily_message->keyword_name,
+                'campaign_id' => $daily_message->campaign_id,
+                'campaign_name' => $daily_message->campaign_name,
+                'organization_id' => $daily_message->organization_id,
+                'organizations_name' => $daily_message->organizations_name,
+                'source_id' => $daily_message->source_id,
+                'source_name' => $daily_message->source_name,
+                'date_m' => $daily_message->date_m,
+                'total_at_date' => $daily_message->total_at_date
+            ];
+
+           if (isset($data['keyword_id']) && $data['keyword_id'] === $daily_message->keyword_id) {
+                $data['data'][] = $nestData;
+           } else {
+               $data['keyword_id'] = $daily_message->keyword_id;
+               $data['data'][] = $nestData;
+           }
+        }
+
+
+        return  $data;
     }
 
-    private function percentageOfMessages() {
+    private function percentageOfMessages($campaign_id, $start_date, $end_date) {
+
+        $percentage_of_messages = PercentageOfMessages::where('campaign_id', $campaign_id);
+        foreach ($percentage_of_messages->get() as $percentage_of_message) {
+            if (isset($data['keyword_id']) && $data['keyword_id'] === $percentage_of_message->keyword_id) {
+                $data['data']['percentage'] = (int)$data['data']['percentage'] + $percentage_of_message->total_at_keyword;
+            } else {
+                $data['keyword_id'] = $percentage_of_message->keyword_id;
+                $data['data']['percentage'] = $percentage_of_message->total_at_keyword;
+            }
+        }
+
+        return $data;
 
     }
 
