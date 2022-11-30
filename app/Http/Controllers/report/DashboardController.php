@@ -72,6 +72,8 @@ class DashboardController extends Controller
                 $data['data']['percentage'] = (int)$data['data']['percentage'] + $percentage_of_message->total_at_keyword;
             } else {
                 $data['keyword_id'] = $percentage_of_message->keyword_id;
+                $data['keyword_name'] = $percentage_of_message->keyword_name;
+                $data['date'] = $start_date .'-'. $end_date;
                 $data['data']['percentage'] = $percentage_of_message->total_at_keyword;
             }
         }
