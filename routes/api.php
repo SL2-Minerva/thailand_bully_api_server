@@ -7,6 +7,7 @@ use App\Http\Controllers\main\KeywordController;
 use App\Http\Controllers\main\SourceController;
 use App\Http\Controllers\permission\PermissionController;
 use App\Http\Controllers\permission\RoleController;
+use App\Http\Controllers\report\DashboardController;
 use App\Http\Controllers\user\OrganizationController;
 use App\Http\Controllers\user\OrganizationGroupController;
 use App\Http\Controllers\user\OrganizationTypeController;
@@ -129,6 +130,11 @@ Route::group(['middleware' => ['api']], function () {
 
         });
 
+    });
+
+
+    Route::group(['prefix' => 'dashboard'], function () {
+        Route::get('/overall/', [DashboardController::class, 'overAll']);
     });
 });
 
