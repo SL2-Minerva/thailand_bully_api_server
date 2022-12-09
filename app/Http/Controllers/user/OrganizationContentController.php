@@ -105,7 +105,7 @@ class OrganizationContentController extends Controller
 
         $data['status'] = 1;
 
-        if (!$request->status) {
+        if ($request->status || $request->status == 0) {
             $data['status'] = false;
         }
 
