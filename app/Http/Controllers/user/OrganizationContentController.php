@@ -115,10 +115,13 @@ class OrganizationContentController extends Controller
 
 
         $organization_content = OrganizationContent::where('organization_id', $this->organization_id)->where('id' , $id)->first();
+        if ($organization_content) {
+            $organization_content->update($data);
+            return parent::handleRespond($organization_content);
+        }
 
+        return  parent::handleNotFound($request->all());
 
-        $organization_content->update($data);
-        return parent::handleRespond($organization_content);
     }
 
 
