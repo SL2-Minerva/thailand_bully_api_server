@@ -106,8 +106,13 @@ class OrganizationContentController extends Controller
         $data['status'] = 1;
 
         if ($request->status || $request->status == 0) {
-            $data['status'] = false;
+            $data['status'] = $request->status;
         }
+
+        if ($request->date) {
+            $data['date'] = $request->date;
+        }
+
 
         $organization_content = OrganizationContent::where('organization_id', $this->organization_id)->where('id' , $id)->first();
 
