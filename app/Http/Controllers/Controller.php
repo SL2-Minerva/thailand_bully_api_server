@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\BaseModel;
+use GuzzleHttp\Psr7\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
@@ -14,6 +15,13 @@ use PHPUnit\Exception;
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
+
+    protected $organization_id = 1;
+    public function __construct(Request $request)
+    {
+//        $this->request = $request;
+    }
+
 
     /**
      * @param $data
@@ -126,5 +134,11 @@ class Controller extends BaseController
         $start = $start === 1 ? null : $start - 1;
 
         return $model::offset($start)->limit($limit)->orderBy('created', 'desc');
+    }
+
+    public static function uploadImage($file) {
+        if ($file) {
+            return $file->store("organization-content", 'public');
+        }
     }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\main\SourceController;
 use App\Http\Controllers\permission\PermissionController;
 use App\Http\Controllers\permission\RoleController;
 use App\Http\Controllers\report\DashboardController;
+use App\Http\Controllers\user\OrganizationContentController;
 use App\Http\Controllers\user\OrganizationController;
 use App\Http\Controllers\user\OrganizationGroupController;
 use App\Http\Controllers\user\OrganizationTypeController;
@@ -132,9 +133,14 @@ Route::group(['middleware' => ['api']], function () {
 
     });
 
-
     Route::group(['prefix' => 'dashboard'], function () {
         Route::get('/overall/', [DashboardController::class, 'overAll']);
+    });
+
+    Route::group(['prefix' => 'organization-content'], function () {
+        Route::get('/', [OrganizationContentController::class, 'index']);
+        Route::post('/', [OrganizationContentController::class, 'store']);
+        Route::post('/update', [OrganizationContentController::class, 'update']);
     });
 });
 
