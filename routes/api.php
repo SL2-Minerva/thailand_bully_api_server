@@ -135,6 +135,13 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard'], function () {
         Route::get('/overall/', [DashboardController::class, 'overAll']);
+        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
+        Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
+        Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
+        Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);
+        Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
+        Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
+        Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
     });
 
     Route::group(['prefix' => 'organization-content'], function () {
