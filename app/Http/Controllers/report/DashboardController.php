@@ -91,7 +91,7 @@ class DashboardController extends Controller
             $data[$keyword_id]['organizations_name'] = $percentage_of_message->organizations_name;
 
             $nestData = [
-                'date' => $start_date .' - '. $end_date,
+                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') .' - '. Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => $percentage_of_message->total_at_keyword
             ];
 
