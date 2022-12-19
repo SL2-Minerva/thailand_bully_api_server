@@ -4,7 +4,11 @@ namespace App\Http\Controllers\report;
 
 use App\Http\Controllers\Controller;
 use App\Models\DailyMessage;
+use App\Models\Message;
 use App\Models\PercentageOfMessages;
+use App\Models\SNA;
+use App\Models\SNAChildNode;
+use App\Models\SNARootNode;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -537,20 +541,129 @@ class DashboardController extends Controller
     }
 
     public function sna (Request $request) {
+        $campaign_id = $request->campaign_id;
+
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
 
         $data = [];
+        $roots = $this->getRootNode($campaign_id);
+        $childs = $this->getChildNode($campaign_id);
+        $data['node'] = array_merge($roots, $childs);
 
-        $data['nodes'][] = ["id" => "test-tr", "label" => "node 1", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        $data['nodes'][] = ["id" => 2, "label" => "node 2", "title" => "Word 1 change color,shape & size", "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        $data['nodes'][] = ["id" => 3, "label" => "node 3", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        $data['nodes'][] = ["id" => 4, "label" => "node 4", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        $data['nodes'][] = ["id" => 5, "label" => "node 5", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
-        $data['edges'][] = [ "from" => 2, "to" => 3, "length" => 200, "color" => "red"];
-        $data['edges'][] = [ "from" => "3", "to" => 2, "length" => 300, "color" => "red"];
-        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
+        foreach ($childs as $child) {
+           foreach ($roots as $root) {
+               if ($child['parent_id'] == $root['id']) {
+                   $data['edges'][] = [ "from" => $child['id'], "to" => $root['id'], "length" => $child['size'], "color" => $child['color']];
+               }
+           }
+        }
 
         return parent::handleRespond($data);
+
+//        Message::where(SNA::CAMPAIGN_ID, $campaign_id)
+//            ->chunk(100, function ($messages) use (&$data) {
+//                foreach ($messages as $message) {
+//                    $data[] = [
+//                        'id' => $message->id,
+//                        'name' => $message->name,
+//                        'value' => $message->value,
+//                        'type' => $message->type,
+//                        'created_at' => $message->created_at,
+//                        'updated_at' => $message->updated_at,
+//                    ];
+//                }
+//            });
+//        $snas = SNA::where(SNA::CAMPAIGN_ID,$campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, '')->groupby(SNA::MESSAGE_ID)->get();
+//
+//        foreach ($snas as $sna) {
+//            $data['nodes'][] = [
+//                "id" => $sna->message_id,
+//                "label" => $sna->author,
+//                "title" => $sna->author,
+//                "color" => $sna->classification_color,
+//                "shape" => "dot",
+//                "size" => $sna->engagement
+//            ];
+//
+//            $data = $this->getReferSna($campaign_id, $sna->message_id, $data);
+//        }
+
+
+//        $data['nodes'][] = ["id" => "test-tr", "label" => "node 1", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+//        $data['nodes'][] = ["id" => 2, "label" => "node 2", "title" => "Word 1 change color,shape & size", "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+//        $data['nodes'][] = ["id" => 3, "label" => "node 3", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+//        $data['nodes'][] = ["id" => 4, "label" => "node 4", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+//        $data['nodes'][] = ["id" => 5, "label" => "node 5", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+//
+//        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
+//        $data['edges'][] = [ "from" => 2, "to" => 3, "length" => 200, "color" => "red"];
+//        $data['edges'][] = [ "from" => "3", "to" => 2, "length" => 300, "color" => "red"];
+//        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
+        return parent::handleRespond($data);
+
+    }
+
+    private function getRootNode($campaign_id) {
+        $snas = SNARootNode::where(SNA::CAMPAIGN_ID, $campaign_id)
+            ->get();
+
+        foreach ($snas as $sna) {
+            $data[] = [
+                "id" => $sna->message_id,
+                "label" => $sna->author,
+                "title" => $sna->author,
+                "color" => $sna->classification_color,
+                "shape" => "dot",
+                "size" => $sna->engagement
+            ];
+
+        }
+
+        return $data;
+    }
+
+    private function getChildNode($campaign_id) {
+        $snas = SNAChildNode::where(SNA::CAMPAIGN_ID, $campaign_id)
+            ->get();
+
+        foreach ($snas as $sna) {
+            $data[] = [
+                "id" => $sna->message_id,
+                "label" => $sna->author,
+                "title" => $sna->author,
+                "parent_id" => $sna->reference_message_id,
+                "color" => $sna->classification_color,
+                "shape" => "dot",
+                "size" => $sna->engagement
+            ];
+
+        }
+
+        return $data;
+    }
+
+    private function getReferSna($campaign_id, $message_id, $data_node = []) {
+        $data = $data_node;
+        $snas = SNA::where(SNA::CAMPAIGN_ID,$campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, $message_id)->get();
+
+
+        foreach ($snas as $sna) {
+            $data['nodes'][] = [
+                "id" => $sna->message_id,
+                "label" => $sna->author,
+                "title" => $sna->author,
+                "color" => $sna->classification_color,
+                "shape" => "dot",
+                "size" => $sna->engagement
+            ];
+
+
+//            $data_node = $this->getReferSna($campaign_id, $sna->message_id, $data_node);
+        }
+
+        return $data;
 
     }
 
