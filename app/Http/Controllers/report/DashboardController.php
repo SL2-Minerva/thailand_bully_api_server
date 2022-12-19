@@ -555,7 +555,12 @@ class DashboardController extends Controller
         foreach ($childs as $child) {
            foreach ($roots as $root) {
                if ($child['parent_id'] == $root['id']) {
-                   $data['edges'][] = [ "from" => $child['id'], "to" => $root['id'], "length" => $child['size'], "color" => $child['color']];
+                   $data['edges'][] = [
+                       "from" => $child['id'],
+                       "to" => $root['id'],
+                       "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
+                       "color" => $child['color']
+                   ];
                }
            }
         }
@@ -607,6 +612,8 @@ class DashboardController extends Controller
 
     private function getRootNode($campaign_id) {
         $snas = SNARootNode::where(SNA::CAMPAIGN_ID, $campaign_id)
+            ->groupBy(SNA::MESSAGE_ID)
+            ->limit(10)
             ->get();
 
         foreach ($snas as $sna) {
@@ -616,7 +623,7 @@ class DashboardController extends Controller
                 "title" => $sna->author,
                 "color" => $sna->classification_color,
                 "shape" => "dot",
-                "size" => $sna->engagement
+                "size" => (int)$sna->engagement / 10  ?? 1
             ];
 
         }
@@ -626,17 +633,20 @@ class DashboardController extends Controller
 
     private function getChildNode($campaign_id) {
         $snas = SNAChildNode::where(SNA::CAMPAIGN_ID, $campaign_id)
+            ->groupBy(SNA::MESSAGE_ID)
+            ->limit(100)
             ->get();
 
         foreach ($snas as $sna) {
             $data[] = [
-                "id" => $sna->message_id,
+                "id" => (int)$sna->message_id,
                 "label" => $sna->author,
                 "title" => $sna->author,
-                "parent_id" => $sna->reference_message_id,
+                "parent_id" => (int)$sna->reference_message_id,
                 "color" => $sna->classification_color,
                 "shape" => "dot",
-                "size" => $sna->engagement
+                "size" => (int)$sna->engagement / 5 ?? 1,
+                "length"=> (int)$sna->engagement ?? 20
             ];
 
         }
