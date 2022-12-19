@@ -550,7 +550,7 @@ class DashboardController extends Controller
         $data = [];
         $roots = $this->getRootNode($campaign_id);
         $childs = $this->getChildNode($campaign_id);
-        $data['node'] = array_merge($roots, $childs);
+        $data['nodes'] = array_merge($roots, $childs);
 
         foreach ($childs as $child) {
            foreach ($roots as $root) {
