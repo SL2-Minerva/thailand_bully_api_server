@@ -36,7 +36,7 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function  get_period ($preiod = null)
+    private function get_period ($preiod = null)
     {
         if ($preiod == null) {
             return 1;
@@ -44,12 +44,53 @@ class DashboardController extends Controller
         return 1;
     }
 
+    private function date_carbon($date) 
+    {
+        return Carbon::parse($date)->format('Y-m-d');
+    }
+
 
     private function get_previous_date($date, $period)
     {
-        $date = Carbon::parse($date);
-        $date->subDays($period);
-        return $date->format('Y-m-d');
+        switch ($period) {
+            case "daily":
+                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
+                break;
+            case "yesterday":
+                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
+                break;
+            case "last7Days":
+                $date = Carbon::parse($date)->subDays(7)->format('Y-m-d');
+                break;
+            case "last30Days":
+                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
+                break;
+            case "thisMonth":
+                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
+                break;
+            case "lastMonth":
+                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
+                break;
+            case "customrange":
+                $date = Carbon::parse($date)->format('Y-m-d');
+                break;
+            default:
+                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
+        }
+        
+        return $date;
+    }
+
+    private function diff_date($start_date, $end_date)
+    {
+        $start_date = Carbon::createFromFormat('Y-m-d H:s:i', $start_date . ' 00:00:00');
+        $end_date = Carbon::createFromFormat('Y-m-d H:s:i', $end_date . ' 23:59:59');
+        $length = $start_date->diffInDays($end_date);
+        return $length != 0 ? $length : 1;
+    }
+
+    private function point_two_digits($number) {
+        return $number !== null ? (float)number_format($number, 2) : null;
     }
 
 
@@ -110,12 +151,14 @@ class DashboardController extends Controller
 
     public function keyStats(Request $request) {
         $data = null;
-        $campaign_id = $request->campaign_id;
-        $start_date = $request->start_date;
-        $end_date = $request->end_date;
-        $data['total_messages'] = $this->totalMessages($campaign_id, $start_date, $end_date);
-        $data['total_engagement'] = $this->totalEngagement($campaign_id, $start_date, $end_date);
-        $data['total_accounts'] = $this->totalAccounts($campaign_id, $start_date, $end_date);
+        $campaign_id = $request->campaign_id ?? "";
+        $start_date = $request->start_date ?? "";
+        $end_date = $request->end_date ?? "";
+        $source = $request->source ?? "";
+        $period = $request->period ?? "";
+        $data['total_messages'] = $this->totalMessages($campaign_id, $start_date, $end_date, $source, $period);
+        $data['total_engagement'] = $this->totalEngagement($campaign_id, $start_date, $end_date, $source, $period);
+        $data['total_accounts'] = $this->totalAccounts($campaign_id, $start_date, $end_date, $source, $period);
 
         return parent::handleRespond($data);
     }
@@ -154,142 +197,102 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function totalMessages($campaign_id, $start_date, $end_date) {
+    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period) {
 
         //todo
-        $start_date = Carbon::parse($start_date)->format('Y-m-d');
-        $end_date = Carbon::parse($end_date)->format('Y-m-d');
+        $start_date = $this->date_carbon($start_date);
+        $end_date = $this->date_carbon($end_date);
 
-        $start_date_sub = Carbon::parse($start_date)->subMonths(1)->format('Y-m-d');
-        $end_date_sub = Carbon::parse($end_date)->subMonths(1)->format('Y-m-d');
+        $start_date_previous = $this->get_previous_date($start_date, $period);
+        $end_date_previous = $this->get_previous_date($end_date, $period);
 
         $total_current = DB::table('percentage_of_messages')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
-            ->get();
+            ->sum('total_at_keyword');
 
-        $total_previous = DB::table('percentage_of_messages')->
-            where('campaign_id', $campaign_id)->
-            whereBetween('date_m', [$start_date_sub, $end_date_sub])->
-            get();
+        $total_previous = DB::table('percentage_of_messages')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+            ->sum('total_at_keyword');
 
-        $start_date = new DateTime($start_date);
-        $end_date = new DateTime($end_date);
-        $interval = $start_date->diff($end_date);
+        $diff_date = $this->diff_date($start_date, $end_date);
 
-        $total_message = 0;
-
-        foreach ($total_current as $total_list) {
-            $total_message = $total_message + $total_list->total_at_keyword;
-        }
-
-        $total_message_previous = 0;
-
-        foreach ($total_previous as $total_list_previous) {
-            $total_message_previous = $total_message_previous + $total_list_previous->total_at_keyword;
-        }
-
-        $comparison = $total_message - $total_message_previous;
-        $percentage = ($total_message - $total_message_previous) / ($total_message_previous === 0 ? 1 : $total_message_previous);
+        $comparison = $total_current - $total_previous;
+        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
 
         return [
-            "total_message" => $total_message,
-            "average_message" => $total_message / ($interval->days + 1),
-            "comparison" => $comparison,
-            "percentage" => $percentage,
+            "total_account" => $total_current,
+            "average_account" => $this->point_two_digits($total_current / $diff_date),
+            "comparison" => $this->point_two_digits($comparison),
+            "percentage" => $this->point_two_digits($percentage),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
 
-    private function totalEngagement($campaign_id, $start_date, $end_date) {
+    private function totalEngagement($campaign_id, $start_date, $end_date, $source, $period) {
 
         //todo
-        $start_date = Carbon::parse($start_date)->format('Y-m-d');
-        $end_date = Carbon::parse($end_date)->format('Y-m-d');
+        $start_date = $this->date_carbon($start_date);
+        $end_date = $this->date_carbon($end_date);
 
-        $start_date_sub = Carbon::parse($start_date)->subMonths(1)->format('Y-m-d');
-        $end_date_sub = Carbon::parse($end_date)->subMonths(1)->format('Y-m-d');
+        $start_date_previous = $this->get_previous_date($start_date, $period);
+        $end_date_previous = $this->get_previous_date($end_date, $period);
 
-        $total_current = DB::table('total_engagement_of_campaign')
+        $total_engagement = DB::table('total_engagement_of_campaign')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
-            ->sum('total_at_keyword')
-            ->get();
-
-        $total_previous = DB::table('total_engagement_of_campaign')
+            ->sum('engagement');
+        
+        $total_engagement_previous = DB::table('total_engagement_of_campaign')
             ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date_sub, $end_date_sub])
-            ->sum('total_at_keyword')
-            ->get();
+            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+            ->sum('engagement');
 
-        $start_date = new DateTime($start_date);
-        $end_date = new DateTime($end_date);
-        $interval = $start_date->diff($end_date);
-
-        $total_engagement = 0;
-//        foreach ($total_current as $total_list) {
-//            $total_engagement = $total_engagement + $total_list->engagement;
-//        }
-//
-//        $total_engagement_previous = 0;
-//        foreach ($total_previous as $total_list_previous) {
-//            $total_engagement_previous = $total_engagement_previous + $total_list_previous->engagement;
-//        }
+        $diff_date = $this->diff_date($start_date, $end_date);
 
         $comparison = $total_engagement - $total_engagement_previous;
-        $percentage = ($total_engagement - $total_engagement_previous) / ($total_engagement_previous === 0 ? 1 : $total_engagement_previous);
+        $percentage = (($total_engagement - $total_engagement_previous) / ($total_engagement_previous === 0 ? 1 : $total_engagement_previous)) * 100;
 
 
         return [
             "total_engagement" => $total_engagement,
-            "average_engagement" => $total_engagement / ($interval->days + 1),/// ผิดดดดดดดด
-            "comparison" => $comparison,
-            "percentage" => $percentage,
+            "average_engagement" => $this->point_two_digits($total_engagement / $diff_date),
+            "comparison" => $this->point_two_digits($comparison),
+            "percentage" => $this->point_two_digits($percentage),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
 
-    private function totalAccounts($campaign_id, $start_date, $end_date) {
+    private function totalAccounts($campaign_id, $start_date, $end_date, $source, $period) {
 
         //todo
-        $start_date = Carbon::parse($start_date)->format('Y-m-d');
-        $end_date = Carbon::parse($end_date)->format('Y-m-d');
+        $start_date = $this->date_carbon($start_date);
+        $end_date = $this->date_carbon($end_date);
 
-        $start_date_sub = Carbon::parse($start_date)->subMonths(1)->format('Y-m-d');
-        $end_date_sub = Carbon::parse($end_date)->subMonths(1)->format('Y-m-d');
+        $start_date_previous = $this->get_previous_date($start_date, $period);
+        $end_date_previous = $this->get_previous_date($end_date, $period);
 
-        $total_current = DB::table('total_account_of_campaign')->
-            where('campaign_id', $campaign_id)->
-            whereBetween('date_m', [$start_date, $end_date])->
-            get();
+        $total_current = DB::table('total_account_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->sum('total_account');
 
-        $total_previous = DB::table('total_account_of_campaign')->
-            where('campaign_id', $campaign_id)->
-            whereBetween('date_m', [$start_date_sub, $end_date_sub])->
-            get();
+        $total_previous = DB::table('total_account_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+            ->sum('total_account');
 
-        $start_date = new DateTime($start_date);
-        $end_date = new DateTime($end_date);
-        $interval = $start_date->diff($end_date);
+        $diff_date = $this->diff_date($start_date, $end_date);
 
-        $total_account = 0;
-        foreach ($total_current as $total_list) {
-            $total_account = $total_account + $total_list->total_account;
-        }
-
-        $total_account_previous = 0;
-        foreach ($total_previous as $total_list_previous) {
-            $total_account_previous = $total_account_previous + $total_list_previous->total_account;
-        }
-
-        $comparison = $total_account - $total_account_previous;
-        $percentage = ($total_account - $total_account_previous) / ($total_account_previous === 0 ? 1 : $total_account_previous);
+        $comparison = $total_current - $total_previous;
+        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
 
         return [
-            "total_account" => $total_account,
-            "average_account" => $total_account / ($interval->days + 1),
-            "comparison" => $comparison,
-            "percentage" => $percentage,
+            "total_account" => $total_current,
+            "average_account" => $this->point_two_digits($total_current / $diff_date),
+            "comparison" => $this->point_two_digits($comparison),
+            "percentage" => $this->point_two_digits($percentage),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
