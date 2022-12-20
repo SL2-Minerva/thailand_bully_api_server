@@ -162,12 +162,12 @@ class DashboardController extends Controller
 
         $start_date_sub = Carbon::parse($start_date)->subMonths(1)->format('Y-m-d');
         $end_date_sub = Carbon::parse($end_date)->subMonths(1)->format('Y-m-d');
-        
-        $total_current = DB::table('percentage_of_messages')->
-            where('campaign_id', $campaign_id)->
-            whereBetween('date_m', [$start_date, $end_date])->
-            get();
-        
+
+        $total_current = DB::table('percentage_of_messages')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->get();
+
         $total_previous = DB::table('percentage_of_messages')->
             where('campaign_id', $campaign_id)->
             whereBetween('date_m', [$start_date_sub, $end_date_sub])->
@@ -176,13 +176,15 @@ class DashboardController extends Controller
         $start_date = new DateTime($start_date);
         $end_date = new DateTime($end_date);
         $interval = $start_date->diff($end_date);
-        
+
         $total_message = 0;
+
         foreach ($total_current as $total_list) {
             $total_message = $total_message + $total_list->total_at_keyword;
         }
 
         $total_message_previous = 0;
+
         foreach ($total_previous as $total_list_previous) {
             $total_message_previous = $total_message_previous + $total_list_previous->total_at_keyword;
         }
@@ -221,7 +223,7 @@ class DashboardController extends Controller
         $start_date = new DateTime($start_date);
         $end_date = new DateTime($end_date);
         $interval = $start_date->diff($end_date);
-        
+
         $total_engagement = 0;
         foreach ($total_current as $total_list) {
             $total_engagement = $total_engagement + $total_list->engagement;
@@ -235,7 +237,7 @@ class DashboardController extends Controller
         $comparison = $total_engagement - $total_engagement_previous;
         $percentage = ($total_engagement - $total_engagement_previous) / ($total_engagement_previous === 0 ? 1 : $total_engagement_previous);
 
-        
+
         return [
             "total_engagement" => $total_engagement,
             "average_engagement" => $total_engagement / ($interval->days + 1),
@@ -267,7 +269,7 @@ class DashboardController extends Controller
         $start_date = new DateTime($start_date);
         $end_date = new DateTime($end_date);
         $interval = $start_date->diff($end_date);
-        
+
         $total_account = 0;
         foreach ($total_current as $total_list) {
             $total_account = $total_account + $total_list->total_account;
@@ -665,6 +667,7 @@ class DashboardController extends Controller
                    $data['edges'][] = [
                        "from" => $child['id'],
                        "to" => $root['id'],
+                       "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'] ,
                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
                        "color" => $child['color']
                    ];
@@ -720,7 +723,7 @@ class DashboardController extends Controller
     private function getRootNode($campaign_id) {
         $snas = SNARootNode::where(SNA::CAMPAIGN_ID, $campaign_id)
             ->groupBy(SNA::MESSAGE_ID)
-            ->limit(10)
+//            ->limit(10)
             ->get();
 
         foreach ($snas as $sna) {
@@ -730,7 +733,7 @@ class DashboardController extends Controller
                 "title" => $sna->author,
                 "color" => $sna->classification_color,
                 "shape" => "dot",
-                "size" => (int)$sna->engagement / 10  ?? 1
+                "size" => (int)$sna->engagement >= 30 ? (int)$sna->engagement / 10 : ((int)$sna->engagement == 0 ? 10 : (int)$sna->engagement)
             ];
 
         }
@@ -752,8 +755,8 @@ class DashboardController extends Controller
                 "parent_id" => (int)$sna->reference_message_id,
                 "color" => $sna->classification_color,
                 "shape" => "dot",
-                "size" => (int)$sna->engagement / 5 ?? 1,
-                "length"=> (int)$sna->engagement ?? 20
+                "size" => (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagement / 10,
+                "length"=> (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagemen + 10
             ];
 
         }
@@ -773,7 +776,7 @@ class DashboardController extends Controller
                 "title" => $sna->author,
                 "color" => $sna->classification_color,
                 "shape" => "dot",
-                "size" => $sna->engagement
+                "size" => $sna->engagement,
             ];
 
 
