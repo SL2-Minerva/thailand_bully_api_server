@@ -90,7 +90,7 @@ class DashboardController extends Controller
     }
 
     private function point_two_digits($number) {
-        return $number !== null ? (float)number_format($number, 2) : null;
+        return $number !== null ? number_format($number, 2) : null;
     }
 
 
@@ -181,16 +181,20 @@ class DashboardController extends Controller
 
     public function keywordSummary(Request $request) {
         $data = null;
-        $campaign_id = $request->campaign_id;
-        $result = $this->keywordsTable($campaign_id, '2022-11-30', '2022-11-30');
+        $campaign_id = $request->campaign_id ?? "";
+        $start_date = $request->start_date ?? "";
+        $end_date = $request->end_date ?? "";
+        $result = $this->keywordsTable($campaign_id, $start_date, $end_date);
 
         return $result;
     }
 
     public function keywordSummaryTop(Request $request) {
         $data = null;
-        $campaign_id = $request->campaign_id;
-        $data['main_keyword'] = $this->mainKeyWords($campaign_id, '2022-11-30', '2022-11-30');
+        $campaign_id = $request->campaign_id ?? "";
+        $start_date = $request->start_date ?? "";
+        $end_date = $request->end_date ?? "";
+        $data['main_keyword'] = $this->mainKeyWords($campaign_id, $start_date, $end_date);
         $data['top_sites'] = $this->topSites($campaign_id, '2022-11-30', '2022-11-30');
         $data['top_hastag'] = $this->topHashtag($campaign_id, '2022-11-30', '2022-11-30');
 
@@ -297,127 +301,100 @@ class DashboardController extends Controller
         ];
     }
 
+    private function messagesTable($campaign_id, $start_date, $end_date, $keyword_id) {
+        $total_message = DB::table('percentage_of_messages')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('total_at_keyword');
+
+        return $total_message;
+    }
+
+    private function engagementTable($campaign_id, $start_date, $end_date, $keyword_id) {
+        $total_engagement = DB::table('total_engagement_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('engagement');
+
+        return $total_engagement;
+    }
+
+    private function accountTable($campaign_id, $start_date, $end_date, $keyword_id) {
+        $total_account = DB::table('total_account_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('total_account');
+
+        return $total_account;
+    }
+
     private function keywordsTable($campaign_id, $start_date, $end_date) {
 
-        $dummy_data[] = [
-            "id" =>  1,
-            "keyword" => "Keyword 1",
-            "message" => 1000,
-            "engagement" => 1000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
-        $dummy_data[] = [
-            "id" =>  2,
-            "keyword" => "Keyword 2",
-            "message" => 2000,
-            "engagement" => 2000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
-        $dummy_data[] = [
-            "id" =>  3,
-            "keyword" => "Keyword 3",
-            "message" => 2000,
-            "engagement" => 2000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
+        $data = [];
+        $total_keywords = DB::table('percentage_of_messages')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('keyword_name')
+            ->get();
 
-        $dummy_data[] = [
-            "id" =>  4,
-            "keyword" => "Keyword 4",
-            "message" => 2000,
-            "engagement" => 2000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
+        $diff_date = $this->diff_date($start_date, $end_date);
+        $id = 1;
 
-        $dummy_data[] = [
-            "id" =>  5,
-            "keyword" => "Keyword 5",
-            "message" => 2000,
-            "engagement" => 2000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
+        foreach ($total_keywords as $item) {
 
-        $dummy_data[] = [
-            "id" =>  6,
-            "keyword" => "Keyword 6",
-            "message" => 2000,
-            "engagement" => 2000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
+            $message = $this->messagesTable($campaign_id, $start_date, $end_date, $item->keyword_id);
+            $engagement = $this->engagementTable($campaign_id, $start_date, $end_date, $item->keyword_id);
+            $accounts = $this->accountTable($campaign_id, $start_date, $end_date, $item->keyword_id);
+            $id+1;
 
-        $dummy_data[] = [
-            "id" =>  7,
-            "keyword" => "Keyword 7",
-            "message" => 2000,
-            "engagement" => 2000,
-            "accounts" => 1000,
-            "average_message" => 93.2,
-            "average_engagement" =>  967.3,
-        ];
+            $data_push = [
+                "id" => $id++,
+                "keyword" => $item->keyword_name,
+                "message" => $this->point_two_digits($message),
+                "engagement" => $this->point_two_digits($engagement),
+                "accounts" => $this->point_two_digits($accounts),
+                "average_message" => $this->point_two_digits($message / $diff_date),
+                "average_engagement" =>  $this->point_two_digits($engagement / $diff_date),
+            ];
 
+            array_push($data, $data_push);
+        }
 
-        return $dummy_data;
+        return $data;
     }
 
     public function mainKeyWords($campaign_id, $start_date, $end_date) {
-        $dummy_data[] = [
-            "id" =>  1,
-            "keyword" => "Keyword 1",
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        $dummy_data[] = [
-            "id" =>  2,
-            "keyword" => "Keyword 2",
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        $dummy_data[] = [
-            "id" =>  3,
-            "keyword" => "Keyword 3",
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
 
-        $dummy_data[] = [
-            "id" =>  4,
-            "keyword" => "Keyword 4",
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
+        $data = [];
+        $total_keywords = DB::table('percentage_of_messages')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('keyword_name')
+            ->get();
+        $id = 1;
 
-        $dummy_data[] = [
-            "id" =>  5,
-            "keyword" => "Keyword 5",
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
+        foreach ($total_keywords as $item) {
 
-        $dummy_data[] = [
-            "id" =>  6,
-            "keyword" => "Keyword 6",
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        return $dummy_data;
+            $message = $this->messagesTable($campaign_id, $start_date, $end_date, $item->keyword_id);
+            $total_message = DB::table('total_message')->where('campaign_id', $campaign_id)->first();
+            $percentage = ($message / $total_message->total_at_keyword) * 100;
+            $id+1;
+
+            $data_push = [
+                "id" => $id++,
+                "keyword" => $item->keyword_name,
+                "no_of_message" => $this->point_two_digits($message),
+                "percentage" => $this->point_two_digits($percentage),
+                "type" => ($message >= 0 ? "plus" : "minus"),
+            ];
+
+            array_push($data, $data_push);
+        }
+
+        return $data;
     }
 
     private function topSites($campaign_id, $start_date, $end_date) {
