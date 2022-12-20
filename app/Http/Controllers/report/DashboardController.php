@@ -210,29 +210,31 @@ class DashboardController extends Controller
         $start_date_sub = Carbon::parse($start_date)->subMonths(1)->format('Y-m-d');
         $end_date_sub = Carbon::parse($end_date)->subMonths(1)->format('Y-m-d');
 
-        $total_current = DB::table('total_engagement_of_campaign')->
-            where('campaign_id', $campaign_id)->
-            whereBetween('date_m', [$start_date, $end_date])->
-            get();
+        $total_current = DB::table('total_engagement_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->sum('total_at_keyword')
+            ->get();
 
-        $total_previous = DB::table('total_engagement_of_campaign')->
-            where('campaign_id', $campaign_id)->
-            whereBetween('date_m', [$start_date_sub, $end_date_sub])->
-            get();
+        $total_previous = DB::table('total_engagement_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date_sub, $end_date_sub])
+            ->sum('total_at_keyword')
+            ->get();
 
         $start_date = new DateTime($start_date);
         $end_date = new DateTime($end_date);
         $interval = $start_date->diff($end_date);
 
         $total_engagement = 0;
-        foreach ($total_current as $total_list) {
-            $total_engagement = $total_engagement + $total_list->engagement;
-        }
-
-        $total_engagement_previous = 0;
-        foreach ($total_previous as $total_list_previous) {
-            $total_engagement_previous = $total_engagement_previous + $total_list_previous->engagement;
-        }
+//        foreach ($total_current as $total_list) {
+//            $total_engagement = $total_engagement + $total_list->engagement;
+//        }
+//
+//        $total_engagement_previous = 0;
+//        foreach ($total_previous as $total_list_previous) {
+//            $total_engagement_previous = $total_engagement_previous + $total_list_previous->engagement;
+//        }
 
         $comparison = $total_engagement - $total_engagement_previous;
         $percentage = ($total_engagement - $total_engagement_previous) / ($total_engagement_previous === 0 ? 1 : $total_engagement_previous);
@@ -240,7 +242,7 @@ class DashboardController extends Controller
 
         return [
             "total_engagement" => $total_engagement,
-            "average_engagement" => $total_engagement / ($interval->days + 1),
+            "average_engagement" => $total_engagement / ($interval->days + 1),/// ผิดดดดดดดด
             "comparison" => $comparison,
             "percentage" => $percentage,
             "type" => ($comparison >= 0 ? "plus" : "minus")
