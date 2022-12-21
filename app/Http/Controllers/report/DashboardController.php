@@ -53,23 +53,23 @@ class DashboardController extends Controller
     }
 
     private function wordCloudsMessage($campaign_id, $start_date, $end_date, $select)
-    {   
+    {
         $dummy_data = $this->wordCloudsData();
         switch ($select) {
             case "top10":
                 $data = array_slice($dummy_data, 0, 10);
-              break;
+                break;
             case "top20":
                 $data = array_slice($dummy_data, 0, 20);
-              break;
+                break;
             case "top50":
                 $data = array_slice($dummy_data, 0, 50);
-              break;
+                break;
             case "top100":
                 $data = array_slice($dummy_data, 0, 100);
                 break;
             default:
-              $data = $dummy_data;
+                $data = $dummy_data;
         }
 
         return $data;
@@ -198,9 +198,11 @@ class DashboardController extends Controller
         $end_date = $request->end_date ?? "";
         $source = $request->source ?? "";
         $period = $request->period ?? "";
-        $data['total_messages'] = $this->totalMessages($campaign_id, $start_date, $end_date, $source, $period);
-        $data['total_engagement'] = $this->totalEngagement($campaign_id, $start_date, $end_date, $source, $period);
-        $data['total_accounts'] = $this->totalAccounts($campaign_id, $start_date, $end_date, $source, $period);
+        $start_date_period = $request->start_date_period ?? "";
+        $end_date_period = $request->end_date_period ?? "";
+        $data['total_messages'] = $this->totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
+        $data['total_engagement'] = $this->totalEngagement($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
+        $data['total_accounts'] = $this->totalAccounts($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
 
         return parent::handleRespond($data);
     }
@@ -247,7 +249,7 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period)
+    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
     {
 
         //todo
@@ -256,6 +258,10 @@ class DashboardController extends Controller
 
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
+        if ($period === "customrange") {
+            $start_date_previous = $this->get_previous_date($start_date_period, $period);
+            $end_date_previous = $this->get_previous_date($end_date_period, $period);
+        }
 
         $total_current = DB::table('percentage_of_messages')
             ->where('campaign_id', $campaign_id)
@@ -281,7 +287,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function totalEngagement($campaign_id, $start_date, $end_date, $source, $period)
+    private function totalEngagement($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
     {
 
         //todo
@@ -290,6 +296,10 @@ class DashboardController extends Controller
 
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
+        if ($period === "customrange") {
+            $start_date_previous = $this->get_previous_date($start_date_period, $period);
+            $end_date_previous = $this->get_previous_date($end_date_period, $period);
+        }
 
         $total_engagement = DB::table('total_engagement_of_campaign')
             ->where('campaign_id', $campaign_id)
@@ -316,7 +326,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function totalAccounts($campaign_id, $start_date, $end_date, $source, $period)
+    private function totalAccounts($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
     {
 
         //todo
@@ -325,6 +335,11 @@ class DashboardController extends Controller
 
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
+
+        if ($period === "customrange") {
+            $start_date_previous = $this->get_previous_date($start_date_period, $period);
+            $end_date_previous = $this->get_previous_date($end_date_period, $period);
+        }
 
         $total_current = DB::table('total_account_of_campaign')
             ->where('campaign_id', $campaign_id)
@@ -827,7 +842,8 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function wordCloudsData() {
+    private function wordCloudsData()
+    {
 
         $dummy_data = [
             [
