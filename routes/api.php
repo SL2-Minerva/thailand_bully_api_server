@@ -143,6 +143,8 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
         Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
         Route::get('/sna/', [DashboardController::class, 'sna']);
+
+        Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
     });
 
     Route::group(['prefix' => 'organization-content'], function () {

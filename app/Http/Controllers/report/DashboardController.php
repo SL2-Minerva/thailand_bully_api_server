@@ -29,14 +29,53 @@ class DashboardController extends Controller
         $data['daily_message'] = $this->dailyMessage($campaign_id, '2022-11-30', '2022-11-30');
         $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, '2022-11-30', '2022-11-30');
         $data['prcentage_of_messages_previous'] = $this->percentageOfMessages(
-            $campaign_id, $this->get_previous_date('2022-11-30', $period),
+            $campaign_id,
+            $this->get_previous_date('2022-11-30', $period),
             $this->get_previous_date('2022-11-30', $period)
         );
 
         return parent::handleRespond($data);
     }
 
-    private function get_period ($preiod = null)
+    public function wordClouds(Request $request)
+    {
+        $data = null;
+        $campaign_id = $request->campaign_id ?? "";
+        $start_date = $request->start_date ?? "";
+        $end_date = $request->end_date ?? "";
+        $select = $request->select ?? "";
+
+        $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+
+        return parent::handleRespond($data);
+    }
+
+    private function wordCloudsMessage($campaign_id, $start_date, $end_date, $select)
+    {   
+        $dummy_data = $this->wordCloudsData();
+        switch ($select) {
+            case "top10":
+                $data = array_slice($dummy_data, 0, 10);
+              break;
+            case "top20":
+                $data = array_slice($dummy_data, 0, 20);
+              break;
+            case "top50":
+                $data = array_slice($dummy_data, 0, 50);
+              break;
+            case "top100":
+                $data = array_slice($dummy_data, 0, 100);
+                break;
+            default:
+              $data = $dummy_data;
+        }
+
+        return $data;
+    }
+
+    private function get_period($preiod = null)
     {
         if ($preiod == null) {
             return 1;
@@ -44,7 +83,7 @@ class DashboardController extends Controller
         return 1;
     }
 
-    private function date_carbon($date) 
+    private function date_carbon($date)
     {
         return Carbon::parse($date)->format('Y-m-d');
     }
@@ -77,7 +116,7 @@ class DashboardController extends Controller
             default:
                 $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
         }
-        
+
         return $date;
     }
 
@@ -89,12 +128,14 @@ class DashboardController extends Controller
         return $length != 0 ? $length : 1;
     }
 
-    private function point_two_digits($number) {
+    private function point_two_digits($number)
+    {
         return $number !== null ? number_format($number, 2) : null;
     }
 
 
-    private function dailyMessage($campaign_id, $start_date, $end_date) {
+    private function dailyMessage($campaign_id, $start_date, $end_date)
+    {
         $data = null;
         $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
         $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
@@ -122,7 +163,8 @@ class DashboardController extends Controller
         return array_values($data);
     }
 
-    private function percentageOfMessages($campaign_id, $start_date, $end_date) {
+    private function percentageOfMessages($campaign_id, $start_date, $end_date)
+    {
         $data = null;
         $percentage_of_messages = PercentageOfMessages::where('campaign_id', $campaign_id);
         $percentage_of_messages->whereBetween('date_m', [$start_date, $end_date]);
@@ -138,7 +180,7 @@ class DashboardController extends Controller
             $data[$keyword_id]['organizations_name'] = $percentage_of_message->organizations_name;
 
             $nestData = [
-                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') .' - '. Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
+                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => $percentage_of_message->total_at_keyword
             ];
 
@@ -146,10 +188,10 @@ class DashboardController extends Controller
         }
 
         return array_values($data);
-
     }
 
-    public function keyStats(Request $request) {
+    public function keyStats(Request $request)
+    {
         $data = null;
         $campaign_id = $request->campaign_id ?? "";
         $start_date = $request->start_date ?? "";
@@ -163,7 +205,8 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function sentimentScore(Request $request) {
+    public function sentimentScore(Request $request)
+    {
         return parent::handleRespond([
             "neutral_value" => 4.5,
             "sentiment_percentage" => 65,
@@ -171,7 +214,8 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function sentimentType(Request $request) {
+    public function sentimentType(Request $request)
+    {
         return parent::handleRespond([
             "positive_percentage" => 10,
             "neutral_percentage" => 65,
@@ -179,7 +223,8 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function keywordSummary(Request $request) {
+    public function keywordSummary(Request $request)
+    {
         $data = null;
         $campaign_id = $request->campaign_id ?? "";
         $start_date = $request->start_date ?? "";
@@ -189,7 +234,8 @@ class DashboardController extends Controller
         return $result;
     }
 
-    public function keywordSummaryTop(Request $request) {
+    public function keywordSummaryTop(Request $request)
+    {
         $data = null;
         $campaign_id = $request->campaign_id ?? "";
         $start_date = $request->start_date ?? "";
@@ -201,7 +247,8 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period) {
+    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period)
+    {
 
         //todo
         $start_date = $this->date_carbon($start_date);
@@ -226,15 +273,16 @@ class DashboardController extends Controller
         $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
 
         return [
-            "total_account" => $this->point_two_digits($total_current),
-            "average_account" => $this->point_two_digits($total_current / $diff_date),
+            "total_message" => $this->point_two_digits($total_current),
+            "average_message" => $this->point_two_digits($total_current / $diff_date),
             "comparison" => $this->point_two_digits($comparison),
             "percentage" => $this->point_two_digits($percentage),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
 
-    private function totalEngagement($campaign_id, $start_date, $end_date, $source, $period) {
+    private function totalEngagement($campaign_id, $start_date, $end_date, $source, $period)
+    {
 
         //todo
         $start_date = $this->date_carbon($start_date);
@@ -247,7 +295,7 @@ class DashboardController extends Controller
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->sum('engagement');
-        
+
         $total_engagement_previous = DB::table('total_engagement_of_campaign')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
@@ -268,7 +316,8 @@ class DashboardController extends Controller
         ];
     }
 
-    private function totalAccounts($campaign_id, $start_date, $end_date, $source, $period) {
+    private function totalAccounts($campaign_id, $start_date, $end_date, $source, $period)
+    {
 
         //todo
         $start_date = $this->date_carbon($start_date);
@@ -301,7 +350,8 @@ class DashboardController extends Controller
         ];
     }
 
-    private function messagesTable($campaign_id, $start_date, $end_date, $keyword_id) {
+    private function messagesTable($campaign_id, $start_date, $end_date, $keyword_id)
+    {
         $total_message = DB::table('percentage_of_messages')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
@@ -311,7 +361,8 @@ class DashboardController extends Controller
         return $total_message;
     }
 
-    private function engagementTable($campaign_id, $start_date, $end_date, $keyword_id) {
+    private function engagementTable($campaign_id, $start_date, $end_date, $keyword_id)
+    {
         $total_engagement = DB::table('total_engagement_of_campaign')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
@@ -321,7 +372,8 @@ class DashboardController extends Controller
         return $total_engagement;
     }
 
-    private function accountTable($campaign_id, $start_date, $end_date, $keyword_id) {
+    private function accountTable($campaign_id, $start_date, $end_date, $keyword_id)
+    {
         $total_account = DB::table('total_account_of_campaign')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
@@ -331,7 +383,8 @@ class DashboardController extends Controller
         return $total_account;
     }
 
-    private function keywordsTable($campaign_id, $start_date, $end_date) {
+    private function keywordsTable($campaign_id, $start_date, $end_date)
+    {
 
         $data = [];
         $total_keywords = DB::table('percentage_of_messages')
@@ -348,7 +401,7 @@ class DashboardController extends Controller
             $message = $this->messagesTable($campaign_id, $start_date, $end_date, $item->keyword_id);
             $engagement = $this->engagementTable($campaign_id, $start_date, $end_date, $item->keyword_id);
             $accounts = $this->accountTable($campaign_id, $start_date, $end_date, $item->keyword_id);
-            $id+1;
+            $id + 1;
 
             $data_push = [
                 "id" => $id++,
@@ -366,7 +419,8 @@ class DashboardController extends Controller
         return $data;
     }
 
-    public function mainKeyWords($campaign_id, $start_date, $end_date) {
+    public function mainKeyWords($campaign_id, $start_date, $end_date)
+    {
 
         $data = [];
         $total_keywords = DB::table('percentage_of_messages')
@@ -381,7 +435,7 @@ class DashboardController extends Controller
             $message = $this->messagesTable($campaign_id, $start_date, $end_date, $item->keyword_id);
             $total_message = DB::table('total_message')->where('campaign_id', $campaign_id)->first();
             $percentage = ($message / $total_message->total_at_keyword) * 100;
-            $id+1;
+            $id + 1;
 
             $data_push = [
                 "id" => $id++,
@@ -397,7 +451,8 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function topSites($campaign_id, $start_date, $end_date) {
+    private function topSites($campaign_id, $start_date, $end_date)
+    {
         $dummy_data[] = [
             "id" =>  1,
             "site_domain" =>  'www.google.com',
@@ -436,7 +491,8 @@ class DashboardController extends Controller
         return $dummy_data;
     }
 
-    private function topHashtag($campaign_id, $start_date, $end_date) {
+    private function topHashtag($campaign_id, $start_date, $end_date)
+    {
         $dummy_data[] = [
             "id" =>  1,
             "hashtag" =>  '#hashtag1',
@@ -481,11 +537,12 @@ class DashboardController extends Controller
     }
 
 
-//    private function commentSentiment($campaign_id, $start_date, $end_date) {
-//
-//    }
-//
-    public function shareOfVoice(Request $request) {
+    //    private function commentSentiment($campaign_id, $start_date, $end_date) {
+    //
+    //    }
+    //
+    public function shareOfVoice(Request $request)
+    {
 
         $data[0]['keyword_id'] = 0;
         $data[0]['keyword_name'] = 'all';
@@ -564,7 +621,8 @@ class DashboardController extends Controller
         return parent::handleRespond(array_values($data));
     }
 
-    public function sentimentLevel(Request $request) {
+    public function sentimentLevel(Request $request)
+    {
 
         $data[0]['keyword_id'] = 0;
         $data[0]['keyword_name'] = 'all';
@@ -631,7 +689,8 @@ class DashboardController extends Controller
         return parent::handleRespond(array_values($data));
     }
 
-    public function sna (Request $request) {
+    public function sna(Request $request)
+    {
         $campaign_id = $request->campaign_id;
 
         if (!$campaign_id) {
@@ -644,68 +703,68 @@ class DashboardController extends Controller
         $data['nodes'] = array_merge($roots, $childs);
 
         foreach ($childs as $child) {
-           foreach ($roots as $root) {
-               if ($child['parent_id'] == $root['id']) {
-                   $data['edges'][] = [
-                       "from" => $child['id'],
-                       "to" => $root['id'],
-                       "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'] ,
-                       "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
-                       "color" => $child['color']
-                   ];
-               }
-           }
+            foreach ($roots as $root) {
+                if ($child['parent_id'] == $root['id']) {
+                    $data['edges'][] = [
+                        "from" => $child['id'],
+                        "to" => $root['id'],
+                        "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
+                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
+                        "color" => $child['color']
+                    ];
+                }
+            }
         }
 
         return parent::handleRespond($data);
 
-//        Message::where(SNA::CAMPAIGN_ID, $campaign_id)
-//            ->chunk(100, function ($messages) use (&$data) {
-//                foreach ($messages as $message) {
-//                    $data[] = [
-//                        'id' => $message->id,
-//                        'name' => $message->name,
-//                        'value' => $message->value,
-//                        'type' => $message->type,
-//                        'created_at' => $message->created_at,
-//                        'updated_at' => $message->updated_at,
-//                    ];
-//                }
-//            });
-//        $snas = SNA::where(SNA::CAMPAIGN_ID,$campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, '')->groupby(SNA::MESSAGE_ID)->get();
-//
-//        foreach ($snas as $sna) {
-//            $data['nodes'][] = [
-//                "id" => $sna->message_id,
-//                "label" => $sna->author,
-//                "title" => $sna->author,
-//                "color" => $sna->classification_color,
-//                "shape" => "dot",
-//                "size" => $sna->engagement
-//            ];
-//
-//            $data = $this->getReferSna($campaign_id, $sna->message_id, $data);
-//        }
+        //        Message::where(SNA::CAMPAIGN_ID, $campaign_id)
+        //            ->chunk(100, function ($messages) use (&$data) {
+        //                foreach ($messages as $message) {
+        //                    $data[] = [
+        //                        'id' => $message->id,
+        //                        'name' => $message->name,
+        //                        'value' => $message->value,
+        //                        'type' => $message->type,
+        //                        'created_at' => $message->created_at,
+        //                        'updated_at' => $message->updated_at,
+        //                    ];
+        //                }
+        //            });
+        //        $snas = SNA::where(SNA::CAMPAIGN_ID,$campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, '')->groupby(SNA::MESSAGE_ID)->get();
+        //
+        //        foreach ($snas as $sna) {
+        //            $data['nodes'][] = [
+        //                "id" => $sna->message_id,
+        //                "label" => $sna->author,
+        //                "title" => $sna->author,
+        //                "color" => $sna->classification_color,
+        //                "shape" => "dot",
+        //                "size" => $sna->engagement
+        //            ];
+        //
+        //            $data = $this->getReferSna($campaign_id, $sna->message_id, $data);
+        //        }
 
 
-//        $data['nodes'][] = ["id" => "test-tr", "label" => "node 1", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-//        $data['nodes'][] = ["id" => 2, "label" => "node 2", "title" => "Word 1 change color,shape & size", "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-//        $data['nodes'][] = ["id" => 3, "label" => "node 3", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-//        $data['nodes'][] = ["id" => 4, "label" => "node 4", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-//        $data['nodes'][] = ["id" => 5, "label" => "node 5", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-//
-//        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
-//        $data['edges'][] = [ "from" => 2, "to" => 3, "length" => 200, "color" => "red"];
-//        $data['edges'][] = [ "from" => "3", "to" => 2, "length" => 300, "color" => "red"];
-//        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
+        //        $data['nodes'][] = ["id" => "test-tr", "label" => "node 1", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+        //        $data['nodes'][] = ["id" => 2, "label" => "node 2", "title" => "Word 1 change color,shape & size", "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+        //        $data['nodes'][] = ["id" => 3, "label" => "node 3", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+        //        $data['nodes'][] = ["id" => 4, "label" => "node 4", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+        //        $data['nodes'][] = ["id" => 5, "label" => "node 5", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
+        //
+        //        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
+        //        $data['edges'][] = [ "from" => 2, "to" => 3, "length" => 200, "color" => "red"];
+        //        $data['edges'][] = [ "from" => "3", "to" => 2, "length" => 300, "color" => "red"];
+        //        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
         return parent::handleRespond($data);
-
     }
 
-    private function getRootNode($campaign_id) {
+    private function getRootNode($campaign_id)
+    {
         $snas = SNARootNode::where(SNA::CAMPAIGN_ID, $campaign_id)
             ->groupBy(SNA::MESSAGE_ID)
-//            ->limit(10)
+            //            ->limit(10)
             ->get();
 
         foreach ($snas as $sna) {
@@ -717,13 +776,13 @@ class DashboardController extends Controller
                 "shape" => "dot",
                 "size" => (int)$sna->engagement >= 30 ? (int)$sna->engagement / 10 : ((int)$sna->engagement == 0 ? 10 : (int)$sna->engagement)
             ];
-
         }
 
         return $data;
     }
 
-    private function getChildNode($campaign_id) {
+    private function getChildNode($campaign_id)
+    {
         $snas = SNAChildNode::where(SNA::CAMPAIGN_ID, $campaign_id)
             ->groupBy(SNA::MESSAGE_ID)
             ->limit(100)
@@ -738,17 +797,17 @@ class DashboardController extends Controller
                 "color" => $sna->classification_color,
                 "shape" => "dot",
                 "size" => (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagement / 10,
-                "length"=> (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagemen + 10
+                "length" => (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagemen + 10
             ];
-
         }
 
         return $data;
     }
 
-    private function getReferSna($campaign_id, $message_id, $data_node = []) {
+    private function getReferSna($campaign_id, $message_id, $data_node = [])
+    {
         $data = $data_node;
-        $snas = SNA::where(SNA::CAMPAIGN_ID,$campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, $message_id)->get();
+        $snas = SNA::where(SNA::CAMPAIGN_ID, $campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, $message_id)->get();
 
 
         foreach ($snas as $sna) {
@@ -762,11 +821,517 @@ class DashboardController extends Controller
             ];
 
 
-//            $data_node = $this->getReferSna($campaign_id, $sna->message_id, $data_node);
+            //            $data_node = $this->getReferSna($campaign_id, $sna->message_id, $data_node);
         }
 
         return $data;
-
     }
 
+    private function wordCloudsData() {
+
+        $dummy_data = [
+            [
+                "text" => "told",
+                "value" => 64
+            ],
+            [
+                "text" => "mistake",
+                "value" => 11
+            ],
+            [
+                "text" => "thought",
+                "value" => 16
+            ],
+            [
+                "text" => "bad",
+                "value" => 17
+            ],
+            [
+                "text" => "correct",
+                "value" => 10
+            ],
+            [
+                "text" => "day",
+                "value" => 54
+            ],
+            [
+                "text" => "prescription",
+                "value" => 12
+            ],
+            [
+                "text" => "time",
+                "value" => 77
+            ],
+            [
+                "text" => "thing",
+                "value" => 45
+            ],
+            [
+                "text" => "left",
+                "value" => 19
+            ],
+            [
+                "text" => "pay",
+                "value" => 13
+            ],
+            [
+                "text" => "people",
+                "value" => 32
+            ],
+            [
+                "text" => "month",
+                "value" => 22
+            ],
+            [
+                "text" => "again",
+                "value" => 35
+            ],
+            [
+                "text" => "review",
+                "value" => 24
+            ],
+            [
+                "text" => "call",
+                "value" => 38
+            ],
+            [
+                "text" => "doctor",
+                "value" => 70
+            ],
+            [
+                "text" => "asked",
+                "value" => 26
+            ],
+            [
+                "text" => "finally",
+                "value" => 14
+            ],
+            [
+                "text" => "insurance",
+                "value" => 29
+            ],
+            [
+                "text" => "week",
+                "value" => 41
+            ],
+            [
+                "text" => "called",
+                "value" => 49
+            ],
+            [
+                "text" => "problem",
+                "value" => 20
+            ],
+            [
+                "text" => "going",
+                "value" => 59
+            ],
+            [
+                "text" => "help",
+                "value" => 49
+            ],
+            [
+                "text" => "felt",
+                "value" => 45
+            ],
+            [
+                "text" => "discomfort",
+                "value" => 11
+            ],
+            [
+                "text" => "lower",
+                "value" => 22
+            ],
+            [
+                "text" => "severe",
+                "value" => 12
+            ],
+            [
+                "text" => "free",
+                "value" => 38
+            ],
+            [
+                "text" => "better",
+                "value" => 54
+            ],
+            [
+                "text" => "muscle",
+                "value" => 14
+            ],
+            [
+                "text" => "neck",
+                "value" => 41
+            ],
+            [
+                "text" => "root",
+                "value" => 24
+            ],
+            [
+                "text" => "adjustment",
+                "value" => 16
+            ],
+            [
+                "text" => "therapy",
+                "value" => 29
+            ],
+            [
+                "text" => "injury",
+                "value" => 20
+            ],
+            [
+                "text" => "excruciating",
+                "value" => 10
+            ],
+            [
+                "text" => "chronic",
+                "value" => 13
+            ],
+            [
+                "text" => "chiropractor",
+                "value" => 35
+            ],
+            [
+                "text" => "treatment",
+                "value" => 59
+            ],
+            [
+                "text" => "tooth",
+                "value" => 32
+            ],
+            [
+                "text" => "chiropractic",
+                "value" => 17
+            ],
+            [
+                "text" => "dr",
+                "value" => 77
+            ],
+            [
+                "text" => "relief",
+                "value" => 19
+            ],
+            [
+                "text" => "shoulder",
+                "value" => 26
+            ],
+            [
+                "text" => "nurse",
+                "value" => 17
+            ],
+            [
+                "text" => "room",
+                "value" => 22
+            ],
+            [
+                "text" => "hour",
+                "value" => 35
+            ],
+            [
+                "text" => "wait",
+                "value" => 38
+            ],
+            [
+                "text" => "hospital",
+                "value" => 11
+            ],
+            [
+                "text" => "eye",
+                "value" => 13
+            ],
+            [
+                "text" => "test",
+                "value" => 10
+            ],
+            [
+                "text" => "appointment",
+                "value" => 49
+            ],
+            [
+                "text" => "medical",
+                "value" => 19
+            ],
+            [
+                "text" => "question",
+                "value" => 20
+            ],
+            [
+                "text" => "office",
+                "value" => 64
+            ],
+            [
+                "text" => "care",
+                "value" => 54
+            ],
+            [
+                "text" => "minute",
+                "value" => 29
+            ],
+            [
+                "text" => "waiting",
+                "value" => 16
+            ],
+            [
+                "text" => "patient",
+                "value" => 59
+            ],
+            [
+                "text" => "health",
+                "value" => 49
+            ],
+            [
+                "text" => "alternative",
+                "value" => 24
+            ],
+            [
+                "text" => "holistic",
+                "value" => 19
+            ],
+            [
+                "text" => "traditional",
+                "value" => 20
+            ],
+            [
+                "text" => "symptom",
+                "value" => 29
+            ],
+            [
+                "text" => "internal",
+                "value" => 17
+            ],
+            [
+                "text" => "prescribed",
+                "value" => 26
+            ],
+            [
+                "text" => "acupuncturist",
+                "value" => 16
+            ],
+            [
+                "text" => "pain",
+                "value" => 64
+            ],
+            [
+                "text" => "integrative",
+                "value" => 10
+            ],
+            [
+                "text" => "herb",
+                "value" => 13
+            ],
+            [
+                "text" => "sport",
+                "value" => 22
+            ],
+            [
+                "text" => "physician",
+                "value" => 41
+            ],
+            [
+                "text" => "herbal",
+                "value" => 11
+            ],
+            [
+                "text" => "eastern",
+                "value" => 12
+            ],
+            [
+                "text" => "chinese",
+                "value" => 32
+            ],
+            [
+                "text" => "acupuncture",
+                "value" => 45
+            ],
+            [
+                "text" => "prescribe",
+                "value" => 14
+            ],
+            [
+                "text" => "medication",
+                "value" => 38
+            ],
+            [
+                "text" => "western",
+                "value" => 35
+            ],
+            [
+                "text" => "sure",
+                "value" => 38
+            ],
+            [
+                "text" => "work",
+                "value" => 64
+            ],
+            [
+                "text" => "smile",
+                "value" => 17
+            ],
+            [
+                "text" => "teeth",
+                "value" => 26
+            ],
+            [
+                "text" => "pair",
+                "value" => 11
+            ],
+            [
+                "text" => "wanted",
+                "value" => 20
+            ],
+            [
+                "text" => "frame",
+                "value" => 13
+            ],
+            [
+                "text" => "lasik",
+                "value" => 10
+            ],
+            [
+                "text" => "amazing",
+                "value" => 41
+            ],
+            [
+                "text" => "fit",
+                "value" => 14
+            ],
+            [
+                "text" => "happy",
+                "value" => 22
+            ],
+            [
+                "text" => "feel",
+                "value" => 49
+            ],
+            [
+                "text" => "glasse",
+                "value" => 19
+            ],
+            [
+                "text" => "vision",
+                "value" => 12
+            ],
+            [
+                "text" => "pressure",
+                "value" => 16
+            ],
+            [
+                "text" => "find",
+                "value" => 29
+            ],
+            [
+                "text" => "experience",
+                "value" => 59
+            ],
+            [
+                "text" => "year",
+                "value" => 70
+            ],
+            [
+                "text" => "massage",
+                "value" => 35
+            ],
+            [
+                "text" => "best",
+                "value" => 54
+            ],
+            [
+                "text" => "mouth",
+                "value" => 20
+            ],
+            [
+                "text" => "staff",
+                "value" => 64
+            ],
+            [
+                "text" => "gum",
+                "value" => 10
+            ],
+            [
+                "text" => "chair",
+                "value" => 12
+            ],
+            [
+                "text" => "ray",
+                "value" => 22
+            ],
+            [
+                "text" => "dentistry",
+                "value" => 11
+            ],
+            [
+                "text" => "canal",
+                "value" => 13
+            ],
+            [
+                "text" => "procedure",
+                "value" => 100
+            ],
+            [
+                "text" => "filling",
+                "value" => 26
+            ],
+            [
+                "text" => "gentle",
+                "value" => 19
+            ],
+            [
+                "text" => "cavity",
+                "value" => 17
+            ],
+            [
+                "text" => "crown",
+                "value" => 14
+            ],
+            [
+                "text" => "cleaning",
+                "value" => 38
+            ],
+            [
+                "text" => "hygienist",
+                "value" => 24
+            ],
+            [
+                "text" => "dental",
+                "value" => 59
+            ],
+            [
+                "text" => "charge",
+                "value" => 24
+            ],
+            [
+                "text" => "cost",
+                "value" => 29
+            ],
+            [
+                "text" => "charged",
+                "value" => 13
+            ],
+            [
+                "text" => "spent",
+                "value" => 17
+            ],
+            [
+                "text" => "paying",
+                "value" => 14
+            ],
+            [
+                "text" => "pocket",
+                "value" => 12
+            ],
+            [
+                "text" => "dollar",
+                "value" => 11
+            ],
+            [
+                "text" => "business",
+                "value" => 32
+            ],
+            [
+                "text" => "refund",
+                "value" => 10
+            ]
+        ];
+
+        return $dummy_data;
+    }
 }
