@@ -135,6 +135,8 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-overall'], function () {
         Route::get('/', [DashboardController::class, 'overAll']);
+        Route::get('/daily-message/level-three/', [DashboardController::class, 'dailyMessageLevelThree']);
+        Route::get('/daily-message/level-four/', [DashboardController::class, 'dailyMessageLevelFour']);
         Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
         Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
         Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
