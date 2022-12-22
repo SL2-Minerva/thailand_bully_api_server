@@ -39,11 +39,7 @@ class DashboardController extends Controller
         $end_date_previous = $this->get_previous_date($end_date, $period);
         $data['daily_message'] = $this->dailyMessage($campaign_id, $start_date, $end_date);
         $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages(
-            $campaign_id,
-            $this->get_previous_date($start_date_previous, $end_date_previous),
-            $this->get_previous_date($start_date_previous, $end_date_previous)
-        );
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -99,7 +95,7 @@ class DashboardController extends Controller
     private function get_previous_date($date, $period)
     {
         switch ($period) {
-            case "daily": //ผิด :: อันนี้ถูกแล้วครับ ผมเอา start_date && end_date มาลบ 1 วัน เพื่อหา previous_date
+            case "daily":
                 $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
                 break;
             case "yesterday":
@@ -177,12 +173,12 @@ class DashboardController extends Controller
     private function percentageOfMessages($campaign_id, $start_date, $end_date)
     {
         $data = null;
-        $percentage_of_messages = PercentageOfMessages::where('campaign_id', $campaign_id);
-        $percentage_of_messages->whereBetween('date_m', [$start_date, $end_date]);
+        $percentage_of_messages = PercentageOfMessages::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('keyword_name');
 
         foreach ($percentage_of_messages->get() as $percentage_of_message) {
             $keyword_id = $percentage_of_message->keyword_id;
-
             $data[$keyword_id]['keyword_id'] = $percentage_of_message->keyword_id;
             $data[$keyword_id]['keyword_name'] = $percentage_of_message->keyword_name;
             $data[$keyword_id]['campaign_id'] = $percentage_of_message->campaign_id;
@@ -190,15 +186,20 @@ class DashboardController extends Controller
             $data[$keyword_id]['organization_id'] = $percentage_of_message->organization_id;
             $data[$keyword_id]['organizations_name'] = $percentage_of_message->organizations_name;
 
+            $message_keyword = $this->messagesTable($campaign_id, $start_date, $end_date, $keyword_id);
+            $message_total = PercentageOfMessages::where('campaign_id', $campaign_id)
+                ->whereBetween('date_m', [$start_date, $end_date])
+                ->sum('total_at_keyword');
+
             $nestData = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-                'percentage' => $percentage_of_message->total_at_keyword
+                'percentage' => $this->point_two_digits(($message_keyword / $message_total) * 100),
             ];
 
             $data[$keyword_id]['value'][] = $nestData;
         }
 
-        if($data) {
+        if ($data) {
             return array_values($data);
         }
 
@@ -218,7 +219,7 @@ class DashboardController extends Controller
         $period = $request->period ?? null;
         $start_date_period = $request->start_date_period ?? null;
         $end_date_period = $request->end_date_period ?? null;
-        
+
         $data['total_messages'] = $this->totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
         $data['total_engagement'] = $this->totalEngagement($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
         $data['total_accounts'] = $this->totalAccounts($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
@@ -283,7 +284,7 @@ class DashboardController extends Controller
 
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
-        
+
         if ($period === "customrange") {
             $start_date_previous = $this->get_previous_date($start_date_period, $period);
             $end_date_previous = $this->get_previous_date($end_date_period, $period);
