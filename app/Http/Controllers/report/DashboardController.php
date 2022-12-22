@@ -167,7 +167,11 @@ class DashboardController extends Controller
             $data[$keyword_id]['value'][] = $nestData;
         }
 
-        return array_values($data);
+        if ($data) {
+            return array_values($data);
+        }
+
+        return $data;
     }
 
     private function percentageOfMessages($campaign_id, $start_date, $end_date)
@@ -198,7 +202,7 @@ class DashboardController extends Controller
             return array_values($data);
         }
 
-        return null;
+        return $data;
     }
 
     public function keyStats(Request $request)
