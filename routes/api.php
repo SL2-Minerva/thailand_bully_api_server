@@ -142,7 +142,6 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
         Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
         Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
-        x
         Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
     });
 
