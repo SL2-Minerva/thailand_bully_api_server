@@ -62,6 +62,95 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function dailyMessageLevelThree(Request $request) {
+        $data = null;
+        $data[] = [
+            "message_id"=> 1293,
+            "message_detail"=> "hello, this is thailand bully report",
+            "account_name"=> "user name 1",
+            "post_date"=> "2022/12/21",
+            "post_time"=> "15:02",
+            "day"=> "something(what's the difference between post date?)",
+            "device"=> "andriod |web | ios",
+            "channel"=> "channel/platform name",
+            "bully_level"=> "level 1",
+            "bully_type"=> "no bully",
+        ];
+
+        $data[] = [
+            "message_id"=> 1294,
+            "message_detail"=> "hello, this is thailand bully report",
+            "account_name"=> "user name 1",
+            "post_date"=> "2022/12/21",
+            "post_time"=> "15:02",
+            "day"=> "something(what's the difference between post date?)",
+            "device"=> "andriod |web | ios",
+            "channel"=> "channel/platform name",
+            "bully_level"=> "level 1",
+            "bully_type"=> "no bully",
+        ];
+
+        $data[] = [
+            "message_id"=> 1295,
+            "message_detail"=> "hello, this is thailand bully report",
+            "account_name"=> "user name 1",
+            "post_date"=> "2022/12/21",
+            "post_time"=> "15:02",
+            "day"=> "something(what's the difference between post date?)",
+            "device"=> "andriod |web | ios",
+            "channel"=> "channel/platform name",
+            "bully_level"=> "level 1",
+            "bully_type"=> "no bully",
+        ];
+
+        $data[] = [
+            "message_id"=> 1296,
+            "message_detail"=> "hello, this is thailand bully report",
+            "account_name"=> "user name 1",
+            "post_date"=> "2022/12/21",
+            "post_time"=> "15:02",
+            "day"=> "something(what's the difference between post date?)",
+            "device"=> "andriod |web | ios",
+            "channel"=> "channel/platform name",
+            "bully_level"=> "level 1",
+            "bully_type"=> "no bully",
+        ];
+        return parent::handleRespond(
+
+        );
+    }
+
+    public function dailyMessageLevelFour(Request $request) {
+
+        $campaign_id = $request->campaign_id;
+
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+
+        $data = [];
+        $roots = $this->getRootNode($campaign_id);
+        $childs = $this->getChildNode($campaign_id);
+        $data['nodes'] = array_merge($roots, $childs);
+
+        foreach ($childs as $child) {
+            foreach ($roots as $root) {
+                if ($child['parent_id'] == $root['id']) {
+                    $data['edges'][] = [
+                        "from" => $child['id'],
+                        "to" => $root['id'],
+                        "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
+                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
+                        "color" => $child['color']
+                    ];
+                }
+            }
+        }
+
+        return parent::handleRespond($data);
+
+    }
+
     private function wordCloudsMessage($campaign_id, $start_date, $end_date, $select)
     {
         $dummy_data = $this->wordCloudsData();
