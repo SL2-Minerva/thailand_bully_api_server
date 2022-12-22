@@ -115,9 +115,7 @@ class DashboardController extends Controller
             "bully_level"=> "level 1",
             "bully_type"=> "no bully",
         ];
-        return parent::handleRespond(
-
-        );
+        return parent::handleRespond($data);
     }
 
     public function dailyMessageLevelFour(Request $request) {
