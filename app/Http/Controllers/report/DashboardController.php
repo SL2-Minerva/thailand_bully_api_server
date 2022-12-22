@@ -19,7 +19,8 @@ class DashboardController extends Controller
     public function overAll(Request $request)
     {
         $campaign_id = $request->campaign_id;
-        $stat_date = null;
+        $period = $request->period;
+        $start_date = null;
         $end_date = null;
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
@@ -29,20 +30,19 @@ class DashboardController extends Controller
             $start_date = $this->date_carbon($request->start_date);
         }
 
-        if ($request->start_date) {
+        if ($request->end_date) {
             $end_date = $this->date_carbon($request->end_date);
         }
 
-
-
         $data = null;
-        $period = $this->get_previous_date($request->period);
-        $data['daily_message'] = $this->dailyMessage($campaign_id, $stat_date, $end_date);
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $stat_date, $end_date);
+        $start_date_previous = $this->get_previous_date($start_date, $period);
+        $end_date_previous = $this->get_previous_date($end_date, $period);
+        $data['daily_message'] = $this->dailyMessage($campaign_id, $start_date, $end_date);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
         $data['prcentage_of_messages_previous'] = $this->percentageOfMessages(
             $campaign_id,
-            $this->get_previous_date('2022-11-30', $period),
-            $this->get_previous_date('2022-11-30', $period)
+            $this->get_previous_date($start_date_previous, $end_date_previous),
+            $this->get_previous_date($start_date_previous, $end_date_previous)
         );
 
         return parent::handleRespond($data);
@@ -52,9 +52,12 @@ class DashboardController extends Controller
     {
         $data = null;
         $campaign_id = $request->campaign_id ?? "";
-        $start_date = $request->start_date ?? "";
-        $end_date = $request->end_date ?? "";
-        $select = $request->select ?? "";
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date ?? null;
+        $end_date = $request->end_date ?? null;
+        $select = $request->select ?? null;
 
         $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
         $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
@@ -96,7 +99,7 @@ class DashboardController extends Controller
     private function get_previous_date($date, $period)
     {
         switch ($period) {
-            case "daily": //ผิด
+            case "daily": //ผิด :: อันนี้ถูกแล้วครับ ผมเอา start_date && end_date มาลบ 1 วัน เพื่อหา previous_date
                 $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
                 break;
             case "yesterday":
@@ -108,11 +111,11 @@ class DashboardController extends Controller
             case "last30Days":
                 $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
                 break;
-            case "thisMonth": //   ผิด
-                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
+            case "thisMonth":
+                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
                 break;
-            case "lastMonth": // ผิด
-                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
+            case "lastMonth":
+                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
                 break;
             case "customrange":
                 $date = Carbon::parse($date)->format('Y-m-d');
@@ -191,19 +194,27 @@ class DashboardController extends Controller
             $data[$keyword_id]['value'][] = $nestData;
         }
 
-        return array_values($data);
+        if($data) {
+            return array_values($data);
+        }
+
+        return null;
     }
 
     public function keyStats(Request $request)
     {
         $data = null;
-        $campaign_id = $request->campaign_id ?? "";
-        $start_date = $request->start_date ?? "";
-        $end_date = $request->end_date ?? "";
-        $source = $request->source ?? "";
-        $period = $request->period ?? "";
-        $start_date_period = $request->start_date_period ?? "";
-        $end_date_period = $request->end_date_period ?? "";
+        $campaign_id = $request->campaign_id;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date ?? null;
+        $end_date = $request->end_date ?? null;
+        $source = $request->source ?? null;
+        $period = $request->period ?? null;
+        $start_date_period = $request->start_date_period ?? null;
+        $end_date_period = $request->end_date_period ?? null;
+        
         $data['total_messages'] = $this->totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
         $data['total_engagement'] = $this->totalEngagement($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
         $data['total_accounts'] = $this->totalAccounts($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period);
@@ -232,18 +243,24 @@ class DashboardController extends Controller
     public function keywordSummary(Request $request)
     {
         $data = null;
-        $campaign_id = $request->campaign_id ?? "";
-        $start_date = $request->start_date ?? "";
-        $end_date = $request->end_date ?? "";
-        $result = $this->keywordsTable($campaign_id, $start_date, $end_date);
+        $campaign_id = $request->campaign_id;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date ?? null;
+        $end_date = $request->end_date ?? null;
+        $data = $this->keywordsTable($campaign_id, $start_date, $end_date);
 
-        return $result;
+        return parent::handleRespond($data);
     }
 
     public function keywordSummaryTop(Request $request)
     {
         $data = null;
-        $campaign_id = $request->campaign_id ?? "";
+        $campaign_id = $request->campaign_id;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
         $start_date = $request->start_date ?? "";
         $end_date = $request->end_date ?? "";
         $data['main_keyword'] = $this->mainKeyWords($campaign_id, $start_date, $end_date);
@@ -262,6 +279,7 @@ class DashboardController extends Controller
 
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
+        
         if ($period === "customrange") {
             $start_date_previous = $this->get_previous_date($start_date_period, $period);
             $end_date_previous = $this->get_previous_date($end_date_period, $period);
@@ -404,8 +422,7 @@ class DashboardController extends Controller
 
     private function keywordsTable($campaign_id, $start_date, $end_date)
     {
-
-        $data = [];
+        $data = null;
         $total_keywords = DB::table('percentage_of_messages')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
@@ -425,6 +442,7 @@ class DashboardController extends Controller
             $data_push = [
                 "id" => $id++,
                 "keyword" => $item->keyword_name,
+                "keyword_id" => $item->keyword_id,
                 "message" => $this->point_two_digits($message),
                 "engagement" => $this->point_two_digits($engagement),
                 "accounts" => $this->point_two_digits($accounts),
@@ -432,7 +450,7 @@ class DashboardController extends Controller
                 "average_engagement" =>  $this->point_two_digits($engagement / $diff_date),
             ];
 
-            array_push($data, $data_push);
+            $data[] = $data_push;
         }
 
         return $data;
@@ -441,7 +459,7 @@ class DashboardController extends Controller
     public function mainKeyWords($campaign_id, $start_date, $end_date)
     {
 
-        $data = [];
+        $data = null;
         $total_keywords = DB::table('percentage_of_messages')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
@@ -459,12 +477,13 @@ class DashboardController extends Controller
             $data_push = [
                 "id" => $id++,
                 "keyword" => $item->keyword_name,
+                "keyword_id" => $item->keyword_id,
                 "no_of_message" => $this->point_two_digits($message),
                 "percentage" => $this->point_two_digits($percentage),
                 "type" => ($message >= 0 ? "plus" : "minus"),
             ];
 
-            array_push($data, $data_push);
+            $data[] = $data_push;
         }
 
         return $data;
@@ -555,11 +574,6 @@ class DashboardController extends Controller
         return $dummy_data;
     }
 
-
-    //    private function commentSentiment($campaign_id, $start_date, $end_date) {
-    //
-    //    }
-    //
     public function shareOfVoice(Request $request)
     {
 
