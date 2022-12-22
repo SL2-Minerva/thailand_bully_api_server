@@ -19,15 +19,26 @@ class DashboardController extends Controller
     public function overAll(Request $request)
     {
         $campaign_id = $request->campaign_id;
-
+        $stat_date = null;
+        $end_date = null;
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
 
+        if ($request->start_date) {
+            $start_date = $this->date_carbon($request->start_date);
+        }
+
+        if ($request->start_date) {
+            $end_date = $this->date_carbon($request->end_date);
+        }
+
+
+
         $data = null;
-        $period = $this->get_period($request->period);
-        $data['daily_message'] = $this->dailyMessage($campaign_id, '2022-11-30', '2022-11-30');
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, '2022-11-30', '2022-11-30');
+        $period = $this->get_previous_date($request->period);
+        $data['daily_message'] = $this->dailyMessage($campaign_id, $stat_date, $end_date);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $stat_date, $end_date);
         $data['prcentage_of_messages_previous'] = $this->percentageOfMessages(
             $campaign_id,
             $this->get_previous_date('2022-11-30', $period),
@@ -75,13 +86,6 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function get_period($preiod = null)
-    {
-        if ($preiod == null) {
-            return 1;
-        }
-        return 1;
-    }
 
     private function date_carbon($date)
     {
@@ -92,7 +96,7 @@ class DashboardController extends Controller
     private function get_previous_date($date, $period)
     {
         switch ($period) {
-            case "daily":
+            case "daily": //ผิด
                 $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
                 break;
             case "yesterday":
@@ -104,10 +108,10 @@ class DashboardController extends Controller
             case "last30Days":
                 $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
                 break;
-            case "thisMonth":
+            case "thisMonth": //   ผิด
                 $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
                 break;
-            case "lastMonth":
+            case "lastMonth": // ผิด
                 $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
                 break;
             case "customrange":

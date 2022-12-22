@@ -133,8 +133,8 @@ Route::group(['middleware' => ['api']], function () {
 
     });
 
-    Route::group(['prefix' => 'dashboard'], function () {
-        Route::get('/overall/', [DashboardController::class, 'overAll']);
+    Route::group(['prefix' => 'dashboard-overall'], function () {
+        Route::get('/', [DashboardController::class, 'overAll']);
         Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
         Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
         Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
@@ -142,10 +142,15 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
         Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
         Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
-        Route::get('/sna/', [DashboardController::class, 'sna']);
-
+        x
         Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
     });
+
+    Route::group(['prefix' => 'dashboard-voice'], function () {
+//            ...
+    });
+
+
 
     Route::group(['prefix' => 'organization-content'], function () {
         Route::get('/', [OrganizationContentController::class, 'index']);
