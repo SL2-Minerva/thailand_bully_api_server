@@ -228,7 +228,7 @@ class DashboardController extends Controller
     private function dailyMessage($campaign_id, $start_date, $end_date, $source)
     {
         $data = null;
-        $daily_messages = DailyMessage::where('campaign_id', $campaign_id)->where('source_id', $source);
+        $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
         $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
 
         foreach ($daily_messages->get() as $daily_message) {
@@ -566,7 +566,7 @@ class DashboardController extends Controller
             $total_message = PercentageOfMessages::where('campaign_id', $campaign_id)
                 ->whereBetween('date_m', [$start_date, $end_date])
                 ->sum('total_at_keyword');
-            
+
             $percentage = ($message / $total_message) * 100;
             $id + 1;
 
