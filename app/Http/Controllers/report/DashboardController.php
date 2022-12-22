@@ -19,6 +19,7 @@ class DashboardController extends Controller
     public function overAll(Request $request)
     {
         $campaign_id = $request->campaign_id;
+        $source = $request->source;
         $period = $request->period;
         $start_date = null;
         $end_date = null;
@@ -37,7 +38,7 @@ class DashboardController extends Controller
         $data = null;
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
-        $data['daily_message'] = $this->dailyMessage($campaign_id, $start_date, $end_date);
+        $data['daily_message'] = $this->dailyMessage($campaign_id, $start_date, $end_date, $source);
         $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
         $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous);
 
@@ -137,10 +138,10 @@ class DashboardController extends Controller
     }
 
 
-    private function dailyMessage($campaign_id, $start_date, $end_date)
+    private function dailyMessage($campaign_id, $start_date, $end_date, $source)
     {
         $data = null;
-        $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
+        $daily_messages = DailyMessage::where('campaign_id', $campaign_id)->where('source_id', $source);
         $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
 
         foreach ($daily_messages->get() as $daily_message) {
@@ -475,8 +476,11 @@ class DashboardController extends Controller
         foreach ($total_keywords as $item) {
 
             $message = $this->messagesTable($campaign_id, $start_date, $end_date, $item->keyword_id);
-            $total_message = DB::table('total_message')->where('campaign_id', $campaign_id)->first();
-            $percentage = ($message / $total_message->total_at_keyword) * 100;
+            $total_message = PercentageOfMessages::where('campaign_id', $campaign_id)
+                ->whereBetween('date_m', [$start_date, $end_date])
+                ->sum('total_at_keyword');
+            
+            $percentage = ($message / $total_message) * 100;
             $id + 1;
 
             $data_push = [
@@ -499,6 +503,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  1,
             "site_domain" =>  'www.google.com',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -506,6 +511,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  2,
             "site_domain" =>  'www.google.com',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -513,6 +519,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  3,
             "site_domain" =>  'www.google.com',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -520,6 +527,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  4,
             "site_domain" =>  'www.google.com',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -527,6 +535,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  5,
             "site_domain" =>  'www.google.com',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -539,6 +548,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  1,
             "hashtag" =>  '#hashtag1',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -547,6 +557,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  2,
             "hashtag" =>  '#hashtag2',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -555,6 +566,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  3,
             "hashtag" =>  '#hashtag3',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -563,6 +575,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  4,
             "hashtag" =>  '#hashtag4',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
@@ -571,6 +584,7 @@ class DashboardController extends Controller
         $dummy_data[] = [
             "id" =>  5,
             "hashtag" =>  '#hashtag5',
+            "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
             "type" => 'plus'
