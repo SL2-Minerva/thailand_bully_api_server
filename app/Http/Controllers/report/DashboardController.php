@@ -426,6 +426,27 @@ class DashboardController extends Controller
         return $total_account;
     }
 
+    private function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
+    {
+        $total_message = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->where('source_id', $source_id)
+            ->sum('total_at_date');
+
+        return $total_message;
+    }
+
+    private function shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $keyword_id)
+    {
+        $total_account = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('total_at_date');
+
+        return $total_account;
+    }
+
     private function keywordsTable($campaign_id, $start_date, $end_date)
     {
         $data = null;
@@ -593,91 +614,96 @@ class DashboardController extends Controller
         return $dummy_data;
     }
 
+    public function shareOfVoiceNumber(Request $request) 
+    {
+        $data = null;
+        $campaign_id = $request->campaign_id;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+
+        $total_keywords = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('keyword_name')
+            ->get();
+
+        $total_message = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->sum('total_at_date');
+
+        foreach ($total_keywords as $item) {
+            $message = $this->shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $item->keyword_id);
+            $push_data = [
+                'keyword_name' => $item->keyword_name,
+                'number_of_massage' => $message,
+            ];
+
+            $data[] = $push_data;
+        }
+
+        return parent::handleRespond($data);
+
+    }
+
     public function shareOfVoice(Request $request)
     {
+        $data = null;
+        $campaign_id = $request->campaign_id;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
 
-        $data[0]['keyword_id'] = 0;
-        $data[0]['keyword_name'] = 'all';
-        $data[0]['campaign_id'] = 1;
-        $data[0]['campaign_name'] = 'campaign_name 1';
-        $data[0]['organization_id'] = 1;
-        $data[0]['organizations_name'] = 'organizations_name 1';
-        $data[0]['value'][] = ['channel' => 'facebook', 'percentage' => 30, 'highlight' => true];
-        $data[0]['value'][] = ['channel' => 'twitter', 'percentage' => 30, 'highlight' => true];
-        $data[0]['value'][] = ['channel' => 'youtube', 'percentage' => 10, 'highlight' => false];
-        $data[0]['value'][] = ['channel' => 'intagrame', 'percentage' => 20, 'highlight' => false];
-        $data[0]['value'][] = ['channel' => 'pantip', 'percentage' => 10, 'highlight' => false];
+        $total_keywords = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('keyword_name', 'source_id')
+            ->get();
 
+        foreach ($total_keywords as $item) {
+            $keyword_id = $item->keyword_id;
+            $data[$keyword_id]['keyword_id'] = $item->keyword_id;
+            $data[$keyword_id]['keyword_name'] = $item->keyword_name;
+            $data[$keyword_id]['campaign_id'] = $item->campaign_id;
+            $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+            $data[$keyword_id]['organization_id'] = $item->organization_id;
+            $data[$keyword_id]['organizations_name'] = $item->organizations_name;
 
-        $data[1]['keyword_id'] = 1;
-        $data[1]['keyword_name'] = 'keyword_name 1';
-        $data[1]['campaign_id'] = 1;
-        $data[1]['campaign_name'] = 'campaign_name 1';
-        $data[1]['organization_id'] = 1;
-        $data[1]['organizations_name'] = 'organizations_name 1';
-        $data[1]['value'][] = ['channel' => 'facebook', 'percentage' => 30, 'highlight' => true];
-        $data[1]['value'][] = ['channel' => 'twitter', 'percentage' => 30, 'highlight' => true];
-        $data[1]['value'][] = ['channel' => 'youtube', 'percentage' => 10, 'highlight' => false];
-        $data[1]['value'][] = ['channel' => 'intagrame', 'percentage' => 20, 'highlight' => false];
-        $data[1]['value'][] = ['channel' => 'pantip', 'percentage' => 10, 'highlight' => false];
+                $message = $this->shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
+                $total_message = DailyMessage::where('campaign_id', $campaign_id)
+                    ->where('keyword_id', $item->keyword_id)
+                    ->where('organization_id', $item->organization_id)
+                    ->where('campaign_name', $item->campaign_name)
+                    ->whereBetween('date_m', [$start_date, $end_date])
+                    ->sum('total_at_date');
 
+                $percentage = ($message / $total_message) * 100;
+    
+                $push_data = [
+                    'channel' => $item->source_name,
+                    'percentage' => $this->point_two_digits($percentage),
+                    'number_of_message' => $message,
+                    // 'highlight' => 
+                ];
+    
+                $data[$keyword_id]['value'][] = $push_data;
+                
+        }
 
-        $data[2]['keyword_id'] = 2;
-        $data[2]['keyword_name'] = 'keyword_name 1';
-        $data[2]['campaign_id'] = 2;
-        $data[2]['campaign_name'] = 'campaign_name 1';
-        $data[2]['organization_id'] = 2;
-        $data[2]['organizations_name'] = 'organizations_name 1';
-        $data[2]['value'][] = ['channel' => 'facebook', 'percentage' => 30, 'highlight' => true];
-        $data[2]['value'][] = ['channel' => 'twitter', 'percentage' => 30, 'highlight' => true];
-        $data[2]['value'][] = ['channel' => 'youtube', 'percentage' => 10, 'highlight' => false];
-        $data[2]['value'][] = ['channel' => 'intagrame', 'percentage' => 20, 'highlight' => false];
-        $data[2]['value'][] = ['channel' => 'pantip', 'percentage' => 10, 'highlight' => false];
+        if ($data) {
+           $data = array_values($data); 
+        }
 
-        $data[3]['keyword_id'] = 3;
-        $data[3]['keyword_name'] = 'keyword_name 1';
-        $data[3]['campaign_id'] = 3;
-        $data[3]['campaign_name'] = 'campaign_name 1';
-        $data[3]['organization_id'] = 3;
-        $data[3]['organizations_name'] = 'organizations_name 1';
-        $data[3]['value'][] = ['channel' => 'facebook', 'percentage' => 30, 'highlight' => true];
-        $data[3]['value'][] = ['channel' => 'twitter', 'percentage' => 30, 'highlight' => true];
-        $data[3]['value'][] = ['channel' => 'youtube', 'percentage' => 10, 'highlight' => false];
-        $data[3]['value'][] = ['channel' => 'intagrame', 'percentage' => 20, 'highlight' => false];
-        $data[3]['value'][] = ['channel' => 'pantip', 'percentage' => 10, 'highlight' => false];
-
-        $data[4]['keyword_id'] = 4;
-        $data[4]['keyword_name'] = 'keyword_name 1';
-        $data[4]['campaign_id'] = 4;
-        $data[4]['campaign_name'] = 'campaign_name 1';
-        $data[4]['organization_id'] = 4;
-        $data[4]['organizations_name'] = 'organizations_name 1';
-        $data[4]['value'][] = ['channel' => 'facebook', 'percentage' => 30, 'highlight' => true];
-        $data[4]['value'][] = ['channel' => 'twitter', 'percentage' => 30, 'highlight' => true];
-        $data[4]['value'][] = ['channel' => 'youtube', 'percentage' => 10, 'highlight' => false];
-        $data[4]['value'][] = ['channel' => 'intagrame', 'percentage' => 20, 'highlight' => false];
-        $data[4]['value'][] = ['channel' => 'pantip', 'percentage' => 10, 'highlight' => false];
-
-        $data[5]['keyword_id'] = 5;
-        $data[5]['keyword_name'] = 'keyword_name 1';
-        $data[5]['campaign_id'] = 5;
-        $data[5]['campaign_name'] = 'campaign_name 1';
-        $data[5]['organization_id'] = 5;
-        $data[5]['organizations_name'] = 'organizations_name 1';
-        $data[5]['value'][] = ['channel' => 'facebook', 'percentage' => 30, 'highlight' => true];
-        $data[5]['value'][] = ['channel' => 'twitter', 'percentage' => 30, 'highlight' => true];
-        $data[5]['value'][] = ['channel' => 'youtube', 'percentage' => 10, 'highlight' => false];
-        $data[5]['value'][] = ['channel' => 'intagrame', 'percentage' => 20, 'highlight' => false];
-        $data[5]['value'][] = ['channel' => 'pantip', 'percentage' => 10, 'highlight' => false];
-
-        return parent::handleRespond(array_values($data));
+        return parent::handleRespond($data);
     }
 
     public function sentimentLevel(Request $request)
     {
 
-        $data[0]['keyword_id'] = 0;
-        $data[0]['keyword_name'] = 'all';
+        $data[0]['keyword_id'] = 1;
+        $data[0]['keyword_name'] = 'keyword_name 1';
         $data[0]['campaign_id'] = 1;
         $data[0]['campaign_name'] = 'campaign_name 1';
         $data[0]['organization_id'] = 1;
@@ -687,56 +713,45 @@ class DashboardController extends Controller
         $data[0]['positive'] = 60;
 
 
-        $data[1]['keyword_id'] = 1;
+        $data[1]['keyword_id'] = 2;
         $data[1]['keyword_name'] = 'keyword_name 1';
-        $data[1]['campaign_id'] = 1;
+        $data[1]['campaign_id'] = 2;
         $data[1]['campaign_name'] = 'campaign_name 1';
-        $data[1]['organization_id'] = 1;
+        $data[1]['organization_id'] = 2;
         $data[1]['organizations_name'] = 'organizations_name 1';
         $data[1]['negative'] = 10;
         $data[1]['neutral'] = 30;
         $data[1]['positive'] = 60;
 
-
-        $data[2]['keyword_id'] = 2;
+        $data[2]['keyword_id'] = 3;
         $data[2]['keyword_name'] = 'keyword_name 1';
-        $data[2]['campaign_id'] = 2;
+        $data[2]['campaign_id'] = 3;
         $data[2]['campaign_name'] = 'campaign_name 1';
-        $data[2]['organization_id'] = 2;
+        $data[2]['organization_id'] = 3;
         $data[2]['organizations_name'] = 'organizations_name 1';
         $data[2]['negative'] = 10;
         $data[2]['neutral'] = 30;
         $data[2]['positive'] = 60;
 
-        $data[3]['keyword_id'] = 3;
+        $data[3]['keyword_id'] = 4;
         $data[3]['keyword_name'] = 'keyword_name 1';
-        $data[3]['campaign_id'] = 3;
+        $data[3]['campaign_id'] = 4;
         $data[3]['campaign_name'] = 'campaign_name 1';
-        $data[3]['organization_id'] = 3;
+        $data[3]['organization_id'] = 4;
         $data[3]['organizations_name'] = 'organizations_name 1';
         $data[3]['negative'] = 10;
         $data[3]['neutral'] = 30;
         $data[3]['positive'] = 60;
 
-        $data[4]['keyword_id'] = 4;
+        $data[4]['keyword_id'] = 5;
         $data[4]['keyword_name'] = 'keyword_name 1';
-        $data[4]['campaign_id'] = 4;
+        $data[4]['campaign_id'] = 5;
         $data[4]['campaign_name'] = 'campaign_name 1';
-        $data[4]['organization_id'] = 4;
+        $data[4]['organization_id'] = 5;
         $data[4]['organizations_name'] = 'organizations_name 1';
         $data[4]['negative'] = 10;
         $data[4]['neutral'] = 30;
         $data[4]['positive'] = 60;
-
-        $data[5]['keyword_id'] = 5;
-        $data[5]['keyword_name'] = 'keyword_name 1';
-        $data[5]['campaign_id'] = 5;
-        $data[5]['campaign_name'] = 'campaign_name 1';
-        $data[5]['organization_id'] = 5;
-        $data[5]['organizations_name'] = 'organizations_name 1';
-        $data[5]['negative'] = 10;
-        $data[5]['neutral'] = 30;
-        $data[5]['positive'] = 60;
 
         return parent::handleRespond(array_values($data));
     }
