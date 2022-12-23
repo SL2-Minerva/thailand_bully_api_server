@@ -336,6 +336,10 @@ class DashboardController extends Controller
         $comparison = $total_current - $total_previous;
         $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
 
+        if($percentage == -100) {
+            $percentage = 0;
+        }
+
         return [
             "total_message" => $this->point_two_digits($total_current),
             "average_message" => $this->point_two_digits($total_current / $diff_date),
@@ -373,6 +377,10 @@ class DashboardController extends Controller
 
         $comparison = $total_engagement - $total_engagement_previous;
         $percentage = (($total_engagement - $total_engagement_previous) / ($total_engagement_previous === 0 ? 1 : $total_engagement_previous)) * 100;
+
+        if($percentage == -100) {
+            $percentage = 0;
+        }
 
 
         return [
@@ -413,6 +421,10 @@ class DashboardController extends Controller
 
         $comparison = $total_current - $total_previous;
         $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
+
+        if($percentage == -100) {
+            $percentage = 0;
+        }
 
         return [
             "total_account" => $this->point_two_digits($total_current),
