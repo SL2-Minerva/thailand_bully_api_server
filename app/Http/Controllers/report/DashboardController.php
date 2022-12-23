@@ -57,7 +57,37 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
 
         $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+
+        return parent::handleRespond($data);
+    }
+
+    public function wordCloudsPlateform(Request $request)
+    {
+        $data = null;
+        $campaign_id = $request->campaign_id ?? "";
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date ?? null;
+        $end_date = $request->end_date ?? null;
+        $select = $request->select ?? null;
+
         $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+
+        return parent::handleRespond($data);
+    }
+
+    public function wordCloudsPosition(Request $request)
+    {
+        $data = null;
+        $campaign_id = $request->campaign_id ?? "";
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        $start_date = $request->start_date ?? null;
+        $end_date = $request->end_date ?? null;
+        $select = $request->select ?? null;
+
         $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
 
         return parent::handleRespond($data);
