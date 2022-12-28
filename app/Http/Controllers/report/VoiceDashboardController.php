@@ -1159,17 +1159,17 @@ class VoiceDashboardController extends Controller
 
     public function ChannelDevice(Request $request)
     {
-        $data['label'][] = [
+        $data['labels'][] = [
             "Andriod",
             "Facebook"
         ];
 
-        $data['label'][] = [
+        $data['labels'][] = [
             "iPhone",
             "Twitter"
         ];
 
-        $data['label'][] = [
+        $data['labels'][] = [
             "Web",
             "Youtube"
         ];
@@ -1183,7 +1183,7 @@ class VoiceDashboardController extends Controller
 
     public function KeywordSentiment(Request $request)
     {
-        $data['label'] = [
+        $data['labels'] = [
             "Positive",
             "Negative",
             "Neutral"
@@ -1236,7 +1236,7 @@ class VoiceDashboardController extends Controller
 
     public function KeywordBullyLevel(Request $request)
     {
-        $data['label'] = [
+        $data['labels'] = [
             "Level 0",
             "Level 1",
             "Level 2",
@@ -1290,7 +1290,7 @@ class VoiceDashboardController extends Controller
 
     public function KeywordBullyType(Request $request)
     {
-        $data['label'] = [
+        $data['labels'] = [
             "No Bully",
             "Gossip",
             "Harassment",
@@ -1345,7 +1345,7 @@ class VoiceDashboardController extends Controller
 
     public function KeywordChannel(Request $request)
     {
-        $data['label'] = [
+        $data['labels'] = [
             "Facebook",
             "Pantip",
             "Twitter",

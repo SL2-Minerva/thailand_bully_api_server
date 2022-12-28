@@ -632,7 +632,7 @@ class ChannelDashboardController extends Controller
 
     public function EngagementRate(Request $request)
     {
-        $data['label'] = [
+        $data['labels'] = [
             "facebook",
             "twitter",
             "youtube",
@@ -661,7 +661,7 @@ class ChannelDashboardController extends Controller
 
     public function SentimentScore(Request $request)
     {
-        $data['label'] = [
+        $data['labels'] = [
             "facebook",
             "twitter",
             "youtube",
