@@ -14,6 +14,7 @@ use App\Http\Controllers\user\OrganizationGroupController;
 use App\Http\Controllers\user\OrganizationTypeController;
 use App\Http\Controllers\user\UserController;
 use App\Http\Controllers\report\VoiceDashboardController;
+use App\Http\Controllers\report\ChannelDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -177,6 +178,23 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/keyword-bully-level', [VoiceDashboardController::class, 'KeywordBullyLevel']);
         Route::get('/keyword-bully-type', [VoiceDashboardController::class, 'KeywordBullyType']);
 
+    });
+
+    Route::group(['prefix' => 'dashboard-channel'], function () {
+        Route::get('/percentage-of-channel', [ChannelDashboardController::class, 'PercentageOfChannel']);
+        Route::get('/daily-channel', [ChannelDashboardController::class, 'DailyChannel']);
+        Route::get('/channel-day', [ChannelDashboardController::class, 'ChannelByDay']);
+        Route::get('/channel-time', [ChannelDashboardController::class, 'ChannelByTime']);
+        Route::get('/channel-device', [ChannelDashboardController::class, 'ChannelByDevice']);
+        Route::get('/channel-account', [ChannelDashboardController::class, 'ChannelByAccount']);
+        Route::get('/channel-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment']);
+        Route::get('/channel-bully-level', [ChannelDashboardController::class, 'ChannelBullyLevel']);
+        Route::get('/channel-bully-type', [ChannelDashboardController::class, 'ChannelBullyType']);
+        Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']);
+        Route::get('/engagement-rate', [ChannelDashboardController::class, 'EngagementRate']);
+        Route::get('/sentiment-score', [ChannelDashboardController::class, 'SentimentScore']);
+        Route::get('/channel-by-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment2']);
+        Route::get('/sentiment-level', [ChannelDashboardController::class, 'SentimentLevel']);
     });
 
 
