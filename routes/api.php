@@ -13,6 +13,7 @@ use App\Http\Controllers\user\OrganizationController;
 use App\Http\Controllers\user\OrganizationGroupController;
 use App\Http\Controllers\user\OrganizationTypeController;
 use App\Http\Controllers\user\UserController;
+use App\Http\Controllers\report\VoiceDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -151,7 +152,31 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::group(['prefix' => 'dashboard-voice'], function () {
-//            ...
+        Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
+        Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
+        Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDay']);
+        Route::get('/message-by-time', [VoiceDashboardController::class, 'MessageByTime']);
+        Route::get('/message-by-device', [VoiceDashboardController::class, 'MessageByDevice']);
+        Route::get('/message-by-account', [VoiceDashboardController::class, 'MessageByAccount']);
+        Route::get('/message-by-channel', [VoiceDashboardController::class, 'MessageByChannel']);
+        Route::get('/message-by-sentiment', [VoiceDashboardController::class, 'MessageBySentiment']);
+        Route::get('/message-by-level', [VoiceDashboardController::class, 'MessageByLevel']);
+        Route::get('/message-by-type', [VoiceDashboardController::class, 'MessageByType']);
+        Route::get('/number-of-account', [VoiceDashboardController::class, 'NumberOfAccount']);
+        Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
+        Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);
+        Route::get('/day-time-sentiment', [VoiceDashboardController::class, 'DayTimeSentiment']);
+        Route::get('/day-time-level', [VoiceDashboardController::class, 'DayTimeLevel']);
+        Route::get('/day-time-type', [VoiceDashboardController::class, 'DayTimeType']);
+        Route::get('/channel-platform', [VoiceDashboardController::class, 'ChannelPlatform']);
+        Route::get('/device', [VoiceDashboardController::class, 'Device']);
+        Route::get('/channel-device', [VoiceDashboardController::class, 'ChannelDevice']);
+
+        Route::get('/keyword-channel', [VoiceDashboardController::class, 'KeywordChannel']);
+        Route::get('/keyword-sentiment', [VoiceDashboardController::class, 'KeywordSentiment']);
+        Route::get('/keyword-bully-level', [VoiceDashboardController::class, 'KeywordBullyLevel']);
+        Route::get('/keyword-bully-type', [VoiceDashboardController::class, 'KeywordBullyType']);
+
     });
 
 
