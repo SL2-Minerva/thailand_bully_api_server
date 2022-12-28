@@ -5,6 +5,7 @@ namespace App\Http\Controllers\user;
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\User;
+use App\Models\UserPermission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -68,13 +69,31 @@ class UserController extends Controller
 
     public function info()
     {
-
         $user = auth('api')->user();
+        $permissions = null;
+
+        if ($user->role_id) {
+
+            $row_permissions = UserPermission::where('role_id', $user->role_id)->get([
+                'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu', 'id'
+            ]);
+
+            foreach ($row_permissions as $permission) {
+                $permissions[$permission->menu] = [
+                    'authorized_create' => $permission->authorized_create,
+                    'authorized_view' => $permission->authorized_view,
+                    'authorized_edit' => $permission->authorized_edit,
+                    'authorized_delete' => $permission->authorized_delete,
+                    'authorized_export' => $permission->authorized_export,
+                    'id' => $permission->id
+                ];
+            }
+        }
 
         if ($user) {
             $data['info'] = $user;
             $data['role'] = $user->is_admin ?? null;
-            $data['permission'] = $user;
+            $data['permission'] = $permissions;
             $data['menu'] = ['all'];
             return parent::handleRespond($data);
         }
