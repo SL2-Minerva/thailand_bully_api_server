@@ -74,7 +74,7 @@ class UserController extends Controller
 
         if ($user->role_id) {
 
-            $row_permissions = UserPermission::where('role_id', $user->role_id)->get([
+            $row_permissions = UserPermission::where('role_id', $user->is_admin ? 0 : $user->role_id)->get([
                 'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu', 'id'
             ]);
 
@@ -89,6 +89,8 @@ class UserController extends Controller
                 ];
             }
         }
+
+
 
         if ($user) {
             $data['info'] = $user;
