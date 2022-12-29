@@ -97,6 +97,7 @@ class UserController extends Controller
             $data['role'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
             $data['menu'] = ['all'];
+            $data['report'] = ['1', '2','3', '4','5'];
             return parent::handleRespond($data);
         }
 
