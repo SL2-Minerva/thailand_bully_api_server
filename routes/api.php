@@ -16,6 +16,7 @@ use App\Http\Controllers\user\UserController;
 use App\Http\Controllers\report\VoiceDashboardController;
 use App\Http\Controllers\report\ChannelDashboardController;
 use App\Http\Controllers\report\EngagementDashboardController;
+use App\Http\Controllers\report\SentimentDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -218,6 +219,26 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/engagement-action-comparison', [EngagementDashboardController::class, 'EngagementActionComparison']);
         Route::get('/engagement-infulencer', [EngagementDashboardController::class, 'EngagementByInfulencer']);
         
+    });
+
+    Route::group(['prefix' => 'dashboard-sentiment'], function () {
+        Route::get('/sentiment-daily', [SentimentDashboardController::class, 'DailySeniment']);
+        Route::get('/sentiment-day', [SentimentDashboardController::class, 'SentimentByDay']);
+        Route::get('/sentiment-time', [SentimentDashboardController::class, 'SentimentByTime']);
+        Route::get('/sentiment-device', [SentimentDashboardController::class, 'SentimentByDevice']);
+        Route::get('/sentiment-account', [SentimentDashboardController::class, 'SentimentByAccount']);
+        Route::get('/sentiment-channel', [SentimentDashboardController::class, 'SentimentByChannel']);
+        Route::get('/sentiment-bully-level', [SentimentDashboardController::class, 'SentimentBullyLevel']);
+        Route::get('/sentiment-bully-type', [SentimentDashboardController::class, 'SentimentBullyType']);
+
+        Route::get('/period-over-period', [SentimentDashboardController::class, 'PeriodOverPeriod']);
+        Route::get('/comparison-channel', [SentimentDashboardController::class, 'ComparisonByChannel']);
+        Route::get('/comparison-engagement-type', [SentimentDashboardController::class, 'ComparisonByEngagementType']);
+        Route::get('/sentiment-score', [SentimentDashboardController::class, 'SentimentScore']);
+        Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
+        Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
+        Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);
+        Route::get('/summary-keyword', [SentimentDashboardController::class, 'SummaryKeyword']);
     });
 
 
