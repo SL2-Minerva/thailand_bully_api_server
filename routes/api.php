@@ -7,6 +7,7 @@ use App\Http\Controllers\main\KeywordController;
 use App\Http\Controllers\main\SourceController;
 use App\Http\Controllers\permission\PermissionController;
 use App\Http\Controllers\permission\RoleController;
+use App\Http\Controllers\report\BullyDashboardController;
 use App\Http\Controllers\report\DashboardController;
 use App\Http\Controllers\user\OrganizationContentController;
 use App\Http\Controllers\user\OrganizationController;
@@ -239,6 +240,27 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
         Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);
         Route::get('/summary-keyword', [SentimentDashboardController::class, 'SummaryKeyword']);
+    });
+
+    Route::group(['prefix' => 'dashboard-bully'], function () {
+        Route::get('/bully-daily', [BullyDashboardController::class, 'DailyBully']);
+        Route::get('/bully-day', [BullyDashboardController::class, 'BullyByDay']);
+        Route::get('/bully-time', [BullyDashboardController::class, 'BullyByTime']);
+        Route::get('/bully-device', [BullyDashboardController::class, 'BullyByDevice']);
+        Route::get('/bully-account', [BullyDashboardController::class, 'BullyByAccount']);
+        Route::get('/bully-channel', [BullyDashboardController::class, 'BullyByChannel']);
+        Route::get('/bully-sentiment', [BullyDashboardController::class, 'BullyBySentiment']);
+        Route::get('/bully-percentage-daily', [BullyDashboardController::class, 'BullyPercentageDaily']);
+        Route::get('/bully-type-day', [BullyDashboardController::class, 'BullyTypeByDay']);
+        Route::get('/bully-type-time', [BullyDashboardController::class, 'BullyTypeByTime']);
+        Route::get('/bully-type-device', [BullyDashboardController::class, 'BullyTypeByDevice']);
+        Route::get('/bully-type-account', [BullyDashboardController::class, 'BullyTypeByAccount']);
+        Route::get('/bully-type-channel', [BullyDashboardController::class, 'BullyTypeByChannel']);
+        Route::get('/bully-type-sentiment', [BullyDashboardController::class, 'BullyTypeBySentiment']);
+        Route::get('/bully-chart-level', [BullyDashboardController::class, 'BullyChartLevel']);
+        Route::get('/bully-table-level', [BullyDashboardController::class, 'BullyLevelLevel']);
+        Route::get('/bully-chart-type', [BullyDashboardController::class, 'BullyChartType']);
+        Route::get('/bully-table-type', [BullyDashboardController::class, 'BullyTableType']);
     });
 
 
