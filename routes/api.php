@@ -92,6 +92,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::post('/create', [PermissionController::class, 'store']);
             Route::put('/update', [PermissionController::class, 'update']);
             Route::put('/delete', [PermissionController::class, 'destroy']);
+            Route::get('/report-chart-list', [PermissionController::class, 'report_chart_list']);
         });
 
 
