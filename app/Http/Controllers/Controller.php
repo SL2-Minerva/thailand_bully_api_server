@@ -11,6 +11,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Exception;
+use Illuminate\Support\Carbon;
 
 class Controller extends BaseController
 {
@@ -140,5 +141,54 @@ class Controller extends BaseController
         if ($file) {
             return $file->store("organization-content", 'public');
         }
+    }
+
+    public static function date_carbon($date)
+    {
+        return Carbon::parse($date)->format('Y-m-d');
+    }
+
+    public static function get_previous_date($date, $period)
+    {
+        switch ($period) {
+            case "daily":
+                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
+                break;
+            case "yesterday":
+                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
+                break;
+            case "last7Days":
+                $date = Carbon::parse($date)->subDays(7)->format('Y-m-d');
+                break;
+            case "last30Days":
+                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
+                break;
+            case "thisMonth":
+                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
+                break;
+            case "lastMonth":
+                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
+                break;
+            case "customrange":
+                $date = Carbon::parse($date)->format('Y-m-d');
+                break;
+            default:
+                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
+        }
+
+        return $date;
+    }
+
+    public static function diff_date($start_date, $end_date)
+    {
+        $start_date = Carbon::createFromFormat('Y-m-d H:s:i', $start_date . ' 00:00:00');
+        $end_date = Carbon::createFromFormat('Y-m-d H:s:i', $end_date . ' 23:59:59');
+        $length = $start_date->diffInDays($end_date);
+        return $length != 0 ? $length : 1;
+    }
+
+    public static function point_two_digits($number)
+    {
+        return $number !== null ? number_format($number, 2) : null;
     }
 }
