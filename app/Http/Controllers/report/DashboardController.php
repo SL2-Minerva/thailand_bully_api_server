@@ -110,6 +110,12 @@ class DashboardController extends Controller
         $start = $start === 1 ? null : $start - 1;
 
         $data = null;
+        $total = Message::where('keyword_id', $keyword_id)
+            ->whereDate('created_at', '>=', $start_date)
+            ->whereDate('created_at', '<=', $end_date)
+            ->get()
+            ->count();
+
         $message = Message::where('keyword_id', $keyword_id)
             ->whereDate('created_at', '>=', $start_date)
             ->whereDate('created_at', '<=', $end_date)
@@ -134,8 +140,9 @@ class DashboardController extends Controller
 
             ];
 
-            $data[] = $data_push;
+            $data['message'][] = $data_push;
         }
+        $data['total'] = $total;
         
         return parent::handleRespond($data);
     }
@@ -194,56 +201,6 @@ class DashboardController extends Controller
         return $data;
     }
 
-
-    private function date_carbon($date)
-    {
-        return Carbon::parse($date)->format('Y-m-d');
-    }
-
-
-    private function get_previous_date($date, $period)
-    {
-        switch ($period) {
-            case "daily":
-                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
-                break;
-            case "yesterday":
-                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
-                break;
-            case "last7Days":
-                $date = Carbon::parse($date)->subDays(7)->format('Y-m-d');
-                break;
-            case "last30Days":
-                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
-                break;
-            case "thisMonth":
-                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
-                break;
-            case "lastMonth":
-                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
-                break;
-            case "customrange":
-                $date = Carbon::parse($date)->format('Y-m-d');
-                break;
-            default:
-                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
-        }
-
-        return $date;
-    }
-
-    private function diff_date($start_date, $end_date)
-    {
-        $start_date = Carbon::createFromFormat('Y-m-d H:s:i', $start_date . ' 00:00:00');
-        $end_date = Carbon::createFromFormat('Y-m-d H:s:i', $end_date . ' 23:59:59');
-        $length = $start_date->diffInDays($end_date);
-        return $length != 0 ? $length : 1;
-    }
-
-    private function point_two_digits($number)
-    {
-        return $number !== null ? number_format($number, 2) : null;
-    }
 
 
     private function dailyMessage($campaign_id, $start_date, $end_date, $source)
