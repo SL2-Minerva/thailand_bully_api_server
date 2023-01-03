@@ -94,58 +94,44 @@ class DashboardController extends Controller
     }
 
     public function dailyMessageLevelThree(Request $request) {
+
+        $campaign_id = $request->campaign_id ?? null;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+        
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
+        $keyword_id = $request->keyword_id ?? null;
+        $source = $request->source ?? null;
+
         $data = null;
-        $data[] = [
-            "message_id"=> 1293,
-            "message_detail"=> "hello, this is thailand bully report",
-            "account_name"=> "user name 1",
-            "post_date"=> "2022/12/21",
-            "post_time"=> "15:02",
-            "day"=> "something(what's the difference between post date?)",
-            "device"=> "andriod |web | ios",
-            "channel"=> "channel/platform name",
-            "bully_level"=> "level 1",
-            "bully_type"=> "no bully",
-        ];
+        $message = Message::where('keyword_id', $keyword_id)
+            ->whereDate('created_at', '>=', $start_date)
+            ->whereDate('created_at', '<=', $end_date);
 
-        $data[] = [
-            "message_id"=> 1294,
-            "message_detail"=> "hello, this is thailand bully report",
-            "account_name"=> "user name 1",
-            "post_date"=> "2022/12/21",
-            "post_time"=> "15:02",
-            "day"=> "something(what's the difference between post date?)",
-            "device"=> "andriod |web | ios",
-            "channel"=> "channel/platform name",
-            "bully_level"=> "level 1",
-            "bully_type"=> "no bully",
-        ];
+        if ($source !== 'all') {
+            $message = $message->where('source_id', $source);    
+        }
 
-        $data[] = [
-            "message_id"=> 1295,
-            "message_detail"=> "hello, this is thailand bully report",
-            "account_name"=> "user name 1",
-            "post_date"=> "2022/12/21",
-            "post_time"=> "15:02",
-            "day"=> "something(what's the difference between post date?)",
-            "device"=> "andriod |web | ios",
-            "channel"=> "channel/platform name",
-            "bully_level"=> "level 1",
-            "bully_type"=> "no bully",
-        ];
+        foreach($message->get() as $item) {
+            $data_push = [
+                "message_id"=> $item->message_id,
+                "message_detail"=> $item->full_message,
+                "account_name"=> $item->author,
+                "post_date"=> Carbon::parse($item->created_at)->format('Y/m/d'),
+                "post_time"=> Carbon::parse($item->created_at)->format('h:i'),
+                "day"=> Carbon::parse($item->created_at)->diffInDays(Carbon::now()),
+                "device"=> $item->device,
+                "channel"=> $item->source_id,
+                "bully_level"=> "level 3",
+                "bully_type"=> $item->message_type
 
-        $data[] = [
-            "message_id"=> 1296,
-            "message_detail"=> "hello, this is thailand bully report",
-            "account_name"=> "user name 1",
-            "post_date"=> "2022/12/21",
-            "post_time"=> "15:02",
-            "day"=> "something(what's the difference between post date?)",
-            "device"=> "andriod |web | ios",
-            "channel"=> "channel/platform name",
-            "bully_level"=> "level 1",
-            "bully_type"=> "no bully",
-        ];
+            ];
+
+            $data[] = $data_push;
+        }
+        
         return parent::handleRespond($data);
     }
 
@@ -260,6 +246,9 @@ class DashboardController extends Controller
         $data = null;
         $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
         $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
+        if ($source !== 'all') {
+            $daily_messages = $daily_messages->where('source_id', $source);    
+        }
 
         foreach ($daily_messages->get() as $daily_message) {
 
