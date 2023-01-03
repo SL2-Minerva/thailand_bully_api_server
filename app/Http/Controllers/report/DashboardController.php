@@ -107,14 +107,12 @@ class DashboardController extends Controller
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
-        $start = $start === 1 ? null : $start - 1;
+        $start = $start === 1 ? null : $start;
 
         $data = null;
         $total = Message::where('keyword_id', $keyword_id)
             ->whereDate('created_at', '>=', $start_date)
-            ->whereDate('created_at', '<=', $end_date)
-            ->get()
-            ->count();
+            ->whereDate('created_at', '<=', $end_date);
 
         $message = Message::where('keyword_id', $keyword_id)
             ->whereDate('created_at', '>=', $start_date)
@@ -123,6 +121,7 @@ class DashboardController extends Controller
 
         if ($source !== 'all') {
             $message = $message->where('source_id', $source);    
+            $total = $total->where('source_id', $source);
         }
 
         foreach($message->get() as $item) {
@@ -142,7 +141,7 @@ class DashboardController extends Controller
 
             $data['message'][] = $data_push;
         }
-        $data['total'] = $total;
+        $data['total'] = $total->get()->count();
         
         return parent::handleRespond($data);
     }
