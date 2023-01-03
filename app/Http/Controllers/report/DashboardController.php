@@ -104,11 +104,16 @@ class DashboardController extends Controller
         $end_date = $this->date_carbon($request->end_date) ?? null;
         $keyword_id = $request->keyword_id ?? null;
         $source = $request->source ?? null;
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start - 1;
 
         $data = null;
         $message = Message::where('keyword_id', $keyword_id)
             ->whereDate('created_at', '>=', $start_date)
-            ->whereDate('created_at', '<=', $end_date);
+            ->whereDate('created_at', '<=', $end_date)
+            ->offset($start)->limit($limit);
 
         if ($source !== 'all') {
             $message = $message->where('source_id', $source);    
