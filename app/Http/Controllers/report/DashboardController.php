@@ -943,9 +943,8 @@ class DashboardController extends Controller
 
             
         foreach ($snas as $sna) {
-            $rand = mt_rand(10000000,99999999); 
             $data[] = [
-                "id" => (int)$sna->message_id != 0 ? (int)$sna->message_id : (int)$this->random_strings(9),
+                "id" => $sna->message_id,
                 "label" => $sna->author,
                 "title" => $sna->author,
                 "parent_id" => (int)$sna->reference_message_id,
