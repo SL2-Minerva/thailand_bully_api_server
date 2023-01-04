@@ -840,76 +840,6 @@ class DashboardController extends Controller
         return parent::handleRespond(array_values($data));
     }
 
-    public function sna(Request $request)
-    {
-        $campaign_id = $request->campaign_id;
-
-        if (!$campaign_id) {
-            return parent::handleNotFound('Campaign id is required');
-        }
-
-        $data = [];
-        $roots = $this->getRootNode($campaign_id);
-        $childs = $this->getChildNode($campaign_id);
-        $data['nodes'] = array_merge($roots, $childs);
-
-        foreach ($childs as $child) {
-            foreach ($roots as $root) {
-                if ($child['parent_id'] == $root['id']) {
-                    $data['edges'][] = [
-                        "from" => $child['id'],
-                        "to" => $root['id'],
-                        "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
-                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
-                        "color" => $child['color']
-                    ];
-                }
-            }
-        }
-
-        return parent::handleRespond($data);
-
-        //        Message::where(SNA::CAMPAIGN_ID, $campaign_id)
-        //            ->chunk(100, function ($messages) use (&$data) {
-        //                foreach ($messages as $message) {
-        //                    $data[] = [
-        //                        'id' => $message->id,
-        //                        'name' => $message->name,
-        //                        'value' => $message->value,
-        //                        'type' => $message->type,
-        //                        'created_at' => $message->created_at,
-        //                        'updated_at' => $message->updated_at,
-        //                    ];
-        //                }
-        //            });
-        //        $snas = SNA::where(SNA::CAMPAIGN_ID,$campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, '')->groupby(SNA::MESSAGE_ID)->get();
-        //
-        //        foreach ($snas as $sna) {
-        //            $data['nodes'][] = [
-        //                "id" => $sna->message_id,
-        //                "label" => $sna->author,
-        //                "title" => $sna->author,
-        //                "color" => $sna->classification_color,
-        //                "shape" => "dot",
-        //                "size" => $sna->engagement
-        //            ];
-        //
-        //            $data = $this->getReferSna($campaign_id, $sna->message_id, $data);
-        //        }
-
-
-        //        $data['nodes'][] = ["id" => "test-tr", "label" => "node 1", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        //        $data['nodes'][] = ["id" => 2, "label" => "node 2", "title" => "Word 1 change color,shape & size", "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        //        $data['nodes'][] = ["id" => 3, "label" => "node 3", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        //        $data['nodes'][] = ["id" => 4, "label" => "node 4", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        //        $data['nodes'][] = ["id" => 5, "label" => "node 5", "title" => "Word 1 change color,shape & size" , "color" => "#f7f0c8", "shape" => "dot", "size" => 40];
-        //
-        //        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
-        //        $data['edges'][] = [ "from" => 2, "to" => 3, "length" => 200, "color" => "red"];
-        //        $data['edges'][] = [ "from" => "3", "to" => 2, "length" => 300, "color" => "red"];
-        //        $data['edges'][] = [ "from" => "test-tr", "to" => 2, "length" => 0, "color" => "red"];
-        return parent::handleRespond($data);
-    }
 
     private function getRootNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date)
     {
@@ -1006,7 +936,7 @@ class DashboardController extends Controller
                 "value" => 17
             ],
             [
-                "text" => "correct",
+                "text" => "ถูก",
                 "value" => 10
             ],
             [
@@ -1018,7 +948,7 @@ class DashboardController extends Controller
                 "value" => 12
             ],
             [
-                "text" => "time",
+                "text" => "เวลา",
                 "value" => 77
             ],
             [
@@ -1026,7 +956,7 @@ class DashboardController extends Controller
                 "value" => 45
             ],
             [
-                "text" => "left",
+                "text" => "ซ้าย",
                 "value" => 19
             ],
             [
@@ -1078,7 +1008,7 @@ class DashboardController extends Controller
                 "value" => 49
             ],
             [
-                "text" => "problem",
+                "text" => "ปัญหา",
                 "value" => 20
             ],
             [
@@ -1182,7 +1112,7 @@ class DashboardController extends Controller
                 "value" => 22
             ],
             [
-                "text" => "hour",
+                "text" => "ชั่วโมง",
                 "value" => 35
             ],
             [
@@ -1190,7 +1120,7 @@ class DashboardController extends Controller
                 "value" => 38
             ],
             [
-                "text" => "hospital",
+                "text" => "โรงพยาบาล",
                 "value" => 11
             ],
             [
@@ -1198,7 +1128,7 @@ class DashboardController extends Controller
                 "value" => 13
             ],
             [
-                "text" => "test",
+                "text" => "ทดสอบ",
                 "value" => 10
             ],
             [
@@ -1210,11 +1140,11 @@ class DashboardController extends Controller
                 "value" => 19
             ],
             [
-                "text" => "question",
+                "text" => "คำถาม",
                 "value" => 20
             ],
             [
-                "text" => "office",
+                "text" => "ออฟฟิศ",
                 "value" => 64
             ],
             [
@@ -1274,7 +1204,7 @@ class DashboardController extends Controller
                 "value" => 10
             ],
             [
-                "text" => "herb",
+                "text" => "สมุนไพร",
                 "value" => 13
             ],
             [
@@ -1318,11 +1248,11 @@ class DashboardController extends Controller
                 "value" => 38
             ],
             [
-                "text" => "work",
+                "text" => "งาน",
                 "value" => 64
             ],
             [
-                "text" => "smile",
+                "text" => "ยิ้ม",
                 "value" => 17
             ],
             [
@@ -1354,7 +1284,7 @@ class DashboardController extends Controller
                 "value" => 14
             ],
             [
-                "text" => "happy",
+                "text" => "ความสุข",
                 "value" => 22
             ],
             [
@@ -1386,7 +1316,7 @@ class DashboardController extends Controller
                 "value" => 70
             ],
             [
-                "text" => "massage",
+                "text" => "ข้อความ",
                 "value" => 35
             ],
             [
@@ -1394,7 +1324,7 @@ class DashboardController extends Controller
                 "value" => 54
             ],
             [
-                "text" => "mouth",
+                "text" => "เดือน",
                 "value" => 20
             ],
             [
@@ -1470,7 +1400,7 @@ class DashboardController extends Controller
                 "value" => 17
             ],
             [
-                "text" => "paying",
+                "text" => "จ่ายแล้ว",
                 "value" => 14
             ],
             [
