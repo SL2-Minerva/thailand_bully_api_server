@@ -927,6 +927,13 @@ class DashboardController extends Controller
         return $data;
     }
 
+    private function random_strings($length_of_string)
+    {
+        $str_result = '0123456789';
+        return substr(str_shuffle($str_result),0, $length_of_string);
+    }
+    
+
     private function getChildNode($campaign_id)
     {
         $snas = SNAChildNode::where(SNA::CAMPAIGN_ID, $campaign_id)
@@ -934,9 +941,11 @@ class DashboardController extends Controller
             ->limit(100)
             ->get();
 
+            
         foreach ($snas as $sna) {
+            $rand = mt_rand(10000000,99999999); 
             $data[] = [
-                "id" => (int)$sna->message_id,
+                "id" => (int)$sna->message_id != 0 ? (int)$sna->message_id : (int)$this->random_strings(9),
                 "label" => $sna->author,
                 "title" => $sna->author,
                 "parent_id" => (int)$sna->reference_message_id,
