@@ -149,14 +149,19 @@ class DashboardController extends Controller
     public function dailyMessageLevelFour(Request $request) {
 
         $campaign_id = $request->campaign_id;
+        $keyword_id = $request->keyword_id ?? null;
+        $message_id = $request->message_id ?? null;
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
+        $source = $request->source ?? null;
 
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
 
         $data = [];
-        $roots = $this->getRootNode($campaign_id);
-        $childs = $this->getChildNode($campaign_id);
+        $roots = $this->getRootNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date);
+        $childs = $this->getChildNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date);
         $data['nodes'] = array_merge($roots, $childs);
 
         foreach ($childs as $child) {
@@ -906,11 +911,14 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function getRootNode($campaign_id)
+    private function getRootNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date)
     {
-        $snas = SNARootNode::where(SNA::CAMPAIGN_ID, $campaign_id)
-            ->groupBy(SNA::MESSAGE_ID)
-            //            ->limit(10)
+        $data = [];
+        $snas = SNARootNode::where('campaign_id', $campaign_id)
+            ->where('keyword_id', $keyword_id)
+            ->where('message_id', $message_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('message_id')
             ->get();
 
         foreach ($snas as $sna) {
@@ -927,18 +935,14 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function random_strings($length_of_string)
+    private function getChildNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date)
     {
-        $str_result = '0123456789';
-        return substr(str_shuffle($str_result),0, $length_of_string);
-    }
-    
-
-    private function getChildNode($campaign_id)
-    {
-        $snas = SNAChildNode::where(SNA::CAMPAIGN_ID, $campaign_id)
-            ->groupBy(SNA::MESSAGE_ID)
-            ->limit(100)
+        $data = [];
+        $snas = SNAChildNode::where('campaign_id', $campaign_id)
+            ->where('keyword_id', $keyword_id)
+            ->where('reference_message_id', $message_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('message_id')
             ->get();
 
             
@@ -947,7 +951,7 @@ class DashboardController extends Controller
                 "id" => $sna->message_id,
                 "label" => $sna->author,
                 "title" => $sna->author,
-                "parent_id" => (int)$sna->reference_message_id,
+                "parent_id" => $sna->reference_message_id,
                 "color" => $sna->classification_color,
                 "shape" => "dot",
                 "size" => (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagement / 10,
