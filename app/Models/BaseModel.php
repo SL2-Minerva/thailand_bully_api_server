@@ -38,6 +38,7 @@ class BaseModel extends Model
     public const ROLE_NAME = 'user_role_name';
     public const ROLE_DESCRIPTION = 'user_role_description';
     public const AUTHORIZED_MENU = 'authorized_menu';
+    public const AUTHORIZED_REPORT = 'authorized_report';
 
     protected $hidden = [
 //        BaseModel::UUID,

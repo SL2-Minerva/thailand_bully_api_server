@@ -52,8 +52,8 @@ class RoleController extends Controller
             if ($res[BaseModel::STATUS] === 200) {
                 $data = $res[BaseModel::DATA_TEXT];
 
-
                 $handle_data = [];
+
                 if (!$request->status || $request->status) {
                     $handle_data[BaseModel::STATUS] = $request->status ?? 1;
                 }
@@ -66,9 +66,11 @@ class RoleController extends Controller
                     $handle_data[BaseModel::DESCRIPTION] = $request->description;
                 }
 
+                if ($request->authorized_report) {
+                    $handle_data[BaseModel::AUTHORIZED_REPORT] = $request->AUTHORIZED_REPORT;
+                }
 
                 $data->update($handle_data);
-
 
                 $permissions = $request->permission;
                 if ($permissions) {
@@ -123,7 +125,8 @@ class RoleController extends Controller
             BaseModel::ROLE_DESCRIPTION => $request->role_description,
             BaseModel::CREATED_BY => $user->id ?? 1,
             BaseModel::UPDATED_BY => $user->id ?? 1,
-            BaseModel::AUTHORIZED_MENU => ['all']
+            BaseModel::AUTHORIZED_MENU => [],
+            BaseModel::AUTHORIZED_REPORT => $request->authorized_report ?? [],
         ];
 
 

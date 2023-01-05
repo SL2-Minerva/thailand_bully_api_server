@@ -108,7 +108,7 @@ class UserController extends Controller
     private function permission_report($role_id)
     {
         $permissions = null;
-        for ($i = 1; $i <= 106; $i++) {
+        for ($i = 1; $i <= 109; $i++) {
             $permissions[] = $i;
         }
         return $permissions;
