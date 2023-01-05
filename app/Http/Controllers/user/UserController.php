@@ -97,10 +97,20 @@ class UserController extends Controller
             $data['role'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
             $data['menu'] = ['all'];
-            $data['report'] = ['1', '2','3', '4','5'];
+            $data['report'] = $this->permission_report($user->role_id);
             return parent::handleRespond($data);
         }
 
         return parent::handleNotFound($user);
+    }
+
+
+    private function permission_report($role_id)
+    {
+        $permissions = null;
+        for ($i = 1; $i <= 106; $i++) {
+            $permissions[] = $i;
+        }
+        return $permissions;
     }
 }
