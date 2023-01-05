@@ -109,7 +109,7 @@ class UserController extends Controller
     {
         $permissions = null;
         for ($i = 1; $i <= 109; $i++) {
-            $permissions[] = $i;
+            $permissions[] = strval($i);
         }
         return $permissions;
     }
