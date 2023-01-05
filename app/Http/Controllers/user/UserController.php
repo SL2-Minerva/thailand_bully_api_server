@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\User;
 use App\Models\UserPermission;
+use App\Models\UserRole;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -97,7 +98,7 @@ class UserController extends Controller
             $data['role'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
             $data['menu'] = ['all'];
-            $data['report'] = $this->permission_report($user->role_id);
+            $data['report'] = $this->permission_report($user);
             return parent::handleRespond($data);
         }
 
@@ -105,12 +106,20 @@ class UserController extends Controller
     }
 
 
-    private function permission_report($role_id)
+    private function permission_report($user)
     {
-        $permissions = null;
-        for ($i = 1; $i <= 109; $i++) {
-            $permissions[] = strval($i);
+
+        if ($user->is_admin) {
+            $permissions = null;
+            for ($i = 1; $i <= 109; $i++) {
+                $permissions[] = strval($i);
+            }
+            return $permissions;
+        } else {
+            $role_id = $user->role_id;
+            $role = UserRole::where(BaseModel::ID, $role_id)->first();
+            return $role->authorized_report;
         }
-        return $permissions;
+
     }
 }
