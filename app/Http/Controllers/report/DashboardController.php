@@ -5,6 +5,7 @@ namespace App\Http\Controllers\report;
 use App\Http\Controllers\Controller;
 use App\Models\DailyMessage;
 use App\Models\Message;
+use App\Models\MessageResultSemetic;
 use App\Models\PercentageOfMessages;
 use App\Models\SNA;
 use App\Models\SNAChildNode;
@@ -99,7 +100,7 @@ class DashboardController extends Controller
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
-        
+
         $start_date = $this->date_carbon($request->start_date) ?? null;
         $end_date = $this->date_carbon($request->end_date) ?? null;
         $keyword_id = $request->keyword_id ?? null;
@@ -120,7 +121,7 @@ class DashboardController extends Controller
             ->offset($start)->limit($limit);
 
         if ($source !== 'all') {
-            $message = $message->where('source_id', $source);    
+            $message = $message->where('source_id', $source);
             $total = $total->where('source_id', $source);
         }
 
@@ -142,7 +143,7 @@ class DashboardController extends Controller
             $data['message'][] = $data_push;
         }
         $data['total'] = $total->get()->count();
-        
+
         return parent::handleRespond($data);
     }
 
@@ -213,7 +214,7 @@ class DashboardController extends Controller
         $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
         $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
         if ($source !== 'all') {
-            $daily_messages = $daily_messages->where('source_id', $source);    
+            $daily_messages = $daily_messages->where('source_id', $source);
         }
 
         foreach ($daily_messages->get() as $daily_message) {
@@ -698,7 +699,7 @@ class DashboardController extends Controller
         return $dummy_data;
     }
 
-    public function shareOfVoiceNumber(Request $request) 
+    public function shareOfVoiceNumber(Request $request)
     {
         $data = null;
         $campaign_id = $request->campaign_id;
@@ -764,20 +765,20 @@ class DashboardController extends Controller
                     ->sum('total_at_date');
 
                 $percentage = ($message / $total_message) * 100;
-    
+
                 $push_data = [
                     'channel' => $item->source_name,
                     'percentage' => $this->point_two_digits($percentage),
                     'number_of_message' => $message,
-                    // 'highlight' => 
+                    // 'highlight' =>
                 ];
-    
+
                 $data[$keyword_id]['value'][] = $push_data;
-                
+
         }
 
         if ($data) {
-           $data = array_values($data); 
+           $data = array_values($data);
         }
 
         return parent::handleRespond($data);
@@ -785,57 +786,55 @@ class DashboardController extends Controller
 
     public function sentimentLevel(Request $request)
     {
+        $data = null;
+        $campaign_id = $request->campaign_id;
 
-        $data[0]['keyword_id'] = 1;
-        $data[0]['keyword_name'] = 'keyword_name 1';
-        $data[0]['campaign_id'] = 1;
-        $data[0]['campaign_name'] = 'campaign_name 1';
-        $data[0]['organization_id'] = 1;
-        $data[0]['organizations_name'] = 'organizations_name 1';
-        $data[0]['negative'] = 10;
-        $data[0]['neutral'] = 30;
-        $data[0]['positive'] = 60;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
+
+        $start_date = $request->start_date ;
+        $end_date = $request->end_date;
+
+        $raw_query = MessageResultSemetic::where('campaign_id', $campaign_id)
+            ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
 
 
-        $data[1]['keyword_id'] = 2;
-        $data[1]['keyword_name'] = 'keyword_name 1';
-        $data[1]['campaign_id'] = 2;
-        $data[1]['campaign_name'] = 'campaign_name 1';
-        $data[1]['organization_id'] = 2;
-        $data[1]['organizations_name'] = 'organizations_name 1';
-        $data[1]['negative'] = 10;
-        $data[1]['neutral'] = 30;
-        $data[1]['positive'] = 60;
 
-        $data[2]['keyword_id'] = 3;
-        $data[2]['keyword_name'] = 'keyword_name 1';
-        $data[2]['campaign_id'] = 3;
-        $data[2]['campaign_name'] = 'campaign_name 1';
-        $data[2]['organization_id'] = 3;
-        $data[2]['organizations_name'] = 'organizations_name 1';
-        $data[2]['negative'] = 10;
-        $data[2]['neutral'] = 30;
-        $data[2]['positive'] = 60;
+        if ($start_date && $end_date) {
+            $raw_query->whereBetween('date_m', [$start_date, $end_date]);
+        }
 
-        $data[3]['keyword_id'] = 4;
-        $data[3]['keyword_name'] = 'keyword_name 1';
-        $data[3]['campaign_id'] = 4;
-        $data[3]['campaign_name'] = 'campaign_name 1';
-        $data[3]['organization_id'] = 4;
-        $data[3]['organizations_name'] = 'organizations_name 1';
-        $data[3]['negative'] = 10;
-        $data[3]['neutral'] = 30;
-        $data[3]['positive'] = 60;
+        $results = $raw_query->groupBy('campaign_id')->groupBy('keyword_id')->groupBy('total_sem')->get();
 
-        $data[4]['keyword_id'] = 5;
-        $data[4]['keyword_name'] = 'keyword_name 1';
-        $data[4]['campaign_id'] = 5;
-        $data[4]['campaign_name'] = 'campaign_name 1';
-        $data[4]['organization_id'] = 5;
-        $data[4]['organizations_name'] = 'organizations_name 1';
-        $data[4]['negative'] = 10;
-        $data[4]['neutral'] = 30;
-        $data[4]['positive'] = 60;
+        $total_s = [
+            'Positive' => 0,
+            'Negative' => 0,
+            'Neutral' => 0,
+        ];
+
+
+        if ($results) {
+
+            foreach ($results as  $result) {
+               $total_s[$result->classification_name] = $total_s[$result->classification_name] + $result->total_sem;
+            }
+
+            foreach ($results as $index => $result) {
+
+                $data[$result->keyword_id] = [
+                    'keyword_id' => $result->keyword_id,
+                    'keyword_name' => $result->keyword_name,
+                    'campaign_id' => $result->campaign_id,
+                    'campaign_name' => $result->campaign_name,
+                    'organization_id' => 1,
+                    'organizations_name' =>  'organizations_name 1',
+                    'negative' =>  $total_s['Negative'],
+                    'neutral' => $total_s['Neutral'],
+                    'positive' => $total_s['Positive'],
+                ];
+            }
+        }
 
         return parent::handleRespond(array_values($data));
     }
@@ -875,7 +874,7 @@ class DashboardController extends Controller
             ->groupBy('message_id')
             ->get();
 
-            
+
         foreach ($snas as $sna) {
             $data[] = [
                 "id" => $sna->message_id,
