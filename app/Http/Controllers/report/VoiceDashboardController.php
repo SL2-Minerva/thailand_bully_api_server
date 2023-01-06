@@ -13,8 +13,8 @@ class VoiceDashboardController extends Controller
 {
     public function PercentageOfMessage(Request $request)
     {
-        $data = null;
         $campaign_id = $request->campaign_id;
+        $source = $request->source;
         $period = $request->period;
         $start_date = null;
         $end_date = null;
@@ -30,25 +30,11 @@ class VoiceDashboardController extends Controller
             $end_date = $this->date_carbon($request->end_date);
         }
 
+        $data = null;
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
-        $prcentage_of_messages_current = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
-        $prcentage_of_messages_previous = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous);
-        foreach ($prcentage_of_messages_previous as $item) {
-            $data['previous_period']['label'][] = $item['keyword_name'];
-            foreach ($item['value'] as $item_value) {
-                $data['previous_period']['data'][] = $item_value['percentage'];
-            }
-            $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
-        }
-
-        foreach ($prcentage_of_messages_current as $item) {
-            $data['current_period']['label'][] = $item['keyword_name'];
-            foreach ($item['value'] as $item_value) {
-                $data['current_period']['data'][] = $item_value['percentage'];
-            }
-            $data['current_period']['total'] = array_sum($data['previous_period']['data']);
-        }
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -87,16 +73,6 @@ class VoiceDashboardController extends Controller
         }
 
         return $data;
-    }
-
-    private function messagesTable($campaign_id, $start_date, $end_date, $keyword_id)
-    {
-        $total_message = PercentageOfMessages::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('keyword_id', $keyword_id)
-            ->sum('total_at_keyword');
-
-        return $total_message;
     }
 
     public function dailyMessage(Request $request)

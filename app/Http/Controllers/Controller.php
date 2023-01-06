@@ -12,6 +12,8 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Validator;
 use PHPUnit\Exception;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use App\Models\DailyMessage;
 
 class Controller extends BaseController
 {
@@ -190,5 +192,69 @@ class Controller extends BaseController
     public static function point_two_digits($number)
     {
         return $number !== null ? number_format($number, 2) : null;
+    }
+
+    public static function messagesTable($campaign_id, $start_date, $end_date, $keyword_id)
+    {
+        $total_message = DB::table('percentage_of_messages')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('total_at_keyword');
+
+        return $total_message;
+    }
+
+    public static function channelTable($campaign_id, $start_date, $end_date, $source_id)
+    {
+        $total_message = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('source_id', $source_id)
+            ->sum('total_at_date');
+
+        return $total_message;
+    }
+
+    public static function engagementTable($campaign_id, $start_date, $end_date, $keyword_id)
+    {
+        $total_engagement = DB::table('total_engagement_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('engagement');
+
+        return $total_engagement;
+    }
+
+    public static function accountTable($campaign_id, $start_date, $end_date, $keyword_id)
+    {
+        $total_account = DB::table('total_account_of_campaign')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('total_account');
+
+        return $total_account;
+    }
+
+    public static function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
+    {
+        $total_message = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->where('source_id', $source_id)
+            ->sum('total_at_date');
+
+        return $total_message;
+    }
+
+    public static function shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $keyword_id)
+    {
+        $total_account = DailyMessage::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('keyword_id', $keyword_id)
+            ->sum('total_at_date');
+
+        return $total_account;
     }
 }
