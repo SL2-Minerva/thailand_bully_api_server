@@ -95,10 +95,11 @@ class UserController extends Controller
 
         if ($user) {
             $data['info'] = $user;
-            $data['role'] = $user->is_admin ?? null;
+            $data['role_description'] = 'ssss';
+            $data['role_name'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
             $data['menu'] = ['all'];
-            $data['report'] = $this->permission_report($user);
+            $data['authorized_report'] = $this->permission_report($user);
             return parent::handleRespond($data);
         }
 
