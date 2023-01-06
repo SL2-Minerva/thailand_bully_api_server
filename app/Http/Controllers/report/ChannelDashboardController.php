@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Carbon;
 use App\Models\PercentageOfMessages;
 use App\Models\DailyMessage;
+use App\Models\Sources;
 
 class ChannelDashboardController extends Controller
 {
@@ -100,22 +101,22 @@ class ChannelDashboardController extends Controller
 
         foreach ($daily_messages->get() as $daily_message) {
 
-            $keyword_id = $daily_message->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $daily_message->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $daily_message->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $daily_message->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $daily_message->campaign_name;
-            $data[$keyword_id]['organization_id'] = $daily_message->organization_id;
-            $data[$keyword_id]['organizations_name'] = $daily_message->organizations_name;
+            $source_id = $daily_message->source_id;
+            $data[$source_id]['source_id'] = $daily_message->source_id;
+            $data[$source_id]['source_name'] = $daily_message->source_name;
+            $data[$source_id]['campaign_id'] = $daily_message->campaign_id;
+            $data[$source_id]['campaign_name'] = $daily_message->campaign_name;
+            $data[$source_id]['organization_id'] = $daily_message->organization_id;
+            $data[$source_id]['organizations_name'] = $daily_message->organizations_name;
 
             $nestData = [
-                'source_id' => $daily_message->source_id,
-                'source_name' => $daily_message->source_name,
+                'keyword_id' => $daily_message->keyword_id,
+                'keyword_name' => $daily_message->keyword_name,
                 'date_m' => $daily_message->date_m,
                 'total_at_date' => $daily_message->total_at_date
             ];
 
-            $data[$keyword_id]['value'][] = $nestData;
+            $data[$source_id]['value'][] = $nestData;
         }
 
         if ($data) {
@@ -596,36 +597,47 @@ class ChannelDashboardController extends Controller
 
     public function PeriodOverPeriod(Request $request)
     {
-        $data['facebook'] = [
-            "comparison_value" => 40000,
-            "percentage" => "10",
-            "type" => "minus",
-        ];
+        $campaign_id = $request->campaign_id;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
 
-        $data['twitter'] = [
-            "comparison_value" => 200,
-            "percentage" => "20",
-            "type" => "plus",
-        ];
+        $start_date = $this->date_carbon($request->start_date);
+        $end_date = $this->date_carbon($request->end_date);
+        $start_date_period = $this->date_carbon($request->start_date_period);
+        $end_date_period = $this->date_carbon($request->end_date_period);
+        $period = $request->period;
 
-        $data['youtube'] = [
-            "comparison_value" => 2000,
-            "percentage" => "20",
-            "type" => "minus",
-        ];
+        $start_date_previous = $this->get_previous_date($start_date, $period);
+        $end_date_previous = $this->get_previous_date($end_date, $period);
 
-        $data['instagram'] = [
-            "comparison_value" => 200,
-            "percentage" => "20",
-            "type" => "plus",
-        ];
+        if ($period === "customrange") {
+            $start_date_previous = $this->get_previous_date($start_date_period, $period);
+            $end_date_previous = $this->get_previous_date($end_date_period, $period);
+        }
 
-        $data['pantip'] = [
-            "comparison_value" => 100,
-            "percentage" => "20",
-            "type" => "plus",
-        ];
+        $source = Sources::where('status', 1)->get();
+        foreach ($source as $item) {
+            $channal_message_current = DailyMessage::where('campaign_id', $campaign_id)
+                ->whereBetween('date_m', [$start_date, $end_date])
+                ->where('source_id', $item->id)
+                ->sum('total_at_date');
 
+            $channal_message_previous = DailyMessage::where('campaign_id', $campaign_id)
+                ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+                ->where('source_id', $item->id)
+                ->sum('total_at_date');
+
+            $comparison = $channal_message_current - $channal_message_previous;
+            $percentage = (($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous)) * 100;
+            
+            $data[$item->name] = [
+                "comparison_value" => $this->point_two_digits($comparison),
+                "percentage" => $this->point_two_digits($percentage),
+                "type" => ($comparison >= 0 ? "plus" : "minus"),
+            ];
+        }
+        
         return parent::handleRespond($data);
     }
 
