@@ -67,7 +67,7 @@ class RoleController extends Controller
                 }
 
                 if ($request->authorized_report) {
-                    $handle_data[BaseModel::AUTHORIZED_REPORT] = $request->AUTHORIZED_REPORT;
+                    $handle_data[BaseModel::AUTHORIZED_REPORT] = $request->authorized_report;
                 }
 
                 $data->update($handle_data);
