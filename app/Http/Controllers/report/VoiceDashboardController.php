@@ -33,95 +33,31 @@ class VoiceDashboardController extends Controller
         $data = null;
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date, $request->keyword_id ?? null, $request->source_id ?? null);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous, $request->keyword_id ?? null, $request->source_id ?? null);
 
         return parent::handleRespond($data);
     }
 
-    private function percentageOfMessages($campaign_id, $start_date, $end_date)
+    private function percentageOfMessages($campaign_id, $start_date, $end_date, $keyword_id, $source_id = null)
     {
-        $data = null;
-        $percentage_of_messages = PercentageOfMessages::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->groupBy('keyword_name');
+        $table = 'percentage_of_messages';
+        $column = 'total_at_keyword';
 
-        foreach ($percentage_of_messages->get() as $percentage_of_message) {
-            $keyword_id = $percentage_of_message->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $percentage_of_message->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $percentage_of_message->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $percentage_of_message->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $percentage_of_message->campaign_name;
-            $data[$keyword_id]['organization_id'] = $percentage_of_message->organization_id;
-            $data[$keyword_id]['organizations_name'] = $percentage_of_message->organizations_name;
-
-            $message_keyword = $this->messagesTable($campaign_id, $start_date, $end_date, $keyword_id);
-            $message_total = PercentageOfMessages::where('campaign_id', $campaign_id)
-                ->whereBetween('date_m', [$start_date, $end_date])
-                ->sum('total_at_keyword');
-
-            $nestData = [
-                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-                'percentage' => $this->point_two_digits(($message_keyword / $message_total) * 100),
-            ];
-
-            $data[$keyword_id]['value'][] = $nestData;
-        }
-
-        if ($data) {
-            return array_values($data);
-        }
-
-        return $data;
+        return  parent::getDataByCondition($table, $campaign_id, $start_date, $end_date, $keyword_id, $source_id, $column, 'percentage', ['group_by' => ['keyword_name']]);
     }
 
     public function dailyMessage(Request $request)
     {
-        $data = null;
         $campaign_id = $request->campaign_id;
         $source = $request->source;
+
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
-
-        if ($request->start_date) {
-            $start_date = $this->date_carbon($request->start_date);
-        }
-
-        if ($request->end_date) {
-            $end_date = $this->date_carbon($request->end_date);
-        }
-        $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
-        $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
-        // if ($source !== 'all') {
-        //     $daily_messages = $daily_messages->where('source_id', $request->source);
-        // }
-
-        foreach ($daily_messages->get() as $daily_message) {
-
-            $keyword_id = $daily_message->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $daily_message->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $daily_message->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $daily_message->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $daily_message->campaign_name;
-            $data[$keyword_id]['organization_id'] = $daily_message->organization_id;
-            $data[$keyword_id]['organizations_name'] = $daily_message->organizations_name;
-
-            $nestData = [
-                'source_id' => $daily_message->source_id,
-                'source_name' => $daily_message->source_name,
-                'date_m' => $daily_message->date_m,
-                'total_at_date' => $daily_message->total_at_date
-            ];
-
-            $data[$keyword_id]['value'][] = $nestData;
-        }
-
-        if ($data) {
-            return parent::handleRespond(array_values($data));
-        }
-
-        return parent::handleRespond($data);
+        $table = 'daily_message';
+        $column = 'engagement';
+        return parent::handleRespond(parent::getDataByCondition($table, $campaign_id, $request->start_date, $request->end_date, null, $source, $column, 'daily_message'));
     }
 
     public function MessageByDay(Request $request)

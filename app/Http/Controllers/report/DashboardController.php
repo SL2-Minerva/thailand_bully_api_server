@@ -40,8 +40,8 @@ class DashboardController extends Controller
         $start_date_previous = $this->get_previous_date($start_date, $period);
         $end_date_previous = $this->get_previous_date($end_date, $period);
         $data['daily_message'] = $this->dailyMessage($campaign_id, $start_date, $end_date, $source);
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($campaign_id, $start_date, $end_date, $request->keyword_id ?? null, $request->source_id ?? null);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($campaign_id, $start_date_previous, $end_date_previous, $request->keyword_id ?? null, $request->source_id ?? null);
 
         return parent::handleRespond($data);
     }
@@ -100,7 +100,7 @@ class DashboardController extends Controller
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
-        
+
         $start_date = $this->date_carbon($request->start_date) ?? null;
         $end_date = $this->date_carbon($request->end_date) ?? null;
         $keyword_id = $request->keyword_id ?? null;
@@ -121,7 +121,7 @@ class DashboardController extends Controller
             ->offset($start)->limit($limit);
 
         if ($source !== 'all') {
-            $message = $message->where('source_id', $source);    
+            $message = $message->where('source_id', $source);
             $total = $total->where('source_id', $source);
         }
 
@@ -143,7 +143,7 @@ class DashboardController extends Controller
             $data['message'][] = $data_push;
         }
         $data['total'] = $total->get()->count();
-        
+
         return parent::handleRespond($data);
     }
 
@@ -210,74 +210,17 @@ class DashboardController extends Controller
 
     private function dailyMessage($campaign_id, $start_date, $end_date, $source)
     {
-        $data = null;
-        $daily_messages = DailyMessage::where('campaign_id', $campaign_id);
-        $daily_messages = $daily_messages->whereBetween('date_m', [$start_date, $end_date]);
-        if ($source !== 'all') {
-            $daily_messages = $daily_messages->where('source_id', $source);    
-        }
-
-        foreach ($daily_messages->get() as $daily_message) {
-
-            $keyword_id = $daily_message->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $daily_message->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $daily_message->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $daily_message->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $daily_message->campaign_name;
-            $data[$keyword_id]['organization_id'] = $daily_message->organization_id;
-            $data[$keyword_id]['organizations_name'] = $daily_message->organizations_name;
-
-            $nestData = [
-                'source_id' => $daily_message->source_id,
-                'source_name' => $daily_message->source_name,
-                'date_m' => $daily_message->date_m,
-                'total_at_date' => $daily_message->total_at_date
-            ];
-
-            $data[$keyword_id]['value'][] = $nestData;
-        }
-
-        if ($data) {
-            return array_values($data);
-        }
-
-        return $data;
+        $table = 'daily_message';
+        $column = 'engagement';
+        return parent::getDataByCondition($table, $campaign_id, $start_date, $end_date, null, $source, $column, 'daily_message');
     }
 
-    private function percentageOfMessages($campaign_id, $start_date, $end_date)
+    private function percentageOfMessages($campaign_id, $start_date, $end_date, $keyword_id, $source_id = null)
     {
-        $data = null;
-        $percentage_of_messages = PercentageOfMessages::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->groupBy('keyword_name');
+        $table = 'percentage_of_messages';
+        $column = 'total_at_keyword';
 
-        foreach ($percentage_of_messages->get() as $percentage_of_message) {
-            $keyword_id = $percentage_of_message->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $percentage_of_message->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $percentage_of_message->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $percentage_of_message->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $percentage_of_message->campaign_name;
-            $data[$keyword_id]['organization_id'] = $percentage_of_message->organization_id;
-            $data[$keyword_id]['organizations_name'] = $percentage_of_message->organizations_name;
-
-            $message_keyword = $this->messagesTable($campaign_id, $start_date, $end_date, $keyword_id);
-            $message_total = PercentageOfMessages::where('campaign_id', $campaign_id)
-                ->whereBetween('date_m', [$start_date, $end_date])
-                ->sum('total_at_keyword');
-
-            $nestData = [
-                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-                'percentage' => $this->point_two_digits(($message_keyword / $message_total) * 100),
-            ];
-
-            $data[$keyword_id]['value'][] = $nestData;
-        }
-
-        if ($data) {
-            return array_values($data);
-        }
-
-        return $data;
+        return  parent::getDataByCondition($table, $campaign_id, $start_date, $end_date, $keyword_id, $source_id, $column, 'percentage', ['group_by' => ['keyword_name']]);
     }
 
     public function keyStats(Request $request)
@@ -349,10 +292,9 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
-    {
 
-        //todo
+    private function totalData($table, $colum, $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period) {
+
         $start_date = $this->date_carbon($start_date);
         $end_date = $this->date_carbon($end_date);
 
@@ -391,91 +333,20 @@ class DashboardController extends Controller
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
+    private function totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
+    {
+        return $this->totalData('percentage_of_messages', 'total_at_keyword', $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period);
+    }
 
     private function totalEngagement($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
     {
 
-        //todo
-        $start_date = $this->date_carbon($start_date);
-        $end_date = $this->date_carbon($end_date);
-
-        $start_date_previous = $this->get_previous_date($start_date, $period);
-        $end_date_previous = $this->get_previous_date($end_date, $period);
-        if ($period === "customrange") {
-            $start_date_previous = $this->get_previous_date($start_date_period, $period);
-            $end_date_previous = $this->get_previous_date($end_date_period, $period);
-        }
-
-        $total_engagement = DB::table('total_engagement_of_campaign')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->sum('engagement');
-
-        $total_engagement_previous = DB::table('total_engagement_of_campaign')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
-            ->sum('engagement');
-
-        $diff_date = $this->diff_date($start_date, $end_date);
-
-        $comparison = $total_engagement - $total_engagement_previous;
-        $percentage = (($total_engagement - $total_engagement_previous) / ($total_engagement_previous === 0 ? 1 : $total_engagement_previous)) * 100;
-
-        if($percentage == -100) {
-            $percentage = 0;
-        }
-
-
-        return [
-            "total_engagement" => $this->point_two_digits($total_engagement),
-            "average_engagement" => $this->point_two_digits($total_engagement / $diff_date),
-            "comparison" => $this->point_two_digits($comparison),
-            "percentage" => $this->point_two_digits($percentage),
-            "type" => ($comparison >= 0 ? "plus" : "minus")
-        ];
+        return $this->totalData('total_engagement_of_campaign', 'engagement', $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period);
     }
 
     private function totalAccounts($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
     {
-
-        //todo
-        $start_date = $this->date_carbon($start_date);
-        $end_date = $this->date_carbon($end_date);
-
-        $start_date_previous = $this->get_previous_date($start_date, $period);
-        $end_date_previous = $this->get_previous_date($end_date, $period);
-
-        if ($period === "customrange") {
-            $start_date_previous = $this->get_previous_date($start_date_period, $period);
-            $end_date_previous = $this->get_previous_date($end_date_period, $period);
-        }
-
-        $total_current = DB::table('total_account_of_campaign')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->sum('total_account');
-
-        $total_previous = DB::table('total_account_of_campaign')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
-            ->sum('total_account');
-
-        $diff_date = $this->diff_date($start_date, $end_date);
-
-        $comparison = $total_current - $total_previous;
-        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
-
-        if($percentage == -100) {
-            $percentage = 0;
-        }
-
-        return [
-            "total_account" => $this->point_two_digits($total_current),
-            "average_account" => $this->point_two_digits($total_current / $diff_date),
-            "comparison" => $this->point_two_digits($comparison),
-            "percentage" => $this->point_two_digits($percentage),
-            "type" => ($comparison >= 0 ? "plus" : "minus")
-        ];
+        return $this->totalData('total_accounts_of_campaign', 'total_accounts', $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period);
     }
 
     private function keywordsTable($campaign_id, $start_date, $end_date)
@@ -645,7 +516,7 @@ class DashboardController extends Controller
         return $dummy_data;
     }
 
-    public function shareOfVoiceNumber(Request $request) 
+    public function shareOfVoiceNumber(Request $request)
     {
         $data = null;
         $campaign_id = $request->campaign_id;
@@ -692,40 +563,41 @@ class DashboardController extends Controller
             ->whereBetween('date_m', [$start_date, $end_date])
             ->groupBy('keyword_name', 'source_id')
             ->get();
+        $data = parent::factorListData($total_keywords, 'shareofvoice', $campaign_id, $start_date, $end_date, null, 'daily_message', 'total_at_date' );
 
-        foreach ($total_keywords as $item) {
-            $keyword_id = $item->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $item->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $item->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $item->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $item->campaign_name;
-            $data[$keyword_id]['organization_id'] = $item->organization_id;
-            $data[$keyword_id]['organizations_name'] = $item->organizations_name;
-
-                $message = $this->shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
-                $total_message = DailyMessage::where('campaign_id', $campaign_id)
-                    ->where('keyword_id', $item->keyword_id)
-                    ->where('organization_id', $item->organization_id)
-                    ->where('campaign_name', $item->campaign_name)
-                    ->whereBetween('date_m', [$start_date, $end_date])
-                    ->sum('total_at_date');
-
-                $percentage = ($message / $total_message) * 100;
-    
-                $push_data = [
-                    'channel' => $item->source_name,
-                    'percentage' => $this->point_two_digits($percentage),
-                    'number_of_message' => $message,
-                    // 'highlight' => 
-                ];
-    
-                $data[$keyword_id]['value'][] = $push_data;
-                
-        }
-
-        if ($data) {
-           $data = array_values($data); 
-        }
+//        foreach ($total_keywords as $item) {
+//            $keyword_id = $item->keyword_id;
+//            $data[$keyword_id]['keyword_id'] = $item->keyword_id;
+//            $data[$keyword_id]['keyword_name'] = $item->keyword_name;
+//            $data[$keyword_id]['campaign_id'] = $item->campaign_id;
+//            $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+//            $data[$keyword_id]['organization_id'] = $item->organization_id;
+//            $data[$keyword_id]['organizations_name'] = $item->organizations_name;
+//
+//                $message = $this->shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
+//                $total_message = DailyMessage::where('campaign_id', $campaign_id)
+//                    ->where('keyword_id', $item->keyword_id)
+//                    ->where('organization_id', $item->organization_id)
+//                    ->where('campaign_name', $item->campaign_name)
+//                    ->whereBetween('date_m', [$start_date, $end_date])
+//                    ->sum('total_at_date');
+//
+//                $percentage = ($message / $total_message) * 100;
+//
+//                $push_data = [
+//                    'channel' => $item->source_name,
+//                    'percentage' => $this->point_two_digits($percentage),
+//                    'number_of_message' => $message,
+//                    // 'highlight' =>
+//                ];
+//
+//                $data[$keyword_id]['value'][] = $push_data;
+//
+//        }
+//
+//        if ($data) {
+//           $data = array_values($data);
+//        }
 
         return parent::handleRespond($data);
     }

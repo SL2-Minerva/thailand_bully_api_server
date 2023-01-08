@@ -7,157 +7,18 @@ use App\Http\Controllers\Controller;
 
 class EngagementDashboardController extends Controller
 {
-    public function EngagementTrans()
+    public function EngagementTrans(Request $request)
     {
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
+
+        $period = $request->period;
+        $start_date_previous = $this->get_previous_date($start_date, $period);
+        $end_date_previous = $this->get_previous_date($end_date, $period);
         $data = [
-            "engagement" => [
-                [
-                    "keyword_id" => 4,
-                    "keyword_name" => "บันเทิง",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-17",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-18",
-                            "total_at_date" => 3
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-19",
-                            "total_at_date" => 10
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-20",
-                            "total_at_date" => 9
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-21",
-                            "total_at_date" => 1
-                        ]
-                    ]
-                ],
-                [
-                    "keyword_id" => 9,
-                    "keyword_name" => "แต่งงาน",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-17",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-18",
-                            "total_at_date" => 1
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-19",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-20",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-21",
-                            "total_at_date" => 1
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-22",
-                            "total_at_date" => 1
-                        ]
-                    ]
-                ]
-            ],
-            "prcentage_of_engagement_current" => [
-                [
-                    "keyword_id" => 4,
-                    "keyword_name" => "บันเทิง",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "73.53"
-                        ]
-                    ]
-                ],
-                [
-                    "keyword_id" => 9,
-                    "keyword_name" => "แต่งงาน",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "26.47"
-                        ]
-                    ]
-                ]
-            ],
-            "prcentage_of_engagement_previous" => [
-                [
-                    "keyword_id" => 4,
-                    "keyword_name" => "บันเทิง",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "16/12/2022 - 22/12/2022",
-                            "percentage" => "65.85"
-                        ]
-                    ]
-                ],
-                [
-                    "keyword_id" => 9,
-                    "keyword_name" => "แต่งงาน",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "16/12/2022 - 22/12/2022",
-                            "percentage" => "34.15"
-                        ]
-                    ]
-                ]
-            ]
+            "engagement" => $this->engagement($request->campaign_id, $start_date, $end_date, $request->source),
+            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $start_date, $end_date, $request->keyword_id ?? null, $request->source ?? null),
+            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $start_date_previous, $end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
         ];
 
         return parent::handleRespond($data);
@@ -560,7 +421,7 @@ class EngagementDashboardController extends Controller
                     "total_at_date" => 1,
                 ]
             ],
-            
+
         ];
 
         $data['engagement'][] = [
@@ -1259,5 +1120,20 @@ class EngagementDashboardController extends Controller
         ];
 
         return parent::handleRespond($data);
+    }
+
+    private function percentageOfEngagement($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
+    {
+        $table = 'total_engagement_of_source';
+        $column = 'engagement';
+        return parent::getDataByCondition($table,$campaign_id, $start_date, $end_date,  $keyword_id, $source_id, $column, 'percentage');
+    }
+
+    private function engagement($campaign_id, $start_date, $end_date, $source)
+    {
+        $table = 'total_engagement_of_source';
+        $column = 'engagement';
+        return parent::getDataByCondition($table, $campaign_id, $start_date, $end_date, null, $source, $column, 'engagement');
+
     }
 }

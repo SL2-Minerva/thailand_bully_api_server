@@ -194,47 +194,39 @@ class Controller extends BaseController
         return $number !== null ? number_format($number, 2) : null;
     }
 
-    public static function messagesTable($campaign_id, $start_date, $end_date, $keyword_id)
+    public static function messagesTable($campaign_id, $start_date, $end_date, $keyword_id, $table = null, $colum = null)
     {
-        $total_message = DB::table('percentage_of_messages')
+        return DB::table($table ?? 'percentage_of_messages')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('keyword_id', $keyword_id)
-            ->sum('total_at_keyword');
-
-        return $total_message;
+            ->sum($colum ?? 'total_at_keyword');
     }
 
     public static function channelTable($campaign_id, $start_date, $end_date, $source_id)
     {
-        $total_message = DailyMessage::where('campaign_id', $campaign_id)
+        return DailyMessage::where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('source_id', $source_id)
             ->sum('total_at_date');
-
-        return $total_message;
     }
 
     public static function engagementTable($campaign_id, $start_date, $end_date, $keyword_id)
     {
-        $total_engagement = DB::table('total_engagement_of_campaign')
+        return DB::table('total_engagement_of_campaign')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('keyword_id', $keyword_id)
             ->sum('engagement');
-
-        return $total_engagement;
     }
 
     public static function accountTable($campaign_id, $start_date, $end_date, $keyword_id)
     {
-        $total_account = DB::table('total_account_of_campaign')
+        return DB::table('total_account_of_campaign')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('keyword_id', $keyword_id)
             ->sum('total_account');
-
-        return $total_account;
     }
 
     public static function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
@@ -257,4 +249,186 @@ class Controller extends BaseController
 
         return $total_account;
     }
+
+
+    private static function findPercentage($items, $column, $start_date, $end_date)
+    {
+        $message_keyword = [];
+        $message_total = 0;
+//        $items = $items->toArray();
+
+//        dd($items->toArray());
+
+        foreach ($items as $object) {
+            $item = (array)$object;
+
+            if (isset($message_keyword[$item['keyword_id']])) {
+                $message_keyword[$item['keyword_id']] += $item[$column];
+            } else {
+                $message_keyword[$item['keyword_id']] = $item[$column];
+            }
+
+            $message_total +=  $item[$column];
+        }
+
+        $data = null;
+
+
+        foreach ($message_keyword as $keyword_id => $value) {
+            $data[$keyword_id]['value'][] = [
+                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
+                'percentage' => self::point_two_digits(($value / $message_total) * 100),
+            ];
+        }
+
+        return $data;
+    }
+
+    protected static function getDataByCondition(
+        $table,
+        $campaign_id,
+        $start_date,
+        $end_date,
+        $keyword_id = null,
+        $source_id = null,
+        $column = null,
+        $type = null, $condition = null)
+    {
+
+
+        $items = DB::table($table)
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date]);
+
+        if (isset($condition['group_by'])) {
+
+            foreach ($condition['group_by'] as $groupBy) {
+                $items->groupBy($groupBy);
+            }
+        }
+
+        if ($keyword_id) {
+            $items->where('keyword_id', $keyword_id);
+        }
+
+
+        if ($source_id && $source_id !== 'all') {
+            $items->where('source_id', $source_id);
+        }
+
+
+        return self::factorListData($items->get(), $type ,$campaign_id, $start_date, $end_date, $keyword_id, $table, $column);
+    }
+
+    protected static function factorListData($items, $type, $campaign_id = null, $start_date = null, $end_date = null, $keyword_id = null, $table = null, $column = null, $condition = null) {
+
+        $data = null;
+
+        if ($type === 'percentage' ) {
+            $data = self::findPercentage($items, $column, $start_date, $end_date);
+        }
+
+        foreach ($items as $item) {
+            $keyword_id = $item->keyword_id;
+
+            if ($type !== 'engagement') {
+                $data[$keyword_id]['keyword_id'] = $item->keyword_id;
+                $data[$keyword_id]['keyword_name'] = $item->keyword_name;
+                $data[$keyword_id]['campaign_id'] = $item->campaign_id;
+                $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+            }
+
+            if ($type !== 'engagement' && isset($item->source_id) && $item->source_id) {
+                $data[$keyword_id]['source_id'] = $item->source_id;
+                $data[$keyword_id]['source_name'] = $item->source_name;
+            }
+
+            if ($type === 'source' || $type === 'daily_message') {
+                $nestData = [
+                    'source_id' => $item->source_id,
+                    'source_name' => $item->source_name,
+                    'date_m' => $item->date_m,
+                    'total_at_date' => $item->total_at_date
+                ];
+
+                $data[$keyword_id]['value'][] = $nestData;
+            }
+
+            if ($type === 'engagement') {
+
+                $nestData['keyword_id'] = $item->keyword_id;
+                $nestData['keyword_name'] = $item->keyword_name;
+                $nestData['campaign_id'] = $item->campaign_id;
+                $nestData['campaign_name'] = $item->campaign_name;
+
+
+                if (isset($nestData["value"][$item->source_id])) {
+                    $nestData["value"][$item->source_id][] = [
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'date_m' => $item->date_m,
+                        'total_at_date' => (int)$item->engagement
+                    ];
+                } else {
+                    $nestData["value"][$item->source_id] = [
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'date_m' => $item->date_m,
+                        'total_at_date' => (int)$item->engagement
+                    ];
+                }
+
+
+                if (isset($data[$item->keyword_id])) {
+                    $data[$item->keyword_id]['value'][] = [
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'date_m' => $item->date_m,
+                        'total_at_date' => (int)$item->engagement
+                    ];
+                } else {
+                    $data[$item->keyword_id] = $nestData;
+                }
+//
+                $data[$item->keyword_id]['value'] = array_values($data[$item->keyword_id]['value']);
+
+//                $data[$item->keyword_id][] = $nestData;
+            }
+
+            if ($type === 'shareofvoice') {
+                                $message = self::shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
+                $total_message = DB::table($table)->where('campaign_id', $campaign_id)
+                    ->where('keyword_id', $item->keyword_id)
+                    ->where('organization_id', $item->organization_id)
+                    ->where('campaign_name', $item->campaign_name)
+                    ->whereBetween('date_m', [$start_date, $end_date])
+                    ->sum($column);
+
+                $percentage = ($message / $total_message) * 100;
+
+                $push_data = [
+                    'channel' => $item->source_name,
+                    'percentage' => self::point_two_digits($percentage),
+                    'number_of_message' => $message,
+                    // 'highlight' =>
+                ];
+
+                $data[$keyword_id]['value'][] = $push_data;
+            }
+
+        }
+
+
+
+        if ($data) {
+            return array_values($data);
+        }
+
+        return $data;
+
+    }
+
+
 }
+
+
