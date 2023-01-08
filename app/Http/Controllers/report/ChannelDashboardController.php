@@ -4,10 +4,13 @@ namespace App\Http\Controllers\report;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Classification;
 use Illuminate\Support\Carbon;
 use App\Models\PercentageOfMessages;
 use App\Models\DailyMessage;
+use App\Models\Message;
 use App\Models\Sources;
+use App\Models\MessageResultGroup;
 
 class ChannelDashboardController extends Controller
 {
@@ -524,75 +527,55 @@ class ChannelDashboardController extends Controller
 
     public function ChannelBullyType(Request $request)
     {
-        $data['labels'] = [
-            "No Bully",
-            "Gossip",
-            "Harassment",
-            "Exclusion",
-            "Hate Speech",
-        ];
+        $data = null;
+        $campaign_id = $request->campaign_id;
+        $source = $request->source;
+        if (!$campaign_id) {
+            return parent::handleNotFound('Campaign id is required');
+        }
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                19,
-                38,
-                47,
-                16,
-                30,
-            ]
-        ];
+        if ($request->start_date) {
+            $start_date = $this->date_carbon($request->start_date);
+        }
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                32,
-                15,
-                78,
-            ]
-        ];
+        if ($request->end_date) {
+            $end_date = $this->date_carbon($request->end_date);
+        }
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                15,
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
+        $channal_bully = MessageResultGroup::where('classification_type_id', 2)
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date]);
+            
+       
+         $data = null;   
+        foreach ($channal_bully->get() as $item) {
+                if (isset($data[$item->source_id])) {
+                    $data[$item->source_id]['value'] =  $data[$item->source_id]['value'] + 1;
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                23,
-                16,
-                38,
-                89,
-            ]
-        ];
+                } else {
+                    $data[$item->source_id] = [
+                        'value' => 1,
+                        "message_id" => $item->message_id,
+                        "source_name" => $this->source_name($item->source_id),
+                        "keyword_name" => $item->keyword_name,
+                        "bully_type" => $this->bully_type_name($item->classification_id),
+                    ];
+                }
+        }
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                45,
-                23,
-                56,
-                67,
-                21,
-            ]
-        ];
+        return parent::handleRespond(array_values($data));
+    }
 
-        return parent::handleRespond($data);
+    public function source_name($source_id) 
+    {
+        $source = Sources::where('id', $source_id)->first();
+        return $source->name;
+    }
+
+    public function bully_type_name($class_id) 
+    {
+        $classfication = Classification::where('id', $class_id)->first();
+        return $classfication->name;
     }
 
     public function PeriodOverPeriod(Request $request)
