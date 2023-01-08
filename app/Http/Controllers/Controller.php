@@ -20,6 +20,7 @@ class Controller extends BaseController
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
     protected $organization_id = 1;
+
     public function __construct(Request $request)
     {
 //        $this->request = $request;
@@ -139,7 +140,8 @@ class Controller extends BaseController
         return $model::offset($start)->limit($limit)->orderBy('created', 'desc');
     }
 
-    public static function uploadImage($file) {
+    public static function uploadImage($file)
+    {
         if ($file) {
             return $file->store("organization-content", 'public');
         }
@@ -268,7 +270,7 @@ class Controller extends BaseController
                 $message_keyword[$item['keyword_id']] = $item[$column];
             }
 
-            $message_total +=  $item[$column];
+            $message_total += $item[$column];
         }
 
         $data = null;
@@ -317,14 +319,15 @@ class Controller extends BaseController
         }
 
 
-        return self::factorListData($items->get(), $type ,$campaign_id, $start_date, $end_date, $keyword_id, $table, $column);
+        return self::factorListData($items->get(), $type, $campaign_id, $start_date, $end_date, $keyword_id, $table, $column);
     }
 
-    protected static function factorListData($items, $type, $campaign_id = null, $start_date = null, $end_date = null, $keyword_id = null, $table = null, $column = null, $condition = null) {
+    protected static function factorListData($items, $type, $campaign_id = null, $start_date = null, $end_date = null, $keyword_id = null, $table = null, $column = null, $condition = null)
+    {
 
         $data = null;
 
-        if ($type === 'percentage' ) {
+        if ($type === 'percentage') {
             $data = self::findPercentage($items, $column, $start_date, $end_date);
         }
 
@@ -396,7 +399,7 @@ class Controller extends BaseController
             }
 
             if ($type === 'shareofvoice') {
-                                $message = self::shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
+                $message = self::shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
                 $total_message = DB::table($table)->where('campaign_id', $campaign_id)
                     ->where('keyword_id', $item->keyword_id)
                     ->where('organization_id', $item->organization_id)
@@ -419,11 +422,62 @@ class Controller extends BaseController
         }
 
 
-
         if ($data) {
             return array_values($data);
         }
 
+        return $data;
+
+    }
+
+    protected static function listDataByDay($table, $campaign_id, $start_date, $end_date, $keyword_id = null, $source_id = null, $column = null, $type = null, $condition = null)
+    {
+        $data['labels'] = [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun"
+        ];
+
+
+        $items = DB::table($table)
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date]);
+
+        if (isset($condition['group_by'])) {
+
+            foreach ($condition['group_by'] as $groupBy) {
+                $items->groupBy($groupBy);
+            }
+        }
+
+        if ($keyword_id) {
+            $items->where('keyword_id', $keyword_id);
+        }
+
+        $data['value'] = null;
+
+        foreach ($items->get() as $item) {
+            $day_name = Carbon::parse($item->date_m)->format('D');
+            $index_label = array_search($day_name, $data['labels']);
+
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0, 0, 0, 0, 0, 0, 0]
+                ];
+            }
+        }
+
+        $data['value'] = array_values($data['value']);
         return $data;
 
     }
