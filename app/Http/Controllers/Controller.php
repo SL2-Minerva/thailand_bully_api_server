@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\BaseModel;
+use App\Models\Sources;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -257,9 +258,6 @@ class Controller extends BaseController
     {
         $message_keyword = [];
         $message_total = 0;
-//        $items = $items->toArray();
-
-//        dd($items->toArray());
 
         foreach ($items as $object) {
             $item = (array)$object;
@@ -274,7 +272,6 @@ class Controller extends BaseController
         }
 
         $data = null;
-
 
         foreach ($message_keyword as $keyword_id => $value) {
             $data[$keyword_id]['value'][] = [
@@ -430,7 +427,7 @@ class Controller extends BaseController
 
     }
 
-    protected static function listDataByDay($table, $campaign_id, $start_date, $end_date, $keyword_id = null, $source_id = null, $column = null, $type = null, $condition = null)
+    protected static function listDataByType($type, $table, $campaign_id, $start_date, $end_date, $keyword_id = null, $source_id = null, $column = null, $condition = null)
     {
         $data['labels'] = [
             "Mon",
@@ -442,7 +439,6 @@ class Controller extends BaseController
             "Sun"
         ];
 
-
         $items = DB::table($table)
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date]);
@@ -454,121 +450,201 @@ class Controller extends BaseController
             }
         }
 
+
+
         if ($keyword_id) {
             $items->where('keyword_id', $keyword_id);
         }
 
         $data['value'] = null;
 
+        if ($type === 'time') {
+            $data['labels'] = [
+                "Before 6 AM",
+                "6 AM-12 PM",
+                "12 PM-6 PM",
+                "After 6 PM"
+            ];
+        }
+
+        if ($type === 'device') {
+            $data['labels'] = [
+                "Android",
+                "Iphone",
+                "Web App",
+            ];
+        }
+
+        if ($type === 'channel') {
+
+            $sources = Sources::all();
+            $data['labels'] = [];
+
+            foreach ($sources as $source) {
+                $data['labels'][] = $source->name;
+            }
+
+        }
+
         foreach ($items->get() as $item) {
-            $day_name = Carbon::parse($item->date_m)->format('D');
-            $index_label = array_search($day_name, $data['labels']);
 
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
-                    'data' => [0, 0, 0, 0, 0, 0, 0]
-                ];
-
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            }
-        }
-
-        $data['value'] = array_values($data['value']);
-        return $data;
-
-    }
-
-    protected static function listDataByTime($table, $campaign_id, $start_date, $end_date, $keyword_id = null, $source_id = null, $column = null, $type = null, $condition = null) {
-        $data['labels'] = [
-            "Before 6 AM",
-            "6 AM-12 PM",
-            "12 PM-6 PM",
-            "After 6 PM"
-        ];
-
-        $items = DB::table($table)
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date]);
-
-        if (isset($condition['group_by'])) {
-
-            foreach ($condition['group_by'] as $groupBy) {
-                $items->groupBy($groupBy);
-            }
-        }
-
-        if ($keyword_id) {
-            $items->where('keyword_id', $keyword_id);
-        }
-
-        $data['value'] = null;
-        $check = [];
-        
-        foreach ($items->get() as $item) {
-            $sixAM = Carbon::parse("06:00:00");
-
-            $time = Carbon::parse($item->date_m)->format('H:i:s');
+            if ($type === 'dayname' || $type === 'dayname_engagement') {
+                $day_name = Carbon::parse($item->date_m)->format('D');
+                $index_label = array_search($day_name, $data['labels']);
 
 
-            $index_label = 3;
-            if (Carbon::parse($time)->lt($sixAM)) {
-                $index_label = 0;
-                $check[] = [
-                    'index' => $index_label,
-                    'time' => $item->date_m,
-                ];
+                if ($type === 'dayname') {
 
-            }
-            if (Carbon::parse($time)->between($sixAM, Carbon::parse("12:00:00"))) {
-                $index_label = 1;
-                $check[] = [
-                    'index' => $index_label,
-                    'time' => $item->date_m,
-                ];
-            }
-            if (Carbon::parse($time)->between(Carbon::parse("12:00:00"), Carbon::parse("18:00:00"))) {
-                $index_label = 2;
-                $check[] = [
-                    'index' => $index_label,
-                    'time' => $item->date_m,
-                ];
+                    if (isset($data['value'][$item->keyword_id])) {
+
+                        $data['value'][$item->keyword_id]['data']['shares'] += 1;
+
+
+                    } else {
+
+                        $data['value'][$item->keyword_id] = [
+                            'id' => $item->keyword_id,
+                            'keyword_name' => $item->keyword_name,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                            'data' => [0, 0, 0, 0, 0, 0, 0]
+                        ];
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+
+                    }
+
+                }
+
+
+                if ($type === 'dayname_engagement') {
+
+                    if (isset($data['value'][0])) {
+                        $data['value'][0]['data'][$index_label] += $item->number_of_shares;
+                        $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+                        $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
+
+                    } else {
+                        $data['value'][0] = [
+                            'id' => 1,
+                            'keyword_name' => 'Share',
+                            'data' => [0, 0, 0, 0, 0, 0, 0]
+                        ];
+
+                        $data['value'][1] = [
+                            'id' => 2,
+                            'keyword_name' => 'Comment',
+                            'data' => [0, 0, 0, 0, 0, 0, 0]
+                        ];
+
+
+                        $data['value'][2] = [
+                            'id' => 3,
+                            'keyword_name' => 'reactions',
+                            'data' => [0, 0, 0, 0, 0, 0, 0]
+                        ];
+
+                        $data['value'][0]['data'][$index_label] += $item->number_of_shares;
+                        $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+                        $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
+                    }
+                }
+
             }
 
-            if (Carbon::parse($time)->gt(Carbon::parse("18:00:00"))) {
+            if ($type === 'time') {
+
+                $sixAM = Carbon::parse("06:00:00");
+                $time = Carbon::parse($item->date_m)->format('H:i:s');
                 $index_label = 3;
-                $check[] = [
-                    'index' => $index_label,
-                    'time' => $item->date_m,
-                ];
+
+                if (Carbon::parse($time)->lt($sixAM)) {
+                    $index_label = 0;
+                }
+
+                if (Carbon::parse($time)->between($sixAM, Carbon::parse("12:00:00"))) {
+                    $index_label = 1;
+                }
+
+                if (Carbon::parse($time)->between(Carbon::parse("12:00:00"), Carbon::parse("18:00:00"))) {
+                    $index_label = 2;
+                }
+
+                if (Carbon::parse($time)->gt(Carbon::parse("18:00:00"))) {
+                    $index_label = 3;
+                }
+
+                if (isset($data['value'][$item->keyword_id])) {
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->keyword_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_name' => $item->keyword_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'data' => [0, 0, 0, 0]
+                    ];
+
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
             }
 
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
-                    'data' => [0, 0, 0, 0]
-                ];
+            if ($type === 'device') {
+                $index_label = 0;
 
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                if ($item->device == 'iphone') {
+                    $index_label = 1;
+                }
+
+                if ($item->device == 'webapp') {
+                    $index_label = 2;
+                }
+
+                if (isset($data['value'][$item->keyword_id])) {
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->keyword_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_name' => $item->keyword_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'data' => [0, 0, 0]
+                    ];
+
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
             }
+
+            if ($type === 'channel') {
+                $index_label = 0;
+                $index_label = array_search($item->source_name, $data['labels']);
+
+                if (isset($data['value'][$item->keyword_id])) {
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->keyword_id] = [
+                        'id' => $item->keyword_id,
+                        'name' => $item->keyword_name,
+                        'keyword_name' => $item->keyword_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                    ];
+
+                    for ($i = 0; $i <= count($data['labels']); $i++) {
+                        $data['value'][$item->keyword_id]['data'][$i] = 0;
+                    }
+
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
+            }
+
+
+
         }
+
         $data['value'] = array_values($data['value']);
         return $data;
 
     }
-
-
-
 
 }
 

@@ -32,9 +32,8 @@ class EngagementDashboardController extends Controller
         $start_date = $this->date_carbon($request->start_date) ?? null;
         $end_date = $this->date_carbon($request->end_date) ?? null;
 
-
         $campaign_id = $request->campaign_id;
-        $data = parent::listDataByDay($table, $campaign_id, $start_date, $end_date );
+        $data = parent::listDataByType('dayname', $table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
     }
@@ -50,7 +49,7 @@ class EngagementDashboardController extends Controller
 
         $campaign_id = $request->campaign_id;
 
-        $data = parent::listDataByTime($table, $campaign_id, $start_date, $end_date );
+        $data = parent::listDataByType('time', $table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
 
@@ -58,61 +57,15 @@ class EngagementDashboardController extends Controller
 
     public function EngagementByDevice(Request $request)
     {
-        $data['labels'] = [
-            "Andriod",
-            "Iphone",
-            "Web App",
-        ];
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+        $period = $request->period;
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                19,
-                38,
-            ]
-        ];
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                23,
-            ]
-        ];
+        $campaign_id = $request->campaign_id;
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-                45,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                23,
-                56,
-                21,
-            ]
-        ];
+        $data = parent::listDataByType('device', $table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
     }
@@ -174,53 +127,16 @@ class EngagementDashboardController extends Controller
 
     public function EngagementChannel(Request $request)
     {
-        $data['labels'] = [
-            "Facebook",
-            "Twitter",
-            "Instagram",
-            "Youtube",
-            "Pantip",
-        ];
 
-        $data['data'][] = [
-            "id" => 1,
-            "name" => "Keyword 1",
-            "data" => [
-                80, 50, 30, 40, 100
-            ]
-        ];
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+        $period = $request->period;
 
-        $data['data'][] = [
-            "id" => 2,
-            "name" => "Keyword 2",
-            "data" => [
-                20, 30, 40, 80, 20
-            ]
-        ];
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
 
-        $data['data'][] = [
-            "id" => 3,
-            "name" => "Keyword 3",
-            "data" => [
-                44, 76, 78, 13, 43
-            ]
-        ];
+        $campaign_id = $request->campaign_id;
 
-        $data['data'][] = [
-            "id" => 4,
-            "name" => "Keyword 4",
-            "data" => [
-                20, 30, 48, 23, 53
-            ]
-        ];
-
-        $data['data'][] = [
-            "id" => 5,
-            "name" => "Keyword 5",
-            "data" => [
-                45, 26, 38, 53, 13
-            ]
-        ];
+        $data = parent::listDataByType('channel', $table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
     }
@@ -427,57 +343,67 @@ class EngagementDashboardController extends Controller
 
     public function EngagementByDayKey(Request $request)
     {
-        $data['labels'] = [
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sun"
-        ];
+//        $data['labels'] = [
+//            "Mon",
+//            "Tue",
+//            "Wed",
+//            "Thu",
+//            "Fri",
+//            "Sat",
+//            "Sun"
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 1,
+//            "keyword_name" => "Share",
+//            "data" => [
+//                20,
+//                39,
+//                19,
+//                38,
+//                47,
+//                16,
+//                30
+//            ]
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 2,
+//            "keyword_name" => "Comment",
+//            "data" => [
+//                12,
+//                16,
+//                23,
+//                56,
+//                32,
+//                15,
+//                78,
+//            ]
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 3,
+//            "keyword_name" => "Reaction",
+//            "data" => [
+//                15,
+//                67,
+//                23,
+//                45,
+//                65,
+//                23,
+//                53,
+//            ]
+//        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Share",
-            "data" => [
-                20,
-                39,
-                19,
-                38,
-                47,
-                16,
-                30
-            ]
-        ];
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+        $period = $request->period;
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Comment",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-                32,
-                15,
-                78,
-            ]
-        ];
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Reaction",
-            "data" => [
-                15,
-                67,
-                23,
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
+        $campaign_id = $request->campaign_id;
+
+        $data = parent::listDataByType('dayname_engagement', $table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
     }
