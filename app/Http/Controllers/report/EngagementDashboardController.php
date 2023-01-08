@@ -26,36 +26,15 @@ class EngagementDashboardController extends Controller
 
     public function EngagementByDay(Request $request)
     {
-
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+        $period = $request->period;
 
         $start_date = $this->date_carbon($request->start_date) ?? null;
         $end_date = $this->date_carbon($request->end_date) ?? null;
 
-        $period = $request->period;
-        $table =  'total_engagement_of_source_d_m_y_h_i_s';
 
         $campaign_id = $request->campaign_id;
-
-
-        $data = parent::listDataByDay($table, $campaign_id, $start_date, $end_date, );
-//        $data['value'][] = [
-//            "id" => 1,
-//            "keyword_name" => "Keyword 1",
-//            "data" => [
-//                20,
-//                39,
-//                19,
-//                38,
-//                47,
-//                16,
-//                30
-//            ]
-//        ];
-
-
-
-
-
+        $data = parent::listDataByDay($table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
     }
@@ -63,70 +42,18 @@ class EngagementDashboardController extends Controller
     public function EngagementByTime(Request $request)
     {
 
-        $table = 'total_engagement_of_source_d_m_y_h_i_s';
-        $data['labels'] = [
-            "Before 6 AM",
-            "6 AM-12 PM",
-            "12 PM-6 PM",
-            "After 6 PM"
-        ];
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+        $period = $request->period;
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                39,
-                19,
-                38,
-            ]
-        ];
+        $start_date = $this->date_carbon($request->start_date) ?? null;
+        $end_date = $this->date_carbon($request->end_date) ?? null;
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-            ]
-        ];
+        $campaign_id = $request->campaign_id;
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-                21,
-                45,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                45,
-                23,
-                56,
-                21,
-            ]
-        ];
+        $data = parent::listDataByTime($table, $campaign_id, $start_date, $end_date );
 
         return parent::handleRespond($data);
+
     }
 
     public function EngagementByDevice(Request $request)
