@@ -5,10 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Classification extends BaseModel
+class MessageResultGroup extends Model
 {
     use HasFactory;
-
-    protected $table = 'classifications';
+    protected $table = 'message_result_group';
     protected $guarded = [];
 }
