@@ -91,8 +91,6 @@ class UserController extends Controller
             }
         }
 
-
-
         if ($user) {
             $data['info'] = $user;
             $data['role_description'] = 'ssss';
@@ -105,7 +103,6 @@ class UserController extends Controller
 
         return parent::handleNotFound($user);
     }
-
 
     private function permission_report($user)
     {

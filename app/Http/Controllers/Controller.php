@@ -259,6 +259,8 @@ class Controller extends BaseController
         $message_keyword = [];
         $message_total = 0;
 
+
+
         foreach ($items as $object) {
             $item = (array)$object;
 
@@ -274,10 +276,13 @@ class Controller extends BaseController
         $data = null;
 
         foreach ($message_keyword as $keyword_id => $value) {
+            $percentage = 0;
+            if ($value && $message_total) {
+                $percentage = self::point_two_digits(($value / $message_total) * 100);
+            }
             $data[$keyword_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-
-                'percentage' => self::point_two_digits(($value / $message_total) * 100),
+                'percentage' => $percentage,
             ];
         }
 
@@ -502,12 +507,8 @@ class Controller extends BaseController
                 if ($type === 'dayname') {
 
                     if (isset($data['value'][$item->keyword_id])) {
-
-                        $data['value'][$item->keyword_id]['data']['shares'] += 1;
-
-
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                     } else {
-
                         $data['value'][$item->keyword_id] = [
                             'id' => $item->keyword_id,
                             'keyword_name' => $item->keyword_name,

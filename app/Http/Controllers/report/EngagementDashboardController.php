@@ -19,7 +19,8 @@ class EngagementDashboardController extends Controller
 
     public function __construct(Request $request)
     {
-        $this->campaign_id = $request->campaign_id;
+
+        $this->campaign_id = $request->campaign_id ? $request->campaign_id : $request->campaignId;
         $this->start_date = $this->date_carbon($request->start_date) ?? null;
         $this->end_date = $this->date_carbon($request->end_date) ?? null;
         $this->period = $request->period;
@@ -161,7 +162,7 @@ class EngagementDashboardController extends Controller
     public function EngagementType(Request $request)
     {
 
-        $table = 'total_engagement_of_source';
+        $table = 'total_engagement_of_source_d_m_y_h_i_s';
         $source_id = $request->source;
         $data = null;
 
@@ -180,6 +181,8 @@ class EngagementDashboardController extends Controller
             $items->where('source_id', $source_id);
         }
 
+
+
         $percentages_share_current = parent::findPercentage($items->get(), 'number_of_shares', $this->start_date, $this->end_date);
         $percentages_comment_current = parent::findPercentage($items->get(), 'number_of_comments', $this->start_date, $this->end_date);
         $percentages_reaction_current = parent::findPercentage($items->get(), 'number_of_reactions', $this->start_date, $this->end_date);
@@ -190,7 +193,6 @@ class EngagementDashboardController extends Controller
         $percentages_reaction_previous = parent::findPercentage($items->get(), 'number_of_reactions', $this->start_date_previous, $this->end_date_previous);
 
         // find percentage of engagement
-
 
         foreach ($items->get() as $item) {
 
@@ -318,12 +320,11 @@ class EngagementDashboardController extends Controller
 
             }
 
-
         }
 
-        $data['engagement'] = isset($data['engagement']) ? array_values($data['engagement']) : $data['engagement'] ;
-        $data['prcentage_of_engagement_previous'] = isset($data['prcentage_of_engagement_previous'] ) ? array_values($data['prcentage_of_engagement_previous']) : $data['prcentage_of_engagement_previous'];
-        $data['prcentage_of_engagement_current'] = isset($data['prcentage_of_engagement_current']) ? array_values($data['prcentage_of_engagement_current']) : $data['prcentage_of_engagement_current'];
+        $data['engagement'] = isset($data['engagement']) ? array_values($data['engagement']) : null;
+        $data['prcentage_of_engagement_previous'] = isset($data['prcentage_of_engagement_previous'] ) ? array_values($data['prcentage_of_engagement_previous']) : null;
+        $data['prcentage_of_engagement_current'] = isset($data['prcentage_of_engagement_current']) ? array_values($data['prcentage_of_engagement_current']) : null;
 
         return parent::handleRespond($data);
     }
