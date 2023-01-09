@@ -254,7 +254,7 @@ class Controller extends BaseController
     }
 
 
-    private static function findPercentage($items, $column, $start_date, $end_date)
+    protected static function findPercentage($items, $column, $start_date, $end_date)
     {
         $message_keyword = [];
         $message_total = 0;
@@ -317,7 +317,7 @@ class Controller extends BaseController
         }
 
 
-        return self::factorListData($items->get(), $type, $campaign_id, $start_date, $end_date, $keyword_id, $table, $column);
+        return self::factorListData($items->get(), $type, $campaign_id, $start_date, $end_date, $keyword_id, $table, $column, $condition);
     }
 
     protected static function factorListData($items, $type, $campaign_id = null, $start_date = null, $end_date = null, $keyword_id = null, $table = null, $column = null, $condition = null)
@@ -415,6 +415,10 @@ class Controller extends BaseController
                 ];
 
                 $data[$keyword_id]['value'][] = $push_data;
+            }
+
+            if ($type === '') {
+
             }
 
         }

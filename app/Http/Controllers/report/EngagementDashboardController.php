@@ -4,6 +4,7 @@ namespace App\Http\Controllers\report;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB;
 
 class EngagementDashboardController extends Controller
 {
@@ -17,7 +18,7 @@ class EngagementDashboardController extends Controller
 
     public function __construct(Request $request)
     {
-
+        $this->campaign_id = $request->campaign_id;
         $this->start_date = $this->date_carbon($request->start_date) ?? null;
         $this->end_date = $this->date_carbon($request->end_date) ?? null;
         $this->period = $request->period;
@@ -163,130 +164,185 @@ class EngagementDashboardController extends Controller
 
     public function EngagementType(Request $request)
     {
-        $data = [
-            "engagement" => $this->engagement($request->campaign_id, $this->start_date, $this->end_date, $request->source),
-            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $this->start_date, $this->end_date, $request->keyword_id ?? null, $request->source ?? null),
-            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $this->start_date_previous, $this->end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
-        ];
+
+        $table = 'total_engagement_of_source';
+        $source_id = $request->source;
+        $data = null;
+
+        $items = DB::table($table)
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        if (isset($condition['group_by'])) {
+
+            foreach ($condition['group_by'] as $groupBy) {
+                $items->groupBy($groupBy);
+            }
+        }
+
+        if ($source_id && $source_id !== 'all') {
+            $items->where('source_id', $source_id);
+        }
+
+        $percentages_share_current = parent::findPercentage($items->get(), 'number_of_shares', $this->start_date, $this->end_date);
+        $percentages_comment_current = parent::findPercentage($items->get(), 'number_of_comments', $this->start_date, $this->end_date);
+        $percentages_reaction_current = parent::findPercentage($items->get(), 'number_of_reactions', $this->start_date, $this->end_date);
+
+
+        $percentages_share_previous = parent::findPercentage($items->get(), 'number_of_shares', $this->start_date_previous, $this->end_date_previous);
+        $percentages_comment_previous = parent::findPercentage($items->get(), 'number_of_comments', $this->start_date_previous, $this->end_date_previous);
+        $percentages_reaction_previous = parent::findPercentage($items->get(), 'number_of_reactions', $this->start_date_previous, $this->end_date_previous);
+
+        // find percentage of engagement
+
+
+        foreach ($items->get() as $item) {
+
+            $shared = [
+                "source_id" => $item->source_id,
+                "source_name" => $item->source_name,
+                "date_m" => $item->date_m,
+                "total_at_date" => $item->number_of_shares,
+            ];
+
+            $comment = [
+                "source_id" => $item->source_id,
+                "source_name" => $item->source_name,
+                "date_m" => $item->date_m,
+                "total_at_date" => $item->number_of_comments,
+            ];
+
+            $reactions = [
+                "source_id" => $item->source_id,
+                "source_name" => $item->source_name,
+                "date_m" => $item->date_m,
+                "total_at_date" => $item->number_of_reactions,
+            ];
+
+
+            if (isset($data['engagement'][1])) {
+
+
+                $data['engagement'][1]['value'][] = $shared;
+                $data['engagement'][2]['value'][] = $comment;
+                $data['engagement'][3]['value'][] = $reactions;
+            }
+
+            else {
+                $data['engagement'][1] = [
+                    "id" => 1,
+                    "name" => 'Share',
+                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                $data['engagement'][2] = [
+                    "id" => 2,
+                    "name" => 'Comment',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                $data['engagement'][3] = [
+                    "id" => 3,
+                    "name" => 'Reactions',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                // engagement
+
+                $data['engagement'][1]['value'][] = $shared;
+                $data['engagement'][2]['value'][] = $comment;
+                $data['engagement'][3]['value'][] = $reactions;
+
+                // prcentage_of_engagement_current
+
+                $data['prcentage_of_engagement_current'][1] = [
+                    "id" => 1,
+                    "name" => 'Share',
+                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                $data['prcentage_of_engagement_current'][2] = [
+                    "id" => 2,
+                    "name" => 'Comment',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                $data['prcentage_of_engagement_current'][3] = [
+                    "id" => 3,
+                    "name" => 'Reactions',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+//                // prcentage_of_engagement_previous
+                $data['prcentage_of_engagement_previous'][1] = [
+                    "id" => 1,
+                    "name" => 'Share',
+                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                $data['prcentage_of_engagement_previous'][2] = [
+                    "id" => 2,
+                    "name" => 'Comment',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+                $data['prcentage_of_engagement_previous'][3] = [
+                    "id" => 3,
+                    "name" => 'Reactions',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "value" => []
+                ];
+
+
+
+                $data['prcentage_of_engagement_current'][1]['value'] = $percentages_share_current[$item->keyword_id]['value'];
+                $data['prcentage_of_engagement_current'][2]['value'] = $percentages_reaction_current[$item->keyword_id]['value'];
+                $data['prcentage_of_engagement_current'][3]['value'] = $percentages_comment_current[$item->keyword_id]['value'];
+
+                $data['prcentage_of_engagement_previous'][1]['value'] = $percentages_share_previous[$item->keyword_id]['value'];
+                $data['prcentage_of_engagement_previous'][2]['value'] = $percentages_reaction_previous[$item->keyword_id]['value'];
+                $data['prcentage_of_engagement_previous'][3]['value'] = $percentages_comment_previous[$item->keyword_id]['value'];
+
+//
+
+            }
+
+
+        }
+
+        $data['engagement'] = array_values($data['engagement']);
+        $data['prcentage_of_engagement_previous'] = array_values($data['prcentage_of_engagement_previous']);
+        $data['prcentage_of_engagement_current'] = array_values($data['prcentage_of_engagement_current']);
+
+
+
+//        $data = [
+//            "engagement" => $this->engagement($request->campaign_id, $this->start_date, $this->end_date, $request->source),
+//            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $this->start_date, $this->end_date, $request->keyword_id ?? null, $request->source ?? null),
+//            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $this->start_date_previous, $this->end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
+//        ];
 
 //        $data = parent::listDataByType('type', 'total_engagement_of_source_d_m_y_h_i_s', $request->campaign_id, $this->start_date, $this->end_date );
 //        return parent::handleRespond($data);
 
-//        $data['engagement'][] = [
-//            "keyword_id" => 1,
-//            "keyword_name" => "Share",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                "source_id" => 2,
-//                "source_name" => "twitter",
-//                "date_m" => "2022-12-17",
-//                "total_at_date" => 2,
-//            ],
-//            [
-//                "source_id" => 2,
-//                "source_name" => "twitter",
-//                "date_m" => "2022-12-18",
-//                "total_at_date" => 3,
-//            ],
-//            [
-//                "source_id" => 2,
-//                "source_name" => "twitter",
-//                "date_m" => "2022-12-19",
-//                "total_at_date" => 10,
-//            ],
-//            [
-//                "source_id" => 2,
-//                "source_name" => "twitter",
-//                "date_m" => "2022-12-20",
-//                "total_at_date" => 9,
-//            ],
-//            [
-//                "source_id" => 2,
-//                "source_name" => "twitter",
-//                "date_m" => "2022-12-21",
-//                "total_at_date" => 1,
-//            ]
-//        ];
-//
-//        $data['engagement'][] = [
-//            "keyword_id" => 2,
-//            "keyword_name" => "Comment",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-17",
-//                    "total_at_date" => 2,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-18",
-//                    "total_at_date" => 3,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-19",
-//                    "total_at_date" => 10,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-20",
-//                    "total_at_date" => 9,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-21",
-//                    "total_at_date" => 1,
-//                ]
-//            ],
-//
-//        ];
-//
-//        $data['engagement'][] = [
-//            "keyword_id" => 3,
-//            "keyword_name" => "Reaction",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-17",
-//                    "total_at_date" => 2,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-18",
-//                    "total_at_date" => 3,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-19",
-//                    "total_at_date" => 10,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-20",
-//                    "total_at_date" => 9,
-//                ],
-//                [
-//                    "source_id" => 2,
-//                    "source_name" => "twitter",
-//                    "date_m" => "2022-12-21",
-//                    "total_at_date" => 1,
-//                ]
-//            ],
-//        ];
+
 //
 //        $data['prcentage_of_engagement_current'][] = [
 //            "keyword_id" => 1,
