@@ -9,371 +9,373 @@ class BullyDashboardController extends Controller
 {
     public function DailyBully(Request $request)
     {
-
-        $data = [
-            "bully_level" => [
-                [
-                    "id" => 1,
-                    "bully_level" => "Level 1",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-17",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-18",
-                            "total_at_date" => 3
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-19",
-                            "total_at_date" => 10
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-20",
-                            "total_at_date" => 9
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-21",
-                            "total_at_date" => 1
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 2,
-                    "bully_level" => "Level 1",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-17",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-18",
-                            "total_at_date" => 1
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-19",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-20",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-21",
-                            "total_at_date" => 1
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-22",
-                            "total_at_date" => 1
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 3,
-                    "bully_level" => "Level 2",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-17",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-18",
-                            "total_at_date" => 1
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-19",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-20",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-21",
-                            "total_at_date" => 1
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-22",
-                            "total_at_date" => 1
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 4,
-                    "bully_level" => "Level 3",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-17",
-                            "total_at_date" => 2
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-18",
-                            "total_at_date" => 3
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-19",
-                            "total_at_date" => 10
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-20",
-                            "total_at_date" => 9
-                        ],
-                        [
-                            "source_id" => 2,
-                            "source_name" => "twitter",
-                            "date_m" => "2022-12-21",
-                            "total_at_date" => 1
-                        ]
-                    ]
-                ]
-            ],
-            "percentage_of_bully_current" => [
-                [
-                    "id" => 1,
-                    "bully_level" => "Level 0",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "73.53"
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 2,
-                    "bully_level" => "Level 1",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "26.47"
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 3,
-                    "bully_level" => "Level 2",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "73.53"
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 4,
-                    "bully_level" => "Level 3",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "33.53"
-                        ]
-                    ]
-                ]
-            ],
-            "percentage_of_bully_previous" => [
-                [
-                    "id" => 1,
-                    "bully_level" => "Level 0",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "16/12/2022 - 22/12/2022",
-                            "percentage" => "65.85"
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 1,
-                    "bully_level" => "Level 0",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "16/12/2022 - 22/12/2022",
-                            "percentage" => "34.15"
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 3,
-                    "bully_level" => "Level 2",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "17/12/2022 - 23/12/2022",
-                            "percentage" => "21.53"
-                        ]
-                    ]
-                ],
-                [
-                    "id" => 4,
-                    "bully_level" => "Level 3",
-                    "campaign_id" => 2,
-                    "campaign_name" => "ข่าวบันเทิง",
-                    "organization_id" => 1,
-                    "organizations_name" => "test",
-                    "value" => [
-                        [
-                            "date" => "16/12/2022 - 22/12/2022",
-                            "percentage" => "73.53"
-                        ]
-                    ]
-                ]
-            ]
-
-        ];
+        $data = [];
+//        $data = [
+//            "bully_level" => [
+//                [
+//                    "id" => 1,
+//                    "bully_level" => "Level 1",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-17",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-18",
+//                            "total_at_date" => 3
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-19",
+//                            "total_at_date" => 10
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-20",
+//                            "total_at_date" => 9
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-21",
+//                            "total_at_date" => 1
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 2,
+//                    "bully_level" => "Level 1",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-17",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-18",
+//                            "total_at_date" => 1
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-19",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-20",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-21",
+//                            "total_at_date" => 1
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-22",
+//                            "total_at_date" => 1
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 3,
+//                    "bully_level" => "Level 2",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-17",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-18",
+//                            "total_at_date" => 1
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-19",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-20",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-21",
+//                            "total_at_date" => 1
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-22",
+//                            "total_at_date" => 1
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 4,
+//                    "bully_level" => "Level 3",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-17",
+//                            "total_at_date" => 2
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-18",
+//                            "total_at_date" => 3
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-19",
+//                            "total_at_date" => 10
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-20",
+//                            "total_at_date" => 9
+//                        ],
+//                        [
+//                            "source_id" => 2,
+//                            "source_name" => "twitter",
+//                            "date_m" => "2022-12-21",
+//                            "total_at_date" => 1
+//                        ]
+//                    ]
+//                ]
+//            ],
+//            "percentage_of_bully_current" => [
+//                [
+//                    "id" => 1,
+//                    "bully_level" => "Level 0",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "17/12/2022 - 23/12/2022",
+//                            "percentage" => "73.53"
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 2,
+//                    "bully_level" => "Level 1",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "17/12/2022 - 23/12/2022",
+//                            "percentage" => "26.47"
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 3,
+//                    "bully_level" => "Level 2",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "17/12/2022 - 23/12/2022",
+//                            "percentage" => "73.53"
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 4,
+//                    "bully_level" => "Level 3",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "17/12/2022 - 23/12/2022",
+//                            "percentage" => "33.53"
+//                        ]
+//                    ]
+//                ]
+//            ],
+//            "percentage_of_bully_previous" => [
+//                [
+//                    "id" => 1,
+//                    "bully_level" => "Level 0",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "16/12/2022 - 22/12/2022",
+//                            "percentage" => "65.85"
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 1,
+//                    "bully_level" => "Level 0",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "16/12/2022 - 22/12/2022",
+//                            "percentage" => "34.15"
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 3,
+//                    "bully_level" => "Level 2",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "17/12/2022 - 23/12/2022",
+//                            "percentage" => "21.53"
+//                        ]
+//                    ]
+//                ],
+//                [
+//                    "id" => 4,
+//                    "bully_level" => "Level 3",
+//                    "campaign_id" => 2,
+//                    "campaign_name" => "ข่าวบันเทิง",
+//                    "organization_id" => 1,
+//                    "organizations_name" => "test",
+//                    "value" => [
+//                        [
+//                            "date" => "16/12/2022 - 22/12/2022",
+//                            "percentage" => "73.53"
+//                        ]
+//                    ]
+//                ]
+//            ]
+//
+//        ];
 
         return parent::handleRespond($data);
     }
 
     public function BullyByDay(Request $request)
     {
-        $data['labels'] = [
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sun"
-        ];
+//        $data['labels'] = [
+//            "Mon",
+//            "Tue",
+//            "Wed",
+//            "Thu",
+//            "Fri",
+//            "Sat",
+//            "Sun"
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 1,
+//            "keyword_name" => "Level 0",
+//            "data" => [
+//                20,
+//                39,
+//                19,
+//                38,
+//                47,
+//                16,
+//                30
+//            ]
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 2,
+//            "keyword_name" => "Level 1",
+//            "data" => [
+//                12,
+//                16,
+//                23,
+//                56,
+//                32,
+//                15,
+//                78,
+//            ]
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 3,
+//            "keyword_name" => "Level 2",
+//            "data" => [
+//                15,
+//                67,
+//                23,
+//                45,
+//                65,
+//                23,
+//                53,
+//            ]
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 4,
+//            "keyword_name" => "Level 3",
+//            "data" => [
+//                12,
+//                16,
+//                23,
+//                56,
+//                32,
+//                15,
+//                78,
+//            ]
+//        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Level 0",
-            "data" => [
-                20,
-                39,
-                19,
-                38,
-                47,
-                16,
-                30
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Level 1",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-                32,
-                15,
-                78,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Level 2",
-            "data" => [
-                15,
-                67,
-                23,
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Level 3",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-                32,
-                15,
-                78,
-            ]
-        ];
+        $data = [];
 
         return parent::handleRespond($data);
     }
@@ -431,7 +433,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyByDevice(Request $request)
@@ -482,7 +484,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyByAccount(Request $request)
@@ -528,7 +530,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyByChannel(Request $request)
@@ -577,7 +579,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyBySentiment(Request $request)
@@ -628,7 +630,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyPercentageDaily(Request $request)
@@ -926,7 +928,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTypeByDay(Request $request)
@@ -1011,7 +1013,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTypeByTime(Request $request)
@@ -1078,7 +1080,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTypeByDevice(Request $request)
@@ -1139,7 +1141,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTypeByAccount(Request $request)
@@ -1195,7 +1197,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTypeByChannel(Request $request)
@@ -1268,7 +1270,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTypeBySentiment(Request $request)
@@ -1329,7 +1331,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyChartLevel(Request $request)
@@ -1357,7 +1359,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyLevelLevel(Request $request)
@@ -1515,7 +1517,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyChartType(Request $request)
@@ -1547,7 +1549,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 
     public function BullyTableType(Request $request)
@@ -1735,6 +1737,6 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond($data);
+        return parent::handleRespond([]);
     }
 }
