@@ -7,6 +7,26 @@ use App\Http\Controllers\Controller;
 
 class EngagementDashboardController extends Controller
 {
+    private $start_date;
+    private $end_date;
+    private $period;
+
+    private $start_date_previous;
+    private $end_date_previous;
+    private $campaign_id;
+
+    public function __construct(Request $request)
+    {
+
+        $this->start_date = $this->date_carbon($request->start_date) ?? null;
+        $this->end_date = $this->date_carbon($request->end_date) ?? null;
+        $this->period = $request->period;
+        $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
+        $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
+
+//        parent::__construct($request);
+    }
+
     public function EngagementTrans(Request $request)
     {
         $start_date = $this->date_carbon($request->start_date) ?? null;
@@ -27,13 +47,13 @@ class EngagementDashboardController extends Controller
     public function EngagementByDay(Request $request)
     {
         $table =  'total_engagement_of_source_d_m_y_h_i_s';
-        $period = $request->period;
-
-        $start_date = $this->date_carbon($request->start_date) ?? null;
-        $end_date = $this->date_carbon($request->end_date) ?? null;
-
-        $campaign_id = $request->campaign_id;
-        $data = parent::listDataByType('dayname', $table, $campaign_id, $start_date, $end_date );
+//        $period = $request->period;
+//
+//        $start_date = $this->date_carbon($request->start_date) ?? null;
+//        $end_date = $this->date_carbon($request->end_date) ?? null;
+//
+//        $this->campaign_id = $request->campaign_id;
+        $data = parent::listDataByType('dayname', $table, $this->campaign_id, $this->start_date, $this->end_date );
 
         return parent::handleRespond($data);
     }
@@ -42,14 +62,14 @@ class EngagementDashboardController extends Controller
     {
 
         $table =  'total_engagement_of_source_d_m_y_h_i_s';
-        $period = $request->period;
+//        $period = $request->period;
+//
+//        $start_date = $this->date_carbon($request->start_date) ?? null;
+//        $end_date = $this->date_carbon($request->end_date) ?? null;
+//
+//        $campaign_id = $request->campaign_id;
 
-        $start_date = $this->date_carbon($request->start_date) ?? null;
-        $end_date = $this->date_carbon($request->end_date) ?? null;
-
-        $campaign_id = $request->campaign_id;
-
-        $data = parent::listDataByType('time', $table, $campaign_id, $start_date, $end_date );
+        $data = parent::listDataByType('time', $table, $this->campaign_id, $this->start_date, $$this->end_date );
 
         return parent::handleRespond($data);
 
@@ -143,257 +163,215 @@ class EngagementDashboardController extends Controller
 
     public function EngagementType(Request $request)
     {
-        $data['engagement'][] = [
-            "keyword_id" => 1,
-            "keyword_name" => "Share",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                "source_id" => 2,
-                "source_name" => "twitter",
-                "date_m" => "2022-12-17",
-                "total_at_date" => 2,
-            ],
-            [
-                "source_id" => 2,
-                "source_name" => "twitter",
-                "date_m" => "2022-12-18",
-                "total_at_date" => 3,
-            ],
-            [
-                "source_id" => 2,
-                "source_name" => "twitter",
-                "date_m" => "2022-12-19",
-                "total_at_date" => 10,
-            ],
-            [
-                "source_id" => 2,
-                "source_name" => "twitter",
-                "date_m" => "2022-12-20",
-                "total_at_date" => 9,
-            ],
-            [
-                "source_id" => 2,
-                "source_name" => "twitter",
-                "date_m" => "2022-12-21",
-                "total_at_date" => 1,
-            ]
+        $data = [
+            "engagement" => $this->engagement($request->campaign_id, $this->start_date, $this->end_date, $request->source),
+            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $this->start_date, $$this->end_date, $request->keyword_id ?? null, $request->source ?? null),
+            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $this->start_date_previous, $$this->end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
         ];
 
-        $data['engagement'][] = [
-            "keyword_id" => 2,
-            "keyword_name" => "Comment",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-17",
-                    "total_at_date" => 2,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-18",
-                    "total_at_date" => 3,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-19",
-                    "total_at_date" => 10,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-20",
-                    "total_at_date" => 9,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-21",
-                    "total_at_date" => 1,
-                ]
-            ],
+//        $data = parent::listDataByType('type', 'total_engagement_of_source_d_m_y_h_i_s', $request->campaign_id, $this->start_date, $this->end_date );
+//        return parent::handleRespond($data);
 
-        ];
-
-        $data['engagement'][] = [
-            "keyword_id" => 3,
-            "keyword_name" => "Reaction",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-17",
-                    "total_at_date" => 2,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-18",
-                    "total_at_date" => 3,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-19",
-                    "total_at_date" => 10,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-20",
-                    "total_at_date" => 9,
-                ],
-                [
-                    "source_id" => 2,
-                    "source_name" => "twitter",
-                    "date_m" => "2022-12-21",
-                    "total_at_date" => 1,
-                ]
-            ],
-        ];
-
-        $data['prcentage_of_engagement_current'][] = [
-            "keyword_id" => 1,
-            "keyword_name" => "Share",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "date" => "17/12/2022 - 23/12/2022",
-                    "percentage" => 35,
-                ]
-            ]
-        ];
-
-        $data['prcentage_of_engagement_current'][] = [
-            "keyword_id" => 2,
-            "keyword_name" => "Comment",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "date" => "16/12/2022 - 22/12/2022",
-                    "percentage" => 45,
-                ]
-            ]
-        ];
-
-        $data['prcentage_of_engagement_current'][] = [
-            "keyword_id" => 3,
-            "keyword_name" => "Reaction",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "date" => "16/12/2022 - 22/12/2022",
-                    "percentage" => 20,
-                ]
-            ]
-        ];
-
-        $data['prcentage_of_engagement_previous'][] = [
-            "keyword_id" => 1,
-            "keyword_name" => "Share",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "date" => "17/12/2022 - 23/12/2022",
-                    "percentage" => 30,
-                ]
-            ]
-        ];
-
-        $data['prcentage_of_engagement_previous'][] = [
-            "keyword_id" => 2,
-            "keyword_name" => "Comment",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "date" => "16/12/2022 - 22/12/2022",
-                    "percentage" => 30,
-                ]
-            ]
-
-        ];
-
-        $data['prcentage_of_engagement_previous'][] = [
-            "keyword_id" => 3,
-            "keyword_name" => "Reaction",
-            "campaign_id" => 2,
-            "campaign_name" => "ข่าวบันเทิง",
-            "value" => [
-                [
-                    "date" => "16/12/2022 - 22/12/2022",
-                    "percentage" => 40,
-                ]
-            ]
-        ];
+//        $data['engagement'][] = [
+//            "keyword_id" => 1,
+//            "keyword_name" => "Share",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                "source_id" => 2,
+//                "source_name" => "twitter",
+//                "date_m" => "2022-12-17",
+//                "total_at_date" => 2,
+//            ],
+//            [
+//                "source_id" => 2,
+//                "source_name" => "twitter",
+//                "date_m" => "2022-12-18",
+//                "total_at_date" => 3,
+//            ],
+//            [
+//                "source_id" => 2,
+//                "source_name" => "twitter",
+//                "date_m" => "2022-12-19",
+//                "total_at_date" => 10,
+//            ],
+//            [
+//                "source_id" => 2,
+//                "source_name" => "twitter",
+//                "date_m" => "2022-12-20",
+//                "total_at_date" => 9,
+//            ],
+//            [
+//                "source_id" => 2,
+//                "source_name" => "twitter",
+//                "date_m" => "2022-12-21",
+//                "total_at_date" => 1,
+//            ]
+//        ];
+//
+//        $data['engagement'][] = [
+//            "keyword_id" => 2,
+//            "keyword_name" => "Comment",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-17",
+//                    "total_at_date" => 2,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-18",
+//                    "total_at_date" => 3,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-19",
+//                    "total_at_date" => 10,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-20",
+//                    "total_at_date" => 9,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-21",
+//                    "total_at_date" => 1,
+//                ]
+//            ],
+//
+//        ];
+//
+//        $data['engagement'][] = [
+//            "keyword_id" => 3,
+//            "keyword_name" => "Reaction",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-17",
+//                    "total_at_date" => 2,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-18",
+//                    "total_at_date" => 3,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-19",
+//                    "total_at_date" => 10,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-20",
+//                    "total_at_date" => 9,
+//                ],
+//                [
+//                    "source_id" => 2,
+//                    "source_name" => "twitter",
+//                    "date_m" => "2022-12-21",
+//                    "total_at_date" => 1,
+//                ]
+//            ],
+//        ];
+//
+//        $data['prcentage_of_engagement_current'][] = [
+//            "keyword_id" => 1,
+//            "keyword_name" => "Share",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "date" => "17/12/2022 - 23/12/2022",
+//                    "percentage" => 35,
+//                ]
+//            ]
+//        ];
+//
+//        $data['prcentage_of_engagement_current'][] = [
+//            "keyword_id" => 2,
+//            "keyword_name" => "Comment",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "date" => "16/12/2022 - 22/12/2022",
+//                    "percentage" => 45,
+//                ]
+//            ]
+//        ];
+//
+//        $data['prcentage_of_engagement_current'][] = [
+//            "keyword_id" => 3,
+//            "keyword_name" => "Reaction",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "date" => "16/12/2022 - 22/12/2022",
+//                    "percentage" => 20,
+//                ]
+//            ]
+//        ];
+//
+//        $data['prcentage_of_engagement_previous'][] = [
+//            "keyword_id" => 1,
+//            "keyword_name" => "Share",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "date" => "17/12/2022 - 23/12/2022",
+//                    "percentage" => 30,
+//                ]
+//            ]
+//        ];
+//
+//        $data['prcentage_of_engagement_previous'][] = [
+//            "keyword_id" => 2,
+//            "keyword_name" => "Comment",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "date" => "16/12/2022 - 22/12/2022",
+//                    "percentage" => 30,
+//                ]
+//            ]
+//
+//        ];
+//
+//        $data['prcentage_of_engagement_previous'][] = [
+//            "keyword_id" => 3,
+//            "keyword_name" => "Reaction",
+//            "campaign_id" => 2,
+//            "campaign_name" => "ข่าวบันเทิง",
+//            "value" => [
+//                [
+//                    "date" => "16/12/2022 - 22/12/2022",
+//                    "percentage" => 40,
+//                ]
+//            ]
+//        ];
 
         return parent::handleRespond($data);
     }
 
     public function EngagementByDayKey(Request $request)
     {
-//        $data['labels'] = [
-//            "Mon",
-//            "Tue",
-//            "Wed",
-//            "Thu",
-//            "Fri",
-//            "Sat",
-//            "Sun"
-//        ];
-//
-//        $data['value'][] = [
-//            "id" => 1,
-//            "keyword_name" => "Share",
-//            "data" => [
-//                20,
-//                39,
-//                19,
-//                38,
-//                47,
-//                16,
-//                30
-//            ]
-//        ];
-//
-//        $data['value'][] = [
-//            "id" => 2,
-//            "keyword_name" => "Comment",
-//            "data" => [
-//                12,
-//                16,
-//                23,
-//                56,
-//                32,
-//                15,
-//                78,
-//            ]
-//        ];
-//
-//        $data['value'][] = [
-//            "id" => 3,
-//            "keyword_name" => "Reaction",
-//            "data" => [
-//                15,
-//                67,
-//                23,
-//                45,
-//                65,
-//                23,
-//                53,
-//            ]
-//        ];
 
         $table =  'total_engagement_of_source_d_m_y_h_i_s';
         $period = $request->period;

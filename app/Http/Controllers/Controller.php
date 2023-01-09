@@ -276,6 +276,7 @@ class Controller extends BaseController
         foreach ($message_keyword as $keyword_id => $value) {
             $data[$keyword_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
+
                 'percentage' => self::point_two_digits(($value / $message_total) * 100),
             ];
         }
