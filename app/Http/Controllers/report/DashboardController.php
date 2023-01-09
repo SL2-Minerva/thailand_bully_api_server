@@ -654,7 +654,9 @@ class DashboardController extends Controller
             }
         }
 
-        return parent::handleRespond(array_values($data));
+        if ($data) {
+            return parent::handleRespond(array_values($data));
+        }
     }
 
 

@@ -119,7 +119,7 @@ class UserController extends Controller
         } else {
             $role_id = $user->role_id;
             $role = UserRole::where(BaseModel::ID, $role_id)->first();
-            return $role->authorized_report;
+            return $role->authorized_report ?? null;
         }
 
     }

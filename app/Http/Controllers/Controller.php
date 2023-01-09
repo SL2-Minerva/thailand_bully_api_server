@@ -390,10 +390,11 @@ class Controller extends BaseController
                 } else {
                     $data[$item->keyword_id] = $nestData;
                 }
-//
-                $data[$item->keyword_id]['value'] = array_values($data[$item->keyword_id]['value']);
 
-//                $data[$item->keyword_id][] = $nestData;
+                if (isset($data[$item->keyword_id]['value'])) {
+                    $data[$item->keyword_id]['value'] = array_values($data[$item->keyword_id]['value']);
+                }
+
             }
 
             if ($type === 'shareofvoice') {
@@ -648,7 +649,11 @@ class Controller extends BaseController
 
         }
 
-        $data['value'] = array_values($data['value']);
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
         return $data;
 
     }

@@ -321,9 +321,9 @@ class EngagementDashboardController extends Controller
 
         }
 
-        $data['engagement'] = array_values($data['engagement']);
-        $data['prcentage_of_engagement_previous'] = array_values($data['prcentage_of_engagement_previous']);
-        $data['prcentage_of_engagement_current'] = array_values($data['prcentage_of_engagement_current']);
+        $data['engagement'] = isset($data['engagement']) ? array_values($data['engagement']) : $data['engagement'] ;
+        $data['prcentage_of_engagement_previous'] = isset($data['prcentage_of_engagement_previous'] ) ? array_values($data['prcentage_of_engagement_previous']) : $data['prcentage_of_engagement_previous'];
+        $data['prcentage_of_engagement_current'] = isset($data['prcentage_of_engagement_current']) ? array_values($data['prcentage_of_engagement_current']) : $data['prcentage_of_engagement_current'];
 
         return parent::handleRespond($data);
     }
@@ -433,7 +433,10 @@ class EngagementDashboardController extends Controller
             }
         }
 
-        $data['value'] = array_values($data['value']);
+        if ($data['value']) {
+            $data['value'] = array_values($data['value']);
+        }
+
 
         return parent::handleRespond($data);
     }
@@ -515,7 +518,10 @@ class EngagementDashboardController extends Controller
             }
         }
 
-        $data['value'] = array_values($data['value']);
+        if ($data['value']) {
+            $data['value'] = array_values($data['value']);
+        }
+
 
         return parent::handleRespond($data);
     }
