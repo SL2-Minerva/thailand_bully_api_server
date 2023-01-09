@@ -165,8 +165,8 @@ class EngagementDashboardController extends Controller
     {
         $data = [
             "engagement" => $this->engagement($request->campaign_id, $this->start_date, $this->end_date, $request->source),
-            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $this->start_date, $$this->end_date, $request->keyword_id ?? null, $request->source ?? null),
-            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $this->start_date_previous, $$this->end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
+            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $this->start_date, $this->end_date, $request->keyword_id ?? null, $request->source ?? null),
+            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $this->start_date_previous, $this->end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
         ];
 
 //        $data = parent::listDataByType('type', 'total_engagement_of_source_d_m_y_h_i_s', $request->campaign_id, $this->start_date, $this->end_date );
