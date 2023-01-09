@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\report;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
@@ -63,14 +64,7 @@ class EngagementDashboardController extends Controller
     {
 
         $table =  'total_engagement_of_source_d_m_y_h_i_s';
-//        $period = $request->period;
-//
-//        $start_date = $this->date_carbon($request->start_date) ?? null;
-//        $end_date = $this->date_carbon($request->end_date) ?? null;
-//
-//        $campaign_id = $request->campaign_id;
-
-        $data = parent::listDataByType('time', $table, $this->campaign_id, $this->start_date, $$this->end_date );
+        $data = parent::listDataByType('time', $table, $this->campaign_id, $this->start_date, $this->end_date );
 
         return parent::handleRespond($data);
 
@@ -162,6 +156,8 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+
+    //todo maybe percentage is wrong
     public function EngagementType(Request $request)
     {
 
@@ -320,8 +316,6 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_previous'][2]['value'] = $percentages_reaction_previous[$item->keyword_id]['value'];
                 $data['prcentage_of_engagement_previous'][3]['value'] = $percentages_comment_previous[$item->keyword_id]['value'];
 
-//
-
             }
 
 
@@ -330,98 +324,6 @@ class EngagementDashboardController extends Controller
         $data['engagement'] = array_values($data['engagement']);
         $data['prcentage_of_engagement_previous'] = array_values($data['prcentage_of_engagement_previous']);
         $data['prcentage_of_engagement_current'] = array_values($data['prcentage_of_engagement_current']);
-
-
-
-//        $data = [
-//            "engagement" => $this->engagement($request->campaign_id, $this->start_date, $this->end_date, $request->source),
-//            "prcentage_of_engagement_current" => $this->percentageOfEngagement($request->campaign_id, $this->start_date, $this->end_date, $request->keyword_id ?? null, $request->source ?? null),
-//            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($request->campaign_id, $this->start_date_previous, $this->end_date_previous, $request->keyword_id ?? null, $request->source ?? null),
-//        ];
-
-//        $data = parent::listDataByType('type', 'total_engagement_of_source_d_m_y_h_i_s', $request->campaign_id, $this->start_date, $this->end_date );
-//        return parent::handleRespond($data);
-
-
-//
-//        $data['prcentage_of_engagement_current'][] = [
-//            "keyword_id" => 1,
-//            "keyword_name" => "Share",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "date" => "17/12/2022 - 23/12/2022",
-//                    "percentage" => 35,
-//                ]
-//            ]
-//        ];
-//
-//        $data['prcentage_of_engagement_current'][] = [
-//            "keyword_id" => 2,
-//            "keyword_name" => "Comment",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "date" => "16/12/2022 - 22/12/2022",
-//                    "percentage" => 45,
-//                ]
-//            ]
-//        ];
-//
-//        $data['prcentage_of_engagement_current'][] = [
-//            "keyword_id" => 3,
-//            "keyword_name" => "Reaction",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "date" => "16/12/2022 - 22/12/2022",
-//                    "percentage" => 20,
-//                ]
-//            ]
-//        ];
-//
-//        $data['prcentage_of_engagement_previous'][] = [
-//            "keyword_id" => 1,
-//            "keyword_name" => "Share",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "date" => "17/12/2022 - 23/12/2022",
-//                    "percentage" => 30,
-//                ]
-//            ]
-//        ];
-//
-//        $data['prcentage_of_engagement_previous'][] = [
-//            "keyword_id" => 2,
-//            "keyword_name" => "Comment",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "date" => "16/12/2022 - 22/12/2022",
-//                    "percentage" => 30,
-//                ]
-//            ]
-//
-//        ];
-//
-//        $data['prcentage_of_engagement_previous'][] = [
-//            "keyword_id" => 3,
-//            "keyword_name" => "Reaction",
-//            "campaign_id" => 2,
-//            "campaign_name" => "ข่าวบันเทิง",
-//            "value" => [
-//                [
-//                    "date" => "16/12/2022 - 22/12/2022",
-//                    "percentage" => 40,
-//                ]
-//            ]
-//        ];
 
         return parent::handleRespond($data);
     }
@@ -444,6 +346,9 @@ class EngagementDashboardController extends Controller
 
     public function EngagementByTimeKey(Request $request)
     {
+
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+
         $data['labels'] = [
             "Before 6 AM",
             "6 AM-12 PM",
@@ -451,79 +356,166 @@ class EngagementDashboardController extends Controller
             "After 6 PM"
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Share",
-            "data" => [
-                20,
-                39,
-                19,
-                38,
-            ]
-        ];
+        $items = DB::table($table)
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Comment",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-            ]
-        ];
+        if (isset($condition['group_by'])) {
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Reaction",
-            "data" => [
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
+            foreach ($condition['group_by'] as $groupBy) {
+                $items->groupBy($groupBy);
+            }
+        }
+
+
+        $data['value'] = null;
+
+        foreach ($items->get() as $item) {
+            $sixAM = Carbon::parse("06:00:00");
+            $time = Carbon::parse($item->date_m)->format('H:i:s');
+            $index_label = 3;
+
+            if (Carbon::parse($time)->lt($sixAM)) {
+                $index_label = 0;
+            }
+
+            if (Carbon::parse($time)->between($sixAM, Carbon::parse("12:00:00"))) {
+                $index_label = 1;
+            }
+
+            if (Carbon::parse($time)->between(Carbon::parse("12:00:00"), Carbon::parse("18:00:00"))) {
+                $index_label = 2;
+            }
+
+            if (Carbon::parse($time)->gt(Carbon::parse("18:00:00"))) {
+                $index_label = 3;
+            }
+
+
+            if (isset($data['value'][1])) {
+
+                $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+                $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+                $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+
+
+            } else {
+
+                    $data['value'][1] = [
+                        "id" => 1,
+                        "keyword_name" => 'Share',
+                        "campaign_id" =>  $item->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        'data' => [0, 0, 0, 0]
+                    ];
+
+                    $data['value'][2] = [
+                        "id" => 2,
+                        "name" => 'Comment',
+                        "campaign_id" =>  $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        'data' => [0, 0, 0, 0]
+                    ];
+
+                    $data['value'][3] = [
+                        "id" => 3,
+                        "keyword_name" => 'Reactions',
+                        "campaign_id" =>  $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        'data' => [0, 0, 0, 0]
+                    ];
+
+                    // engagement
+
+//                    $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+//                    $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+//                    $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+            }
+        }
+
+        $data['value'] = array_values($data['value']);
 
         return parent::handleRespond($data);
     }
 
     public function EngagementByDeviceKey(Request $request)
     {
+
+        $table =  'total_engagement_of_source_d_m_y_h_i_s';
+
         $data['labels'] = [
             "Andriod",
             "Iphone",
             "Web App",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Share",
-            "data" => [
-                20,
-                19,
-                38,
-            ]
-        ];
+        $items = DB::table($table)
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Comment",
-            "data" => [
-                12,
-                16,
-                23,
-            ]
-        ];
+        if (isset($condition['group_by'])) {
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Reaction",
-            "data" => [
-                65,
-                23,
-                53,
-            ]
-        ];
+            foreach ($condition['group_by'] as $groupBy) {
+                $items->groupBy($groupBy);
+            }
+        }
+
+
+        $data['value'] = null;
+
+        foreach ($items->get() as $item) {
+                $index_label = 0;
+
+                if ($item->device == 'iphone') {
+                    $index_label = 1;
+                }
+
+                if ($item->device == 'webapp') {
+                    $index_label = 2;
+                }
+
+            if (isset($data['value'][1])) {
+
+                $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+                $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+                $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+
+
+            } else {
+
+                $data['value'][1] = [
+                    "id" => 1,
+                    "keyword_name" => 'Share',
+                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    'data' => [0, 0, 0]
+                ];
+
+                $data['value'][2] = [
+                    "id" => 2,
+                    "keyword_name" => 'Comment',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    'data' => [0, 0, 0]
+                ];
+
+                $data['value'][3] = [
+                    "id" => 3,
+                    "keyword_name" => 'Reactions',
+                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    'data' => [0, 0, 0]
+                ];
+
+                // engagement
+
+//                    $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+//                    $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+//                    $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+            }
+        }
+
+        $data['value'] = array_values($data['value']);
 
         return parent::handleRespond($data);
     }
@@ -567,6 +559,7 @@ class EngagementDashboardController extends Controller
 
     public function EngagementChannelKey(Request $request)
     {
+
         $data['labels'] = [
             "Facebook",
             "Twitter",
@@ -713,124 +706,125 @@ class EngagementDashboardController extends Controller
 
     public function EngagementTypeComparison(Request $request)
     {
+        $data = [];
 
-        $data = [
-            [
-                "keyword_name" => "keyword 1",
-                "total" => [
-                    "value" => "-500",
-                    "percentage" => "-20",
-                    "type" => "minus"
-                ],
-                "share" => [
-                    "value" => "80",
-                    "percentage" => "5",
-                    "type" => "plus"
-                ],
-                "comment" => [
-                    "value" => "-200",
-                    "percentage" => "-10",
-                    "type" => "minus"
-                ],
-                "reaction" => [
-                    "value" => "-380",
-                    "percentage" => "-2",
-                    "type" => "minus"
-                ]
-            ],
-            [
-                "keyword_name" => "keyword 2",
-                "total" => [
-                    "value" => "-500",
-                    "percentage" => "-20",
-                    "type" => "minus"
-                ],
-                "share" => [
-                    "value" => "80",
-                    "percentage" => "5",
-                    "type" => "plus"
-                ],
-                "comment" => [
-                    "value" => "-200",
-                    "percentage" => "-10",
-                    "type" => "minus"
-                ],
-                "reaction" => [
-                    "value" => "-380",
-                    "percentage" => "-2",
-                    "type" => "minus"
-                ]
-            ],
-            [
-                "keyword_name" => "keyword 3",
-                "total" => [
-                    "value" => "-500",
-                    "percentage" => "-20",
-                    "type" => "minus"
-                ],
-                "share" => [
-                    "value" => "80",
-                    "percentage" => "5",
-                    "type" => "plus"
-                ],
-                "comment" => [
-                    "value" => "-200",
-                    "percentage" => "-10",
-                    "type" => "minus"
-                ],
-                "reaction" => [
-                    "value" => "-380",
-                    "percentage" => "-2",
-                    "type" => "minus"
-                ]
-            ],
-            [
-                "keyword_name" => "keyword 4",
-                "total" => [
-                    "value" => "-500",
-                    "percentage" => "-20",
-                    "type" => "minus"
-                ],
-                "share" => [
-                    "value" => "80",
-                    "percentage" => "5",
-                    "type" => "plus"
-                ],
-                "comment" => [
-                    "value" => "-200",
-                    "percentage" => "-10",
-                    "type" => "minus"
-                ],
-                "reaction" => [
-                    "value" => "-380",
-                    "percentage" => "-2",
-                    "type" => "minus"
-                ]
-            ],
-            [
-                "keyword_name" => "keyword 5",
-                "total" => [
-                    "value" => "-500",
-                    "percentage" => "-20",
-                    "type" => "minus"
-                ],
-                "share" => [
-                    "value" => "80",
-                    "percentage" => "5",
-                    "type" => "plus"
-                ],
-                "comment" => [
-                    "value" => "-200",
-                    "percentage" => "-10",
-                    "type" => "minus"
-                ],
-                "reaction" => [
-                    "value" => "-380",
-                    "percentage" => "-2",
-                    "type" => "minus"
-                ]
-            ]
-        ];
+//        $data = [
+//            [
+//                "keyword_name" => "keyword 1",
+//                "total" => [
+//                    "value" => "-500",
+//                    "percentage" => "-20",
+//                    "type" => "minus"
+//                ],
+//                "share" => [
+//                    "value" => "80",
+//                    "percentage" => "5",
+//                    "type" => "plus"
+//                ],
+//                "comment" => [
+//                    "value" => "-200",
+//                    "percentage" => "-10",
+//                    "type" => "minus"
+//                ],
+//                "reaction" => [
+//                    "value" => "-380",
+//                    "percentage" => "-2",
+//                    "type" => "minus"
+//                ]
+//            ],
+//            [
+//                "keyword_name" => "keyword 2",
+//                "total" => [
+//                    "value" => "-500",
+//                    "percentage" => "-20",
+//                    "type" => "minus"
+//                ],
+//                "share" => [
+//                    "value" => "80",
+//                    "percentage" => "5",
+//                    "type" => "plus"
+//                ],
+//                "comment" => [
+//                    "value" => "-200",
+//                    "percentage" => "-10",
+//                    "type" => "minus"
+//                ],
+//                "reaction" => [
+//                    "value" => "-380",
+//                    "percentage" => "-2",
+//                    "type" => "minus"
+//                ]
+//            ],
+//            [
+//                "keyword_name" => "keyword 3",
+//                "total" => [
+//                    "value" => "-500",
+//                    "percentage" => "-20",
+//                    "type" => "minus"
+//                ],
+//                "share" => [
+//                    "value" => "80",
+//                    "percentage" => "5",
+//                    "type" => "plus"
+//                ],
+//                "comment" => [
+//                    "value" => "-200",
+//                    "percentage" => "-10",
+//                    "type" => "minus"
+//                ],
+//                "reaction" => [
+//                    "value" => "-380",
+//                    "percentage" => "-2",
+//                    "type" => "minus"
+//                ]
+//            ],
+//            [
+//                "keyword_name" => "keyword 4",
+//                "total" => [
+//                    "value" => "-500",
+//                    "percentage" => "-20",
+//                    "type" => "minus"
+//                ],
+//                "share" => [
+//                    "value" => "80",
+//                    "percentage" => "5",
+//                    "type" => "plus"
+//                ],
+//                "comment" => [
+//                    "value" => "-200",
+//                    "percentage" => "-10",
+//                    "type" => "minus"
+//                ],
+//                "reaction" => [
+//                    "value" => "-380",
+//                    "percentage" => "-2",
+//                    "type" => "minus"
+//                ]
+//            ],
+//            [
+//                "keyword_name" => "keyword 5",
+//                "total" => [
+//                    "value" => "-500",
+//                    "percentage" => "-20",
+//                    "type" => "minus"
+//                ],
+//                "share" => [
+//                    "value" => "80",
+//                    "percentage" => "5",
+//                    "type" => "plus"
+//                ],
+//                "comment" => [
+//                    "value" => "-200",
+//                    "percentage" => "-10",
+//                    "type" => "minus"
+//                ],
+//                "reaction" => [
+//                    "value" => "-380",
+//                    "percentage" => "-2",
+//                    "type" => "minus"
+//                ]
+//            ]
+//        ];
 
         return parent::handleRespond($data);
     }

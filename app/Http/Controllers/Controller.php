@@ -463,7 +463,7 @@ class Controller extends BaseController
 
         $data['value'] = null;
 
-        if ($type === 'time') {
+        if ($type === 'time' ) {
             $data['labels'] = [
                 "Before 6 AM",
                 "6 AM-12 PM",
@@ -556,7 +556,7 @@ class Controller extends BaseController
 
             }
 
-            if ($type === 'time') {
+            if ($type === 'time' || $type === 'time_engagement') {
 
                 $sixAM = Carbon::parse("06:00:00");
                 $time = Carbon::parse($item->date_m)->format('H:i:s');
@@ -580,6 +580,8 @@ class Controller extends BaseController
 
                 if (isset($data['value'][$item->keyword_id])) {
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+
+
                 } else {
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,
@@ -648,6 +650,10 @@ class Controller extends BaseController
 
         $data['value'] = array_values($data['value']);
         return $data;
+
+    }
+
+    protected static function listDataByAction($table, $campaign_id, $start_date, $end_date,$column = null, $condition = null, $keyword_id = null, $source_id = null) {
 
     }
 
