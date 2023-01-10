@@ -31,6 +31,7 @@ class ChannelDashboardController extends Controller
         $this->start_date = $this->date_carbon($request->start_date) ?? null;
         $this->end_date = $this->date_carbon($request->end_date) ?? null;
         $this->period = $request->period;
+        $this->campaign_id = $request->campaign_id;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
 
@@ -120,15 +121,12 @@ class ChannelDashboardController extends Controller
 
     public function ChannelByDay(Request $request)
     {
-        $data['labels'] = [
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sun"
-        ];
+
+        $table =  'daily_message';
+        $data = parent::listDataByType('channel_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 'total_at_date' );
+
+        return parent::handleRespond($data);
+
 
         $data['value'][] = [
             "id" => 1,
@@ -362,8 +360,8 @@ class ChannelDashboardController extends Controller
         $channal_bully = MessageResultGroup::where('classification_type_id', 3)
             ->where('campaign_id', $request->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-            
-        $data = null;   
+
+        $data = null;
         foreach ($channal_bully->get() as $item) {
             if (isset($data[$item->source_id])) {
                 $data[$item->source_id]['value'] =  $data[$item->source_id]['value'] + 1;
@@ -389,7 +387,7 @@ class ChannelDashboardController extends Controller
         $channal_bully = MessageResultGroup::where('classification_type_id', 2)
             ->where('campaign_id', $request->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-             
+
         foreach ($channal_bully->get() as $item) {
             if (isset($data[$item->source_id])) {
                 $data[$item->source_id]['value'] =  $data[$item->source_id]['value'] + 1;
@@ -408,7 +406,7 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond(array_values($data));
     }
 
-    public function bully_type_name($class_id) 
+    public function bully_type_name($class_id)
     {
         $classfication = Classification::where('id', $class_id)->first();
         return $classfication->name;
@@ -440,14 +438,14 @@ class ChannelDashboardController extends Controller
 
             $comparison = $channal_message_current - $channal_message_previous;
             $percentage = ($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous) * 100;
-            
+
             $data[$item->name] = [
                 "comparison_value" => $this->point_two_digits($comparison),
                 "percentage" => $this->point_two_digits($percentage),
                 "type" => ($comparison >= 0 ? "plus" : "minus"),
             ];
         }
-        
+
         return parent::handleRespond($data);
     }
 

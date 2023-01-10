@@ -486,7 +486,7 @@ class Controller extends BaseController
             ];
         }
 
-        if ($type === 'channel') {
+        if ($type === 'channel' ) {
 
             $sources = Sources::all();
             $data['labels'] = [];
@@ -497,10 +497,14 @@ class Controller extends BaseController
 
         }
 
+        $debug = [];
         foreach ($items->get() as $item) {
 
-            if ($type === 'dayname' || $type === 'dayname_engagement') {
+            if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day') {
+
                 $day_name = Carbon::parse($item->date_m)->format('D');
+
+
                 $index_label = array_search($day_name, $data['labels']);
 
 
@@ -520,6 +524,29 @@ class Controller extends BaseController
 
                     }
 
+                    //
+
+
+
+
+                }
+
+                if ($type === 'channel_by_day') {
+                    if (isset($data['value'][$item->source_id])) {
+                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+                    } else {
+
+                        $data['value'][$item->source_id] = [
+                            'id' => $item->source_id,
+                            'name' => $item->source_name,
+                            'keyword_name' => $item->source_name,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                            'data' => [0, 0, 0, 0, 0, 0, 0]
+                        ];
+
+                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+                    }
                 }
 
 
@@ -627,23 +654,29 @@ class Controller extends BaseController
                 $index_label = 0;
                 $index_label = array_search($item->source_name, $data['labels']);
 
-                if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                } else {
-                    $data['value'][$item->keyword_id] = [
-                        'id' => $item->keyword_id,
-                        'name' => $item->keyword_name,
-                        'keyword_name' => $item->keyword_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                    ];
+                if ($type === 'channel') {
+                    if (isset($data['value'][$item->keyword_id])) {
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    } else {
+                        $data['value'][$item->keyword_id] = [
+                            'id' => $item->keyword_id,
+                            'name' => $item->keyword_name,
+                            'keyword_name' => $item->keyword_name,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                        ];
 
-                    for ($i = 0; $i <= count($data['labels']); $i++) {
-                        $data['value'][$item->keyword_id]['data'][$i] = 0;
+                        for ($i = 0; $i <= count($data['labels']); $i++) {
+                            $data['value'][$item->keyword_id]['data'][$i] = 0;
+                        }
+
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                     }
-
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                 }
+
+
+
+
             }
 
 
