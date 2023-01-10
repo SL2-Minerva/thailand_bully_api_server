@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\BaseModel;
+use App\Models\Classification;
 use App\Models\Sources;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -468,8 +469,8 @@ class Controller extends BaseController
         }
 
         $data['value'] = null;
-
-        if ($type === 'time' ) {
+        
+        if ($type === 'time') {
             $data['labels'] = [
                 "Before 6 AM",
                 "6 AM-12 PM",
@@ -477,8 +478,25 @@ class Controller extends BaseController
                 "After 6 PM"
             ];
         }
-
+        
+        if ($type === 'channel_by_time') {
+            $data['labels'] = [
+                "Before 6 AM",
+                "6 AM-12 PM",
+                "12 PM-6 PM",
+                "After 6 PM"
+            ];
+        }
+        
         if ($type === 'device') {
+            $data['labels'] = [
+                "Android",
+                "Iphone",
+                "Web App",
+            ];
+        }
+
+        if ($type === 'channel_by_device') {
             $data['labels'] = [
                 "Android",
                 "Iphone",
@@ -497,11 +515,18 @@ class Controller extends BaseController
 
         }
 
+        if ($type === 'sentiment') {
+            $sentiment = Classification::where('classification_type_id', 1)->get();
+            $data['labels'] = [];
+
+            foreach ($sentiment as $item) {
+                $data['labels'][] = $item->name;
+            }
+        }
+        
         $debug = [];
         foreach ($items->get() as $item) {
-
             if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day') {
-
                 $day_name = Carbon::parse($item->date_m)->format('D');
 
 
@@ -524,11 +549,7 @@ class Controller extends BaseController
 
                     }
 
-                    //
-
-
-
-
+                    
                 }
 
                 if ($type === 'channel_by_day') {
@@ -585,8 +606,9 @@ class Controller extends BaseController
 
             }
 
-            if ($type === 'time' || $type === 'time_engagement') {
-
+            
+            if ($type === 'time' || $type === 'time_engagement' || $type === 'channel_by_time') {
+                
                 $sixAM = Carbon::parse("06:00:00");
                 $time = Carbon::parse($item->date_m)->format('H:i:s');
                 $index_label = 3;
@@ -623,13 +645,32 @@ class Controller extends BaseController
 
                         $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                     }
-                } else {
-                    //todo
                 }
 
+                if ($type === 'channel_by_time') {
+                    if (isset($data['value'][$item->source_id])) {
+                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+    
+    
+                    } else {
+                        $data['value'][$item->source_id] = [
+                            'id' => $item->source_id,
+                            'keyword_name' => $item->keyword_name,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                            'source_id' => $item->source_id,
+                            'source_name' => $item->source_name,
+                            'data' => [0, 0, 0, 0]
+                        ];
+    
+                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+                    }
+                }
 
             }
-
+            
+            
+            
             if ($type === 'device') {
                 $index_label = 0;
 
@@ -653,6 +694,34 @@ class Controller extends BaseController
                     ];
 
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
+            }
+
+            if ($type === 'channel_by_device') {
+                $index_label = 0;
+
+                if ($item->device == 'iphone') {
+                    $index_label = 1;
+                }
+
+                if ($item->device == 'webapp') {
+                    $index_label = 2;
+                }
+
+                if (isset($data['value'][$item->source_id])) {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->source_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_name' => $item->keyword_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'data' => [0, 0, 0]
+                    ];
+
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
                 }
             }
 
@@ -681,6 +750,32 @@ class Controller extends BaseController
                 }
 
 
+            }
+
+            if ($type === 'sentiment') {
+                $index_label = 0;
+                $index_label = array_search($item->classification_name, $data['labels']);
+
+                
+                if (isset($data['value'][$item->source_id])) {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->source_id] = [
+                        'id' => $item->source_id,
+                        'name' => $item->keyword_name,
+                        'keyword_name' => $item->keyword_name,
+                        'source_name' => self::source_name($item->source_id),
+                        'classification_name' => $item->classification_name,
+                        'classification_id' => $item->classification_id,
+                        'source_id' => $item->source_id,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'data' => [0, 0, 0]
+                    ];
+
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
+                
 
 
             }
@@ -700,6 +795,40 @@ class Controller extends BaseController
 
     protected static function listDataByAction($table, $campaign_id, $start_date, $end_date,$column = null, $condition = null, $keyword_id = null, $source_id = null) {
 
+    }
+
+    public static function source_name($source_id)
+    {
+        $source = Sources::where('id', $source_id)->first();
+        return $source->name;
+    }
+
+    public static function totalFromMessageResultSemetic($table, $campaign_id, $start_date, $end_date, $column, $keyword_name, $value_name) {
+        $engagement_previous = DB::table($table)->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->get();
+        
+        $source = Sources::where('status', 1)->get();
+        foreach ($source as $source) {
+            $data['labels'][] = self::source_name($source->id);
+        }
+
+        foreach ($engagement_previous as $item_previous) {
+            $source_name = self::source_name($item_previous->source_id);
+            $index_label = array_search($source_name, $data['labels']);
+
+            if (isset($data['value'][$value_name])) {
+                $data['value'][$value_name]['data'][$index_label] += $item_previous->$column;
+            } else {
+                $data['value'][$value_name] = [
+                    'id' => $item_previous->keyword_id,
+                    'keyword_name' => $keyword_name,
+                    'data' => [0,0,0,0,0,0]
+                ];
+            }
+        }
+
+        return $data;
     }
 
 }

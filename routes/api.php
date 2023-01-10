@@ -196,7 +196,9 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/channel-bully-type', [ChannelDashboardController::class, 'ChannelBullyType']);
         Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']);
         Route::get('/engagement-rate', [ChannelDashboardController::class, 'EngagementRate']);
+        Route::get('/engagement-rate-previous', [ChannelDashboardController::class, 'EngagementRatePrevious']);
         Route::get('/sentiment-score', [ChannelDashboardController::class, 'SentimentScore']);
+        Route::get('/sentiment-score-previous', [ChannelDashboardController::class, 'SentimentScorePrevious']);
         Route::get('/channel-by-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment2']);
         Route::get('/sentiment-level', [ChannelDashboardController::class, 'SentimentLevel']);
     });
