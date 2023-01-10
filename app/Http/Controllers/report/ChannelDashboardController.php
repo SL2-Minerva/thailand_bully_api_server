@@ -211,63 +211,97 @@ class ChannelDashboardController extends Controller
     public function ChannelBullyLevel(Request $request)
     {
 
-        $data = null;
+        $items = MessageResultSemetic::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 3);
 
-        $channal_bully = MessageResultGroup::where('classification_type_id', 3)
-            ->where('campaign_id', $request->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-            
-        $data = null;   
-        foreach ($channal_bully->get() as $item) {
-            if (isset($data[$item->source_id])) {
-                $data[$item->source_id]['value'] =  $data[$item->source_id]['value'] + 1;
+        $sentiment = Classification::where('classification_type_id', 3)->get();;
+        $data['labels'] = [];
 
-            } else {
-                $data[$item->source_id] = [
-                    'value' => 1,
-                    "message_id" => $item->message_id,
-                    "source_name" => $this->source_name($item->source_id),
-                    "keyword_name" => $item->keyword_name,
-                    "bully_type" => $this->bully_type_name($item->classification_id),
-                ];
-            }
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
         }
         
-        if (!$data) {
-            return parent::handleNotFound($data);
+        foreach ($items->get() as $item) {
+
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'name' => $item->keyword_name,
+                    'keyword_name' => $item->keyword_name,
+                    'source_name' => self::source_name($item->source_id),
+                    // 'classification_name' => $item->classification_name,
+                    // 'classification_id' => $item->classification_id,
+                    'source_id' => $item->source_id,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0,0,0,0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
+            }
+
         }
 
-        return parent::handleRespond(array_values($data));
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
+        return parent::handleRespond($data);
     }
 
     public function ChannelBullyType(Request $request)
     {
-        $data = null;
-
-        $channal_bully = MessageResultGroup::where('classification_type_id', 2)
-            ->where('campaign_id', $request->campaign_id)
+        $items = MessageResultSemetic::where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-             
-        foreach ($channal_bully->get() as $item) {
-            if (isset($data[$item->source_id])) {
-                $data[$item->source_id]['value'] =  $data[$item->source_id]['value'] + 1;
 
-            } else {
-                $data[$item->source_id] = [
-                    'value' => 1,
-                    "message_id" => $item->message_id,
-                    "source_name" => $this->source_name($item->source_id),
-                    "keyword_name" => $item->keyword_name,
-                    "bully_type" => $this->bully_type_name($item->classification_id),
-                ];
-            }
-        }
+        $sentiment = Classification::where('classification_type_id', 2)->get();;
+        $data['labels'] = [];
 
-        if (!$data) {
-            return parent::handleNotFound($data);
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
         }
         
-        return parent::handleRespond(array_values($data));
+        foreach ($items->get() as $item) {
+
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'name' => $item->keyword_name,
+                    'keyword_name' => $item->keyword_name,
+                    'source_name' => self::source_name($item->source_id),
+                    // 'classification_name' => $item->classification_name,
+                    // 'classification_id' => $item->classification_id,
+                    'source_id' => $item->source_id,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0,0,0,0,0,0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
+        return parent::handleRespond($data);
     }
 
     public function bully_type_name($class_id) 
