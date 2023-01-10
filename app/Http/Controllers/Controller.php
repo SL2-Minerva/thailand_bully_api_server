@@ -607,21 +607,27 @@ class Controller extends BaseController
                     $index_label = 3;
                 }
 
-                if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                if ($type === 'time' || $type === 'time_engagement') {
+                    if (isset($data['value'][$item->keyword_id])) {
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
 
 
+                    } else {
+                        $data['value'][$item->keyword_id] = [
+                            'id' => $item->keyword_id,
+                            'keyword_name' => $item->keyword_name,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                            'data' => [0, 0, 0, 0]
+                        ];
+
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    }
                 } else {
-                    $data['value'][$item->keyword_id] = [
-                        'id' => $item->keyword_id,
-                        'keyword_name' => $item->keyword_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                        'data' => [0, 0, 0, 0]
-                    ];
-
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    //todo
                 }
+
+
             }
 
             if ($type === 'device') {
