@@ -254,7 +254,8 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/bully-account', [BullyDashboardController::class, 'BullyByAccount']);
         Route::get('/bully-channel', [BullyDashboardController::class, 'BullyByChannel']);
         Route::get('/bully-sentiment', [BullyDashboardController::class, 'BullyBySentiment']);
-        Route::get('/bully-percentage-daily', [BullyDashboardController::class, 'BullyPercentageDaily']);
+        Route::get('/bully-type-daily', [BullyDashboardController::class, 'BullyTypeDaily']);
+        Route::get('/bully-type-percentage-daily', [BullyDashboardController::class, 'BullyTypePercentageDaily']);
         Route::get('/bully-type-day', [BullyDashboardController::class, 'BullyTypeByDay']);
         Route::get('/bully-type-time', [BullyDashboardController::class, 'BullyTypeByTime']);
         Route::get('/bully-type-device', [BullyDashboardController::class, 'BullyTypeByDevice']);
