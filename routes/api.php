@@ -247,6 +247,7 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-bully'], function () {
         Route::get('/bully-daily', [BullyDashboardController::class, 'DailyBully']);
+        Route::get('/bully-percentage', [BullyDashboardController::class, 'PercentageBully']);
         Route::get('/bully-day', [BullyDashboardController::class, 'BullyByDay']);
         Route::get('/bully-time', [BullyDashboardController::class, 'BullyByTime']);
         Route::get('/bully-device', [BullyDashboardController::class, 'BullyByDevice']);
