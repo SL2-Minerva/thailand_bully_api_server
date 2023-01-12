@@ -758,7 +758,7 @@ class Controller extends BaseController
                 }
 
                 if (isset($data['value'][$item->source_id])) {
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
                 } else {
                     $data['value'][$item->source_id] = [
                         'id' => $item->keyword_id,
@@ -770,7 +770,7 @@ class Controller extends BaseController
                         'data' => [0, 0, 0]
                     ];
 
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
                 }
             }
 
@@ -788,7 +788,7 @@ class Controller extends BaseController
                     }
     
                     if (isset($data['value'][$item->classification_id])) {
-                        $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                        $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                     } else {
                         $data['value'][$item->classification_id] = [
                             'id' => $item->classification_id,
@@ -796,7 +796,7 @@ class Controller extends BaseController
                             'data' => [0, 0, 0]
                         ];
     
-                        $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                        $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                     }
                 }
                 
@@ -830,7 +830,7 @@ class Controller extends BaseController
                     if ($item->classification_type_id === $column) {
 
                         if (isset($data['value'][$item->classification_id])) {
-                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         } else {
                             $data['value'][$item->classification_id] = [
                                 'id' => $item->classification_id,
@@ -838,7 +838,7 @@ class Controller extends BaseController
                                 'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                             ];
     
-                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         }
                     }
                 }
@@ -854,7 +854,7 @@ class Controller extends BaseController
                 if ($type === 'sentiment') {
 
                     if (isset($data['value'][$item->source_id])) {
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
                     } else {
                         $data['value'][$item->source_id] = [
                             'id' => $item->source_id,
@@ -869,7 +869,7 @@ class Controller extends BaseController
                             'data' => [0, 0, 0]
                         ];
     
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
                     }
                 }
 
@@ -877,7 +877,7 @@ class Controller extends BaseController
                     if ($item->classification_type_id === $column) {
 
                         if (isset($data['value'][$item->classification_id])) {
-                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         } else {
                             $data['value'][$item->classification_id] = [
                                 'id' => $item->classification_id,
@@ -885,7 +885,7 @@ class Controller extends BaseController
                                 'data' => [0, 0, 0]
                             ];
     
-                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         }
                     }
 
