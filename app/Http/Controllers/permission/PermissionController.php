@@ -176,11 +176,6 @@ class PermissionController extends Controller
             ],
             [
                 "groupName" => "Overall Dashboard",
-                "title" => "Daily Message",
-                "id" => "16"
-            ],
-            [
-                "groupName" => "Overall Dashboard",
                 "title" => "Accounts(Platforms)",
                 "id" => "17"
             ],
@@ -376,7 +371,7 @@ class PermissionController extends Controller
             ],
             [
                 "groupName" => "Channel Dashboard",
-                "title" => "Channel by Sentiment",
+                "title" => "Channel by Sentiment & Sentiment Level",
                 "id" => "56"
             ],
             [
@@ -421,42 +416,42 @@ class PermissionController extends Controller
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Daily Engagement",
+                "title" => "Daily Engagement Type",
                 "id" => "65"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Engagement by Day",
+                "title" => "Engangement Type By Day",
                 "id" => "66"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Engagement by Time",
+                "title" => "Engagement Type By Time",
                 "id" => "67"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Engagement by Devices",
+                "title" => "Engagement Type By Devices",
                 "id" => "68"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Engagement by Account",
+                "title" => "Engagement Type By Account",
                 "id" => "69"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Engagement by Channel",
+                "title" => "Engagement Type By Channel",
                 "id" => "70"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Total Engagement",
+                "title" => "Total Engagement(Period over Period Comparison)",
                 "id" => "71"
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title" => "Engagement Comparison by Channel",
+                "title" => "Engagement Comparison by Channels",
                 "id" => "72"
             ],
             [
