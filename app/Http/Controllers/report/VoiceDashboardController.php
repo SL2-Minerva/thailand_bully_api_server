@@ -4,13 +4,35 @@ namespace App\Http\Controllers\report;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Classification;
 use App\Models\Message;
 use Illuminate\Support\Carbon;
 use App\Models\DailyMessage;
+use App\Models\MessageResultBully;
 use App\Models\PercentageOfMessages;
+use App\Models\Sources;
 
 class VoiceDashboardController extends Controller
 {
+    private $start_date;
+    private $end_date;
+    private $period;
+
+    private $start_date_previous;
+    private $end_date_previous;
+    private $campaign_id;
+
+    public function __construct(Request $request)
+    {
+
+        $this->start_date = $this->date_carbon($request->start_date) ?? null;
+        $this->end_date = $this->date_carbon($request->end_date) ?? null;
+        $this->period = $request->period;
+        $this->campaign_id = $request->campaign_id;
+        $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
+        $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
+
+    }
     public function PercentageOfMessage(Request $request)
     {
         $campaign_id = $request->campaign_id;
@@ -62,213 +84,26 @@ class VoiceDashboardController extends Controller
 
     public function MessageByDay(Request $request)
     {
-        $data['labels'] = [
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sun"
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                39,
-                19,
-                38,
-                47,
-                16,
-                30
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-                32,
-                15,
-                78,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                15,
-                67,
-                23,
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                23,
-                16,
-                38,
-                89,
-                21,
-                45,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                45,
-                23,
-                56,
-                22,
-                35,
-                67,
-                21,
-            ]
-        ];
+        $table =  'daily_message';
+        $data = parent::listDataByType('dayname', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null );
 
         return parent::handleRespond($data);
     }
 
     public function MessageByTime(Request $request)
     {
-        $data['labels'] = [
-            "Before 6 AM",
-            "6 AM-12 PM",
-            "12 PM-6 PM",
-            "After 6 PM"
-        ];
-
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                39,
-                19,
-                38,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                23,
-                56,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-                21,
-                45,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                45,
-                23,
-                56,
-                21,
-            ]
-        ];
+        $table =  'daily_message_device_d_m_y_h_i_s';
+        $data = parent::listDataByType('time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null );
 
         return parent::handleRespond($data);
     }
 
     public function MessageByDevice(Request $request)
     {
-        $data['labels'] = [
-            "Andriod",
-            "Iphone",
-            "Web App",
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                19,
-                38,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                23,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-                45,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                23,
-                56,
-                21,
-            ]
-        ];
+        $table =  'daily_message_device';
+        $data = parent::listDataByType('device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null );
 
         return parent::handleRespond($data);
     }
@@ -330,73 +165,9 @@ class VoiceDashboardController extends Controller
 
     public function MessageByChannel(Request $request)
     {
-        $data['labels'] = [
-            "Facebook",
-            "Twitter",
-            "Instagram",
-            "Youtube",
-            "Pantip",
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                45,
-                23,
-                56,
-                67,
-                21,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                19,
-                38,
-                47,
-                16,
-                30,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                12,
-                16,
-                32,
-                15,
-                78,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                15,
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                67,
-                23,
-                16,
-                38,
-                89,
-            ]
-        ];
+        $table =  'daily_message';
+        $data = parent::listDataByType('channel', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null );
 
         return parent::handleRespond($data);
     }
@@ -464,141 +235,87 @@ class VoiceDashboardController extends Controller
 
     public function MessageByLevel(Request $request)
     {
-        $data['labels'] = [
-            "Level 0",
-            "Level 1",
-            "Level 2",
-            "Level 3",
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                19,
-                38,
-                47,
-                16,
-            ]
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 3);
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                32,
-                78,
-            ]
-        ];
+        $level = Classification::where('classification_type_id', 3)->get();
+        $data['labels'] = [];
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                15,
-                45,
-                23,
-                53,
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                16,
-                38,
-                89,
-            ]
-        ];
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                45,
-                23,
-                67,
-                21,
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0,0]
+                ];
 
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
     }
 
     public function MessageByType(Request $request)
     {
-        $data['labels'] = [
-            "No Bully",
-            "Gossip",
-            "Harassment",
-            "Exclusion",
-            "Hate Speech",
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                19,
-                38,
-                47,
-                16,
-                30,
-            ]
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 2);
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                32,
-                15,
-                78,
-            ]
-        ];
+        $level = Classification::where('classification_type_id', 2)->get();
+        $data['labels'] = [];
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                15,
-                45,
-                65,
-                23,
-                53,
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                23,
-                16,
-                38,
-                89,
-            ]
-        ];
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                45,
-                23,
-                56,
-                67,
-                21,
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0,0,0,0]
+                ];
 
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
     }
 
@@ -1134,165 +851,126 @@ class VoiceDashboardController extends Controller
 
     public function KeywordBullyLevel(Request $request)
     {
-        $data['labels'] = [
-            "Level 0",
-            "Level 1",
-            "Level 2",
-            "Level 3",
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 3);
 
-        $data['data'][] = [
-            "name" => "All",
-            "data" => [
-                100, 150, 200, 150,
-            ]
-        ];
+        $level = Classification::where('classification_type_id', 3)->get();
+        $data['labels'] = [];
 
-        $data['data'][] = [
-            "name" => "Keyword 1",
-            "data" => [
-                80, 50, 100, 49,
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
 
-        $data['data'][] = [
-            "name" => "Keyword 2",
-            "data" => [
-                20, 40, 10, 19,
-            ]
-        ];
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
 
-        $data['data'][] = [
-            "name" => "Keyword 3",
-            "data" => [
-                44, 76, 45, 100,
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0,0]
+                ];
 
-        $data['data'][] = [
-            "name" => "Keyword 4",
-            "data" => [
-                20, 30, 12, 30,
-            ]
-        ];
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            }
 
-        $data['data'][] = [
-            "name" => "Keyword 5",
-            "data" => [
-                45, 26, 30, 80,
-            ]
-        ];
+        }
 
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
     }
 
     public function KeywordBullyType(Request $request)
     {
-        $data['labels'] = [
-            "No Bully",
-            "Gossip",
-            "Harassment",
-            "Exclusion",
-            "Hate Speech",
-        ];
 
-        $data['data'][] = [
-            "name" => "All",
-            "data" => [
-                45, 28, 45, 98, 73,
-            ]
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 2);
 
-        $data['data'][] = [
-            "name" => "Keyword 1",
-            "data" => [
-                80, 50, 100, 49, 60,
-            ]
-        ];
+        $level = Classification::where('classification_type_id', 2)->get();
+        $data['labels'] = [];
 
-        $data['data'][] = [
-            "name" => "Keyword 2",
-            "data" => [
-                20, 40, 10, 19, 100,
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
 
-        $data['data'][] = [
-            "name" => "Keyword 3",
-            "data" => [
-                44, 76, 45, 100, 30,
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0,0,0,0]
+                ];
 
-        $data['data'][] = [
-            "name" => "Keyword 4",
-            "data" => [
-                20, 30, 12, 30, 80,
-            ]
-        ];
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            }
 
-        $data['data'][] = [
-            "name" => "Keyword 5",
-            "data" => [
-                45, 26, 30, 80, 100,
-            ]
-        ];
+        }
 
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
     }
 
     public function KeywordChannel(Request $request)
     {
-        $data['labels'] = [
-            "Facebook",
-            "Pantip",
-            "Twitter",
-            "Youtube",
-            "Instagram"
-        ];
 
-        $data['data'][] = [
-            "name" => "All",
-            "data" => [
-                45, 28, 45, 98, 73,
-            ]
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['data'][] = [
-            "name" => "Keyword 1",
-            "data" => [
-                80, 50, 30, 40, 100
-            ]
-        ];
+        $level = Sources::where('status', 1)->get();
+        $data['labels'] = [];
 
-        $data['data'][] = [
-            "name" => "Keyword 2",
-            "data" => [
-                20, 30, 40, 80, 20
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
+            $index_label = 0;
+            $index_label = array_search($item->source_name, $data['labels']);
 
-        $data['data'][] = [
-            "name" => "Keyword 3",
-            "data" => [
-                44, 76, 78, 13, 43
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0,0,0,0]
+                ];
 
-        $data['data'][] = [
-            "name" => "Keyword 4",
-            "data" => [
-                20, 30, 48, 23, 53
-            ]
-        ];
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            }
 
-        $data['data'][] = [
-            "name" => "Keyword 5",
-            "data" => [
-                45, 26, 38, 53, 13
-            ]
-        ];
+        }
 
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
     }
 }
