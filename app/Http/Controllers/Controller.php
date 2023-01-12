@@ -16,6 +16,7 @@ use PHPUnit\Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\DailyMessage;
+use App\Models\MessageResultBully;
 
 class Controller extends BaseController
 {
@@ -212,6 +213,15 @@ class Controller extends BaseController
         return DailyMessage::where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('source_id', $source_id)
+            ->sum('total_at_date');
+    }
+
+    public static function bullyTable($campaign_id, $start_date, $end_date, $classification_id, $classification_type_id)
+    {
+        return MessageResultBully::where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('classification_id', $classification_id)
+            ->where('classification_type_id', $classification_type_id)
             ->sum('total_at_date');
     }
 
@@ -479,7 +489,7 @@ class Controller extends BaseController
             ];
         }
         
-        if ($type === 'channel_by_time') {
+        if ($type === 'channel_by_time' || $type === 'bully_level_by_time') {
             $data['labels'] = [
                 "Before 6 AM",
                 "6 AM-12 PM",
@@ -496,7 +506,7 @@ class Controller extends BaseController
             ];
         }
 
-        if ($type === 'channel_by_device') {
+        if ($type === 'channel_by_device' || $type === 'bully_level_by_device') {
             $data['labels'] = [
                 "Android",
                 "Iphone",
@@ -504,7 +514,7 @@ class Controller extends BaseController
             ];
         }
 
-        if ($type === 'channel' ) {
+        if ($type === 'channel' || $type === 'bully_level_by_channel') {
 
             $sources = Sources::all();
             $data['labels'] = [];
@@ -515,7 +525,8 @@ class Controller extends BaseController
 
         }
 
-        if ($type === 'sentiment') {
+
+        if ($type === 'sentiment' || $type === 'bully_level_by_sentiment') {
             $sentiment = Classification::where('classification_type_id', 1)->get();
             $data['labels'] = [];
 
@@ -526,7 +537,7 @@ class Controller extends BaseController
         
         $debug = [];
         foreach ($items->get() as $item) {
-            if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day') {
+            if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day' || $type === 'bully_level_by_day') {
                 $day_name = Carbon::parse($item->date_m)->format('D');
 
 
@@ -570,6 +581,25 @@ class Controller extends BaseController
                     }
                 }
 
+                if ($type === 'bully_level_by_day') {
+                    if ($item->classification_type_id === $column) {
+
+                        if (isset($data['value'][$item->classification_id])) {
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+        
+        
+                        } else {
+                            $data['value'][$item->classification_id] = [
+                                'id' => $item->classification_id,
+                                'keyword_name' => $item->classification_name,
+                                'data' => [0, 0, 0, 0, 0, 0, 0]
+                            ];
+        
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+                        }
+                    }
+                }
+
 
                 if ($type === 'dayname_engagement') {
 
@@ -607,7 +637,7 @@ class Controller extends BaseController
             }
 
             
-            if ($type === 'time' || $type === 'time_engagement' || $type === 'channel_by_time') {
+            if ($type === 'time' || $type === 'time_engagement' || $type === 'channel_by_time' || $type === 'bully_level_by_time') {
                 
                 $sixAM = Carbon::parse("06:00:00");
                 $time = Carbon::parse($item->date_m)->format('H:i:s');
@@ -664,6 +694,25 @@ class Controller extends BaseController
                         ];
     
                         $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+                    }
+                }
+
+                if ($type === 'bully_level_by_time') {
+                    if ($item->classification_type_id === $column) {
+
+                        if (isset($data['value'][$item->classification_id])) {
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+        
+        
+                        } else {
+                            $data['value'][$item->classification_id] = [
+                                'id' => $item->classification_id,
+                                'keyword_name' => $item->classification_name,
+                                'data' => [0, 0, 0, 0]
+                            ];
+        
+                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+                        }
                     }
                 }
 
@@ -725,7 +774,35 @@ class Controller extends BaseController
                 }
             }
 
-            if ($type === 'channel') {
+            if ($type === 'bully_level_by_device') {
+                if ($item->classification_type_id === $column) {
+
+                    $index_label = 0;
+    
+                    if ($item->device == 'iphone') {
+                        $index_label = 1;
+                    }
+    
+                    if ($item->device == 'webapp') {
+                        $index_label = 2;
+                    }
+    
+                    if (isset($data['value'][$item->classification_id])) {
+                        $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                    } else {
+                        $data['value'][$item->classification_id] = [
+                            'id' => $item->classification_id,
+                            'keyword_name' => $item->classification_name,
+                            'data' => [0, 0, 0]
+                        ];
+    
+                        $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                    }
+                }
+                
+            }
+
+            if ($type === 'channel' || $type === 'bully_level_by_channel') {
                 $index_label = 0;
                 $index_label = array_search($item->source_name, $data['labels']);
 
@@ -749,35 +826,71 @@ class Controller extends BaseController
                     }
                 }
 
+                if ($type === 'bully_level_by_channel') {
+                    if ($item->classification_type_id === $column) {
+
+                        if (isset($data['value'][$item->classification_id])) {
+                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                        } else {
+                            $data['value'][$item->classification_id] = [
+                                'id' => $item->classification_id,
+                                'keyword_name' => $item->classification_name,
+                                'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                            ];
+    
+                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                        }
+                    }
+                }
+
 
             }
 
-            if ($type === 'sentiment') {
+            if ($type === 'sentiment' || $type === 'bully_level_by_sentiment') {
                 $index_label = 0;
                 $index_label = array_search($item->classification_name, $data['labels']);
 
                 
-                if (isset($data['value'][$item->source_id])) {
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
-                } else {
-                    $data['value'][$item->source_id] = [
-                        'id' => $item->source_id,
-                        'name' => $item->keyword_name,
-                        'keyword_name' => $item->keyword_name,
-                        'source_name' => self::source_name($item->source_id),
-                        'classification_name' => $item->classification_name,
-                        'classification_id' => $item->classification_id,
-                        'source_id' => $item->source_id,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                        'data' => [0, 0, 0]
-                    ];
+                if ($type === 'sentiment') {
 
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    if (isset($data['value'][$item->source_id])) {
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    } else {
+                        $data['value'][$item->source_id] = [
+                            'id' => $item->source_id,
+                            'name' => $item->keyword_name,
+                            'keyword_name' => $item->keyword_name,
+                            'source_name' => self::source_name($item->source_id),
+                            'classification_name' => $item->classification_name,
+                            'classification_id' => $item->classification_id,
+                            'source_id' => $item->source_id,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                            'data' => [0, 0, 0]
+                        ];
+    
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    }
+                }
+
+                if ($type === 'bully_level_by_sentiment') {
+                    if ($item->classification_type_id === $column) {
+
+                        if (isset($data['value'][$item->classification_id])) {
+                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                        } else {
+                            $data['value'][$item->classification_id] = [
+                                'id' => $item->classification_id,
+                                'keyword_name' => $item->classification_name,
+                                'data' => [0, 0, 0]
+                            ];
+    
+                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                        }
+                    }
+
                 }
                 
-
-
             }
 
 
