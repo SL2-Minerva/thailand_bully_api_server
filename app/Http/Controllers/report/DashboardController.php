@@ -272,7 +272,7 @@ class DashboardController extends Controller
         $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->campaign_id, $this->source_id, $this->source_id);
         $pervious = $this->findSentiment('message_result_semetic', $this->start_date_previous, $this->end_date_previous, $this->campaign_id, $this->source_id);
 
-
+        dd($current, $pervious);
         return parent::handleRespond([
             "neutral_value" => (float)self::point_two_digits($current['results']),
             "sentiment_percentage" => $current['sentiment_percentage'],
@@ -302,7 +302,8 @@ class DashboardController extends Controller
             }
         }
 
-        $sentiment_score = ( ((1 * 10) + (-1 * 20)) / (10 + 20 + 30) ) * 5;
+
+        $sentiment_score = ( ((1 * $positive) + (-1 * $negative)) / ($positive + $negative + $neutral) ) * 5;
         $data['neutral'] = $neutral;
         $data['positive'] = $positive;
         $data['negative'] = $negative;
@@ -315,7 +316,7 @@ class DashboardController extends Controller
             $percentage = 40;
         } else if ($sentiment_score >= 3 && $sentiment_score <= 3.0) {
             $percentage = 60;
-        } else if ($sentiment_score >= 4 && $sentiment_score <= 4.9) {
+        } else if ($sentiment_score >= 4 ) {
             $percentage = 80;
         }
 
@@ -327,11 +328,9 @@ class DashboardController extends Controller
 
     }
 
-    private function closest_sentiment_score ( $number) {
+    private function closest_sentiment_score ( $target) {
 
-        $target = 0.6;
-
-        if ( $target >= -1) {
+        if ( $target <= -1 ) {
             return 'Negative';
         }
 
