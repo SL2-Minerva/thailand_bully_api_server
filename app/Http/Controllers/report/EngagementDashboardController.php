@@ -601,38 +601,79 @@ class EngagementDashboardController extends Controller
     public function EngagementChannelKey(Request $request)
     {
 
-        $data['labels'] = [
-            "Facebook",
-            "Twitter",
-            "Instagram",
-            "Youtube",
-            "Pantip",
-        ];
+        $data = parent::listSource();
 
-        $data['data'][] = [
-            "id" => 1,
-            "name" => "Share",
-            "data" => [
-                80, 50, 30, 40, 100
-            ]
-        ];
+        $table = 'total_engagement_of_source';
 
-        $data['data'][] = [
-            "id" => 2,
-            "name" => "Comment",
-            "data" => [
-                20, 30, 40, 80, 20
-            ]
-        ];
+        $raw = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['data'][] = [
-            "id" => 3,
-            "name" => "Reaction",
-            "data" => [
-                44, 76, 78, 13, 43
-            ]
-        ];
+        $items = $raw->get();
 
+        foreach ($items as $item) {
+            $index_label = array_search($item->source_name, $data['labels']);
+
+            if (isset($data['value'][1])) {
+                $data['value'][1]['data'][$index_label] += $item->number_of_shares;
+                $data['value'][2]['data'][$index_label] += $item->number_of_comments;
+                $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+            } else {
+                $data['value'][1] = [
+                    'id' => 1,
+                    'name' => "Share",
+                ];
+
+                $data['value'][2] = [
+                    'id' => 2,
+                    'name' => "Comment",
+                ];
+
+                $data['value'][3] = [
+                    'id' => 3,
+                    'name' => "Reaction",
+                ];
+
+                for ($i = 0; $i <= count($data['labels']); $i++) {
+
+                    $data['value'][1]['data'][$i] = 0;
+                    $data['value'][2]['data'][$i] = 0;
+                    $data['value'][3]['data'][$i] = 0;
+                }
+
+                $data['value'][1]['data'][$index_label] = $item->number_of_shares;
+                $data['value'][2]['data'][$index_label] = $item->number_of_comments;
+                $data['value'][3]['data'][$index_label] = $item->number_of_reactions;
+            }
+        }
+
+
+//        $data['data'][] = [
+//            "id" => 1,
+//            "name" => "Share",
+//            "data" => [
+//                80, 50, 30, 40, 100
+//            ]
+//        ];
+//
+//        $data['data'][] = [
+//            "id" => 2,
+//            "name" => "Comment",
+//            "data" => [
+//                20, 30, 40, 80, 20
+//            ]
+//        ];
+//
+//        $data['data'][] = [
+//            "id" => 3,
+//            "name" => "Reaction",
+//            "data" => [
+//                44, 76, 78, 13, 43
+//            ]
+//        ];
+
+        if (isset($data['value']) && $data['value']) {
+            $data['value'] = array_values($data['value']);
+        }
         return parent::handleRespond($data);
     }
 

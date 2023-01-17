@@ -943,6 +943,17 @@ class Controller extends BaseController
         return $data;
     }
 
+    protected static function listSource () {
+        $sources = Sources::all();
+        $data['labels'] = [];
+
+        foreach ($sources as $source) {
+            $data['labels'][] = $source->name;
+        }
+
+        return $data;
+    }
+
 }
 
 
