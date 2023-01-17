@@ -93,50 +93,52 @@ class EngagementDashboardController extends Controller
             "Follower",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                19,
-            ]
-        ];
+        $table = 'sna_root_node';
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-            ]
-        ];
+        $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                65,
-                23,
-            ]
-        ];
+        $infulencers = $infulencer_root->get();
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-            ]
-        ];
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                23,
-                56,
-            ]
-        ];
+        foreach ($infulencers as $infulencer) {
+
+            if (isset($data['value'][$infulencer->keyword_id]['data'][0])) {
+                $data['value'][$infulencer->keyword_id]['data'][0] += $infulencer->engagement;
+            } else {
+                $data['value'][$infulencer->keyword_id]['id'] = $infulencer->keyword_id;
+                $data['value'][$infulencer->keyword_id]['keyword_name'] = $infulencer->keyword_name;
+                $data['value'][$infulencer->keyword_id]['data'][0] = $infulencer->engagement ?? 0;
+
+            }
+
+        }
+
+        $table = 'sna_child_node';
+        $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+
+        $followers = $follower_raw->get();
+
+
+        foreach ($followers as $follower) {
+
+            if (isset($data['value'][$follower->keyword_id]['data'][1])) {
+                $data['value'][$follower->keyword_id]['data'][1] += $follower->engagement ?? 0;
+            } else {
+                $data['value'][$follower->keyword_id]['id'] = $follower->keyword_id;
+                $data['value'][$follower->keyword_id]['keyword_name'] = $follower->keyword_name;
+                $data['value'][$follower->keyword_id]['data'][1] = $follower->engagement ?? 0;
+            }
+
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+
 
         return parent::handleRespond($data);
     }
@@ -838,66 +840,56 @@ class EngagementDashboardController extends Controller
 
     public function EngagementActionComparison(Request $request)
     {
+        $engagement_action_raw = DB::table('total_engagement_of_source_d_m_y_h_i_s')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data = [
-            [
-                "keyword_id" => 1,
-                "keyword_name" => "keyword_name 1",
-                "campaign_id" => 1,
-                "campaign_name" => "campaign_name 1",
-                "organization_id" => 1,
-                "organizations_name" => "organizations_name 1",
-                "share" => 10,
-                "reaction" => 30,
-                "comment" => 60
-            ],
-            [
-                "keyword_id" => 2,
-                "keyword_name" => "keyword_name 1",
-                "campaign_id" => 2,
-                "campaign_name" => "campaign_name 1",
-                "organization_id" => 2,
-                "organizations_name" => "organizations_name 1",
-                "share" => 10,
-                "comment" => 30,
-                "reaction" => 60
-            ],
-            [
-                "keyword_id" => 3,
-                "keyword_name" => "keyword_name 1",
-                "campaign_id" => 3,
-                "campaign_name" => "campaign_name 1",
-                "organization_id" => 3,
-                "organizations_name" => "organizations_name 1",
-                "share" => 10,
-                "comment" => 30,
-                "reaction" => 60
-            ],
-            [
-                "keyword_id" => 4,
-                "keyword_name" => "keyword_name 1",
-                "campaign_id" => 4,
-                "campaign_name" => "campaign_name 1",
-                "organization_id" => 4,
-                "organizations_name" => "organizations_name 1",
-                "share" => 10,
-                "comment" => 30,
-                "reaction" => 60
-            ],
-            [
-                "keyword_id" => 5,
-                "keyword_name" => "keyword_name 1",
-                "campaign_id" => 5,
-                "campaign_name" => "campaign_name 1",
-                "organization_id" => 5,
-                "organizations_name" => "organizations_name 1",
-                "share" => 10,
-                "comment" => 30,
-                "reaction" => 60
-            ]
-        ];
+        $engagement_actions = $engagement_action_raw->get();
 
-        return parent::handleRespond($data);
+
+        $percentages = null;
+        foreach ($engagement_actions as $engagement_action) {
+            if (isset($percentages[$engagement_action->keyword_id]) ) {
+
+                $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['share_r'] += (float)$engagement_action->number_of_shares;
+                $percentages[$engagement_action->keyword_id]['comment_r'] += (float)$engagement_action->number_of_comments;
+                $percentages[$engagement_action->keyword_id]['reaction_r'] += (float)$engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['share'] = (float)self::point_two_digits(($percentages[$engagement_action->keyword_id]['share_r'] / $percentages[$engagement_action->keyword_id]['total']) * 100);
+                $percentages[$engagement_action->keyword_id]['comment'] = (float)self::point_two_digits(($percentages[$engagement_action->keyword_id]['comment_r'] / $percentages[$engagement_action->keyword_id]['total']) * 100); ;
+                $percentages[$engagement_action->keyword_id]['reaction'] = (float)self::point_two_digits(($percentages[$engagement_action->keyword_id]['reaction_r'] / $percentages[$engagement_action->keyword_id]['total']) * 100);
+            }
+            else {
+                $percentages[$engagement_action->keyword_id] = [
+                    'share' => 0,
+                    'share_r' => 0,
+                    'comment' => 0,
+                    'comment_r' => 0,
+                    'reaction' => 0,
+                    'reaction_r' => 0,
+                    'total' => 0,
+                    "keyword_id" => $engagement_action->keyword_id,
+                    "keyword_name" => $engagement_action->keyword_name,
+                    "campaign_id" => $engagement_action->campaign_id,
+                    "campaign_name" => $engagement_action->campaign_name,
+                ];
+
+
+                $percentages[$engagement_action->keyword_id]['share_r'] += (float)$engagement_action->number_of_shares;
+                $percentages[$engagement_action->keyword_id]['comment_r'] += (float)$engagement_action->number_of_comments;
+                $percentages[$engagement_action->keyword_id]['reaction_r'] += (float)$engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['share'] = (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagement_action->engagement) * 100);
+                $percentages[$engagement_action->keyword_id]['comment'] = (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagement_action->engagement) * 100);
+                $percentages[$engagement_action->keyword_id]['reaction'] = (float)self::point_two_digits(($engagement_action->number_of_reactions / (float)$engagement_action->engagement) * 100);
+                $percentages[$engagement_action->keyword_id]['total'] +=  $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
+            }
+        }
+
+        if ($percentages) {
+            $percentages = array_values($percentages);
+
+        }
+
+        return parent::handleRespond($percentages);
     }
 
     public function EngagementByInfulencer(Request $request)
