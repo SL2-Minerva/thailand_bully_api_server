@@ -536,32 +536,64 @@ class EngagementDashboardController extends Controller
             "Follower",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Share",
-            "data" => [
-                19,
-                38,
-            ]
-        ];
+        $table_root = 'sna_root_node';
+        $table_child = 'sna_child_node';
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Comment",
-            "data" => [
-                16,
-                23,
-            ]
-        ];
+        $infulencer_root = DB::table($table_root)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Reaction",
-            "data" => [
-                23,
-                53,
-            ]
-        ];
+        $infulencers = $infulencer_root->get();
+
+
+        foreach ($infulencers as $infulencer) {
+
+            if (isset($data['value'][1]['data'][0])) {
+                $data['value'][1]['data'][0] += $infulencer->number_of_shares;
+                $data['value'][2]['data'][0] += $infulencer->number_of_comments;
+                $data['value'][3]['data'][0] += $infulencer->number_of_reactions;
+            } else {
+                $data['value'][1] = [
+                    'id' => 1,
+                    "keyword_name" => "Share",
+                    "data"  => [$infulencer->number_of_shares, 0]
+                ];
+
+                $data['value'][2] = [
+                    'id' => 2,
+                    "keyword_name" => "Comment",
+                    "data"  => [$infulencer->number_of_comments, 0]
+                ];
+
+                $data['value'][3] = [
+                    'id' => 3,
+                    "keyword_name" => "Reaction",
+                    "data"  => [$infulencer->number_of_reactions, 0]
+                ];
+
+            }
+
+        }
+
+        $follower_raw = DB::table($table_child)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+
+        $followers = $follower_raw->get();
+
+
+        foreach ($followers as $follower) {
+
+            if (isset($data['value'][1]['data'][0])) {
+                $data['value'][1]['data'][1] += $follower->number_of_shares;
+                $data['value'][2]['data'][1] += $follower->number_of_comments;
+                $data['value'][3]['data'][1] += $follower->number_of_reactions;
+            }
+
+        }
+
+        if (isset($data['value']) && $data['value']) {
+            $data['value'] = array_values($data['value']);
+        }
 
         return parent::handleRespond($data);
     }
