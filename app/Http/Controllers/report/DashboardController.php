@@ -272,7 +272,6 @@ class DashboardController extends Controller
         $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->campaign_id, $this->source_id, $this->source_id);
         $pervious = $this->findSentiment('message_result_semetic', $this->start_date_previous, $this->end_date_previous, $this->campaign_id, $this->source_id);
 
-        dd($current, $pervious);
         return parent::handleRespond([
             "neutral_value" => (float)self::point_two_digits($current['results']),
             "sentiment_percentage" => $current['sentiment_percentage'],
