@@ -301,8 +301,7 @@ class DashboardController extends Controller
             }
         }
 
-
-        $sentiment_score = ( ((1 * $positive) + (-1 * $negative)) / ($positive + $negative + $neutral) ) * 5;
+        $sentiment_score = ( ((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral) ) * 5;
         $data['neutral'] = $neutral;
         $data['positive'] = $positive;
         $data['negative'] = $negative;
@@ -320,7 +319,7 @@ class DashboardController extends Controller
         }
 
         $data['sentiment_percentage'] = ($sentiment_score * 1) + $percentage;
-        $data['text'] = $this->closest_sentiment_score($sentiment_score);
+        $data['text'] = $this->closest_sentiment_score($data['sentiment_percentage'] ?? 0);
 
         return $data;
 
@@ -329,15 +328,15 @@ class DashboardController extends Controller
 
     private function closest_sentiment_score ( $target) {
 
-        if ( $target <= -1 ) {
+        if ( $target <= 40) {
             return 'Negative';
         }
 
-        if (($target > 0 && $target <= 1 )) {
+        if (($target >= 41 && $target <= 70 )) {
             return 'Neutral';
         }
 
-        if ($target >= 2) {
+        if ($target > 70) {
             return 'Positive';
         }
     }
