@@ -872,33 +872,127 @@ class EngagementDashboardController extends Controller
             "Negative",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Previous",
-            "data" => [
-                47, 16, 30,
-            ],
-        ];
+        $table = 'message_result_semetic_engagement';
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Current",
-            "data" => [
-                12, 16, 78,
-            ],
-        ];
+        $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['share'] = [
-            "-30%", "-30%", "-30%", "-30%", "-30%",
-        ];
+        $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
 
-        $data['comment'] = [
-            "-23%", "-23%", "-23%", "-23%", "-23%",
-        ];
+        $items_current = $raw_current->get();
+        $items_previous = $raw_previous->get();
+        $current_share = [];
+        $previous_share = [];
+        $current_comment = [];
+        $previous_comment = [];
+        $current_reaction = [];
+        $previous_reaction = [];
 
-        $data['reaction'] = [
-            "-56%", "-56%", "-56%", "-56%", "-56%",
-        ];
+        $debug = null;
+
+        foreach ($items_current as $item) {
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            if (isset($data['value'][2])) {
+                $data['value'][2]['data'][$index_label] += 1;
+                $current_share[$index_label] += $item->number_of_shares;
+                $current_comment[$index_label] += $item->number_of_comments;
+                $current_reaction[$index_label] += $item->number_of_reactions;
+
+            } else {
+                $data['value'][1] = [
+                    'id' => 1,
+                    'keyword_name' => "Previous",
+                ];
+
+                $data['value'][2] = [
+                    'id' => 2,
+                    'keyword_name' => "Current",
+                ];
+
+                for ($i = 0; $i < count($data['labels']); $i++) {
+                    $data['value'][1]['data'][$i] = 0;
+                    $data['value'][2]['data'][$i] = 0;
+
+                    $data['share'][$i] = 0;
+                    $data['comment'][$i] = 0;
+                    $data['reaction'][$i] = 0;
+
+                    $current_share[$i] = 0;
+                    $current_share[$index_label] = $item->number_of_shares;
+                    $current_comment[$i] = 0;
+                    $current_comment[$index_label] = $item->number_of_comments;
+                    $current_reaction[$i] = 0;
+                    $current_reaction[$index_label] = $item->number_of_reactions;
+
+                    $previous_share[$i] = 0;
+                    $previous_comment[$i] = 0;
+                    $previous_reaction[$i] = 0;
+                }
+
+                $data['value'][2]['data'][$index_label] += $item->engagement;
+            }
+        }
+
+
+        foreach ($items_previous as $item) {
+
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            if (isset($data['value'][1])) {
+
+                $data['value'][1]['data'][$index_label] += $item->engagement;
+            }
+
+            $previous_share[$index_label] += $item->number_of_shares;
+            $previous_comment[$index_label] += $item->number_of_comments;
+            $previous_reaction[$index_label] += $item->number_of_reactions;
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+
+        for ($i = 0; $i < count($data['labels']); $i++) {
+            $data['share'][$i]  = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
+            $data['comment'][$i]  = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
+            $data['reaction'][$i]  = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+//        $data['value'][] = [
+//            "id" => 1,
+//            "keyword_name" => "Previous",
+//            "data" => [
+//                47, 16, 30,
+//            ],
+//        ];
+//
+//        $data['value'][] = [
+//            "id" => 2,
+//            "keyword_name" => "Current",
+//            "data" => [
+//                12, 16, 78,
+//            ],
+//        ];
+//
+//        $data['share'] = [
+//            "-30%", "-30%", "-30%", "-30%", "-30%",
+//        ];
+//
+//        $data['comment'] = [
+//            "-23%", "-23%", "-23%", "-23%", "-23%",
+//        ];
+//
+//        $data['reaction'] = [
+//            "-56%", "-56%", "-56%", "-56%", "-56%",
+//        ];
 
         return parent::handleRespond($data);
     }
@@ -906,6 +1000,81 @@ class EngagementDashboardController extends Controller
     public function EngagementTypeComparison(Request $request)
     {
         $data = [];
+
+        $table = 'total_engagement_of_source_d_m_y_h_i_s';
+
+        $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+        $items_current = $raw_current->get();
+        $items_previous = $raw_previous->get();
+
+        $current = null;
+        $previous = null;
+
+        foreach ($items_current as $item) {
+            if (isset($current[$item->keyword_id]) && $current[$item->keyword_id]) {
+                $current[$item->keyword_id]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $current[$item->keyword_id]['share'] += $item->number_of_shares;
+                $current[$item->keyword_id]['comment'] += $item->number_of_comments;
+                $current[$item->keyword_id]['reaction'] += $item->number_of_reactions;
+            } else {
+                $current[$item->keyword_id]['keyword_name'] = $item->keyword_name;
+                $current[$item->keyword_id]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $current[$item->keyword_id]['share'] = $item->number_of_shares;
+                $current[$item->keyword_id]['comment'] = $item->number_of_comments;
+                $current[$item->keyword_id]['reaction'] = $item->number_of_reactions;
+            }
+        }
+
+        foreach ($items_previous as $item) {
+            if (isset($previous[$item->keyword_id]) && $previous[$item->keyword_id]) {
+                $previous[$item->keyword_id]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $previous[$item->keyword_id]['share'] += $item->number_of_shares;
+                $previous[$item->keyword_id]['comment'] += $item->number_of_comments;
+                $previous[$item->keyword_id]['reaction'] += $item->number_of_reactions;
+            } else {
+                $previous[$item->keyword_id]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $previous[$item->keyword_id]['share'] = $item->number_of_shares;
+                $previous[$item->keyword_id]['comment'] = $item->number_of_comments;
+                $previous[$item->keyword_id]['reaction'] = $item->number_of_reactions;
+            }
+        }
+
+//        dd($current, $previous);
+
+        foreach ($current as $key => $item) {
+
+            $data[] = [
+                'keyword_id' => $key,
+                'keyword_name' => $item['keyword_name'],
+                'total' => [
+                    "value" => $item['total'] - $previous[$key]['total'],
+                    "percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
+                    "type" => $item['total'] - $previous[$key]['total'] >0 ? "plus" : "minus",
+                ],
+                'share' => [
+                    "value" => $item['share'] - $previous[$key]['share'],
+                    "percentage" => $this->overPeriodComparison($item['share'], $previous[$key]['share']),
+                    "type" => $item['share'] - $previous[$key]['share'] > 0 ? "plus" : "minus",
+                ],
+                'comment' => [
+                    "value" => $item['comment'] - $previous[$key]['comment'],
+                    "percentage" => $this->overPeriodComparison($item['comment'], $previous[$key]['comment']),
+                    "type" => $item['comment'] - $previous[$key]['comment'] > 0 ? "plus" : "minus",
+                ],
+                'reaction' => [
+                    "value" => $item['reaction'] - $previous[$key]['reaction'],
+                    "percentage" => $this->overPeriodComparison($item['reaction'], $previous[$key]['reaction']),
+                    "type" => $item['reaction'] - $previous[$key]['reaction'] > 0 ? "plus" : "minus",
+                ],
+            ];
+        }
+
+
 
 //        $data = [
 //            [

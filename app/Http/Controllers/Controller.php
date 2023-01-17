@@ -266,7 +266,8 @@ class Controller extends BaseController
 
     protected static function overPeriodComparison($current, $previous)
     {
-        if (!$current && !$previous) {
+
+        if ( $current - $previous === 0 || $previous === 0) {
             return 0;
         }
 
