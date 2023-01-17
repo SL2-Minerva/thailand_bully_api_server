@@ -17,6 +17,28 @@ use DateTime;
 
 class DashboardController extends Controller
 {
+
+    private $start_date;
+    private $end_date;
+    private $period;
+
+    private $start_date_previous;
+    private $end_date_previous;
+    private $campaign_id;
+    private $source_id;
+
+    public function __construct(Request $request)
+    {
+        $this->campaign_id = $request->campaign_id ? $request->campaign_id : $request->campaignId;
+        $this->start_date = $this->date_carbon($request->start_date) ?? null;
+        $this->end_date = $this->date_carbon($request->end_date) ?? null;
+        $this->period = $request->period;
+        $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
+        $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
+        $this->source_id = $request->source_id;
+
+    }
+
     public function overAll(Request $request)
     {
         $campaign_id = $request->campaign_id;
@@ -246,19 +268,92 @@ class DashboardController extends Controller
 
     public function sentimentScore(Request $request)
     {
+
+        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->campaign_id, $this->source_id);
+        $pervious = $this->findSentiment('message_result_semetic', $this->start_date_previous, $this->end_date_previous, $this->campaign_id, $this->source_id);
+
+
         return parent::handleRespond([
-            "neutral_value" => 4.5,
-            "sentiment_percentage" => 65,
-            "pervious_sentiment" => 2.3,
+            "neutral_value" => $current['results'],
+            "sentiment_percentage" => $current['sentiment_percentage'],
+            "pervious_sentiment" => $pervious['results'],
+            "text" =>$current['text']
         ]);
+    }
+
+    private function findSentiment($table, $start_date, $end_date, $campaign_id, $source_id = null)
+    {
+        $positive = 0;
+        $negative = 0;
+        $neutral = 0;
+
+        $results = DB::table('message_result_semetic')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_name', ["Positive", 'Negative', 'Neutral'])
+            ->get();
+
+        foreach ($results as $result) {
+            if ($result->classification_name == "Positive") {
+                $positive += 1;
+            } else if ($result->classification_name == "Negative") {
+                $negative += 1;
+            } else if ($result->classification_name == "Neutral") {
+                $neutral += 1;
+            }
+        }
+
+        $sentiment_score = ( ((1 * 10) + (-1 * 20)) / (10 + 20 + 30) ) * 5;
+        $data['neutral'] = $neutral;
+        $data['positive'] = $positive;
+        $data['negative'] = $negative;
+        $data['results'] = $sentiment_score;
+        $percentage = 20;
+
+
+
+         if ($sentiment_score >= 2 && $sentiment_score <= 3) {
+            $percentage = 40;
+        } else if ($sentiment_score >= 3 && $sentiment_score <= 3.0) {
+            $percentage = 60;
+        } else if ($sentiment_score >= 4 && $sentiment_score <= 4.9) {
+            $percentage = 80;
+        }
+
+        $data['sentiment_percentage'] = ($sentiment_score * 1) + $percentage;
+        $data['text'] = $this->closest_sentiment_score($sentiment_score);
+
+        return $data;
+
+
+    }
+
+    private function closest_sentiment_score ( $number) {
+
+        $target = 0.6;
+
+        if ( $target >= -1) {
+            return 'Negative';
+        }
+
+        if (($target > 0 && $target <= 1 )) {
+            return 'Neutral';
+        }
+
+        if ($target >= 2) {
+            return 'Positive';
+        }
     }
 
     public function sentimentType(Request $request)
     {
+
+        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->campaign_id, $this->source_id);
+        $message_total = $current['positive'] + $current['negative'] + $current['neutral'];
+
         return parent::handleRespond([
-            "positive_percentage" => 10,
-            "neutral_percentage" => 65,
-            "negative_percentage" => 40,
+            "positive_percentage" => (float)self::point_two_digits(($current['positive'] / $message_total) * 100),
+            "neutral_percentage" => (float)self::point_two_digits(($current['neutral'] / $message_total) * 100),
+            "negative_percentage" => (float)self::point_two_digits(($current['negative'] / $message_total) * 100),
         ]);
     }
 
