@@ -269,14 +269,14 @@ class DashboardController extends Controller
     public function sentimentScore(Request $request)
     {
 
-        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->campaign_id, $this->source_id);
+        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->campaign_id, $this->source_id, $this->source_id);
         $pervious = $this->findSentiment('message_result_semetic', $this->start_date_previous, $this->end_date_previous, $this->campaign_id, $this->source_id);
 
 
         return parent::handleRespond([
-            "neutral_value" => $current['results'],
+            "neutral_value" => (float)self::point_two_digits($current['results']),
             "sentiment_percentage" => $current['sentiment_percentage'],
-            "pervious_sentiment" => $pervious['results'],
+            "pervious_sentiment" => (float)self::point_two_digits($pervious['results']),
             "text" =>$current['text']
         ]);
     }
@@ -287,8 +287,8 @@ class DashboardController extends Controller
         $negative = 0;
         $neutral = 0;
 
-        $results = DB::table('message_result_semetic')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+        $results = DB::table($table)->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_name', ["Positive", 'Negative', 'Neutral'])
             ->get();
 
