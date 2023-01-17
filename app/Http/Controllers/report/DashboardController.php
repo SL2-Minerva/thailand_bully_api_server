@@ -292,7 +292,8 @@ class DashboardController extends Controller
             ->whereIn('classification_name', ["Positive", 'Negative', 'Neutral'])
             ->get();
 
-        if ($results) {
+        if ($results->count() > 0) {
+
             foreach ($results as $result) {
                 if ($result->classification_name == "Positive") {
                     $positive += 1;
