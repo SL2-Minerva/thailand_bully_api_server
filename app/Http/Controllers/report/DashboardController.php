@@ -423,47 +423,53 @@ class DashboardController extends Controller
 
     private function topSites($campaign_id, $start_date, $end_date)
     {
-        $dummy_data[] = [
-            "id" =>  1,
-            "site_domain" =>  'www.google.com',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        $dummy_data[] = [
-            "id" =>  2,
-            "site_domain" =>  'www.google.com',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        $dummy_data[] = [
-            "id" =>  3,
-            "site_domain" =>  'www.google.com',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        $dummy_data[] = [
-            "id" =>  4,
-            "site_domain" =>  'www.google.com',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        $dummy_data[] = [
-            "id" =>  5,
-            "site_domain" =>  'www.google.com',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-        return $dummy_data;
+        $data = null;
+
+        $message_keyword = [];
+        $message_total = 0;
+
+        $total_keywords = DB::table('tbl_message_top_sites')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->groupBy('keyword_name')
+            ->get();
+
+
+        foreach ($total_keywords as $object) {
+            $item = (array)$object;
+
+            if (isset($message_keyword[$item['keyword_id']])) {
+                $message_keyword[$item['keyword_id']] += $item['engagement'];
+            } else {
+                $message_keyword[$item['keyword_id']] = $item['engagement'];
+            }
+
+            $message_total += $item['engagement'];
+        }
+
+        foreach ($message_keyword as $keyword_id => $value) {
+            $percentage = 0;
+            if ($value && $message_total) {
+                $percentage = self::point_two_digits(($value / $message_total) * 100);
+            }
+            $data[$keyword_id]['value'][] = [
+                'keyword'=> $value['keyword_name'],
+                'keyword_id'=> $value['keyword_id'],
+                'percentage' => $message_total,
+                "no_of_message" => $this->point_two_digits($message_total),
+                "type" => ($message_total >= 0 ? "plus" : "minus"),
+            ];
+        }
+        return $data;
+//        $dummy_data[] = [
+//            "id" =>  1,
+//            "site_domain" =>  'www.google.com',
+//            "keyword_id" => 1,
+//            "no_of_message" => 1000,
+//            "percentage" => 1000,
+//            "type" => 'plus'
+//        ];
+
     }
 
     private function topHashtag($campaign_id, $start_date, $end_date)

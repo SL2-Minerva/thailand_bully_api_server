@@ -12,7 +12,6 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Validator;
-use PHPUnit\Exception;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\DailyMessage;
@@ -479,7 +478,7 @@ class Controller extends BaseController
         }
 
         $data['value'] = null;
-        
+
         if ($type === 'time') {
             $data['labels'] = [
                 "Before 6 AM",
@@ -488,7 +487,7 @@ class Controller extends BaseController
                 "After 6 PM"
             ];
         }
-        
+
         if ($type === 'channel_by_time' || $type === 'bully_level_by_time') {
             $data['labels'] = [
                 "Before 6 AM",
@@ -497,7 +496,7 @@ class Controller extends BaseController
                 "After 6 PM"
             ];
         }
-        
+
         if ($type === 'device') {
             $data['labels'] = [
                 "Android",
@@ -534,7 +533,7 @@ class Controller extends BaseController
                 $data['labels'][] = $item->name;
             }
         }
-        
+
         $debug = [];
         foreach ($items->get() as $item) {
             if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day' || $type === 'bully_level_by_day') {
@@ -560,7 +559,7 @@ class Controller extends BaseController
 
                     }
 
-                    
+
                 }
 
                 if ($type === 'channel_by_day') {
@@ -586,15 +585,15 @@ class Controller extends BaseController
 
                         if (isset($data['value'][$item->classification_id])) {
                             $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-        
-        
+
+
                         } else {
                             $data['value'][$item->classification_id] = [
                                 'id' => $item->classification_id,
                                 'keyword_name' => $item->classification_name,
                                 'data' => [0, 0, 0, 0, 0, 0, 0]
                             ];
-        
+
                             $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         }
                     }
@@ -636,9 +635,9 @@ class Controller extends BaseController
 
             }
 
-            
+
             if ($type === 'time' || $type === 'time_engagement' || $type === 'channel_by_time' || $type === 'bully_level_by_time') {
-                
+
                 $sixAM = Carbon::parse("06:00:00");
                 $time = Carbon::parse($item->date_m)->format('H:i:s');
                 $index_label = 3;
@@ -680,8 +679,8 @@ class Controller extends BaseController
                 if ($type === 'channel_by_time') {
                     if (isset($data['value'][$item->source_id])) {
                         $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-    
-    
+
+
                     } else {
                         $data['value'][$item->source_id] = [
                             'id' => $item->source_id,
@@ -692,7 +691,7 @@ class Controller extends BaseController
                             'source_name' => $item->source_name,
                             'data' => [0, 0, 0, 0]
                         ];
-    
+
                         $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
                     }
                 }
@@ -702,24 +701,24 @@ class Controller extends BaseController
 
                         if (isset($data['value'][$item->classification_id])) {
                             $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-        
-        
+
+
                         } else {
                             $data['value'][$item->classification_id] = [
                                 'id' => $item->classification_id,
                                 'keyword_name' => $item->classification_name,
                                 'data' => [0, 0, 0, 0]
                             ];
-        
+
                             $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         }
                     }
                 }
 
             }
-            
-            
-            
+
+
+
             if ($type === 'device') {
                 $index_label = 0;
 
@@ -778,15 +777,15 @@ class Controller extends BaseController
                 if ($item->classification_type_id === $column) {
 
                     $index_label = 0;
-    
+
                     if ($item->device == 'iphone') {
                         $index_label = 1;
                     }
-    
+
                     if ($item->device == 'webapp') {
                         $index_label = 2;
                     }
-    
+
                     if (isset($data['value'][$item->classification_id])) {
                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                     } else {
@@ -795,11 +794,11 @@ class Controller extends BaseController
                             'keyword_name' => $item->classification_name,
                             'data' => [0, 0, 0]
                         ];
-    
+
                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                     }
                 }
-                
+
             }
 
             if ($type === 'channel' || $type === 'bully_level_by_channel') {
@@ -837,7 +836,7 @@ class Controller extends BaseController
                                 'keyword_name' => $item->classification_name,
                                 'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                             ];
-    
+
                             $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         }
                     }
@@ -850,7 +849,7 @@ class Controller extends BaseController
                 $index_label = 0;
                 $index_label = array_search($item->classification_name, $data['labels']);
 
-                
+
                 if ($type === 'sentiment') {
 
                     if (isset($data['value'][$item->source_id])) {
@@ -868,7 +867,7 @@ class Controller extends BaseController
                             'campaign_name' => $item->campaign_name,
                             'data' => [0, 0, 0]
                         ];
-    
+
                         $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
                     }
                 }
@@ -884,13 +883,13 @@ class Controller extends BaseController
                                 'keyword_name' => $item->classification_name,
                                 'data' => [0, 0, 0]
                             ];
-    
+
                             $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
                         }
                     }
 
                 }
-                
+
             }
 
 
@@ -920,7 +919,7 @@ class Controller extends BaseController
         $engagement_previous = DB::table($table)->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->get();
-        
+
         $source = Sources::where('status', 1)->get();
         foreach ($source as $source) {
             $data['labels'][] = self::source_name($source->id);
