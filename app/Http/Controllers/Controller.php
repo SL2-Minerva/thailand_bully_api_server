@@ -264,6 +264,15 @@ class Controller extends BaseController
     }
 
 
+    protected static function overPeriodComparison($current, $previous)
+    {
+        if (!$current && !$previous) {
+            return 0;
+        }
+
+        return (float) self::point_two_digits((($current - $previous) / $previous) * 100) ;
+    }
+
     protected static function findPercentage($items, $column, $start_date, $end_date)
     {
         $message_keyword = [];
