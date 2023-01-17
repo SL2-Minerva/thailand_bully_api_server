@@ -679,28 +679,51 @@ class EngagementDashboardController extends Controller
 
     public function EngagementComparison(Request $request)
     {
+
+        $data = null;
+        $table = 'total_engagement_of_source';
+        $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+        $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+
+        $totalEngagement_current = $raw_current->sum('engagement');
+        $totalEngagement_previous = $raw_previous->sum('engagement');
+
+
+        $total_share_current = $raw_current->sum('number_of_shares');
+        $total_share_previous = $raw_previous->sum('number_of_shares');
+
+        $total_comment_current = $raw_current->sum('number_of_comments');
+        $total_comment_previous = $raw_previous->sum('number_of_comments');
+
+        $total_reactions_current = $raw_current->sum('number_of_reactions');
+        $total_reactions_previous = $raw_previous->sum('number_of_reactions');
+
+
         $data['totalEngagement'] = [
-            "totalValue" => "1.2M",
-            "comparison" => "-1%",
-            "type" => "minus",
+            "totalValue" => parent::custom_number_format((int)$totalEngagement_current),
+            "comparison" => (float)parent::point_two_digits($totalEngagement_current- $totalEngagement_previous !== 0 ? ($totalEngagement_current- $totalEngagement_previous) / $totalEngagement_previous : 0),
+            "type" => $totalEngagement_current- $totalEngagement_previous > 0 ? "plus" :"minus",
         ];
 
         $data['share'] = [
-            "totalValue" => "800k",
-            "comparison" => "3%",
-            "type" => "plus",
+            "totalValue" => parent::custom_number_format((int)$total_share_current),
+            "comparison" => (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? ($total_share_current - $total_share_previous) / $total_share_previous : 0),
+            "type" => $total_share_current- $total_share_previous > 0 ? "plus" :"minus",
         ];
 
         $data['comment'] = [
-            "totalValue" => "20k",
-            "comparison" => "-3%",
-            "type" => "minus",
+            "totalValue" => parent::custom_number_format((int)$total_comment_current),
+            "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? ($total_comment_current - $total_comment_previous) / $total_comment_previous : 0),
+            "type" => $total_comment_current- $total_comment_previous > 0 ? "plus" :"minus",
         ];
 
         $data['reaction'] = [
-            "totalValue" => "1.45M",
-            "comparison" => "-1%",
-            "type" => "minus",
+            "totalValue" => parent::custom_number_format((int)$total_reactions_current),
+            "comparison" => (float)parent::point_two_digits(($total_reactions_current- $total_reactions_previous) / $total_reactions_previous),
+            "type" => $total_reactions_current- $total_reactions_previous > 0 ? "plus" :"minus",
         ];
 
         return parent::handleRespond($data);

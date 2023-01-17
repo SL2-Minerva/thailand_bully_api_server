@@ -954,6 +954,22 @@ class Controller extends BaseController
         return $data;
     }
 
+
+    protected static function custom_number_format($n, $precision = 3) {
+        if ($n < 1000000) {
+            // Anything less than a million
+            $n_format = number_format($n);
+        } else if ($n < 1000000000) {
+            // Anything less than a billion
+            $n_format = number_format($n / 1000000, $precision) . 'M';
+        } else {
+            // At least a billion
+            $n_format = number_format($n / 1000000000, $precision) . 'B';
+        }
+
+        return $n_format;
+    }
+
 }
 
 
