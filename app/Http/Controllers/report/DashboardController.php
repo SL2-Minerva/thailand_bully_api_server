@@ -285,32 +285,39 @@ class DashboardController extends Controller
         $positive = 0;
         $negative = 0;
         $neutral = 0;
+        $sentiment_score = 0;
 
         $results = DB::table($table)->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_name', ["Positive", 'Negative', 'Neutral'])
             ->get();
 
-        foreach ($results as $result) {
-            if ($result->classification_name == "Positive") {
-                $positive += 1;
-            } else if ($result->classification_name == "Negative") {
-                $negative += 1;
-            } else if ($result->classification_name == "Neutral") {
-                $neutral += 1;
+        if ($results) {
+            foreach ($results as $result) {
+                if ($result->classification_name == "Positive") {
+                    $positive += 1;
+                } else if ($result->classification_name == "Negative") {
+                    $negative += 1;
+                } else if ($result->classification_name == "Neutral") {
+                    $neutral += 1;
+                }
             }
+
+            $sentiment_score = ( ((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral) ) * 5;
         }
 
-        $sentiment_score = ( ((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral) ) * 5;
+
         $data['neutral'] = $neutral;
         $data['positive'] = $positive;
         $data['negative'] = $negative;
         $data['results'] = $sentiment_score;
         $percentage = 20;
 
+        if ($sentiment_score === 0) {
+            $percentage = 0;
+        }
 
-
-         if ($sentiment_score >= 2 && $sentiment_score <= 3) {
+        if ($sentiment_score >= 2 && $sentiment_score <= 3) {
             $percentage = 40;
         } else if ($sentiment_score >= 3 && $sentiment_score <= 3.0) {
             $percentage = 60;
