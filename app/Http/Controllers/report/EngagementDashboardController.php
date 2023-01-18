@@ -1251,65 +1251,50 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($percentages);
     }
 
+    //todo mamybe is wrong
     public function EngagementByInfulencer(Request $request)
     {
 
-        $data = [
-            [
-                "infulencer" => "User 1",
-                "total" => 39,
-                "share" => 29,
-                "comment" => 0,
-                "reaction" => 10,
-                "period_over_preiod" => "-10",
-                "period_over_period_percentage" => "-1"
-            ],
-            [
-                "infulencer" => "User 2",
-                "total" => 25,
-                "share" => 25,
-                "comment" => 0,
-                "reaction" => 0,
-                "period_over_preiod" => "+10",
-                "period_over_period_percentage" => "+2"
-            ],
-            [
-                "infulencer" => "User 3",
-                "total" => 29,
-                "share" => 29,
-                "comment" => 0,
-                "reaction" => 10,
-                "period_over_preiod" => "-10",
-                "period_over_period_percentage" => "-1"
-            ],
-            [
-                "infulencer" => "User 4",
-                "total" => 95,
-                "share" => 90,
-                "comment" => 0,
-                "reaction" => 5,
-                "period_over_preiod" => "-10",
-                "period_over_period_percentage" => "-1"
-            ],
-            [
-                "infulencer" => "User 5",
-                "total" => 29,
-                "share" => 29,
-                "comment" => 0,
-                "reaction" => 10,
-                "period_over_preiod" => "-10",
-                "period_over_period_percentage" => "-1"
-            ],
-            [
-                "infulencer" => "User 6",
-                "total" => 32,
-                "share" => 32,
-                "comment" => 0,
-                "reaction" => 10,
-                "period_over_preiod" => "+20",
-                "period_over_period_percentage" => "+30"
-            ]
-        ];
+        $raw_current = DB::table('sna_root_node')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        $raw_previous = DB::table('sna_root_node')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+        $items_current = $raw_current->get();
+        $items_previous = $raw_previous->get();
+
+        $current = null;
+
+        foreach ($items_current as $item) {
+
+            $current[] = [
+                "message_id" => $item->message_id,
+                "infulencer" => $item->author,
+                "total" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+                "share" => $item->number_of_shares,
+                "comment" => $item->number_of_comments,
+                "reaction" => $item->number_of_reactions,
+            ];
+        }
+
+        $data = null;
+        foreach ($current as $item) {
+            foreach ($items_previous as $item_previous) {
+                if ($item['message_id'] == $item_previous->message_id) {
+                    $data[] = [
+                        "message_id" => $item['message_id'],
+                        "infulencer" => $item['infulencer'],
+                        "total" => $item['total'],
+                        "share" => $item_previous->number_of_shares,
+                        "comment" => $item_previous->number_of_comments,
+                        "reaction" => $item_previous->number_of_reactions,
+                        "period_over_preiod" => $item['total'] - ($item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
+                        "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
+                    ];
+                }
+            }
+        }
 
         return parent::handleRespond($data);
     }
