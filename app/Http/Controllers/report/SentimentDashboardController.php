@@ -4,12 +4,46 @@ namespace App\Http\Controllers\report;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SentimentDashboardController extends Controller
 {
+    private $start_date;
+    private $end_date;
+    private $period;
+    private $start_date_previous;
+    private $end_date_previous;
+    private $campaign_id;
+
+    public function __construct(Request $request)
+    {
+
+        $this->campaign_id = $request->campaign_id ? $request->campaign_id : $request->campaignId;
+        $this->start_date = $this->date_carbon($request->start_date) ?? null;
+        $this->end_date = $this->date_carbon($request->end_date) ?? null;
+        $this->period = $request->period;
+        $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
+        $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
+    }
     public function DailySeniment(Request $request)
     {
-            $data = [];
+        $table = 'message_result_semetic';
+        $data = null;
+        $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        $raw_pre = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+        $data['sentiment'] = $this->sentiment($raw_current);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($raw_current, $this->start_date, $this->end_date);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($raw_pre,$this->start_date_previous,$this->end_date_previous);
+
+
+
+
+
 //        $data = [
 //            "sentiment" => [
 //                [
@@ -236,6 +270,147 @@ class SentimentDashboardController extends Controller
 //        ];
 
         return parent::handleRespond($data);
+    }
+
+
+    private function percentageOfMessages($raw, $start_date, $end_date)
+    {
+//        $labels = [
+//            "Positive",
+//            "Neutral",
+//            "Negative"
+//        ];
+        $raw->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
+        $items = $raw->get();
+
+        $data = null;
+        if ($items->count() <= 0)  return null;
+
+        $message_keyword = [];
+        $message_total = 0;
+
+        $column = 'total_sem';
+
+        foreach ($items as $object) {
+            $item = (array)$object;
+
+            if (!isset($data[$item['classification_id']])) {
+
+                $data[$item['classification_id']] = [
+                    'keyword_id' => $item['classification_id'],
+                    'keyword_name' => $item['classification_name'],
+                    'campaign_id' => $item['campaign_id'],
+                    'campaign_name' => $item['campaign_name'],
+                ];
+            }
+
+            if (isset($message_keyword[$item['classification_id']])) {
+
+                $message_keyword[$item['classification_id']] += $item[$column];
+            } else {
+
+                $message_keyword[$item['classification_id']] = $item[$column];
+            }
+
+            $message_total += $item[$column];
+        }
+
+
+        foreach ($message_keyword as $classification_id => $value) {
+            $percentage = 0;
+            if ($value && $message_total) {
+                $percentage = self::point_two_digits(($value / $message_total) * 100);
+            }
+
+            $data[$classification_id]['value'][] = [
+                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
+                'percentage' => $percentage,
+            ];
+        }
+
+
+        if ($data) {
+            $data = array_values($data);
+        }
+        return $data;
+
+//        foreach ($items as $item) {
+//            $index_label = array_search($item->classification_name, $labels);
+//
+//            if (isset($data[$index_label])) {
+//                $data[$index_label]['value'][] = [
+//                    'date' => $item->date_m,
+//                    'source_id' => $item->source_id,
+//                    'total_at_date' => $item->total_sem
+//                ];
+//            } else {
+//                $data[$index_label] = [
+//                    'keyword_id' => $item->classification_id,
+//                    'keyword_name' => $item->classification_name,
+//                    'campaign_id' => $item->campaign_id,
+//                    'campaign_name' => $item->campaign_name,
+//                    'value' => [
+//                        "date" => '',
+//                        "percentage" => 0
+//                    ]
+//                ];
+//
+//                $data[$index_label]['value'][] = [
+//                    'date' => $item->date_m,
+//                    'source_id' => $item->source_id,
+//                    'total_at_date' => $item->total_sem
+//                ];
+//            }
+//        }
+//        if ($data) {
+//            $data = array_values($data);
+//        }
+        return $data;
+
+    }
+    private function sentiment($raw)
+    {
+        $labels = [
+            "Positive",
+            "Neutral",
+            "Negative"
+        ];
+
+        $raw->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
+        $items = $raw->get();
+
+        $data = null;
+        if ($items->count() <= 0)  return null;
+
+            foreach ($items as $item) {
+                $index_label = array_search($item->classification_name, $labels);
+
+                if (isset($data[$index_label])) {
+                    $data[$index_label]['value'][] = [
+                        'date' => $item->date_m,
+                        'source_id' => $item->source_id,
+                        'total_at_date' => $item->total_sem
+                    ];
+                } else {
+                    $data[$index_label] = [
+                        'keyword_id' => $item->classification_id,
+                        'keyword_name' => $item->classification_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'value' => []
+                    ];
+
+                    $data[$index_label]['value'][] = [
+                        'date' => $item->date_m,
+                        'source_id' => $item->source_id,
+                        'total_at_date' => $item->total_sem
+                    ];
+                }
+            }
+            if ($data) {
+                $data = array_values($data);
+            }
+            return $data;
     }
 
     public function SentimentByDay(Request $request)
