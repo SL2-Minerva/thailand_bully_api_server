@@ -11,6 +11,7 @@ use App\Models\DailyMessage;
 use App\Models\MessageResultBully;
 use App\Models\PercentageOfMessages;
 use App\Models\Sources;
+use Illuminate\Support\Facades\DB;
 
 class VoiceDashboardController extends Controller
 {
@@ -115,50 +116,50 @@ class VoiceDashboardController extends Controller
             "Follower",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                19,
-                38,
-            ]
-        ];
+        $table = 'sna_root_node';
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                16,
-                23,
-            ]
-        ];
+        $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                23,
-                53,
-            ]
-        ];
+        $infulencers = $infulencer_root->get();
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                89,
-                45,
-            ]
-        ];
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                56,
-                21,
-            ]
-        ];
+        foreach ($infulencers as $infulencer) {
+
+            if (isset($data['value'][$infulencer->keyword_id]['data'][0])) {
+                $data['value'][$infulencer->keyword_id]['data'][0] += 1;
+            } else {
+                $data['value'][$infulencer->keyword_id]['id'] = $infulencer->keyword_id;
+                $data['value'][$infulencer->keyword_id]['keyword_name'] = $infulencer->keyword_name;
+                $data['value'][$infulencer->keyword_id]['data'][0] = 0;
+
+            }
+
+        }
+
+        $table = 'sna_child_node';
+        $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+
+        $followers = $follower_raw->get();
+
+
+        foreach ($followers as $follower) {
+
+            if (isset($data['value'][$follower->keyword_id]['data'][1])) {
+                $data['value'][$follower->keyword_id]['data'][1] += 1;
+            } else {
+                $data['value'][$follower->keyword_id]['id'] = $follower->keyword_id;
+                $data['value'][$follower->keyword_id]['keyword_name'] = $follower->keyword_name;
+                $data['value'][$follower->keyword_id]['data'][1] = 0;
+            }
+
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
 
         return parent::handleRespond($data);
     }
@@ -174,63 +175,45 @@ class VoiceDashboardController extends Controller
 
     public function MessageBySentiment(Request $request)
     {
-        $data['labels'] = [
-            "Negative",
-            "Neutral",
-            "Positive",
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 1);
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                19,
-                38,
-            ]
-        ];
+        $level = Classification::where('classification_type_id', 1)->get();
+        $data['labels'] = [];
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-                23,
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                65,
-                23,
-                53,
-            ]
-        ];
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-                45,
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0]
+                ];
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                23,
-                56,
-                21,
-            ]
-        ];
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
+            }
 
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
+        
     }
 
     public function MessageByLevel(Request $request)
@@ -720,29 +703,58 @@ class VoiceDashboardController extends Controller
 
     public function ChannelPlatform(Request $request)
     {
-        $data['previous_period']['label'] = [
-            "Facebook",
-            "Instagram",
-            "Pantip",
-            "Twitter",
-            "Youtube",
-        ];
-        $data['previous_period']['data'] = [
-            395, 285, 484, 291, 499,
-        ];
-        $data['previous_period']['total'] = 57392;
+        $label = Sources::where('status', 1)->get();
 
-        $data['current_period']['label'] = [
-            "Facebook",
-            "Instagram",
-            "Pantip",
-            "Twitter",
-            "Youtube",
-        ];
-        $data['current_period']['data'] = [
-            623, 384, 282, 483, 823,
-        ];
-        $data['current_period']['total'] = 38273;
+        $data['current_period']['label'] = [];
+        $data['previous_period']['label'] = [];
+
+        foreach ($label as $item) {
+            $data['current_period']['label'][] = $item->name;
+            $data['current_period']['data'][] = 0;
+
+            $data['previous_period']['label'][] = $item->name;
+            $data['previous_period']['data'][] = 0;
+        }
+
+        $items_current = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+        foreach ($items_current->get() as $item) {
+            $index_label = 0;
+            $index_label = array_search($item->source_name, $data['current_period']['label']);
+            
+            if (isset($data['current_period']['data'])) {
+                $data['current_period']['data'][$index_label] += $item->total_at_date;
+            } else {
+                $data['current_period']= [
+                    'data' => [0,0,0,0,0,0]
+                ];
+
+                $data['current_period']['data'][$index_label] += $item->total_at_date;
+            }
+        }
+        
+        $data['current_period']['total'] = array_sum($data['current_period']['data']);
+
+        foreach ($items_previous->get() as $item) {
+            $index_label = 0;
+            $index_label = array_search($item->source_name, $data['previous_period']['label']);
+            
+            if (isset($data['previous_period']['data'])) {
+                $data['previous_period']['data'][$index_label] += $item->total_at_date;
+            } else {
+                $data['previous_period']= [
+                    'data' => [0,0,0,0,0,0]
+                ];
+
+                $data['previous_period']['data'][$index_label] += $item->total_at_date;
+            }
+        }
+
+        $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
 
         return parent::handleRespond($data);
     }
@@ -754,20 +766,47 @@ class VoiceDashboardController extends Controller
             "Iphone",
             "Web App"
         ];
-        $data['previous_period']['data'] = [
-            395, 291, 499,
-        ];
-        $data['previous_period']['total'] = 7392;
 
         $data['current_period']['label'] = [
             "Andriod",
             "Iphone",
             "Web App"
         ];
-        $data['current_period']['data'] = [
-            623, 483, 823,
-        ];
-        $data['current_period']['total'] = 3273;
+
+        $data['previous_period']['data'] = [0,0,0];
+        $data['current_period']['data'] = [0,0,0];
+
+        $items_current = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+        $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+        
+        foreach ($items_current->get() as $item) {
+            if($item->device === "android") {
+                $data['current_period']['data'][0] += $item->total_at_date;
+            }
+            if($item->device === "iphone") {
+                $data['current_period']['data'][1] += $item->total_at_date;
+            }
+            if($item->device === "webapp") {
+                $data['current_period']['data'][2] += $item->total_at_date;
+            }
+        }
+        $data['current_period']['total'] = array_sum($data['current_period']['data']);
+        
+
+        foreach ($items_previous->get() as $item) {
+            if($item->device === "android") {
+                $data['previous_period']['data'][0] += $item->total_at_date;
+            }
+            if($item->device === "iphone") {
+                $data['previous_period']['data'][1] += $item->total_at_date;
+            }
+            if($item->device === "webapp") {
+                $data['previous_period']['data'][2] += $item->total_at_date;
+            }
+        }
+        $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
 
         return parent::handleRespond($data);
     }

@@ -149,43 +149,56 @@ class BullyDashboardController extends Controller
             "Follower",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Level 0",
-            "data" => [
-                19,
-                38,
-            ]
-        ];
+        $table = 'sna_root_node';
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Level 1",
-            "data" => [
-                16,
-                23,
-            ]
-        ];
+        $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->where('classification_type_id', 3)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Level 2",
-            "data" => [
-                23,
-                53,
-            ]
-        ];
+        $infulencers = $infulencer_root->get();
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Level 3",
-            "data" => [
-                15,
-                35,
-            ]
-        ];
 
-        return parent::handleRespond([]);
+        foreach ($infulencers as $infulencer) {
+
+            if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
+                $data['value'][$infulencer->classification_id]['data'][0] += 1;
+            } else {
+                $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
+                $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->classification_name;
+                $data['value'][$infulencer->classification_id]['data'][0] = 0;
+
+            }
+
+        }
+
+        $table = 'sna_child_node';
+        $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->where('classification_type_id', 3)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+
+        $followers = $follower_raw->get();
+
+
+        foreach ($followers as $follower) {
+
+            if (isset($data['value'][$follower->classification_id]['data'][1])) {
+                $data['value'][$follower->classification_id]['data'][1] += 1;
+            } else {
+                $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
+                $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
+                $data['value'][$follower->classification_id]['data'][1] = 0;
+            }
+
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+
+
+        return parent::handleRespond($data);
     }
 
     public function BullyByChannel(Request $request)
@@ -324,53 +337,56 @@ class BullyDashboardController extends Controller
             "Follower",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "No Bully",
-            "data" => [
-                19,
-                38,
-            ]
-        ];
+        $table = 'sna_root_node';
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Gossip",
-            "data" => [
-                16,
-                23,
-            ]
-        ];
+        $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->where('classification_type_id', 2)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $data['value'][] = [
+        $infulencers = $infulencer_root->get();
 
-            "id" => 3,
-            "keyword_name" => "Harassement",
-            "data" => [
-                23,
-                53,
-            ]
-        ];
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Exclusion",
-            "data" => [
-                23,
-                53,
-            ]
-        ];
+        foreach ($infulencers as $infulencer) {
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Hate Speech",
-            "data" => [
-                23,
-                53,
-            ]
-        ];
+            if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
+                $data['value'][$infulencer->classification_id]['data'][0] += 1;
+            } else {
+                $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
+                $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->classification_name;
+                $data['value'][$infulencer->classification_id]['data'][0] = 0;
 
-        return parent::handleRespond([]);
+            }
+
+        }
+
+        $table = 'sna_child_node';
+        $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
+            ->where('classification_type_id', 2)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+
+        $followers = $follower_raw->get();
+
+
+        foreach ($followers as $follower) {
+
+            if (isset($data['value'][$follower->classification_id]['data'][1])) {
+                $data['value'][$follower->classification_id]['data'][1] += 1;
+            } else {
+                $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
+                $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
+                $data['value'][$follower->classification_id]['data'][1] = 0;
+            }
+
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+
+
+        return parent::handleRespond($data);
     }
 
     public function BullyTypeByChannel(Request $request)
