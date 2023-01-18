@@ -813,78 +813,66 @@ class VoiceDashboardController extends Controller
 
     public function ChannelDevice(Request $request)
     {
-        $data['labels'][] = [
-            "Andriod",
-            "Facebook"
-        ];
 
-        $data['labels'][] = [
-            "iPhone",
-            "Twitter"
-        ];
+        $items = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->groupBy('device', 'source_name');
 
-        $data['labels'][] = [
-            "Web",
-            "Youtube"
-        ];
+        foreach ($items->get() as $item) {
+            $data['labels'][] = [
+                $item->device !== "" ? $item->device : "unknow",
+                $item->source_name,
+            ];
 
-        $data['data'] = [
-            44, 50, 6,
-        ];
+            $data['data'][] =  DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->where('device', $item->device)
+                ->where('source_name', $item->source_name)
+                ->sum('total_at_date');
+        }
 
         return parent::handleRespond($data);
     }
 
     public function KeywordSentiment(Request $request)
     {
-        $data['labels'] = [
-            "Positive",
-            "Negative",
-            "Neutral"
-        ];
+        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 1);
 
-        $data['data'][] = [
-            "name" => "All",
-            "data" => [
-                44, 50, 6,
-            ]
-        ];
+        $level = Classification::where('classification_type_id', 1)->get();
+        $data['labels'] = [];
 
-        $data['data'][] = [
-            "name" => "Keyword 1",
-            "data" => [
-                80, 50, 100
-            ]
-        ];
+        foreach ($level as $item) {
+            $data['labels'][] = $item->name;
+        }
+        
+        foreach ($items->get() as $item) {
 
-        $data['data'][] = [
-            "name" => "Keyword 2",
-            "data" => [
-                20, 40, 10
-            ]
-        ];
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
 
-        $data['data'][] = [
-            "name" => "Keyword 3",
-            "data" => [
-                44, 76, 45
-            ]
-        ];
+            
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0,0,0]
+                ];
 
-        $data['data'][] = [
-            "name" => "Keyword 4",
-            "data" => [
-                20, 40, 12
-            ]
-        ];
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            }
 
-        $data['data'][] = [
-            "name" => "Keyword 5",
-            "data" => [
-                45, 26, 30
-            ]
-        ];
+        }
 
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+        
         return parent::handleRespond($data);
     }
 
