@@ -863,7 +863,7 @@ class Controller extends BaseController
                 if ($type === 'sentiment') {
 
                     if (isset($data['value'][$item->source_id])) {
-                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
                     } else {
                         $data['value'][$item->source_id] = [
                             'id' => $item->source_id,
@@ -878,15 +878,16 @@ class Controller extends BaseController
                             'data' => [0, 0, 0]
                         ];
 
-                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
                     }
                 }
 
                 if ($type === 'bully_level_by_sentiment') {
                     if ($item->classification_type_id === $column) {
-
+                        
                         if (isset($data['value'][$item->classification_id])) {
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+                            // dd($data['value'][$item->classification_id]);
+                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
                         } else {
                             $data['value'][$item->classification_id] = [
                                 'id' => $item->classification_id,
@@ -894,7 +895,7 @@ class Controller extends BaseController
                                 'data' => [0, 0, 0]
                             ];
 
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
                         }
                     }
 
