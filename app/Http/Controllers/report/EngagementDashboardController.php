@@ -1255,46 +1255,126 @@ class EngagementDashboardController extends Controller
     public function EngagementByInfulencer(Request $request)
     {
 
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 5;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start - 1;
+
         $raw_current = DB::table('sna_root_node')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])->groupBy('author');
 
         $raw_previous = DB::table('sna_root_node')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])->groupBy('author');
+
+        if ($request->enable_page) {
+            $raw_current->offset($start)->limit($limit)->orderBy('created', 'desc');
+            $raw_previous->offset($start)->limit($limit)->orderBy('created', 'desc');
+        }
+//
+
 
         $items_current = $raw_current->get();
         $items_previous = $raw_previous->get();
 
+
         $current = null;
+        $previous = null;
 
         foreach ($items_current as $item) {
+            if (isset($current[$item->author]) && $current[$item->author]) {
+                $current[$item->author]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $current[$item->author]['share'] += $item->number_of_shares;
+                $current[$item->author]['comment'] += $item->number_of_comments;
+                $current[$item->author]['reaction'] += $item->number_of_reactions;
+            } else {
+                $current[$item->author]['message_id'] = $item->message_id;
+                $current[$item->author]['infulencer'] = $item->author;
+                $current[$item->author]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $current[$item->author]['share'] = $item->number_of_shares;
+                $current[$item->author]['comment'] = $item->number_of_comments;
+                $current[$item->author]['reaction'] = $item->number_of_reactions;
+            }
+        }
 
-            $current[] = [
-                "message_id" => $item->message_id,
-                "infulencer" => $item->author,
-                "total" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
-                "share" => $item->number_of_shares,
-                "comment" => $item->number_of_comments,
-                "reaction" => $item->number_of_reactions,
+        foreach ($items_previous as $item) {
+            if (isset($previous[$item->author]) && $previous[$item->author]) {
+                $previous[$item->author]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $previous[$item->author]['share'] += $item->number_of_shares;
+                $previous[$item->author]['comment'] += $item->number_of_comments;
+                $previous[$item->author]['reaction'] += $item->number_of_reactions;
+            } else {
+                $previous[$item->author]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $previous[$item->author]['share'] = $item->number_of_shares;
+                $previous[$item->author]['comment'] = $item->number_of_comments;
+                $previous[$item->author]['reaction'] = $item->number_of_reactions;
+            }
+        }
+
+//        dd($current, $previous);
+
+        foreach ($current as $key => $item) {
+            $data[] = [
+                'message_id' => $item['message_id'],
+                'infulencer' => $item['infulencer'],
+                "total" => $item['total'],
+                "share" => $item['share'],
+                "comment" => $item['comment'],
+                "reaction" => $item['reaction'],
+                "period_over_preiod" => $item['total'] - $previous[$key]['total'],
+                "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
+
             ];
         }
 
-        $data = null;
-        foreach ($current as $item) {
-            foreach ($items_previous as $item_previous) {
-                if ($item['message_id'] == $item_previous->message_id) {
-                    $data[] = [
-                        "message_id" => $item['message_id'],
-                        "infulencer" => $item['infulencer'],
-                        "total" => $item['total'],
-                        "share" => $item_previous->number_of_shares,
-                        "comment" => $item_previous->number_of_comments,
-                        "reaction" => $item_previous->number_of_reactions,
-                        "period_over_preiod" => $item['total'] - ($item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
-                        "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
-                    ];
-                }
-            }
+//        $current = null;
+//
+//        foreach ($items_current as $item) {
+//
+////            $current[] = [
+////                "message_id" => $item->message_id,
+////                "infulencer" => $item->author,
+////                "total" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+////                "share" => $item->number_of_shares,
+////                "comment" => $item->number_of_comments,
+////                "reaction" => $item->number_of_reactions,
+////            ];
+//        }
+//
+//        $data = null;
+//        foreach ($current as $item) {
+//            foreach ($items_previous as $item_previous) {
+//                if ($item['message_id'] == $item_previous->message_id) {
+//                    $data[] = [
+//                        "message_id" => $item['message_id'],
+//                        "infulencer" => $item['infulencer'],
+//                        "total" => $item['total'],
+//                        "share" => $item_previous->number_of_shares,
+//                        "comment" => $item_previous->number_of_comments,
+//                        "reaction" => $item_previous->number_of_reactions,
+//                        "period_over_preiod" => $item['total'] - ($item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
+//                        "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
+//                    ];
+//                }
+//            }
+//        }
+
+        switch ($request->select) {
+            case "top10":
+                $data = array_slice($data, 0, 10);
+                break;
+            case "top20":
+                $data = array_slice($data, 0, 20);
+                break;
+            case "top50":
+                $data = array_slice($data, 0, 50);
+                break;
+            case "top100":
+                $data = array_slice($data, 0, 100);
+                break;
+            default:
+                $data = $data;
         }
+
 
         return parent::handleRespond($data);
     }
