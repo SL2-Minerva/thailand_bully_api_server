@@ -1326,37 +1326,6 @@ class EngagementDashboardController extends Controller
             ];
         }
 
-//        $current = null;
-//
-//        foreach ($items_current as $item) {
-//
-////            $current[] = [
-////                "message_id" => $item->message_id,
-////                "infulencer" => $item->author,
-////                "total" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
-////                "share" => $item->number_of_shares,
-////                "comment" => $item->number_of_comments,
-////                "reaction" => $item->number_of_reactions,
-////            ];
-//        }
-//
-//        $data = null;
-//        foreach ($current as $item) {
-//            foreach ($items_previous as $item_previous) {
-//                if ($item['message_id'] == $item_previous->message_id) {
-//                    $data[] = [
-//                        "message_id" => $item['message_id'],
-//                        "infulencer" => $item['infulencer'],
-//                        "total" => $item['total'],
-//                        "share" => $item_previous->number_of_shares,
-//                        "comment" => $item_previous->number_of_comments,
-//                        "reaction" => $item_previous->number_of_reactions,
-//                        "period_over_preiod" => $item['total'] - ($item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
-//                        "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $item_previous->number_of_shares + $item_previous->number_of_comments + $item_previous->number_of_reactions),
-//                    ];
-//                }
-//            }
-//        }
 
         switch ($request->select) {
             case "top10":
