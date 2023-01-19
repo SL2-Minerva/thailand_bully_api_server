@@ -163,16 +163,16 @@ class Controller extends BaseController
             case "yesterday":
                 $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
                 break;
-            case "last7Days":
+            case "last7days":
                 $date = Carbon::parse($date)->subDays(7)->format('Y-m-d');
                 break;
-            case "last30Days":
+            case "last30days":
                 $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
                 break;
-            case "thisMonth":
+            case "thismonth":
                 $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
                 break;
-            case "lastMonth":
+            case "lastmonth":
                 $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
                 break;
             case "customrange":
