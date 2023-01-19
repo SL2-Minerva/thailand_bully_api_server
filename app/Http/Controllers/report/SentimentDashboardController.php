@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use App\Models\Sources;
 
 class SentimentDashboardController extends Controller
 {
@@ -378,7 +379,7 @@ class SentimentDashboardController extends Controller
     public function SentimentByChannel(Request $request)
     {
 
-        $data = parent::listSource();
+        $data = $this->listSource();
 
         $table = 'message_result_bully';
 
@@ -535,25 +536,25 @@ class SentimentDashboardController extends Controller
         $total_reactions_previous = $raw_previous->where('classification_name', 'Negative')->count();
 
         $data['totalSentiment'] = [
-            "totalValue" => parent::custom_number_format((int)$totalEngagement_current),
+            "totalValue" => $this->custom_number_format((int)$totalEngagement_current),
             "comparison" => (float)parent::point_two_digits($totalEngagement_current- $totalEngagement_previous !== 0 ? $this->overPeriodComparison($totalEngagement_current, $totalEngagement_previous)  : 0),
             "type" => $totalEngagement_current- $totalEngagement_previous > 0 ? "plus" :"minus",
         ];
 
         $data['positive'] = [
-            "totalValue" => parent::custom_number_format((int)$total_share_current),
+            "totalValue" => $this->custom_number_format((int)$total_share_current),
             "comparison" => (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous  * 100) : 0),
             "type" => $total_share_current- $total_share_previous > 0 ? "plus" :"minus",
         ];
 
         $data['neutral'] = [
-            "totalValue" => parent::custom_number_format((int)$total_comment_current),
+            "totalValue" => $this->custom_number_format((int)$total_comment_current),
             "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
             "type" => $total_comment_current- $total_comment_previous > 0 ? "plus" :"minus",
         ];
 
         $data['negative'] = [
-            "totalValue" => parent::custom_number_format((int)$total_reactions_current),
+            "totalValue" => $this->custom_number_format((int)$total_reactions_current),
             "comparison" => (float)parent::point_two_digits($this->overPeriodComparison($total_reactions_current, $total_reactions_previous)),
             "type" => $total_reactions_current- $total_reactions_previous > 0 ? "plus" :"minus",
         ];
@@ -1093,5 +1094,41 @@ class SentimentDashboardController extends Controller
 
 
         return parent::handleRespond($data);
+    }
+
+    private function listSource () {
+        $sources = Sources::all();
+        $data['labels'] = [];
+
+        foreach ($sources as $source) {
+            $data['labels'][] = $source->name;
+        }
+
+        return $data;
+    }
+
+    private function overPeriodComparison($current, $previous)
+    {
+
+        if ( $current - $previous === 0 || $previous === 0) {
+            return 0;
+        }
+
+        return (float) self::point_two_digits((($current - $previous) / $previous) * 100) ;
+    }
+
+    private function custom_number_format($n, $precision = 3) {
+        if ($n < 1000000) {
+            // Anything less than a million
+            $n_format = number_format($n);
+        } else if ($n < 1000000000) {
+            // Anything less than a billion
+            $n_format = number_format($n / 1000000, $precision) . 'M';
+        } else {
+            // At least a billion
+            $n_format = number_format($n / 1000000000, $precision) . 'B';
+        }
+
+        return $n_format;
     }
 }

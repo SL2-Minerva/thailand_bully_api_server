@@ -198,788 +198,784 @@ class Controller extends BaseController
         return $number !== null ? number_format($number, 2) : null;
     }
 
-    public static function messagesTable($campaign_id, $start_date, $end_date, $keyword_id, $table = null, $colum = null)
-    {
-        return DB::table($table ?? 'percentage_of_messages')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('keyword_id', $keyword_id)
-            ->sum($colum ?? 'total_at_keyword');
-    }
-
-    public static function channelTable($campaign_id, $start_date, $end_date, $source_id)
-    {
-        return DailyMessage::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('source_id', $source_id)
-            ->sum('total_at_date');
-    }
-
-    public static function bullyTable($campaign_id, $start_date, $end_date, $classification_id, $classification_type_id)
-    {
-        return MessageResultBully::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('classification_id', $classification_id)
-            ->where('classification_type_id', $classification_type_id)
-            ->sum('total_at_date');
-    }
-
-    public static function engagementTable($campaign_id, $start_date, $end_date, $keyword_id)
-    {
-        return DB::table('total_engagement_of_campaign')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('keyword_id', $keyword_id)
-            ->sum('engagement');
-    }
-
-    public static function accountTable($campaign_id, $start_date, $end_date, $keyword_id)
-    {
-        return DB::table('total_account_of_campaign')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('keyword_id', $keyword_id)
-            ->sum('total_account');
-    }
-
-    public static function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
-    {
-        $total_message = DailyMessage::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('keyword_id', $keyword_id)
-            ->where('source_id', $source_id)
-            ->sum('total_at_date');
-
-        return $total_message;
-    }
-
-    public static function shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $keyword_id)
-    {
-        $total_account = DailyMessage::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('keyword_id', $keyword_id)
-            ->sum('total_at_date');
-
-        return $total_account;
-    }
-
-
-    protected static function overPeriodComparison($current, $previous)
-    {
-
-        if ( $current - $previous === 0 || $previous === 0) {
-            return 0;
-        }
-
-        return (float) self::point_two_digits((($current - $previous) / $previous) * 100) ;
-    }
-
-    protected static function findPercentage($items, $column, $start_date, $end_date)
-    {
-        $message_keyword = [];
-        $message_total = 0;
-
-
-
-        foreach ($items as $object) {
-            $item = (array)$object;
-
-            if (isset($message_keyword[$item['keyword_id']])) {
-                $message_keyword[$item['keyword_id']] += $item[$column];
-            } else {
-                $message_keyword[$item['keyword_id']] = $item[$column];
-            }
-
-            $message_total += $item[$column];
-        }
-
-        $data = null;
-
-        foreach ($message_keyword as $keyword_id => $value) {
-            $percentage = 0;
-            if ($value && $message_total) {
-                $percentage = self::point_two_digits(($value / $message_total) * 100);
-            }
-            $data[$keyword_id]['value'][] = [
-                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-                'percentage' => $percentage,
-            ];
-        }
-
-        return $data;
-    }
-
-    protected static function getDataByCondition(
-        $table,
-        $campaign_id,
-        $start_date,
-        $end_date,
-        $keyword_id = null,
-        $source_id = null,
-        $column = null,
-        $type = null, $condition = null)
-    {
-
-
-        $items = DB::table($table)
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date]);
-
-        if (isset($condition['group_by'])) {
-
-            foreach ($condition['group_by'] as $groupBy) {
-                $items->groupBy($groupBy);
-            }
-        }
-
-        if ($keyword_id) {
-            $items->where('keyword_id', $keyword_id);
-        }
-
-
-        if ($source_id && $source_id !== 'all') {
-            $items->where('source_id', $source_id);
-        }
-
-
-        return self::factorListData($items->get(), $type, $campaign_id, $start_date, $end_date, $keyword_id, $table, $column, $condition);
-    }
-
-    protected static function factorListData($items, $type, $campaign_id = null, $start_date = null, $end_date = null, $keyword_id = null, $table = null, $column = null, $condition = null)
-    {
-
-        $data = null;
-
-        if ($type === 'percentage') {
-            $data = self::findPercentage($items, $column, $start_date, $end_date);
-        }
-
-        foreach ($items as $item) {
-            $keyword_id = $item->keyword_id;
-
-            if ($type !== 'engagement') {
-                $data[$keyword_id]['keyword_id'] = $item->keyword_id;
-                $data[$keyword_id]['keyword_name'] = $item->keyword_name;
-                $data[$keyword_id]['campaign_id'] = $item->campaign_id;
-                $data[$keyword_id]['campaign_name'] = $item->campaign_name;
-            }
-
-            if ($type !== 'engagement' && isset($item->source_id) && $item->source_id) {
-                $data[$keyword_id]['source_id'] = $item->source_id;
-                $data[$keyword_id]['source_name'] = $item->source_name;
-            }
-
-            if ($type === 'source' || $type === 'daily_message') {
-                $nestData = [
-                    'source_id' => $item->source_id,
-                    'source_name' => $item->source_name,
-                    'date_m' => $item->date_m,
-                    'total_at_date' => $item->total_at_date
-                ];
-
-                $data[$keyword_id]['value'][] = $nestData;
-            }
-
-            if ($type === 'engagement') {
-
-                $nestData['keyword_id'] = $item->keyword_id;
-                $nestData['keyword_name'] = $item->keyword_name;
-                $nestData['campaign_id'] = $item->campaign_id;
-                $nestData['campaign_name'] = $item->campaign_name;
-
-
-                if (isset($nestData["value"][$item->source_id])) {
-                    $nestData["value"][$item->source_id][] = [
-                        'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,
-                        'date_m' => $item->date_m,
-                        'total_at_date' => (int)$item->engagement
-                    ];
-                } else {
-                    $nestData["value"][$item->source_id] = [
-                        'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,
-                        'date_m' => $item->date_m,
-                        'total_at_date' => (int)$item->engagement
-                    ];
-                }
-
-
-                if (isset($data[$item->keyword_id])) {
-                    $data[$item->keyword_id]['value'][] = [
-                        'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,
-                        'date_m' => $item->date_m,
-                        'total_at_date' => (int)$item->engagement
-                    ];
-                } else {
-                    $data[$item->keyword_id] = $nestData;
-                }
-
-                if (isset($data[$item->keyword_id]['value'])) {
-                    $data[$item->keyword_id]['value'] = array_values($data[$item->keyword_id]['value']);
-                }
-
-            }
-
-            if ($type === 'shareofvoice') {
-                $message = self::shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
-                $total_message = DB::table($table)->where('campaign_id', $campaign_id)
-                    ->where('keyword_id', $item->keyword_id)
-                    ->where('organization_id', $item->organization_id)
-                    ->where('campaign_name', $item->campaign_name)
-                    ->whereBetween('date_m', [$start_date, $end_date])
-                    ->sum($column);
-
-                $percentage = ($message / $total_message) * 100;
-
-                $push_data = [
-                    'channel' => $item->source_name,
-                    'percentage' => self::point_two_digits($percentage),
-                    'number_of_message' => $message,
-                    // 'highlight' =>
-                ];
-
-                $data[$keyword_id]['value'][] = $push_data;
-            }
-
-            if ($type === '') {
-
-            }
-
-        }
-
-
-        if ($data) {
-            return array_values($data);
-        }
-
-        return $data;
-
-    }
-
-    protected static function listDataByType($type, $table, $campaign_id, $start_date, $end_date, $keyword_id = null, $source_id = null, $column = null, $condition = null)
-    {
-        $data['labels'] = [
-            "Mon",
-            "Tue",
-            "Wed",
-            "Thu",
-            "Fri",
-            "Sat",
-            "Sun"
-        ];
-
-        $items = DB::table($table)
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date]);
-
-        if (isset($condition['group_by'])) {
-
-            foreach ($condition['group_by'] as $groupBy) {
-                $items->groupBy($groupBy);
-            }
-        }
-
-
-
-        if ($keyword_id) {
-            $items->where('keyword_id', $keyword_id);
-        }
-
-        $data['value'] = null;
-
-        if ($type === 'time') {
-            $data['labels'] = [
-                "Before 6 AM",
-                "6 AM-12 PM",
-                "12 PM-6 PM",
-                "After 6 PM"
-            ];
-        }
-
-        if ($type === 'channel_by_time' || $type === 'bully_level_by_time') {
-            $data['labels'] = [
-                "Before 6 AM",
-                "6 AM-12 PM",
-                "12 PM-6 PM",
-                "After 6 PM"
-            ];
-        }
-
-        if ($type === 'device') {
-            $data['labels'] = [
-                "Android",
-                "Iphone",
-                "Web App",
-            ];
-        }
-
-        if ($type === 'channel_by_device' || $type === 'bully_level_by_device') {
-            $data['labels'] = [
-                "Android",
-                "Iphone",
-                "Web App",
-            ];
-        }
-
-        if ($type === 'channel' || $type === 'bully_level_by_channel') {
-
-            $sources = Sources::all();
-            $data['labels'] = [];
-
-            foreach ($sources as $source) {
-                $data['labels'][] = $source->name;
-            }
-
-        }
-
-
-        if ($type === 'sentiment' || $type === 'bully_level_by_sentiment') {
-            $sentiment = Classification::where('classification_type_id', 1)->get();
-            $data['labels'] = [];
-
-            foreach ($sentiment as $item) {
-                $data['labels'][] = $item->name;
-            }
-        }
-
-        $debug = [];
-        foreach ($items->get() as $item) {
-            if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day' || $type === 'bully_level_by_day') {
-                $day_name = Carbon::parse($item->date_m)->format('D');
-
-
-                $index_label = array_search($day_name, $data['labels']);
-
-
-                if ($type === 'dayname') {
-
-                    if (isset($data['value'][$item->keyword_id])) {
-                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                    } else {
-                        $data['value'][$item->keyword_id] = [
-                            'id' => $item->keyword_id,
-                            'keyword_name' => $item->keyword_name,
-                            'campaign_id' => $item->campaign_id,
-                            'campaign_name' => $item->campaign_name,
-                            'data' => [0, 0, 0, 0, 0, 0, 0]
-                        ];
-                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-
-                    }
-
-
-                }
-
-                if ($type === 'channel_by_day') {
-                    if (isset($data['value'][$item->source_id])) {
-                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-                    } else {
-
-                        $data['value'][$item->source_id] = [
-                            'id' => $item->source_id,
-                            'name' => $item->source_name,
-                            'keyword_name' => $item->source_name,
-                            'campaign_id' => $item->campaign_id,
-                            'campaign_name' => $item->campaign_name,
-                            'data' => [0, 0, 0, 0, 0, 0, 0]
-                        ];
-
-                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-                    }
-                }
-
-                if ($type === 'bully_level_by_day') {
-                    if ($item->classification_type_id === $column) {
-
-                        if (isset($data['value'][$item->classification_id])) {
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-
-
-                        } else {
-                            $data['value'][$item->classification_id] = [
-                                'id' => $item->classification_id,
-                                'keyword_name' => $item->classification_name,
-                                'data' => [0, 0, 0, 0, 0, 0, 0]
-                            ];
-
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-                        }
-                    }
-                }
-
-
-                if ($type === 'dayname_engagement') {
-
-                    if (isset($data['value'][0])) {
-                        $data['value'][0]['data'][$index_label] += $item->number_of_shares;
-                        $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                        $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
-
-                    } else {
-                        $data['value'][0] = [
-                            'id' => 1,
-                            'keyword_name' => 'Share',
-                            'data' => [0, 0, 0, 0, 0, 0, 0]
-                        ];
-
-                        $data['value'][1] = [
-                            'id' => 2,
-                            'keyword_name' => 'Comment',
-                            'data' => [0, 0, 0, 0, 0, 0, 0]
-                        ];
-
-
-                        $data['value'][2] = [
-                            'id' => 3,
-                            'keyword_name' => 'reactions',
-                            'data' => [0, 0, 0, 0, 0, 0, 0]
-                        ];
-
-                        $data['value'][0]['data'][$index_label] += $item->number_of_shares;
-                        $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                        $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
-                    }
-                }
-
-            }
-
-
-            if ($type === 'time' || $type === 'time_engagement' || $type === 'channel_by_time' || $type === 'bully_level_by_time') {
-
-                $sixAM = Carbon::parse("06:00:00");
-                $time = Carbon::parse($item->date_m)->format('H:i:s');
-                $index_label = 3;
-
-                if (Carbon::parse($time)->lt($sixAM)) {
-                    $index_label = 0;
-                }
-
-                if (Carbon::parse($time)->between($sixAM, Carbon::parse("12:00:00"))) {
-                    $index_label = 1;
-                }
-
-                if (Carbon::parse($time)->between(Carbon::parse("12:00:00"), Carbon::parse("18:00:00"))) {
-                    $index_label = 2;
-                }
-
-                if (Carbon::parse($time)->gt(Carbon::parse("18:00:00"))) {
-                    $index_label = 3;
-                }
-
-                if ($type === 'time' || $type === 'time_engagement') {
-                    if (isset($data['value'][$item->keyword_id])) {
-                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-
-
-                    } else {
-                        $data['value'][$item->keyword_id] = [
-                            'id' => $item->keyword_id,
-                            'keyword_name' => $item->keyword_name,
-                            'campaign_id' => $item->campaign_id,
-                            'campaign_name' => $item->campaign_name,
-                            'data' => [0, 0, 0, 0]
-                        ];
-
-                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                    }
-                }
-
-                if ($type === 'channel_by_time') {
-                    if (isset($data['value'][$item->source_id])) {
-                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-
-
-                    } else {
-                        $data['value'][$item->source_id] = [
-                            'id' => $item->source_id,
-                            'keyword_name' => $item->keyword_name,
-                            'campaign_id' => $item->campaign_id,
-                            'campaign_name' => $item->campaign_name,
-                            'source_id' => $item->source_id,
-                            'source_name' => $item->source_name,
-                            'data' => [0, 0, 0, 0]
-                        ];
-
-                        $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-                    }
-                }
-
-                if ($type === 'bully_level_by_time') {
-                    if ($item->classification_type_id === $column) {
-
-                        if (isset($data['value'][$item->classification_id])) {
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-
-
-                        } else {
-                            $data['value'][$item->classification_id] = [
-                                'id' => $item->classification_id,
-                                'keyword_name' => $item->classification_name,
-                                'data' => [0, 0, 0, 0]
-                            ];
-
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-                        }
-                    }
-                }
-
-            }
-
-
-
-            if ($type === 'device') {
-                $index_label = 0;
-
-                if ($item->device == 'iphone') {
-                    $index_label = 1;
-                }
-
-                if ($item->device == 'webapp') {
-                    $index_label = 2;
-                }
-
-                if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                } else {
-                    $data['value'][$item->keyword_id] = [
-                        'id' => $item->keyword_id,
-                        'keyword_name' => $item->keyword_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                        'data' => [0, 0, 0]
-                    ];
-
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                }
-            }
-
-            if ($type === 'channel_by_device') {
-                $index_label = 0;
-
-                if ($item->device == 'iphone') {
-                    $index_label = 1;
-                }
-
-                if ($item->device == 'webapp') {
-                    $index_label = 2;
-                }
-
-                if (isset($data['value'][$item->source_id])) {
-                    $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-                } else {
-                    $data['value'][$item->source_id] = [
-                        'id' => $item->keyword_id,
-                        'keyword_name' => $item->keyword_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                        'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,
-                        'data' => [0, 0, 0]
-                    ];
-
-                    $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
-                }
-            }
-
-            if ($type === 'bully_level_by_device') {
-                if ($item->classification_type_id === $column) {
-
-                    $index_label = 0;
-
-                    if ($item->device == 'iphone') {
-                        $index_label = 1;
-                    }
-
-                    if ($item->device == 'webapp') {
-                        $index_label = 2;
-                    }
-
-                    if (isset($data['value'][$item->classification_id])) {
-                        $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-                    } else {
-                        $data['value'][$item->classification_id] = [
-                            'id' => $item->classification_id,
-                            'keyword_name' => $item->classification_name,
-                            'data' => [0, 0, 0]
-                        ];
-
-                        $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-                    }
-                }
-
-            }
-
-            if ($type === 'channel' || $type === 'bully_level_by_channel') {
-                $index_label = 0;
-                $index_label = array_search($item->source_name, $data['labels']);
-
-                if ($type === 'channel') {
-                    if (isset($data['value'][$item->keyword_id])) {
-                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                    } else {
-                        $data['value'][$item->keyword_id] = [
-                            'id' => $item->keyword_id,
-                            'name' => $item->keyword_name,
-                            'keyword_name' => $item->keyword_name,
-                            'campaign_id' => $item->campaign_id,
-                            'campaign_name' => $item->campaign_name,
-                        ];
-
-                        for ($i = 0; $i <= count($data['labels']); $i++) {
-                            $data['value'][$item->keyword_id]['data'][$i] = 0;
-                        }
-
-                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                    }
-                }
-
-                if ($type === 'bully_level_by_channel') {
-                    if ($item->classification_type_id === $column) {
-
-                        if (isset($data['value'][$item->classification_id])) {
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-                        } else {
-                            $data['value'][$item->classification_id] = [
-                                'id' => $item->classification_id,
-                                'keyword_name' => $item->classification_name,
-                                'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-                            ];
-
-                            $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
-                        }
-                    }
-                }
-
-
-            }
-
-            if ($type === 'sentiment' || $type === 'bully_level_by_sentiment') {
-                $index_label = 0;
-                $index_label = array_search($item->classification_name, $data['labels']);
-
-
-                if ($type === 'sentiment') {
-
-                    if (isset($data['value'][$item->source_id])) {
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
-                    } else {
-                        $data['value'][$item->source_id] = [
-                            'id' => $item->source_id,
-                            'name' => $item->keyword_name,
-                            'keyword_name' => $item->keyword_name,
-                            'source_name' => self::source_name($item->source_id),
-                            'classification_name' => $item->classification_name,
-                            'classification_id' => $item->classification_id,
-                            'source_id' => $item->source_id,
-                            'campaign_id' => $item->campaign_id,
-                            'campaign_name' => $item->campaign_name,
-                            'data' => [0, 0, 0]
-                        ];
-
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
-                    }
-                }
-
-                if ($type === 'bully_level_by_sentiment') {
-                    if ($item->classification_type_id === $column) {
+    // public static function messagesTable($campaign_id, $start_date, $end_date, $keyword_id, $table = null, $colum = null)
+    // {
+    //     return DB::table($table ?? 'percentage_of_messages')
+    //         ->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->sum($colum ?? 'total_at_keyword');
+    // }
+
+    // public static function channelTable($campaign_id, $start_date, $end_date, $source_id)
+    // {
+    //     return DailyMessage::where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('source_id', $source_id)
+    //         ->sum('total_at_date');
+    // }
+
+    // public static function bullyTable($campaign_id, $start_date, $end_date, $classification_id, $classification_type_id)
+    // {
+    //     return MessageResultBully::where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('classification_id', $classification_id)
+    //         ->where('classification_type_id', $classification_type_id)
+    //         ->sum('total_at_date');
+    // }
+
+    // public static function engagementTable($campaign_id, $start_date, $end_date, $keyword_id)
+    // {
+    //     return DB::table('total_engagement_of_campaign')
+    //         ->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->sum('engagement');
+    // }
+
+    // public static function accountTable($campaign_id, $start_date, $end_date, $keyword_id)
+    // {
+    //     return DB::table('total_account_of_campaign')
+    //         ->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->sum('total_account');
+    // }
+
+    // public static function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
+    // {
+    //     $total_message = DailyMessage::where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->where('source_id', $source_id)
+    //         ->sum('total_at_date');
+
+    //     return $total_message;
+    // }
+
+    // public static function shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $keyword_id)
+    // {
+    //     $total_account = DailyMessage::where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->sum('total_at_date');
+
+    //     return $total_account;
+    // }
+
+
+    // protected static function overPeriodComparison($current, $previous)
+    // {
+
+    //     if ( $current - $previous === 0 || $previous === 0) {
+    //         return 0;
+    //     }
+
+    //     return (float) self::point_two_digits((($current - $previous) / $previous) * 100) ;
+    // }
+
+    // protected static function findPercentage($items, $column, $start_date, $end_date)
+    // {
+    //     $message_keyword = [];
+    //     $message_total = 0;
+
+
+
+    //     foreach ($items as $object) {
+    //         $item = (array)$object;
+
+    //         if (isset($message_keyword[$item['keyword_id']])) {
+    //             $message_keyword[$item['keyword_id']] += $item[$column];
+    //         } else {
+    //             $message_keyword[$item['keyword_id']] = $item[$column];
+    //         }
+
+    //         $message_total += $item[$column];
+    //     }
+
+    //     $data = null;
+
+    //     foreach ($message_keyword as $keyword_id => $value) {
+    //         $percentage = 0;
+    //         if ($value && $message_total) {
+    //             $percentage = self::point_two_digits(($value / $message_total) * 100);
+    //         }
+    //         $data[$keyword_id]['value'][] = [
+    //             'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
+    //             'percentage' => $percentage,
+    //         ];
+    //     }
+
+    //     return $data;
+    // }
+
+    // protected static function getDataByCondition(
+    //     $table,
+    //     $campaign_id,
+    //     $start_date,
+    //     $end_date,
+    //     $keyword_id = null,
+    //     $source_id = null,
+    //     $column = null,
+    //     $type = null, $condition = null)
+    // {
+
+
+    //     $items = DB::table($table)
+    //         ->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date]);
+
+    //     if (isset($condition['group_by'])) {
+
+    //         foreach ($condition['group_by'] as $groupBy) {
+    //             $items->groupBy($groupBy);
+    //         }
+    //     }
+
+    //     if ($keyword_id) {
+    //         $items->where('keyword_id', $keyword_id);
+    //     }
+
+
+    //     if ($source_id && $source_id !== 'all') {
+    //         $items->where('source_id', $source_id);
+    //     }
+
+
+    //     return self::factorListData($items->get(), $type, $campaign_id, $start_date, $end_date, $keyword_id, $table, $column, $condition);
+    // }
+
+    // protected static function factorListData($items, $type, $campaign_id = null, $start_date = null, $end_date = null, $keyword_id = null, $table = null, $column = null, $condition = null)
+    // {
+
+    //     $data = null;
+
+    //     if ($type === 'percentage') {
+    //         $data = self::findPercentage($items, $column, $start_date, $end_date);
+    //     }
+
+    //     foreach ($items as $item) {
+    //         $keyword_id = $item->keyword_id;
+
+    //         if ($type !== 'engagement') {
+    //             $data[$keyword_id]['keyword_id'] = $item->keyword_id;
+    //             $data[$keyword_id]['keyword_name'] = $item->keyword_name;
+    //             $data[$keyword_id]['campaign_id'] = $item->campaign_id;
+    //             $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+    //         }
+
+    //         if ($type !== 'engagement' && isset($item->source_id) && $item->source_id) {
+    //             $data[$keyword_id]['source_id'] = $item->source_id;
+    //             $data[$keyword_id]['source_name'] = $item->source_name;
+    //         }
+
+    //         if ($type === 'source' || $type === 'daily_message') {
+    //             $nestData = [
+    //                 'source_id' => $item->source_id,
+    //                 'source_name' => $item->source_name,
+    //                 'date_m' => $item->date_m,
+    //                 'total_at_date' => $item->total_at_date
+    //             ];
+
+    //             $data[$keyword_id]['value'][] = $nestData;
+    //         }
+
+    //         if ($type === 'engagement') {
+
+    //             $nestData['keyword_id'] = $item->keyword_id;
+    //             $nestData['keyword_name'] = $item->keyword_name;
+    //             $nestData['campaign_id'] = $item->campaign_id;
+    //             $nestData['campaign_name'] = $item->campaign_name;
+
+
+    //             if (isset($nestData["value"][$item->source_id])) {
+    //                 $nestData["value"][$item->source_id][] = [
+    //                     'source_id' => $item->source_id,
+    //                     'source_name' => $item->source_name,
+    //                     'date_m' => $item->date_m,
+    //                     'total_at_date' => (int)$item->engagement
+    //                 ];
+    //             } else {
+    //                 $nestData["value"][$item->source_id] = [
+    //                     'source_id' => $item->source_id,
+    //                     'source_name' => $item->source_name,
+    //                     'date_m' => $item->date_m,
+    //                     'total_at_date' => (int)$item->engagement
+    //                 ];
+    //             }
+
+
+    //             if (isset($data[$item->keyword_id])) {
+    //                 $data[$item->keyword_id]['value'][] = [
+    //                     'source_id' => $item->source_id,
+    //                     'source_name' => $item->source_name,
+    //                     'date_m' => $item->date_m,
+    //                     'total_at_date' => (int)$item->engagement
+    //                 ];
+    //             } else {
+    //                 $data[$item->keyword_id] = $nestData;
+    //             }
+
+    //             if (isset($data[$item->keyword_id]['value'])) {
+    //                 $data[$item->keyword_id]['value'] = array_values($data[$item->keyword_id]['value']);
+    //             }
+
+    //         }
+
+    //         if ($type === 'shareofvoice') {
+    //             $message = self::shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $item->keyword_id, $item->source_id);
+    //             $total_message = DB::table($table)->where('campaign_id', $campaign_id)
+    //                 ->where('keyword_id', $item->keyword_id)
+    //                 ->where('organization_id', $item->organization_id)
+    //                 ->where('campaign_name', $item->campaign_name)
+    //                 ->whereBetween('date_m', [$start_date, $end_date])
+    //                 ->sum($column);
+
+    //             $percentage = ($message / $total_message) * 100;
+
+    //             $push_data = [
+    //                 'channel' => $item->source_name,
+    //                 'percentage' => self::point_two_digits($percentage),
+    //                 'number_of_message' => $message,
+    //                 // 'highlight' =>
+    //             ];
+
+    //             $data[$keyword_id]['value'][] = $push_data;
+    //         }
+
+    //         if ($type === '') {
+
+    //         }
+
+    //     }
+
+
+    //     if ($data) {
+    //         return array_values($data);
+    //     }
+
+    //     return $data;
+
+    // }
+
+    // protected static function listDataByType($type, $table, $campaign_id, $start_date, $end_date, $keyword_id = null, $source_id = null, $column = null, $condition = null)
+    // {
+    //     $data['labels'] = [
+    //         "Mon",
+    //         "Tue",
+    //         "Wed",
+    //         "Thu",
+    //         "Fri",
+    //         "Sat",
+    //         "Sun"
+    //     ];
+
+    //     $items = DB::table($table)
+    //         ->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date]);
+
+    //     if (isset($condition['group_by'])) {
+
+    //         foreach ($condition['group_by'] as $groupBy) {
+    //             $items->groupBy($groupBy);
+    //         }
+    //     }
+
+
+
+    //     if ($keyword_id) {
+    //         $items->where('keyword_id', $keyword_id);
+    //     }
+
+    //     $data['value'] = null;
+
+    //     if ($type === 'time') {
+    //         $data['labels'] = [
+    //             "Before 6 AM",
+    //             "6 AM-12 PM",
+    //             "12 PM-6 PM",
+    //             "After 6 PM"
+    //         ];
+    //     }
+
+    //     if ($type === 'channel_by_time' || $type === 'bully_level_by_time') {
+    //         $data['labels'] = [
+    //             "Before 6 AM",
+    //             "6 AM-12 PM",
+    //             "12 PM-6 PM",
+    //             "After 6 PM"
+    //         ];
+    //     }
+
+    //     if ($type === 'device') {
+    //         $data['labels'] = [
+    //             "Android",
+    //             "Iphone",
+    //             "Web App",
+    //         ];
+    //     }
+
+    //     if ($type === 'channel_by_device' || $type === 'bully_level_by_device') {
+    //         $data['labels'] = [
+    //             "Android",
+    //             "Iphone",
+    //             "Web App",
+    //         ];
+    //     }
+
+    //     if ($type === 'channel' || $type === 'bully_level_by_channel') {
+
+    //         $sources = Sources::all();
+    //         $data['labels'] = [];
+
+    //         foreach ($sources as $source) {
+    //             $data['labels'][] = $source->name;
+    //         }
+
+    //     }
+
+
+    //     if ($type === 'sentiment' || $type === 'bully_level_by_sentiment') {
+    //         $sentiment = Classification::where('classification_type_id', 1)->get();
+    //         $data['labels'] = [];
+
+    //         foreach ($sentiment as $item) {
+    //             $data['labels'][] = $item->name;
+    //         }
+    //     }
+
+    //     $debug = [];
+    //     foreach ($items->get() as $item) {
+    //         if ($type === 'dayname' || $type === 'dayname_engagement' || $type === 'channel_by_day' || $type === 'bully_level_by_day') {
+    //             $day_name = Carbon::parse($item->date_m)->format('D');
+
+
+    //             $index_label = array_search($day_name, $data['labels']);
+
+
+    //             if ($type === 'dayname') {
+
+    //                 if (isset($data['value'][$item->keyword_id])) {
+    //                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+    //                 } else {
+    //                     $data['value'][$item->keyword_id] = [
+    //                         'id' => $item->keyword_id,
+    //                         'keyword_name' => $item->keyword_name,
+    //                         'campaign_id' => $item->campaign_id,
+    //                         'campaign_name' => $item->campaign_name,
+    //                         'data' => [0, 0, 0, 0, 0, 0, 0]
+    //                     ];
+    //                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+
+    //                 }
+
+
+    //             }
+
+    //             if ($type === 'channel_by_day') {
+    //                 if (isset($data['value'][$item->source_id])) {
+    //                     $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+    //                 } else {
+
+    //                     $data['value'][$item->source_id] = [
+    //                         'id' => $item->source_id,
+    //                         'name' => $item->source_name,
+    //                         'keyword_name' => $item->source_name,
+    //                         'campaign_id' => $item->campaign_id,
+    //                         'campaign_name' => $item->campaign_name,
+    //                         'data' => [0, 0, 0, 0, 0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+    //                 }
+    //             }
+
+    //             if ($type === 'bully_level_by_day') {
+    //                 if ($item->classification_type_id === $column) {
+
+    //                     if (isset($data['value'][$item->classification_id])) {
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+
+
+    //                     } else {
+    //                         $data['value'][$item->classification_id] = [
+    //                             'id' => $item->classification_id,
+    //                             'keyword_name' => $item->classification_name,
+    //                             'data' => [0, 0, 0, 0, 0, 0, 0]
+    //                         ];
+
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+    //                     }
+    //                 }
+    //             }
+
+
+    //             if ($type === 'dayname_engagement') {
+
+    //                 if (isset($data['value'][0])) {
+    //                     $data['value'][0]['data'][$index_label] += $item->number_of_shares;
+    //                     $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+    //                     $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
+
+    //                 } else {
+    //                     $data['value'][0] = [
+    //                         'id' => 1,
+    //                         'keyword_name' => 'Share',
+    //                         'data' => [0, 0, 0, 0, 0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][1] = [
+    //                         'id' => 2,
+    //                         'keyword_name' => 'Comment',
+    //                         'data' => [0, 0, 0, 0, 0, 0, 0]
+    //                     ];
+
+
+    //                     $data['value'][2] = [
+    //                         'id' => 3,
+    //                         'keyword_name' => 'reactions',
+    //                         'data' => [0, 0, 0, 0, 0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][0]['data'][$index_label] += $item->number_of_shares;
+    //                     $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+    //                     $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
+    //                 }
+    //             }
+
+    //         }
+
+
+    //         if ($type === 'time' || $type === 'time_engagement' || $type === 'channel_by_time' || $type === 'bully_level_by_time') {
+
+    //             $sixAM = Carbon::parse("06:00:00");
+    //             $time = Carbon::parse($item->date_m)->format('H:i:s');
+    //             $index_label = 3;
+
+    //             if (Carbon::parse($time)->lt($sixAM)) {
+    //                 $index_label = 0;
+    //             }
+
+    //             if (Carbon::parse($time)->between($sixAM, Carbon::parse("12:00:00"))) {
+    //                 $index_label = 1;
+    //             }
+
+    //             if (Carbon::parse($time)->between(Carbon::parse("12:00:00"), Carbon::parse("18:00:00"))) {
+    //                 $index_label = 2;
+    //             }
+
+    //             if (Carbon::parse($time)->gt(Carbon::parse("18:00:00"))) {
+    //                 $index_label = 3;
+    //             }
+
+    //             if ($type === 'time' || $type === 'time_engagement') {
+    //                 if (isset($data['value'][$item->keyword_id])) {
+    //                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+
+
+    //                 } else {
+    //                     $data['value'][$item->keyword_id] = [
+    //                         'id' => $item->keyword_id,
+    //                         'keyword_name' => $item->keyword_name,
+    //                         'campaign_id' => $item->campaign_id,
+    //                         'campaign_name' => $item->campaign_name,
+    //                         'data' => [0, 0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+    //                 }
+    //             }
+
+    //             if ($type === 'channel_by_time') {
+    //                 if (isset($data['value'][$item->source_id])) {
+    //                     $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+
+
+    //                 } else {
+    //                     $data['value'][$item->source_id] = [
+    //                         'id' => $item->source_id,
+    //                         'keyword_name' => $item->keyword_name,
+    //                         'campaign_id' => $item->campaign_id,
+    //                         'campaign_name' => $item->campaign_name,
+    //                         'source_id' => $item->source_id,
+    //                         'source_name' => $item->source_name,
+    //                         'data' => [0, 0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+    //                 }
+    //             }
+
+    //             if ($type === 'bully_level_by_time') {
+    //                 if ($item->classification_type_id === $column) {
+
+    //                     if (isset($data['value'][$item->classification_id])) {
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+
+
+    //                     } else {
+    //                         $data['value'][$item->classification_id] = [
+    //                             'id' => $item->classification_id,
+    //                             'keyword_name' => $item->classification_name,
+    //                             'data' => [0, 0, 0, 0]
+    //                         ];
+
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+    //                     }
+    //                 }
+    //             }
+
+    //         }
+
+
+
+    //         if ($type === 'device') {
+    //             $index_label = 0;
+
+    //             if ($item->device == 'iphone') {
+    //                 $index_label = 1;
+    //             }
+
+    //             if ($item->device == 'webapp') {
+    //                 $index_label = 2;
+    //             }
+
+    //             if (isset($data['value'][$item->keyword_id])) {
+    //                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+    //             } else {
+    //                 $data['value'][$item->keyword_id] = [
+    //                     'id' => $item->keyword_id,
+    //                     'keyword_name' => $item->keyword_name,
+    //                     'campaign_id' => $item->campaign_id,
+    //                     'campaign_name' => $item->campaign_name,
+    //                     'data' => [0, 0, 0]
+    //                 ];
+
+    //                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+    //             }
+    //         }
+
+    //         if ($type === 'channel_by_device') {
+    //             $index_label = 0;
+
+    //             if ($item->device == 'iphone') {
+    //                 $index_label = 1;
+    //             }
+
+    //             if ($item->device == 'webapp') {
+    //                 $index_label = 2;
+    //             }
+
+    //             if (isset($data['value'][$item->source_id])) {
+    //                 $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+    //             } else {
+    //                 $data['value'][$item->source_id] = [
+    //                     'id' => $item->keyword_id,
+    //                     'keyword_name' => $item->keyword_name,
+    //                     'campaign_id' => $item->campaign_id,
+    //                     'campaign_name' => $item->campaign_name,
+    //                     'source_id' => $item->source_id,
+    //                     'source_name' => $item->source_name,
+    //                     'data' => [0, 0, 0]
+    //                 ];
+
+    //                 $data['value'][$item->source_id]['data'][$index_label] += $item->total_at_date;
+    //             }
+    //         }
+
+    //         if ($type === 'bully_level_by_device') {
+    //             if ($item->classification_type_id === $column) {
+
+    //                 $index_label = 0;
+
+    //                 if ($item->device == 'iphone') {
+    //                     $index_label = 1;
+    //                 }
+
+    //                 if ($item->device == 'webapp') {
+    //                     $index_label = 2;
+    //                 }
+
+    //                 if (isset($data['value'][$item->classification_id])) {
+    //                     $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+    //                 } else {
+    //                     $data['value'][$item->classification_id] = [
+    //                         'id' => $item->classification_id,
+    //                         'keyword_name' => $item->classification_name,
+    //                         'data' => [0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+    //                 }
+    //             }
+
+    //         }
+
+    //         if ($type === 'channel' || $type === 'bully_level_by_channel') {
+    //             $index_label = 0;
+    //             $index_label = array_search($item->source_name, $data['labels']);
+
+    //             if ($type === 'channel') {
+    //                 if (isset($data['value'][$item->keyword_id])) {
+    //                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+    //                 } else {
+    //                     $data['value'][$item->keyword_id] = [
+    //                         'id' => $item->keyword_id,
+    //                         'name' => $item->keyword_name,
+    //                         'keyword_name' => $item->keyword_name,
+    //                         'campaign_id' => $item->campaign_id,
+    //                         'campaign_name' => $item->campaign_name,
+    //                     ];
+
+    //                     for ($i = 0; $i <= count($data['labels']); $i++) {
+    //                         $data['value'][$item->keyword_id]['data'][$i] = 0;
+    //                     }
+
+    //                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+    //                 }
+    //             }
+
+    //             if ($type === 'bully_level_by_channel') {
+    //                 if ($item->classification_type_id === $column) {
+
+    //                     if (isset($data['value'][$item->classification_id])) {
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+    //                     } else {
+    //                         $data['value'][$item->classification_id] = [
+    //                             'id' => $item->classification_id,
+    //                             'keyword_name' => $item->classification_name,
+    //                             'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    //                         ];
+
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += $item->total_at_date;
+    //                     }
+    //                 }
+    //             }
+
+
+    //         }
+
+    //         if ($type === 'sentiment' || $type === 'bully_level_by_sentiment') {
+    //             $index_label = 0;
+    //             $index_label = array_search($item->classification_name, $data['labels']);
+
+
+    //             if ($type === 'sentiment') {
+
+    //                 if (isset($data['value'][$item->source_id])) {
+    //                     $data['value'][$item->source_id]['data'][$index_label] += 1;
+    //                 } else {
+    //                     $data['value'][$item->source_id] = [
+    //                         'id' => $item->source_id,
+    //                         'name' => $item->keyword_name,
+    //                         'keyword_name' => $item->keyword_name,
+    //                         'source_name' => self::source_name($item->source_id),
+    //                         'classification_name' => $item->classification_name,
+    //                         'classification_id' => $item->classification_id,
+    //                         'source_id' => $item->source_id,
+    //                         'campaign_id' => $item->campaign_id,
+    //                         'campaign_name' => $item->campaign_name,
+    //                         'data' => [0, 0, 0]
+    //                     ];
+
+    //                     $data['value'][$item->source_id]['data'][$index_label] += 1;
+    //                 }
+    //             }
+
+    //             if ($type === 'bully_level_by_sentiment') {
+    //                 if ($item->classification_type_id === $column) {
                         
-                        if (isset($data['value'][$item->classification_id])) {
-                            // dd($data['value'][$item->classification_id]);
-                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
-                        } else {
-                            $data['value'][$item->classification_id] = [
-                                'id' => $item->classification_id,
-                                'keyword_name' => $item->classification_name,
-                                'data' => [0, 0, 0]
-                            ];
+    //                     if (isset($data['value'][$item->classification_id])) {
+    //                         // dd($data['value'][$item->classification_id]);
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += 1;
+    //                     } else {
+    //                         $data['value'][$item->classification_id] = [
+    //                             'id' => $item->classification_id,
+    //                             'keyword_name' => $item->classification_name,
+    //                             'data' => [0, 0, 0]
+    //                         ];
 
-                            $data['value'][$item->classification_id]['data'][$index_label] += 1;
-                        }
-                    }
+    //                         $data['value'][$item->classification_id]['data'][$index_label] += 1;
+    //                     }
+    //                 }
 
-                }
+    //             }
 
-            }
-
-
-
-        }
+    //         }
 
 
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
 
-        return $data;
-
-    }
-
-    protected static function listDataByAction($table, $campaign_id, $start_date, $end_date,$column = null, $condition = null, $keyword_id = null, $source_id = null) {
-
-    }
-
-    public static function source_name($source_id)
-    {
-        $source = Sources::where('id', $source_id)->first();
-        return $source->name;
-    }
-
-    public static function totalFromMessageResultSemetic($table, $campaign_id, $start_date, $end_date, $column, $keyword_name, $value_name) {
-        $engagement_previous = DB::table($table)->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->get();
-
-        $source = Sources::where('status', 1)->get();
-        foreach ($source as $source) {
-            $data['labels'][] = self::source_name($source->id);
-        }
-
-        foreach ($engagement_previous as $item_previous) {
-            $source_name = self::source_name($item_previous->source_id);
-            $index_label = array_search($source_name, $data['labels']);
-
-            if (isset($data['value'][$value_name])) {
-                $data['value'][$value_name]['data'][$index_label] += $item_previous->$column;
-            } else {
-                $data['value'][$value_name] = [
-                    'id' => $item_previous->keyword_id,
-                    'keyword_name' => $keyword_name,
-                    'data' => [0,0,0,0,0,0]
-                ];
-            }
-        }
-
-        return $data;
-    }
-
-    protected static function listSource () {
-        $sources = Sources::all();
-        $data['labels'] = [];
-
-        foreach ($sources as $source) {
-            $data['labels'][] = $source->name;
-        }
-
-        return $data;
-    }
+    //     }
 
 
-    protected static function custom_number_format($n, $precision = 3) {
-        if ($n < 1000000) {
-            // Anything less than a million
-            $n_format = number_format($n);
-        } else if ($n < 1000000000) {
-            // Anything less than a billion
-            $n_format = number_format($n / 1000000, $precision) . 'M';
-        } else {
-            // At least a billion
-            $n_format = number_format($n / 1000000000, $precision) . 'B';
-        }
+    //     if (isset($data['value'])) {
+    //         $data['value'] = array_values($data['value']);
+    //     }
 
-        return $n_format;
-    }
+    //     return $data;
+
+    // }
+
+    // public static function source_name($source_id)
+    // {
+    //     $source = Sources::where('id', $source_id)->first();
+    //     return $source->name;
+    // }
+
+    // public static function totalFromMessageResultSemetic($table, $campaign_id, $start_date, $end_date, $column, $keyword_name, $value_name) {
+    //     $engagement_previous = DB::table($table)->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date, $end_date])
+    //         ->get();
+
+    //     $source = Sources::where('status', 1)->get();
+    //     foreach ($source as $source) {
+    //         $data['labels'][] = self::source_name($source->id);
+    //     }
+
+    //     foreach ($engagement_previous as $item_previous) {
+    //         $source_name = self::source_name($item_previous->source_id);
+    //         $index_label = array_search($source_name, $data['labels']);
+
+    //         if (isset($data['value'][$value_name])) {
+    //             $data['value'][$value_name]['data'][$index_label] += $item_previous->$column;
+    //         } else {
+    //             $data['value'][$value_name] = [
+    //                 'id' => $item_previous->keyword_id,
+    //                 'keyword_name' => $keyword_name,
+    //                 'data' => [0,0,0,0,0,0]
+    //             ];
+    //         }
+    //     }
+
+    //     return $data;
+    // }
+
+    // protected static function listSource () {
+    //     $sources = Sources::all();
+    //     $data['labels'] = [];
+
+    //     foreach ($sources as $source) {
+    //         $data['labels'][] = $source->name;
+    //     }
+
+    //     return $data;
+    // }
+
+
+    // protected static function custom_number_format($n, $precision = 3) {
+    //     if ($n < 1000000) {
+    //         // Anything less than a million
+    //         $n_format = number_format($n);
+    //     } else if ($n < 1000000000) {
+    //         // Anything less than a billion
+    //         $n_format = number_format($n / 1000000, $precision) . 'M';
+    //     } else {
+    //         // At least a billion
+    //         $n_format = number_format($n / 1000000000, $precision) . 'B';
+    //     }
+
+    //     return $n_format;
+    // }
 
 }
 
