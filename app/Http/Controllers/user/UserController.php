@@ -135,7 +135,7 @@ class UserController extends Controller
             $user = $user->where('name', 'like', "%$request->name%");
         }
 
-        if ($request->status) {
+        if ($request->status || $request->status === '0') {
             $user = $user->where('status', $request->status);
         }
 
