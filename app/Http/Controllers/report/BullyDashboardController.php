@@ -359,6 +359,7 @@ class BullyDashboardController extends Controller
             ->where('classification_type_id', 3)->get();
 
         $all = 0;
+        $data = [];
         foreach ($bully as $item) {
             $data['all'] = [
                 'keyword_name' => "all",
@@ -860,6 +861,40 @@ class BullyDashboardController extends Controller
         return $source->name;
     }
 
+
+    public function BullyChartType(Request $request)
+    {
+        $bully = MessageResultBully::where('campaign_id', $request->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 2)->get();
+
+        $all = 0;
+        foreach ($bully as $item) {
+            $data['all'] = [
+                'keyword_name' => "all",
+                'data' => $all += $item->total_at_date
+            ];
+
+            if (isset($data[$item->classification_id])) {
+                $data[$item->classification_id]['data'] += $item->total_at_date;
+                $data["all"]['data'] += $item->total_at_date;
+
+
+            } else {
+                $data[$item->classification_id] = [
+                    'keyword_name' => $item->classification_name,
+                    'data' => 0
+                ];
+            }
+        }
+
+        if (!$data) {
+            return parent::handleRespond($data);
+        }
+
+        return parent::handleRespond(array_values($data));
+    }
+
     public function BullyBySentiment(Request $request)
     {
         $data['labels'] = [
@@ -867,6 +902,8 @@ class BullyDashboardController extends Controller
             "Neutral",
             "Negative",
         ];
+
+
 
         $data['value'][] = [
             "id" => 1,
@@ -1130,39 +1167,6 @@ class BullyDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function BullyChartType(Request $request)
-    {
-        $bully = MessageResultBully::where('campaign_id', $request->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('classification_type_id', 2)->get();
-
-        $all = 0;
-        foreach ($bully as $item) {
-            $data['all'] = [
-                'keyword_name' => "all",
-                'data' => $all += $item->total_at_date
-            ];
-
-            if (isset($data[$item->classification_id])) {
-                $data[$item->classification_id]['data'] += $item->total_at_date;
-                $data["all"]['data'] += $item->total_at_date;
-
-
-            } else {
-                $data[$item->classification_id] = [
-                    'keyword_name' => $item->classification_name,
-                    'data' => 0
-                ];
-            }
-        }
-
-        if (!$data) {
-            return parent::handleRespond($data);
-        }
-
-        return parent::handleRespond(array_values($data));
-    }
-
     public function BullyTableType(Request $request)
     {
         $data = [
@@ -1348,6 +1352,6 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond([]);
+        return parent::handleRespond($data);
     }
 }
