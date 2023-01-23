@@ -36,7 +36,7 @@ class OrganizationController extends Controller
     {
         $data = [
             BaseModel::NAME => $request->name,
-            BaseModel::STATUS => true,
+            BaseModel::STATUS => $request->status ?? 1,
             Organization::GROUP_ID => $request->organization_group_id,
             Organization::TYPE_ID => $request->organization_type_id,
             BaseModel::CREATED_BY => auth()->id() ?? null, // todo check auth
