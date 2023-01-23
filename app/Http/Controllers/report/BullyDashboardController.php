@@ -969,7 +969,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond([]);
+        return parent::handleRespond($data);
     }
 
     public function BullyLevelLevel(Request $request)
@@ -1127,7 +1127,7 @@ class BullyDashboardController extends Controller
             ]
         ];
 
-        return parent::handleRespond([]);
+        return parent::handleRespond($data);
     }
 
     public function BullyChartType(Request $request)
