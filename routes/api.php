@@ -76,6 +76,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::post('/create', [OrganizationController::class, 'store']);
             Route::put('/update', [OrganizationController::class, 'update']);
             Route::put('/delete', [OrganizationController::class, 'destroy']);
+            Route::get('/search', [OrganizationController::class, 'search']);
         });
 
         Route::group(['prefix' => 'source'], function () {
@@ -111,6 +112,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::post('/create', [CampaignController::class, 'store']);
             Route::put('/update', [CampaignController::class, 'update']);
             Route::put('/delete', [CampaignController::class, 'destroy']);
+            Route::get('/search', [CampaignController::class, 'search']);
         });
 
 
