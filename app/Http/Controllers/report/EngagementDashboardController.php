@@ -19,6 +19,7 @@ class EngagementDashboardController extends Controller
     private $start_date_previous;
     private $end_date_previous;
     private $campaign_id;
+    private $keyword_id;
 
     public function __construct(Request $request)
     {
@@ -29,6 +30,13 @@ class EngagementDashboardController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
+
+
+        $fillter_keywords = $request->fillter_keywords;
+
+        if ($fillter_keywords !== 'all') {
+            $keyword_id = explode(',' , $fillter_keywords);
+        }
 
 //        parent::__construct($request);
     }
@@ -741,8 +749,16 @@ class EngagementDashboardController extends Controller
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
+
         $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+        if ($this->keyword_id) {
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $items_current = $raw_current->get();
         $items_previous = $raw_previous->get();
@@ -875,10 +891,15 @@ class EngagementDashboardController extends Controller
             "Negative",
         ];
 
+
         $table = 'message_result_semetic_engagement';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
@@ -893,6 +914,33 @@ class EngagementDashboardController extends Controller
         $previous_reaction = [];
 
         $debug = null;
+        $data['value'][1] = [
+            'id' => 1,
+            'keyword_name' => "Previous",
+        ];
+
+        $data['value'][2] = [
+            'id' => 2,
+            'keyword_name' => "Current",
+        ];
+
+        for ($i = 0; $i < count($data['labels']); $i++) {
+            $data['value'][1]['data'][$i] = 0;
+            $data['value'][2]['data'][$i] = 0;
+
+            $data['share'][$i] = 0;
+            $data['comment'][$i] = 0;
+            $data['reaction'][$i] = 0;
+
+            $current_share[$i] = 0;
+            $current_comment[$i] = 0;
+            $current_reaction[$i] = 0;
+
+
+            $previous_share[$i] = 0;
+            $previous_comment[$i] = 0;
+            $previous_reaction[$i] = 0;
+        }
 
         foreach ($items_current as $item) {
             $index_label = array_search($item->classification_name, $data['labels']);
@@ -904,39 +952,33 @@ class EngagementDashboardController extends Controller
                 $current_reaction[$index_label] += $item->number_of_reactions;
 
             } else {
-                $data['value'][1] = [
-                    'id' => 1,
-                    'keyword_name' => "Previous",
-                ];
 
-                $data['value'][2] = [
-                    'id' => 2,
-                    'keyword_name' => "Current",
-                ];
 
-                for ($i = 0; $i < count($data['labels']); $i++) {
-                    $data['value'][1]['data'][$i] = 0;
-                    $data['value'][2]['data'][$i] = 0;
-
-                    $data['share'][$i] = 0;
-                    $data['comment'][$i] = 0;
-                    $data['reaction'][$i] = 0;
-
-                    $current_share[$i] = 0;
+//                for ($i = 0; $i < count($data['labels']); $i++) {
+//                    $data['value'][1]['data'][$i] = 0;
+//                    $data['value'][2]['data'][$i] = 0;
+//
+//                    $data['share'][$i] = 0;
+//                    $data['comment'][$i] = 0;
+//                    $data['reaction'][$i] = 0;
+//
+//                    $current_share[$i] = 0;
                     $current_share[$index_label] = $item->number_of_shares;
-                    $current_comment[$i] = 0;
+//                    $current_comment[$i] = 0;
                     $current_comment[$index_label] = $item->number_of_comments;
-                    $current_reaction[$i] = 0;
+//                    $current_reaction[$i] = 0;
                     $current_reaction[$index_label] = $item->number_of_reactions;
-
+//
                     $previous_share[$i] = 0;
                     $previous_comment[$i] = 0;
                     $previous_reaction[$i] = 0;
-                }
+//                }
 
                 $data['value'][2]['data'][$index_label] += $item->engagement;
             }
         }
+
+
 
 
         foreach ($items_previous as $item) {
@@ -2029,7 +2071,7 @@ class EngagementDashboardController extends Controller
 
                 if ($type === 'bully_level_by_sentiment') {
                     if ($item->classification_type_id === $column) {
-                        
+
                         if (isset($data['value'][$item->classification_id])) {
                             // dd($data['value'][$item->classification_id]);
                             $data['value'][$item->classification_id]['data'][$index_label] += 1;
