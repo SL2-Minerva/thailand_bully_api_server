@@ -4,6 +4,7 @@ namespace App\Http\Controllers\main;
 
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
+use App\Models\Campaign;
 use App\Models\Domain;
 use App\Models\Keyword;
 use Illuminate\Http\Request;
@@ -65,5 +66,15 @@ class KeywordController extends Controller
             return $res;
         }
         return $res;
+    }
+
+    public function keywords(Request $request) {
+        $campaing_id = $request->campaing_id;
+
+        if (!$campaing_id) return parent::handleNotFound();
+
+        $campaings = Keyword::where(Campaign::ID, $campaing_id)->get();
+        parent::handleRespond($campaings);
+
     }
 }

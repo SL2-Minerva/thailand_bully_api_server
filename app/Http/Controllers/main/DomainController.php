@@ -32,7 +32,9 @@ class DomainController extends Controller
         }
 
         $data_submit = [
-            "name" => $request->name
+            "name" => $request->name,
+            "description" => $request->description,
+            "status" => $request->status,
         ];
 
         $domain = Domain::create($data_submit);

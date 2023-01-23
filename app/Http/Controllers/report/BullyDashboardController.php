@@ -21,6 +21,7 @@ class BullyDashboardController extends Controller
     private $start_date_previous;
     private $end_date_previous;
     private $campaign_id;
+    private $keyword_id;
 
     public function __construct(Request $request)
     {
@@ -32,48 +33,57 @@ class BullyDashboardController extends Controller
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
 
+        if ($request->fillter_keywords) {
+            $this->keyword_id = $request->fillter_keywords;
+            $this->keyword_id = explode(",", $this->keyword_id);
+        }
+
     }
 
     public function PercentageBully(Request $request)
     {
         $data = null;
-        $data['prcentage_of_messages_current'] = $this->PercentageToCal($request->campaign_id, $this->start_date, $this->end_date, 3);
-        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($request->campaign_id, $this->start_date_previous, $this->end_date_previous, 3);
+        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date);
+        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
 
-    private function PercentageToCal($campaign_id, $start_date, $end_date, $classification_type_id)
+    private function PercentageToCal($start_date, $end_date)
     {
-        $data = null;
-        $percentage_of_bully = MessageResultBully::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('classification_type_id', $classification_type_id)
-            ->groupBy('classification_id');
+        $data = [];
 
-        foreach ($percentage_of_bully->get() as $bully) {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [3]);
 
-            $classification_id = $bully->classification_id;
-            $data[$classification_id]['bully_level'] = $bully->classification_name;
-            $data[$classification_id]['campaign_id'] = $bully->campaign_id;
-            $data[$classification_id]['campaign_name'] = $bully->campaign_name;
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
-            $channal_message = $this->bullyTable($campaign_id, $start_date, $end_date, $classification_id, $bully->classification_type_id);
-            $channal_message_total = MessageResultBully::where('campaign_id', $campaign_id)
-                ->whereBetween('date_m', [$start_date, $end_date])
-                ->where('classification_type_id', $bully->classification_type_id)
-                ->sum('total_at_date');
+        $items = $raw->get();
+        $message_total = 0;
 
-            $nestData = [
-                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-                'percentage' => $this->point_two_digits(($channal_message / $channal_message_total) * 100),
-            ];
+        foreach ($items as $item) {
+            $message_total += 1;
+            if (isset($data[$item->classification_id])) {
+                $data[$item->classification_id]['value']['total'] += 1;
+            } else {
+                $data[$item->classification_id]['bully_level'] = $item->classification_name;
+                $data[$item->classification_id]['campaign_id'] = $item->campaign_id;
+                $data[$item->classification_id]['campaign_name'] = $item->campaign_name;
+                $data[$item->classification_id]['value']['total'] = 1;
+                $data[$item->classification_id]['value']['date'] = Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y');
+            }
+        }
 
-            $data[$classification_id]['value'] = $nestData;
+        foreach ($data as $key => $value) {
+            $data[$key]['value']['percentage'] = $this->point_two_digits(($data[$key]['value']['total'] / $message_total) * 100);
         }
 
         if ($data) {
-            return array_values($data);
+            $data = array_values($data);
         }
 
         return $data;
@@ -88,7 +98,7 @@ class BullyDashboardController extends Controller
 
         foreach ($daily_messages->get() as $daily_message) {
 
-            if ($daily_message->classification_type_id === 3 ) {
+            if ($daily_message->classification_type_id === 3) {
 
                 $classification_id = $daily_message->classification_id;
                 $data[$classification_id]['source_id'] = $daily_message->classification_id;
@@ -119,8 +129,8 @@ class BullyDashboardController extends Controller
     public function BullyByDay(Request $request)
     {
 
-        $table =  'message_result_bully';
-        $data = $this->listDataByType('bully_level_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null );
+        $table = 'message_result_bully';
+        $data = $this->listDataByType('bully_level_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null);
 
         return parent::handleRespond($data);
     }
@@ -128,8 +138,8 @@ class BullyDashboardController extends Controller
     public function BullyByTime(Request $request)
     {
 
-        $table =  'message_result_bully_d_m_y_h_i_s';
-        $data = $this->listDataByType('bully_level_by_time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null );
+        $table = 'message_result_bully_d_m_y_h_i_s';
+        $data = $this->listDataByType('bully_level_by_time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null);
 
         return parent::handleRespond($data);
     }
@@ -137,8 +147,8 @@ class BullyDashboardController extends Controller
     public function BullyByDevice(Request $request)
     {
 
-        $table =  'message_device_bully';
-        $data = $this->listDataByType('bully_level_by_device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null );
+        $table = 'message_device_bully';
+        $data = $this->listDataByType('bully_level_by_device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null);
 
         return parent::handleRespond($data);
     }
@@ -198,18 +208,16 @@ class BullyDashboardController extends Controller
         }
 
 
-
         return parent::handleRespond($data);
     }
 
     public function BullyByChannel(Request $request)
     {
-        $table =  'message_result_bully';
-        $data = $this->listDataByType('bully_level_by_channel', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null );
+        $table = 'message_result_bully';
+        $data = $this->listDataByType('bully_level_by_channel', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 3, null);
 
         return parent::handleRespond($data);
     }
-
 
 
     public function BullyTypePercentageDaily(Request $request)
@@ -231,7 +239,7 @@ class BullyDashboardController extends Controller
 
         foreach ($daily_messages->get() as $daily_message) {
 
-            if ($daily_message->classification_type_id === 2 ) {
+            if ($daily_message->classification_type_id === 2) {
 
                 $classification_id = $daily_message->classification_id;
                 $data[$classification_id]['source_id'] = $daily_message->classification_id;
@@ -260,24 +268,24 @@ class BullyDashboardController extends Controller
 
     public function BullyTypeByDay(Request $request)
     {
-        $table =  'message_result_bully';
-        $data = $this->listDataByType('bully_level_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null );
+        $table = 'message_result_bully';
+        $data = $this->listDataByType('bully_level_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null);
 
         return parent::handleRespond($data);
     }
 
     public function BullyTypeByTime(Request $request)
     {
-        $table =  'message_result_bully_d_m_y_h_i_s';
-        $data = $this->listDataByType('bully_level_by_time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null );
+        $table = 'message_result_bully_d_m_y_h_i_s';
+        $data = $this->listDataByType('bully_level_by_time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null);
 
         return parent::handleRespond($data);
     }
 
     public function BullyTypeByDevice(Request $request)
     {
-        $table =  'message_device_bully';
-        $data = $this->listDataByType('bully_level_by_device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null );
+        $table = 'message_device_bully';
+        $data = $this->listDataByType('bully_level_by_device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null);
 
         return parent::handleRespond($data);
     }
@@ -337,18 +345,16 @@ class BullyDashboardController extends Controller
         }
 
 
-
         return parent::handleRespond($data);
     }
 
     public function BullyTypeByChannel(Request $request)
     {
-        $table =  'message_result_bully';
-        $data = $this->listDataByType('bully_level_by_channel', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null );
+        $table = 'message_result_bully';
+        $data = $this->listDataByType('bully_level_by_channel', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 2, null);
 
         return parent::handleRespond($data);
     }
-
 
 
     public function BullyChartLevel(Request $request)
@@ -387,7 +393,6 @@ class BullyDashboardController extends Controller
     }
 
 
-
     private function bullyTable($campaign_id, $start_date, $end_date, $classification_id, $classification_type_id)
     {
         return MessageResultBully::where('campaign_id', $campaign_id)
@@ -419,7 +424,6 @@ class BullyDashboardController extends Controller
                 $items->groupBy($groupBy);
             }
         }
-
 
 
         if ($keyword_id) {
@@ -667,7 +671,6 @@ class BullyDashboardController extends Controller
             }
 
 
-
             if ($type === 'device') {
                 $index_label = 0;
 
@@ -843,7 +846,6 @@ class BullyDashboardController extends Controller
             }
 
 
-
         }
 
 
@@ -905,49 +907,54 @@ class BullyDashboardController extends Controller
             "Negative",
         ];
 
+        $data['value'][10] = ["id" => 10, "keyword_name" => "Level 0", "data" => [0, 0, 0]];
+        $data['value'][11] = ["id" => 11, "keyword_name" => "Level 1", "data" => [0, 0, 0]];
+        $data['value'][12] = ["id" => 12, "keyword_name" => "Level 2", "data" => [0, 0, 0]];
+        $data['value'][13] = ["id" => 13, "keyword_name" => "Level 3", "data" => [0, 0, 0]];
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1, 3]);
+
+        if ($this->keyword_id) {
+            $raw->where('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+        $anylsys = [];
+        foreach ($items as $item) {
+
+            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+        }
+
+        foreach ($anylsys as $anylsy) {
+
+            $index_data = 10;
+
+            if ($anylsy['Bully Level'] === 'Level 1') {
+                $index_data = 11;
+            }
+
+            if ($anylsy['Bully Level'] === 'Level 2') {
+                $index_data = 12;
+            }
+
+            if ($anylsy['Bully Level'] === 'Level 3') {
+                $index_data = 13;
+            }
 
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Level 0",
-            "data" => [
-                19,
-                38,
-                47,
-            ]
-        ];
+            $index_label = array_search($anylsy['Sentiment'], $data['labels']);
+            $data['value'][$index_data]['data'][$index_label] += 1;
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Level 1",
-            "data" => [
-                12,
-                16,
-                32,
-            ]
-        ];
+        }
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Level 2",
-            "data" => [
-                15,
-                45,
-                23,
-            ]
-        ];
+        if ($data) {
+            $data['value'] = array_values($data['value']);
+        }
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Level 3",
-            "data" => [
-                23,
-                17,
-                34,
-            ]
-        ];
-
-        return parent::handleRespond([]);
+        return parent::handleRespond($data);
     }
 
     public function BullyTypeBySentiment(Request $request)
@@ -958,402 +965,425 @@ class BullyDashboardController extends Controller
             "Negative",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "No Bully",
-            "data" => [
-                19,
-                38,
-                47,
-            ]
-        ];
+        $bully_types = DB::table('classifications')->where('classification_type_id', 2)->get();
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Gossip",
-            "data" => [
-                12,
-                16,
-                32,
-            ]
-        ];
+        foreach ($bully_types as $bully_type) {
+            $data['value'][$bully_type->id] = [
+                'id' => $bully_type->id,
+                'keyword_name' => $bully_type->name,
+                'data' => [0, 0, 0]
+            ];
+        }
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Harassment",
-            "data" => [
-                15,
-                45,
-                23,
-            ]
-        ];
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1, 2]);
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Exclusion",
-            "data" => [
-                23,
-                17,
-                34,
-            ]
-        ];
+        if ($this->keyword_id) {
+            $raw->where('keyword_id', $this->keyword_id);
+        }
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Hate Speech",
-            "data" => [
-                12,
-                16,
-                23,
-            ]
-        ];
+        $items = $raw->get();
+        $anylsys = [];
+
+        foreach ($items as $item) {
+            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+        }
+
+        foreach ($anylsys as $anylsy) {
+            foreach ($bully_types as $bully_type) {
+
+                if ($anylsy['Bully Type'] === $bully_type->name) {
+                    $index_label = array_search($anylsy['Sentiment'], $data['labels']);
+                    $data['value'][$bully_type->id]['data'][$index_label] += 1;
+                }
+            }
+        }
+
+        if ($data) {
+            $data['value'] = array_values($data['value']);
+        }
 
         return parent::handleRespond($data);
     }
 
     public function BullyLevelLevel(Request $request)
     {
-        $data = [
-            [
-                "id" => 1,
-                "keyword_name" => "all",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 0",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 1",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 2",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 3",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ]
+
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [3]);
+
+        if ($this->keyword_id) {
+            $raw->where('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+
+        $soures = $this->listSource();
+        $anylsys = [];
+        $anylsys['all'] = [
+            'id' => -1,
+            'keyword_name' => "all",
+            'total' => 0
         ];
+
+        for ($i = 0; $i < count($soures['labels']); $i++) {
+            $anylsys['all']['value'][$soures['labels'][$i]]['id'] = $i;
+            $anylsys['all']['value'][$soures['labels'][$i]]['channel'] = $soures['labels'][$i];
+            $anylsys['all']['value'][$soures['labels'][$i]]['percentage'] = 0;
+            $anylsys['all']['value'][$soures['labels'][$i]]['total'] = 0;
+        }
+
+
+        foreach ($items as $item) {
+
+            if (isset($anylsys['all'])) {
+                $anylsys['all']["campaign_id"] = $item->campaign_id;
+                $anylsys['all']["campaign_name"] = $item->campaign_name;
+                $anylsys['all']['total'] += 1;
+                $anylsys['all']['value'][$item->source_name]['total'] += 1;
+            }
+
+            if (isset($anylsys[$item->classification_name])) {
+                $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
+                $anylsys[$item->classification_name]['total'] += 1;
+            } else {
+                $anylsys[$item->classification_name] = [
+                    "id" => $item->classification_id,
+                    "keyword_name" => $item->classification_name,
+                    "campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "total" => 1,
+                ];
+
+                for ($i = 0; $i < count($soures['labels']); $i++) {
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['id'] =  $i;
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['channel'] =  $soures['labels'][$i];
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['total'] = 0;
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['percentage'] = 0;
+                }
+
+                $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
+            }
+        }
+
+        $data = [];
+
+        foreach ($anylsys as $key => $item) {
+            $total = $item['total'];
+            $data[$key] = [
+                'id' => $item['id'],
+                'keyword_name' => $item['keyword_name'],
+                'campaign_id' => $item['campaign_id'],
+                'campaign_name' => $item['campaign_name'],
+                'value' => $item['value'],
+                'total' => $item['total'],
+            ];
+
+            foreach ($item['value'] as $index => $value) {
+                $data[$key]['value'][$index]['percentage'] = $value['total'] / $total * 100;
+            }
+
+        }
+
+        if ($data) {
+            $data = array_values($data);
+        }
+
+        foreach ($data as $key => $item) {
+            $data[$key]['value'] = array_values($item['value']);
+        }
 
         return parent::handleRespond($data);
     }
 
     public function BullyTableType(Request $request)
     {
-        $data = [
-            [
-                "id" => 1,
-                "keyword_name" => "all",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "No Bully",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Gossip",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Harassment",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Exclusion",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Hate Speech",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ]
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [2]);
+
+        if ($this->keyword_id) {
+            $raw->where('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+        $soures = $this->listSource();
+        $anylsys = [];
+        $anylsys['all'] = [
+            'id' => -1,
+            'keyword_name' => "all",
+            'total' => 0
         ];
 
+        for ($i = 0; $i < count($soures['labels']); $i++) {
+            $anylsys['all']['value'][$soures['labels'][$i]]['id'] = $i;
+            $anylsys['all']['value'][$soures['labels'][$i]]['channel'] = $soures['labels'][$i];
+            $anylsys['all']['value'][$soures['labels'][$i]]['percentage'] = 0;
+            $anylsys['all']['value'][$soures['labels'][$i]]['total'] = 0;
+        }
+
+
+        foreach ($items as $item) {
+
+            if (isset($anylsys['all'])) {
+                $anylsys['all']["campaign_id"] = $item->campaign_id;
+                $anylsys['all']["campaign_name"] = $item->campaign_name;
+                $anylsys['all']['total'] += 1;
+                $anylsys['all']['value'][$item->source_name]['total'] += 1;
+            }
+
+            if (isset($anylsys[$item->classification_name])) {
+                $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
+                $anylsys[$item->classification_name]['total'] += 1;
+            } else {
+                $anylsys[$item->classification_name] = [
+                    "id" => $item->classification_id,
+                    "keyword_name" => $item->classification_name,
+                    "campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    "total" => 1,
+                ];
+
+                for ($i = 0; $i < count($soures['labels']); $i++) {
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['id'] =  $i;
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['channel'] =  $soures['labels'][$i];
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['total'] = 0;
+                    $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['percentage'] = 0;
+                }
+
+                $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
+            }
+        }
+
+        $data = [];
+
+        foreach ($anylsys as $key => $item) {
+            $total = $item['total'];
+            $data[$key] = [
+                'id' => $item['id'],
+                'keyword_name' => $item['keyword_name'],
+                'campaign_id' => $item['campaign_id'],
+                'campaign_name' => $item['campaign_name'],
+                'value' => $item['value'],
+                'total' => $item['total'],
+            ];
+
+            foreach ($item['value'] as $index => $value) {
+                $data[$key]['value'][$index]['percentage'] = $value['total'] / $total * 100;
+            }
+
+        }
+
+        if ($data) {
+            $data = array_values($data);
+        }
+
+        foreach ($data as $key => $item) {
+            $data[$key]['value'] = array_values($item['value']);
+        }
+
+//        $data = [
+//            [
+//                "id" => 1,
+//                "keyword_name" => "all",
+//                "campaign_id" => 2,
+//                "campaign_name" => "ข่าวบันเทิง",
+//                "organization_id" => 1,
+//                "organizations_name" => "test",
+//                "value" => [
+//                    [
+//                        "channel" => "facebook",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "twitter",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "youtube",
+//                        "percentage" => "10"
+//                    ],
+//                    [
+//                        "channel" => "instagram",
+//                        "percentage" => "20"
+//                    ],
+//                    [
+//                        "channel" => "pantip",
+//                        "percentage" => "15"
+//                    ]
+//                ]
+//            ],
+//            [
+//                "id" => 1,
+//                "keyword_name" => "No Bully",
+//                "campaign_id" => 2,
+//                "campaign_name" => "ข่าวบันเทิง",
+//                "organization_id" => 1,
+//                "organizations_name" => "test",
+//                "value" => [
+//                    [
+//                        "channel" => "facebook",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "twitter",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "youtube",
+//                        "percentage" => "10"
+//                    ],
+//                    [
+//                        "channel" => "instagram",
+//                        "percentage" => "20"
+//                    ],
+//                    [
+//                        "channel" => "pantip",
+//                        "percentage" => "15"
+//                    ]
+//                ]
+//            ],
+//            [
+//                "id" => 1,
+//                "keyword_name" => "Gossip",
+//                "campaign_id" => 2,
+//                "campaign_name" => "ข่าวบันเทิง",
+//                "organization_id" => 1,
+//                "organizations_name" => "test",
+//                "value" => [
+//                    [
+//                        "channel" => "facebook",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "twitter",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "youtube",
+//                        "percentage" => "10"
+//                    ],
+//                    [
+//                        "channel" => "instagram",
+//                        "percentage" => "20"
+//                    ],
+//                    [
+//                        "channel" => "pantip",
+//                        "percentage" => "15"
+//                    ]
+//                ]
+//            ],
+//            [
+//                "id" => 1,
+//                "keyword_name" => "Harassment",
+//                "campaign_id" => 2,
+//                "campaign_name" => "ข่าวบันเทิง",
+//                "organization_id" => 1,
+//                "organizations_name" => "test",
+//                "value" => [
+//                    [
+//                        "channel" => "facebook",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "twitter",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "youtube",
+//                        "percentage" => "10"
+//                    ],
+//                    [
+//                        "channel" => "instagram",
+//                        "percentage" => "20"
+//                    ],
+//                    [
+//                        "channel" => "pantip",
+//                        "percentage" => "15"
+//                    ]
+//                ]
+//            ],
+//            [
+//                "id" => 1,
+//                "keyword_name" => "Exclusion",
+//                "campaign_id" => 2,
+//                "campaign_name" => "ข่าวบันเทิง",
+//                "organization_id" => 1,
+//                "organizations_name" => "test",
+//                "value" => [
+//                    [
+//                        "channel" => "facebook",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "twitter",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "youtube",
+//                        "percentage" => "10"
+//                    ],
+//                    [
+//                        "channel" => "instagram",
+//                        "percentage" => "20"
+//                    ],
+//                    [
+//                        "channel" => "pantip",
+//                        "percentage" => "15"
+//                    ]
+//                ]
+//            ],
+//            [
+//                "id" => 1,
+//                "keyword_name" => "Hate Speech",
+//                "campaign_id" => 2,
+//                "campaign_name" => "ข่าวบันเทิง",
+//                "organization_id" => 1,
+//                "organizations_name" => "test",
+//                "value" => [
+//                    [
+//                        "channel" => "facebook",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "twitter",
+//                        "percentage" => "30"
+//                    ],
+//                    [
+//                        "channel" => "youtube",
+//                        "percentage" => "10"
+//                    ],
+//                    [
+//                        "channel" => "instagram",
+//                        "percentage" => "20"
+//                    ],
+//                    [
+//                        "channel" => "pantip",
+//                        "percentage" => "15"
+//                    ]
+//                ]
+//            ]
+//        ];
+
         return parent::handleRespond($data);
+    }
+
+    private function listSource()
+    {
+        $sources = Sources::all();
+        $data['labels'] = [];
+
+        foreach ($sources as $source) {
+            $data['labels'][] = $source->name;
+        }
+
+        return $data;
     }
 }
