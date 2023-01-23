@@ -233,14 +233,14 @@ class CampaignController extends Controller
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
-        
+
         $campaigns = Campaign::query()->offset($start)->limit($limit);
 
         if ($request->name) {
             $campaigns = $campaigns->where('name', 'like', "%$request->name%");
         }
 
-        if ($request->status) {
+        if ($request->status || $request->status === '0') {
             $campaigns = $campaigns->where('status', $request->status);
         }
 

@@ -100,19 +100,19 @@ class OrganizationController extends Controller
             ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group')
             ->offset($start)->limit($limit);
 
-        if ($request->name !== null) {
+        if ($request->name) {
             $data->where('organizations.name','like', "%$request->name%");
         }
 
-        if ($request->status !== null) {
+        if ($request->status || $request->status === '0') {
             $data->where('organizations.status', $request->status);
         }
 
-        if ($request->group !== null) {
+        if ($request->group) {
             $data->where('organizations.organization_group_id', $request->group);
         }
 
-        if ($request->type !== null) {
+        if ($request->type) {
             $data->where('organizations.organization_type_id', $request->type);
         }
 
