@@ -226,4 +226,53 @@ class CampaignController extends Controller
         }
         return $res;
     }
+
+    public function search(Request $request)
+    {
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        
+        $campaigns = Campaign::query()->offset($start)->limit($limit);
+
+        if ($request->name) {
+            $campaigns = $campaigns->where('name', 'like', "%$request->name%");
+        }
+
+        if ($request->status) {
+            $campaigns = $campaigns->where('status', $request->status);
+        }
+
+
+        if ($request->organization_id) {
+            $campaigns = $campaigns->where('organization_id', $request->organization_id);
+        }
+
+        if ($request->start_at) {
+            $campaigns = $campaigns->where('start_at', '<=', $request->start_at);
+        }
+
+        if ($request->end_at) {
+            $campaigns = $campaigns->where('end_at', '>=', $request->end_at);
+        }
+
+        $data = [];
+        foreach ($campaigns->get() as $campaign) {
+            $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->get();
+
+            if ($campaign->keyword) {
+                foreach ($campaign->keyword as $item) {
+                    $item->keyword_or = explode(",", $item->keyword_or);
+                    $item->keyword_and = explode(",", $item->keyword_and);
+                    $item->keyword_exclude = explode(",", $item->keyword_exclude);
+                }
+            }
+            $campaign->organization = Organization::find($campaign->organization_id)->name;
+            $data[] = $campaign;
+
+        }
+
+        return parent::handleRespond($data);
+    }
 }

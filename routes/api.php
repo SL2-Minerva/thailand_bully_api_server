@@ -112,6 +112,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::post('/create', [CampaignController::class, 'store']);
             Route::put('/update', [CampaignController::class, 'update']);
             Route::put('/delete', [CampaignController::class, 'destroy']);
+            Route::get('/search', [CampaignController::class, 'search']);
         });
 
 
