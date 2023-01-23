@@ -67,8 +67,8 @@ class ChannelDashboardController extends Controller
 
             $channal_message = $this->channelTable($campaign_id, $start_date, $end_date, $source_id);
             $channal_message_total = DailyMessage::where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->sum('total_at_date');
+                ->whereBetween('date_m', [$start_date, $end_date])
+                ->sum('total_at_date');
 
             $nestData = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
@@ -122,24 +122,24 @@ class ChannelDashboardController extends Controller
     public function ChannelByDay(Request $request)
     {
 
-        $table =  'daily_message';
+        $table = 'daily_message';
         // $data = parent::listDataByType('channel_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 'total_at_date' );
-        $data = $this->listDataByType('channel_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 'total_at_date' );
+        $data = $this->listDataByType('channel_by_day', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 'total_at_date');
 
         return parent::handleRespond($data);
     }
 
     public function ChannelByTime(Request $request)
     {
-        $table =  'daily_message_device_d_m_y_h_i_s';
-        $data = $this->listDataByType('channel_by_time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 'total_at_date' );
+        $table = 'daily_message_device_d_m_y_h_i_s';
+        $data = $this->listDataByType('channel_by_time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, 'total_at_date');
 
         return parent::handleRespond($data);
     }
 
     public function ChannelByDevice(Request $request)
     {
-        $table =  'daily_message_device';
+        $table = 'daily_message_device';
         $data = $this->listDataByType('channel_by_device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, 'total_at_date');
 
         return parent::handleRespond($data);
@@ -152,57 +152,61 @@ class ChannelDashboardController extends Controller
             "Follower",
         ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Keyword 1",
-            "data" => [
-                20,
-                19,
-            ]
-        ];
+        $raw_child = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('reference_message_id', '!=', null)
+            ->whereIn('classification_type_id', [1]);
 
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Keyword 2",
-            "data" => [
-                12,
-                16,
-            ]
-        ];
 
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Keyword 3",
-            "data" => [
-                65,
-                23,
-            ]
-        ];
+        $raw_root = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('reference_message_id','')
+            ->orWhere('reference_message_id',null)
+            ->whereIn('classification_type_id', [1]);
 
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Keyword 4",
-            "data" => [
-                67,
-                89,
-            ]
-        ];
+        $soures = $this->listSource();
 
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Keyword 5",
-            "data" => [
-                23,
-                56,
-            ]
-        ];
+
+        for ($i = 0; $i < count($soures['labels']); $i++) {
+            $data['value'][$soures['labels'][$i]] = [
+                "id" => $i,
+                "keyword_name" => $soures['labels'][$i],
+                'data' => [0, 0]
+            ];
+
+        }
+
+//        if ($this->keyword_id) {
+//            $raw_child->where('keyword_id', $this->keyword_id);
+//            $raw_root->where('keyword_id', $this->keyword_id);
+//        }
+
+        $items_root = $raw_root->get();
+        $items_child = $raw_child->get();
+
+        foreach ($items_root as $key => $item) {
+            $source_id = $item->source_id;
+            $data['value'][$item->source_name]['data'][0] += 1;
+        }
+
+
+        foreach ($items_child as $key => $item) {
+            $source_id = $item->source_id;
+            $data['value'][$item->source_name]['data'][1] += 1;
+        }
+
+        if ($data['value']) {
+            $data['value'] = array_values($data['value']);
+        }
 
         return parent::handleRespond($data);
     }
 
     public function ChannelBySentiment(Request $request)
     {
-        $table =  'message_result_group';
+        $table = 'message_result_group';
         $data = $this->listDataByType('sentiment', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null);
 
         return parent::handleRespond($data);
@@ -221,13 +225,13 @@ class ChannelDashboardController extends Controller
         foreach ($sentiment as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->source_id])) {
                 $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
             } else {
@@ -241,7 +245,7 @@ class ChannelDashboardController extends Controller
                     'source_id' => $item->source_id,
                     'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,
-                    'data' => [0,0,0,0]
+                    'data' => [0, 0, 0, 0]
                 ];
 
                 $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
@@ -253,7 +257,7 @@ class ChannelDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
@@ -268,13 +272,13 @@ class ChannelDashboardController extends Controller
         foreach ($sentiment as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->source_id])) {
                 $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
             } else {
@@ -288,7 +292,7 @@ class ChannelDashboardController extends Controller
                     'source_id' => $item->source_id,
                     'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,
-                    'data' => [0,0,0,0,0,0]
+                    'data' => [0, 0, 0, 0, 0, 0]
                 ];
 
                 $data['value'][$item->source_id]['data'][$index_label] += $item->total_sem;
@@ -300,17 +304,18 @@ class ChannelDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
-    public function bully_type_name($class_id) 
+    public function bully_type_name($class_id)
     {
         $classfication = Classification::where('id', $class_id)->first();
         return $classfication->name;
     }
 
-    private function total_message_by_source_id($table, $campaign_id, $start_date, $end_date, $source_id, $field) {
+    private function total_message_by_source_id($table, $campaign_id, $start_date, $end_date, $source_id, $field)
+    {
         if ($source_id === "all") {
             $channal_message_current = DB::table($table)->where('campaign_id', $campaign_id)
                 ->whereBetween('date_m', [$start_date, $end_date])
@@ -336,21 +341,21 @@ class ChannelDashboardController extends Controller
 
             $comparison = $channal_message_current - $channal_message_previous;
             $percentage = ($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous) * 100;
-            
+
             $data[$item->name] = [
                 "comparison_value" => $this->point_two_digits($comparison),
                 "percentage" => $this->point_two_digits($percentage),
                 "type" => ($comparison >= 0 ? "plus" : "minus"),
             ];
         }
-        
+
         return parent::handleRespond($data);
     }
 
     public function EngagementRate(Request $request)
     {
         $data = null;
-        
+
         $data = $this->totalFromMessageResultSemetic("message_result_semetic", $request->campaign_id, $this->start_date, $this->end_date, "engagement", "current period", "current_period");
 
         return parent::handleRespond($data);
@@ -360,7 +365,7 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
 
-        $data = $this->totalFromMessageResultSemetic("message_result_semetic",$request->campaign_id, $this->start_date_previous, $this->end_date_previous, "engagement", "previous period", "previous_period");
+        $data = $this->totalFromMessageResultSemetic("message_result_semetic", $request->campaign_id, $this->start_date_previous, $this->end_date_previous, "engagement", "previous period", "previous_period");
 
         return parent::handleRespond($data);
     }
@@ -368,7 +373,7 @@ class ChannelDashboardController extends Controller
     public function SentimentScore(Request $request)
     {
         $data = null;
-        $data = $this->totalFromMessageResultSemetic("message_result_semetic",$request->campaign_id, $this->start_date, $this->end_date, "total_sem", "current period", "current_period");
+        $data = $this->totalFromMessageResultSemetic("message_result_semetic", $request->campaign_id, $this->start_date, $this->end_date, "total_sem", "current period", "current_period");
 
         return parent::handleRespond($data);
     }
@@ -377,7 +382,7 @@ class ChannelDashboardController extends Controller
     {
 
         $data = null;
-        $data = $this->totalFromMessageResultSemetic("message_result_semetic",$request->campaign_id, $this->start_date_previous, $this->end_date_previous, "total_sem", "previous period", "previous_period");
+        $data = $this->totalFromMessageResultSemetic("message_result_semetic", $request->campaign_id, $this->start_date_previous, $this->end_date_previous, "total_sem", "previous period", "previous_period");
 
         return parent::handleRespond($data);
     }
@@ -403,7 +408,7 @@ class ChannelDashboardController extends Controller
         if (!$data) {
             return parent::handleNotFound($data);
         }
-        
+
         return parent::handleRespond(array_values($data));
     }
 
@@ -432,9 +437,9 @@ class ChannelDashboardController extends Controller
             foreach ($sum as $item) {
                 if (isset($item->classification_name) && $item->classification_name === "Negative") {
                     $data[$source_id]['negative'] = $data[$source_id]['negative'] + 1;
-                } else if(isset($item->classification_name) && $item->classification_name === "Positive") {
+                } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
                     $data[$source_id]['positive'] = $data[$source_id]['positive'] + 1;
-                } else if(isset($item->classification_name) && $item->classification_name === "Neutral") {
+                } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
                     $data[$source_id]['neutral'] = $data[$source_id]['neutral'] + 1;
                 }
             }
@@ -455,7 +460,8 @@ class ChannelDashboardController extends Controller
             ->sum('total_at_date');
     }
 
-    private function totalFromMessageResultSemetic($table, $campaign_id, $start_date, $end_date, $column, $keyword_name, $value_name) {
+    private function totalFromMessageResultSemetic($table, $campaign_id, $start_date, $end_date, $column, $keyword_name, $value_name)
+    {
         $engagement_previous = DB::table($table)->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->get();
@@ -475,7 +481,7 @@ class ChannelDashboardController extends Controller
                 $data['value'][$value_name] = [
                     'id' => $item_previous->keyword_id,
                     'keyword_name' => $keyword_name,
-                    'data' => [0,0,0,0,0,0]
+                    'data' => [0, 0, 0, 0, 0, 0]
                 ];
             }
         }
@@ -511,7 +517,6 @@ class ChannelDashboardController extends Controller
                 $items->groupBy($groupBy);
             }
         }
-
 
 
         if ($keyword_id) {
@@ -759,7 +764,6 @@ class ChannelDashboardController extends Controller
             }
 
 
-
             if ($type === 'device') {
                 $index_label = 0;
 
@@ -915,7 +919,7 @@ class ChannelDashboardController extends Controller
 
                 if ($type === 'bully_level_by_sentiment') {
                     if ($item->classification_type_id === $column) {
-                        
+
                         if (isset($data['value'][$item->classification_id])) {
                             // dd($data['value'][$item->classification_id]);
                             $data['value'][$item->classification_id]['data'][$index_label] += 1;
@@ -935,7 +939,6 @@ class ChannelDashboardController extends Controller
             }
 
 
-
         }
 
 
@@ -945,6 +948,18 @@ class ChannelDashboardController extends Controller
 
         return $data;
 
+    }
+
+    private function listSource()
+    {
+        $sources = Sources::all();
+        $data['labels'] = [];
+
+        foreach ($sources as $source) {
+            $data['labels'][] = $source->name;
+        }
+
+        return $data;
     }
 
 }
