@@ -87,7 +87,7 @@ class BullyDashboardController extends Controller
         $daily_messages = $daily_messages->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
         foreach ($daily_messages->get() as $daily_message) {
-            
+
             if ($daily_message->classification_type_id === 3 ) {
 
                 $classification_id = $daily_message->classification_id;
@@ -96,14 +96,14 @@ class BullyDashboardController extends Controller
                 $data[$classification_id]['source_name'] = $daily_message->source_name;
                 $data[$classification_id]['campaign_id'] = $daily_message->campaign_id;
                 $data[$classification_id]['campaign_name'] = $daily_message->campaign_name;
-    
+
                 $nestData = [
                     'keyword_id' => $daily_message->keyword_id,
                     'keyword_name' => $daily_message->keyword_name,
                     'date_m' => $daily_message->date_m,
                     'total_at_date' => $daily_message->total_at_date
                 ];
-    
+
                 $data[$classification_id]['value'][] = $nestData;
             }
         }
@@ -210,61 +210,12 @@ class BullyDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function BullyBySentiment(Request $request)
-    {
-        $data['labels'] = [
-            "Positive",
-            "Neutral",
-            "Negative",
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "Level 0",
-            "data" => [
-                19,
-                38,
-                47,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Level 1",
-            "data" => [
-                12,
-                16,
-                32,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Level 2",
-            "data" => [
-                15,
-                45,
-                23,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Level 3",
-            "data" => [
-                23,
-                17,
-                34,
-            ]
-        ];
-
-        return parent::handleRespond([]);
-    }
 
     public function BullyTypePercentageDaily(Request $request)
     {
         $data = null;
-        
+
         $data['prcentage_of_messages_current'] = $this->PercentageToCal($request->campaign_id, $this->start_date, $this->end_date, 2);
         $data['prcentage_of_messages_previous'] = $this->PercentageToCal($request->campaign_id, $this->start_date_previous, $this->end_date_previous, 2);
 
@@ -279,7 +230,7 @@ class BullyDashboardController extends Controller
         $daily_messages = $daily_messages->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
         foreach ($daily_messages->get() as $daily_message) {
-            
+
             if ($daily_message->classification_type_id === 2 ) {
 
                 $classification_id = $daily_message->classification_id;
@@ -288,14 +239,14 @@ class BullyDashboardController extends Controller
                 $data[$classification_id]['source_name'] = $daily_message->source_name;
                 $data[$classification_id]['campaign_id'] = $daily_message->campaign_id;
                 $data[$classification_id]['campaign_name'] = $daily_message->campaign_name;
-    
+
                 $nestData = [
                     'keyword_id' => $daily_message->keyword_id,
                     'keyword_name' => $daily_message->keyword_name,
                     'date_m' => $daily_message->date_m,
                     'total_at_date' => $daily_message->total_at_date
                 ];
-    
+
                 $data[$classification_id]['value'][] = $nestData;
             }
         }
@@ -398,66 +349,7 @@ class BullyDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function BullyTypeBySentiment(Request $request)
-    {
-        $data['labels'] = [
-            "Positive",
-            "Neutral",
-            "Negative",
-        ];
 
-        $data['value'][] = [
-            "id" => 1,
-            "keyword_name" => "No Bully",
-            "data" => [
-                19,
-                38,
-                47,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 2,
-            "keyword_name" => "Gossip",
-            "data" => [
-                12,
-                16,
-                32,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 3,
-            "keyword_name" => "Harassment",
-            "data" => [
-                15,
-                45,
-                23,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 4,
-            "keyword_name" => "Exclusion",
-            "data" => [
-                23,
-                17,
-                34,
-            ]
-        ];
-
-        $data['value'][] = [
-            "id" => 5,
-            "keyword_name" => "Hate Speech",
-            "data" => [
-                12,
-                16,
-                23,
-            ]
-        ];
-
-        return parent::handleRespond([]);
-    }
 
     public function BullyChartLevel(Request $request)
     {
@@ -485,392 +377,15 @@ class BullyDashboardController extends Controller
                 ];
             }
         }
-        
+
         if (!$data) {
             return parent::handleRespond($data);
         }
-        
+
         return parent::handleRespond(array_values($data));
     }
 
-    public function BullyLevelLevel(Request $request)
-    {
-        $data = [
-            [
-                "id" => 1,
-                "keyword_name" => "all",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 0",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 1",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 2",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Level 3",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ]
-        ];
 
-        return parent::handleRespond([]);
-    }
-
-    public function BullyChartType(Request $request)
-    {
-        $bully = MessageResultBully::where('campaign_id', $request->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('classification_type_id', 2)->get();
-            
-        $all = 0;
-        foreach ($bully as $item) {
-            $data['all'] = [
-                'keyword_name' => "all",
-                'data' => $all += $item->total_at_date
-            ];
-
-            if (isset($data[$item->classification_id])) {
-                $data[$item->classification_id]['data'] += $item->total_at_date;
-                $data["all"]['data'] += $item->total_at_date;
-
-
-            } else {
-                $data[$item->classification_id] = [
-                    'keyword_name' => $item->classification_name,
-                    'data' => 0
-                ];
-            }
-        }
-        
-        if (!$data) {
-            return parent::handleRespond($data);
-        }
-        
-        return parent::handleRespond(array_values($data));
-    }
-
-    public function BullyTableType(Request $request)
-    {
-        $data = [
-            [
-                "id" => 1,
-                "keyword_name" => "all",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "No Bully",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Gossip",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Harassment",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Exclusion",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ],
-            [
-                "id" => 1,
-                "keyword_name" => "Hate Speech",
-                "campaign_id" => 2,
-                "campaign_name" => "ข่าวบันเทิง",
-                "organization_id" => 1,
-                "organizations_name" => "test",
-                "value" => [
-                    [
-                        "channel" => "facebook",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "twitter",
-                        "percentage" => "30"
-                    ],
-                    [
-                        "channel" => "youtube",
-                        "percentage" => "10"
-                    ],
-                    [
-                        "channel" => "instagram",
-                        "percentage" => "20"
-                    ],
-                    [
-                        "channel" => "pantip",
-                        "percentage" => "15"
-                    ]
-                ]
-            ]
-        ];
-
-        return parent::handleRespond([]);
-    }
 
     private function bullyTable($campaign_id, $start_date, $end_date, $classification_id, $classification_type_id)
     {
@@ -1307,7 +822,7 @@ class BullyDashboardController extends Controller
 
                 if ($type === 'bully_level_by_sentiment') {
                     if ($item->classification_type_id === $column) {
-                        
+
                         if (isset($data['value'][$item->classification_id])) {
                             // dd($data['value'][$item->classification_id]);
                             $data['value'][$item->classification_id]['data'][$index_label] += 1;
@@ -1343,5 +858,496 @@ class BullyDashboardController extends Controller
     {
         $source = Sources::where('id', $source_id)->first();
         return $source->name;
+    }
+
+    public function BullyBySentiment(Request $request)
+    {
+        $data['labels'] = [
+            "Positive",
+            "Neutral",
+            "Negative",
+        ];
+
+        $data['value'][] = [
+            "id" => 1,
+            "keyword_name" => "Level 0",
+            "data" => [
+                19,
+                38,
+                47,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 2,
+            "keyword_name" => "Level 1",
+            "data" => [
+                12,
+                16,
+                32,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 3,
+            "keyword_name" => "Level 2",
+            "data" => [
+                15,
+                45,
+                23,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 4,
+            "keyword_name" => "Level 3",
+            "data" => [
+                23,
+                17,
+                34,
+            ]
+        ];
+
+        return parent::handleRespond([]);
+    }
+
+    public function BullyTypeBySentiment(Request $request)
+    {
+        $data['labels'] = [
+            "Positive",
+            "Neutral",
+            "Negative",
+        ];
+
+        $data['value'][] = [
+            "id" => 1,
+            "keyword_name" => "No Bully",
+            "data" => [
+                19,
+                38,
+                47,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 2,
+            "keyword_name" => "Gossip",
+            "data" => [
+                12,
+                16,
+                32,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 3,
+            "keyword_name" => "Harassment",
+            "data" => [
+                15,
+                45,
+                23,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 4,
+            "keyword_name" => "Exclusion",
+            "data" => [
+                23,
+                17,
+                34,
+            ]
+        ];
+
+        $data['value'][] = [
+            "id" => 5,
+            "keyword_name" => "Hate Speech",
+            "data" => [
+                12,
+                16,
+                23,
+            ]
+        ];
+
+        return parent::handleRespond([]);
+    }
+
+    public function BullyLevelLevel(Request $request)
+    {
+        $data = [
+            [
+                "id" => 1,
+                "keyword_name" => "all",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Level 0",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Level 1",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Level 2",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Level 3",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ]
+        ];
+
+        return parent::handleRespond([]);
+    }
+
+    public function BullyChartType(Request $request)
+    {
+        $bully = MessageResultBully::where('campaign_id', $request->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('classification_type_id', 2)->get();
+
+        $all = 0;
+        foreach ($bully as $item) {
+            $data['all'] = [
+                'keyword_name' => "all",
+                'data' => $all += $item->total_at_date
+            ];
+
+            if (isset($data[$item->classification_id])) {
+                $data[$item->classification_id]['data'] += $item->total_at_date;
+                $data["all"]['data'] += $item->total_at_date;
+
+
+            } else {
+                $data[$item->classification_id] = [
+                    'keyword_name' => $item->classification_name,
+                    'data' => 0
+                ];
+            }
+        }
+
+        if (!$data) {
+            return parent::handleRespond($data);
+        }
+
+        return parent::handleRespond(array_values($data));
+    }
+
+    public function BullyTableType(Request $request)
+    {
+        $data = [
+            [
+                "id" => 1,
+                "keyword_name" => "all",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "No Bully",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Gossip",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Harassment",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Exclusion",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ],
+            [
+                "id" => 1,
+                "keyword_name" => "Hate Speech",
+                "campaign_id" => 2,
+                "campaign_name" => "ข่าวบันเทิง",
+                "organization_id" => 1,
+                "organizations_name" => "test",
+                "value" => [
+                    [
+                        "channel" => "facebook",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "twitter",
+                        "percentage" => "30"
+                    ],
+                    [
+                        "channel" => "youtube",
+                        "percentage" => "10"
+                    ],
+                    [
+                        "channel" => "instagram",
+                        "percentage" => "20"
+                    ],
+                    [
+                        "channel" => "pantip",
+                        "percentage" => "15"
+                    ]
+                ]
+            ]
+        ];
+
+        return parent::handleRespond([]);
     }
 }

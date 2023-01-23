@@ -185,13 +185,13 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
             } else {
@@ -211,9 +211,9 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
-        
+
     }
 
     public function MessageByLevel(Request $request)
@@ -229,13 +229,13 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
             } else {
@@ -255,7 +255,7 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
@@ -272,13 +272,13 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
             } else {
@@ -298,408 +298,11 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
-        return parent::handleRespond($data);
-    }
-
-    public function NumberOfAccount(Request $request)
-    {
-        $data[] = [
-            "name" =>  "Keyword 1",
-            "data" => [
-                44,
-                55,
-                41,
-                67,
-                22,
-                43,
-                21,
-                49,
-                29,
-                36,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Keyword 2",
-            "data" => [
-                13,
-                23,
-                20,
-                8,
-                13,
-                27,
-                33,
-                12,
-                29,
-                34,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Keyword 3",
-            "data" => [
-                11,
-                17,
-                15,
-                15,
-                21,
-                14,
-                15,
-                13,
-                65,
-                29,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Keyword 4",
-            "data" => [
-                44,
-                55,
-                41,
-                67,
-                22,
-                43,
-                21,
-                49,
-                58,
-                37,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Keyword 5",
-            "data" => [
-                30,
-                23,
-                20,
-                8,
-                13,
-                27,
-                33,
-                12,
-                62,
-                43,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
 
         return parent::handleRespond($data);
     }
 
-    public function PeriodOverPeriod(Request $request)
-    {
-        $data['total_messages'] = [
-            "total_message" => 40000,
-            "percentage" => "10",
-            "type" => "minus",
-        ];
 
-        $data['total_account'] = [
-            "total_message" => 200,
-            "percentage" => "20",
-            "type" => "plus",
-        ];
-
-        return parent::handleRespond($data);
-    }
-
-    public function DayTimeComparison(Request $request)
-    {
-        $data[] = [
-            "name" =>  "Mon.",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Tue.",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Wed.",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Thu.",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Fri.",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Sat.",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
-
-        $data[] = [
-            "name" =>  "Sun.",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
-
-        return parent::handleRespond($data);
-    }
-
-    public function DayTimeSentiment(Request $request)
-    {
-        $data['day_value'][] = [
-            "name" =>  "Negative",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70,
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "Neutral",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70,
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "Positive",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20,
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Negative",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Neutral",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Positive",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
-
-        return parent::handleRespond($data);
-    }
-
-    public function DayTimeLevel(Request $request)
-    {
-        $data['day_value'][] = [
-            "name" =>  "level 3",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "level 2",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "level 1",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "level 0",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 74
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "level 3",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "level 2",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "level 1",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "level 0",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40
-            ]
-        ];
-
-        return parent::handleRespond($data);
-    }
-
-    public function DayTimeType(Request $request)
-    {
-        $data['day_value'][] = [
-            "name" =>  "Hate Speech",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "Exclusion",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "Harassment",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "Gossip",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 74
-            ]
-        ];
-
-        $data['day_value'][] = [
-            "name" =>  "No Bully",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70,
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Hate Speech",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Exclusion",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Harassment",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "Gossip",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40
-            ]
-        ];
-
-        $data['time_value'][] = [
-            "name" =>  "No Bully",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
-
-        return parent::handleRespond($data);
-    }
 
     public function ChannelPlatform(Request $request)
     {
@@ -725,7 +328,7 @@ class VoiceDashboardController extends Controller
         foreach ($items_current->get() as $item) {
             $index_label = 0;
             $index_label = array_search($item->source_name, $data['current_period']['label']);
-            
+
             if (isset($data['current_period']['data'])) {
                 $data['current_period']['data'][$index_label] += $item->total_at_date;
             } else {
@@ -736,13 +339,13 @@ class VoiceDashboardController extends Controller
                 $data['current_period']['data'][$index_label] += $item->total_at_date;
             }
         }
-        
+
         $data['current_period']['total'] = array_sum($data['current_period']['data']);
 
         foreach ($items_previous->get() as $item) {
             $index_label = 0;
             $index_label = array_search($item->source_name, $data['previous_period']['label']);
-            
+
             if (isset($data['previous_period']['data'])) {
                 $data['previous_period']['data'][$index_label] += $item->total_at_date;
             } else {
@@ -780,7 +383,7 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
         $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
-        
+
         foreach ($items_current->get() as $item) {
             if($item->device === "android") {
                 $data['current_period']['data'][0] += $item->total_at_date;
@@ -793,7 +396,7 @@ class VoiceDashboardController extends Controller
             }
         }
         $data['current_period']['total'] = array_sum($data['current_period']['data']);
-        
+
 
         foreach ($items_previous->get() as $item) {
             if($item->device === "android") {
@@ -813,6 +416,8 @@ class VoiceDashboardController extends Controller
 
     public function ChannelDevice(Request $request)
     {
+
+        $data = [];
 
         $items = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -846,13 +451,13 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             } else {
@@ -872,7 +477,7 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
@@ -888,13 +493,13 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             } else {
@@ -914,7 +519,7 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
@@ -931,12 +536,12 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             } else {
@@ -956,7 +561,7 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
@@ -972,12 +577,12 @@ class VoiceDashboardController extends Controller
         foreach ($level as $item) {
             $data['labels'][] = $item->name;
         }
-        
+
         foreach ($items->get() as $item) {
             $index_label = 0;
             $index_label = array_search($item->source_name, $data['labels']);
 
-            
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             } else {
@@ -997,7 +602,7 @@ class VoiceDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         return parent::handleRespond($data);
     }
 
@@ -1622,7 +1227,7 @@ class VoiceDashboardController extends Controller
 
                 if ($type === 'bully_level_by_sentiment') {
                     if ($item->classification_type_id === $column) {
-                        
+
                         if (isset($data['value'][$item->classification_id])) {
                             // dd($data['value'][$item->classification_id]);
                             $data['value'][$item->classification_id]['data'][$index_label] += 1;
@@ -1652,5 +1257,405 @@ class VoiceDashboardController extends Controller
 
         return $data;
 
+    }
+
+
+    public function NumberOfAccount(Request $request)
+    {
+        $data[] = [
+            "name" =>  "Keyword 1",
+            "data" => [
+                44,
+                55,
+                41,
+                67,
+                22,
+                43,
+                21,
+                49,
+                29,
+                36,
+            ],
+            "date" => [
+                "01/10",
+                "02/10",
+                "03/10",
+                "04/10",
+                "05/10",
+                "06/10",
+                "07/10",
+                "08/10",
+                "09/10",
+                "10/10",
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Keyword 2",
+            "data" => [
+                13,
+                23,
+                20,
+                8,
+                13,
+                27,
+                33,
+                12,
+                29,
+                34,
+            ],
+            "date" => [
+                "01/10",
+                "02/10",
+                "03/10",
+                "04/10",
+                "05/10",
+                "06/10",
+                "07/10",
+                "08/10",
+                "09/10",
+                "10/10",
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Keyword 3",
+            "data" => [
+                11,
+                17,
+                15,
+                15,
+                21,
+                14,
+                15,
+                13,
+                65,
+                29,
+            ],
+            "date" => [
+                "01/10",
+                "02/10",
+                "03/10",
+                "04/10",
+                "05/10",
+                "06/10",
+                "07/10",
+                "08/10",
+                "09/10",
+                "10/10",
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Keyword 4",
+            "data" => [
+                44,
+                55,
+                41,
+                67,
+                22,
+                43,
+                21,
+                49,
+                58,
+                37,
+            ],
+            "date" => [
+                "01/10",
+                "02/10",
+                "03/10",
+                "04/10",
+                "05/10",
+                "06/10",
+                "07/10",
+                "08/10",
+                "09/10",
+                "10/10",
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Keyword 5",
+            "data" => [
+                30,
+                23,
+                20,
+                8,
+                13,
+                27,
+                33,
+                12,
+                62,
+                43,
+            ],
+            "date" => [
+                "01/10",
+                "02/10",
+                "03/10",
+                "04/10",
+                "05/10",
+                "06/10",
+                "07/10",
+                "08/10",
+                "09/10",
+                "10/10",
+            ]
+        ];
+
+        return parent::handleRespond($data);
+    }
+
+    public function PeriodOverPeriod(Request $request)
+    {
+        $data['total_messages'] = [
+            "total_message" => 40000,
+            "percentage" => "10",
+            "type" => "minus",
+        ];
+
+        $data['total_account'] = [
+            "total_message" => 200,
+            "percentage" => "20",
+            "type" => "plus",
+        ];
+
+        return parent::handleRespond($data);
+    }
+
+    public function DayTimeComparison(Request $request)
+    {
+        $data[] = [
+            "name" =>  "Mon.",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Tue.",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Wed.",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Thu.",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Fri.",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Sat.",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
+            ]
+        ];
+
+        $data[] = [
+            "name" =>  "Sun.",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
+            ]
+        ];
+
+        return parent::handleRespond($data);
+    }
+
+    public function DayTimeSentiment(Request $request)
+    {
+        $data['day_value'][] = [
+            "name" =>  "Negative",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70,
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "Neutral",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70,
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "Positive",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20,
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Negative",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Neutral",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Positive",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
+            ]
+        ];
+
+        return parent::handleRespond($data);
+    }
+
+    public function DayTimeLevel(Request $request)
+    {
+        $data['day_value'][] = [
+            "name" =>  "level 3",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "level 2",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "level 1",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "level 0",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 74
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "level 3",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "level 2",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "level 1",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "level 0",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40
+            ]
+        ];
+
+        return parent::handleRespond($data);
+    }
+
+    public function DayTimeType(Request $request)
+    {
+        $data['day_value'][] = [
+            "name" =>  "Hate Speech",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "Exclusion",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "Harassment",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "Gossip",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 74
+            ]
+        ];
+
+        $data['day_value'][] = [
+            "name" =>  "No Bully",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70,
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Hate Speech",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Exclusion",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Harassment",
+            "data" => [
+                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "Gossip",
+            "data" => [
+                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40
+            ]
+        ];
+
+        $data['time_value'][] = [
+            "name" =>  "No Bully",
+            "data" => [
+                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
+            ]
+        ];
+
+        return parent::handleRespond($data);
     }
 }
