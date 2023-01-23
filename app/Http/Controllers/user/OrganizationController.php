@@ -88,4 +88,36 @@ class OrganizationController extends Controller
         return $this->update($request, BaseModel::DELETE_TEXT);
     }
 
+    public function search(Request $request) {
+
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        
+        $data = Organization::join('user_organization_types', 'user_organization_types.id', '=', 'organizations.organization_type_id')
+            ->join('user_organization_groups', 'user_organization_groups.id', '=', 'organizations.organization_group_id')
+            ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group')
+            ->offset($start)->limit($limit);
+
+        if ($request->name !== null) {
+            $data->where('organizations.name','like', "%$request->name%");
+        }
+
+        if ($request->status !== null) {
+            $data->where('organizations.status', $request->status);
+        }
+
+        if ($request->group !== null) {
+            $data->where('organizations.organization_group_id', $request->group);
+        }
+
+        if ($request->type !== null) {
+            $data->where('organizations.organization_type_id', $request->type);
+        }
+
+        return parent::handleRespond($data->get());
+        
+    }
+
 }
