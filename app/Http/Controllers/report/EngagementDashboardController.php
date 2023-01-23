@@ -1358,6 +1358,7 @@ class EngagementDashboardController extends Controller
 //        dd($current, $previous);
 
         foreach ($current as $key => $item) {
+            $previous_total = isset($previous[$key]['total']) ? $previous[$key]['total'] : 0;
             $data[] = [
                 'message_id' => $item['message_id'],
                 'infulencer' => $item['infulencer'],
@@ -1365,8 +1366,8 @@ class EngagementDashboardController extends Controller
                 "share" => $item['share'],
                 "comment" => $item['comment'],
                 "reaction" => $item['reaction'],
-                "period_over_preiod" => $item['total'] - $previous[$key]['total'],
-                "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
+                "period_over_preiod" => $item['total'] - $previous_total,
+                "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous_total),
 
             ];
         }
