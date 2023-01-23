@@ -1270,7 +1270,9 @@ class SentimentDashboardController extends Controller
 //                ]
 //            ],
 //        ];
-
+        if ($data) {
+            $data = array_values($data);
+        }
 
         return parent::handleRespond($data);
     }
