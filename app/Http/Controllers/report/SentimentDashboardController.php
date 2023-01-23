@@ -1284,7 +1284,7 @@ class SentimentDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])->whereIn('classification_type_id', [1]);
 
         $items = $raw->get();
-
+        $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
         foreach ($items as $item) {
