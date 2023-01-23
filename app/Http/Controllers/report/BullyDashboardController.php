@@ -869,6 +869,8 @@ class BullyDashboardController extends Controller
             ->where('classification_type_id', 2)->get();
 
         $all = 0;
+
+        $data = [];
         foreach ($bully as $item) {
             $data['all'] = [
                 'keyword_name' => "all",
