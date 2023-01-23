@@ -50,6 +50,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::post('/create', [UserController::class, 'create']);
             Route::put('/update/{user}', [UserController::class, 'update']);
             Route::delete('/delete/{user}', [UserController::class, 'delete']);
+            Route::get('/search', [UserController::class, 'search']);
         });
         // organization-type
         Route::group(['prefix' => 'organization-type'], function () {

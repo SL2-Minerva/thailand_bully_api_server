@@ -120,4 +120,30 @@ class UserController extends Controller
         }
 
     }
+
+    public function search(Request $request) 
+    {
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        
+        $user = User::query()->offset($start)->limit($limit);
+
+
+        if ($request->name) {
+            $user = $user->where('name', 'like', "%$request->name%");
+        }
+
+        if ($request->status) {
+            $user = $user->where('status', $request->status);
+        }
+
+
+        if ($request->organization_id) {
+            $user = $user->where('organization_id', $request->organization_id);
+        }
+
+        return parent::handleRespond($user->get());
+    }
 }
