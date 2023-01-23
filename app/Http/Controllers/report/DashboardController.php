@@ -116,7 +116,8 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function dailyMessageLevelThree(Request $request) {
+    public function dailyMessageLevelThree(Request $request)
+    {
 
         $campaign_id = $request->campaign_id ?? null;
         if (!$campaign_id) {
@@ -147,18 +148,18 @@ class DashboardController extends Controller
             $total = $total->where('source_id', $source);
         }
 
-        foreach($message->get() as $item) {
+        foreach ($message->get() as $item) {
             $data_push = [
-                "message_id"=> $item->message_id,
-                "message_detail"=> $item->full_message,
-                "account_name"=> $item->author,
-                "post_date"=> Carbon::parse($item->created_at)->format('Y/m/d'),
-                "post_time"=> Carbon::parse($item->created_at)->format('h:i'),
-                "day"=> Carbon::parse($item->created_at)->diffInDays(Carbon::now()),
-                "device"=> $item->device,
-                "channel"=> $item->source_id,
-                "bully_level"=> "level 3",
-                "bully_type"=> $item->message_type
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->created_at)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->created_at)->format('h:i'),
+                "day" => Carbon::parse($item->created_at)->diffInDays(Carbon::now()),
+                "device" => $item->device,
+                "channel" => $item->source_id,
+                "bully_level" => "level 3",
+                "bully_type" => $item->message_type
 
             ];
 
@@ -169,18 +170,60 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function dailyMessageLevelFour(Request $request) {
+
+    private function factoryDataLevelFour($start_date, $end_date, $condition = null)
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->where('message_type', 'Post')
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        if (isset($condition['classification_type_id']) && $condition['classification_type_id']) {
+            $raw = $raw->whereIn('classification_type_id', $condition['classification_type_id']);
+        }
+
+        if (isset($condition['source_id']) && $condition['source_id']) {
+            $raw = $raw->whereIn('source_id', $condition['source_id']);
+        }
+
+        if (isset($condition['keyword_id']) && $condition['keyword_id']) {
+            $raw = $raw->whereIn('keyword_id', $condition['keyword_id']);
+        }
+
+
+
+        $items = $raw->get();
+//        dd($items);
+
+    }
+
+    public function dailyMessageLevelFour(Request $request)
+    {
 
         $campaign_id = $request->campaign_id;
         $keyword_id = $request->keyword_id ?? null;
         $message_id = $request->message_id ?? null;
-        $start_date = $this->date_carbon($request->start_date) ?? null;
-        $end_date = $this->date_carbon($request->end_date) ?? null;
-        $source = $request->source ?? null;
 
-        if (!$campaign_id) {
+        $report_number = $request->report_number ?? null;
+        $data = null;
+
+//
+        if (!$this->campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
+
+
+        $condition_root = [
+            'root' => true,
+            "message_id" => $message_id,
+            "keyword_id" => $keyword_id,
+            "report_number" => $report_number,
+            "classification_type_id" => [1]
+        ];
+
+        $parent = $this->factoryDataLevelFour($this->start_date, $this->end_date, $condition_root);
+
+
 
         $data = [];
         $roots = $this->getRootNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date);
@@ -229,7 +272,6 @@ class DashboardController extends Controller
     }
 
 
-
     private function dailyMessage($campaign_id, $start_date, $end_date, $source)
     {
         $table = 'daily_message';
@@ -242,7 +284,7 @@ class DashboardController extends Controller
         $table = 'percentage_of_messages';
         $column = 'total_at_keyword';
 
-        return  $this->getDataByCondition($table, $campaign_id, $start_date, $end_date, $keyword_id, $source_id, $column, 'percentage', ['group_by' => ['keyword_name']]);
+        return $this->getDataByCondition($table, $campaign_id, $start_date, $end_date, $keyword_id, $source_id, $column, 'percentage', ['group_by' => ['keyword_name']]);
     }
 
     public function keyStats(Request $request)
@@ -276,7 +318,7 @@ class DashboardController extends Controller
             "neutral_value" => (float)self::point_two_digits($current['results']),
             "sentiment_percentage" => $current['sentiment_percentage'],
             "pervious_sentiment" => (float)self::point_two_digits($pervious['results']),
-            "text" =>$current['text']
+            "text" => $current['text']
         ]);
     }
 
@@ -304,7 +346,7 @@ class DashboardController extends Controller
                 }
             }
 
-            $sentiment_score = ( ((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral) ) * 5;
+            $sentiment_score = (((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
         }
 
 
@@ -322,7 +364,7 @@ class DashboardController extends Controller
             $percentage = 40;
         } else if ($sentiment_score >= 3 && $sentiment_score <= 3.0) {
             $percentage = 60;
-        } else if ($sentiment_score >= 4 ) {
+        } else if ($sentiment_score >= 4) {
             $percentage = 80;
         }
 
@@ -334,13 +376,14 @@ class DashboardController extends Controller
 
     }
 
-    private function closest_sentiment_score ( $target) {
+    private function closest_sentiment_score($target)
+    {
 
-        if ( $target <= 40) {
+        if ($target <= 40) {
             return 'Negative';
         }
 
-        if (($target >= 41 && $target <= 70 )) {
+        if (($target >= 41 && $target <= 70)) {
             return 'Neutral';
         }
 
@@ -393,7 +436,8 @@ class DashboardController extends Controller
     }
 
 
-    private function totalData($table, $colum, $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period) {
+    private function totalData($table, $colum, $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period)
+    {
 
         $start_date = $this->date_carbon($start_date);
         $end_date = $this->date_carbon($end_date);
@@ -421,7 +465,7 @@ class DashboardController extends Controller
         $comparison = $total_current - $total_previous;
         $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
 
-        if($percentage == -100) {
+        if ($percentage == -100) {
             $percentage = 0;
         }
 
@@ -433,6 +477,7 @@ class DashboardController extends Controller
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
+
     private function totalMessages($campaign_id, $start_date, $end_date, $source, $period, $start_date_period, $end_date_period)
     {
         return $this->totalData('percentage_of_messages', 'total_at_keyword', $campaign_id, $start_date, $end_date, $period, $start_date_period, $end_date_period);
@@ -476,7 +521,7 @@ class DashboardController extends Controller
                 "engagement" => $this->point_two_digits($engagement),
                 "accounts" => $this->point_two_digits($accounts),
                 "average_message" => $this->point_two_digits($message / $diff_date),
-                "average_engagement" =>  $this->point_two_digits($engagement / $diff_date),
+                "average_engagement" => $this->point_two_digits($engagement / $diff_date),
             ];
 
             $data[] = $data_push;
@@ -553,8 +598,8 @@ class DashboardController extends Controller
                 $percentage = self::point_two_digits(($value / $message_total) * 100);
             }
             $data[$keyword_id]['value'][] = [
-                'keyword'=> $value['keyword_name'],
-                'keyword_id'=> $value['keyword_id'],
+                'keyword' => $value['keyword_name'],
+                'keyword_id' => $value['keyword_id'],
                 'percentage' => $message_total,
                 "no_of_message" => $this->point_two_digits($message_total),
                 "type" => ($message_total >= 0 ? "plus" : "minus"),
@@ -575,8 +620,8 @@ class DashboardController extends Controller
     private function topHashtag($campaign_id, $start_date, $end_date)
     {
         $dummy_data[] = [
-            "id" =>  1,
-            "hashtag" =>  '#hashtag1',
+            "id" => 1,
+            "hashtag" => '#hashtag1',
             "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
@@ -584,8 +629,8 @@ class DashboardController extends Controller
         ];
 
         $dummy_data[] = [
-            "id" =>  2,
-            "hashtag" =>  '#hashtag2',
+            "id" => 2,
+            "hashtag" => '#hashtag2',
             "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
@@ -593,8 +638,8 @@ class DashboardController extends Controller
         ];
 
         $dummy_data[] = [
-            "id" =>  3,
-            "hashtag" =>  '#hashtag3',
+            "id" => 3,
+            "hashtag" => '#hashtag3',
             "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
@@ -602,8 +647,8 @@ class DashboardController extends Controller
         ];
 
         $dummy_data[] = [
-            "id" =>  4,
-            "hashtag" =>  '#hashtag4',
+            "id" => 4,
+            "hashtag" => '#hashtag4',
             "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
@@ -611,8 +656,8 @@ class DashboardController extends Controller
         ];
 
         $dummy_data[] = [
-            "id" =>  5,
-            "hashtag" =>  '#hashtag5',
+            "id" => 5,
+            "hashtag" => '#hashtag5',
             "keyword_id" => 1,
             "no_of_message" => 1000,
             "percentage" => 1000,
@@ -669,7 +714,7 @@ class DashboardController extends Controller
             ->whereBetween('date_m', [$start_date, $end_date])
             ->groupBy('keyword_name', 'source_id')
             ->get();
-        $data = $this->factorListData($total_keywords, 'shareofvoice', $campaign_id, $start_date, $end_date, null, 'daily_message', 'total_at_date' );
+        $data = $this->factorListData($total_keywords, 'shareofvoice', $campaign_id, $start_date, $end_date, null, 'daily_message', 'total_at_date');
 
 //        foreach ($total_keywords as $item) {
 //            $keyword_id = $item->keyword_id;
@@ -717,12 +762,11 @@ class DashboardController extends Controller
             return parent::handleNotFound('Campaign id is required');
         }
 
-        $start_date = $request->start_date ;
+        $start_date = $request->start_date;
         $end_date = $request->end_date;
 
         $raw_query = MessageResultSemetic::where('campaign_id', $campaign_id)
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
-
 
 
         if ($start_date && $end_date) {
@@ -740,8 +784,8 @@ class DashboardController extends Controller
 
         if ($results) {
 
-            foreach ($results as  $result) {
-               $total_s[$result->classification_name] = $total_s[$result->classification_name] + $result->total_sem;
+            foreach ($results as $result) {
+                $total_s[$result->classification_name] = $total_s[$result->classification_name] + $result->total_sem;
             }
 
             foreach ($results as $index => $result) {
@@ -752,8 +796,8 @@ class DashboardController extends Controller
                     'campaign_id' => $result->campaign_id,
                     'campaign_name' => $result->campaign_name,
                     'organization_id' => 1,
-                    'organizations_name' =>  'organizations_name 1',
-                    'negative' =>  $total_s['Negative'],
+                    'organizations_name' => 'organizations_name 1',
+                    'negative' => $total_s['Negative'],
                     'neutral' => $total_s['Neutral'],
                     'positive' => $total_s['Positive'],
                 ];
@@ -1549,7 +1593,6 @@ class DashboardController extends Controller
     {
         $message_keyword = [];
         $message_total = 0;
-
 
 
         foreach ($items as $object) {
