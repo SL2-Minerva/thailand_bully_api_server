@@ -573,7 +573,7 @@ class DashboardController extends Controller
         $message_keyword = [];
         $message_total = 0;
 
-        $total_keywords = DB::table('tbl_message_top_sites')
+        $total_keywords = DB::table('message_top_sites')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->groupBy('keyword_name')
