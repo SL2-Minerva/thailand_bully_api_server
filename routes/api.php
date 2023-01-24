@@ -229,6 +229,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/engagement-type-comparison', [EngagementDashboardController::class, 'EngagementTypeComparison']);
         Route::get('/engagement-action-comparison', [EngagementDashboardController::class, 'EngagementActionComparison']);
         Route::get('/engagement-infulencer', [EngagementDashboardController::class, 'EngagementByInfulencer']);
+        Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
 
     });
 

@@ -2103,4 +2103,52 @@ class EngagementDashboardController extends Controller
         return $data;
 
     }
+
+
+    public function keywordByEngagementType(Request $request) {
+        $jayParsedAry = [
+            "labels" => [
+                "Share of Voice",
+                "Comments",
+                "Reaction"
+            ],
+            "value" => [
+                [
+                    "id" => 1,
+                    "keyword_name" => "keyword 1",
+                    "campaign_id" => 1,
+                    "campaign_name" => "ทดสอบ การเมือง",
+                    "data" => [
+                        13,
+                        8,
+                        15
+                    ]
+                ],
+                [
+                    "id" => 2,
+                    "keyword_name" => "keyword 2",
+                    "campaign_id" => 1,
+                    "campaign_name" => "ทดสอบ การเมือง",
+                    "data" => [
+                        10,
+                        38,
+                        23
+                    ]
+                ],
+                [
+                    "id" => 3,
+                    "keyword_name" => "keyword 3",
+                    "campaign_id" => 1,
+                    "campaign_name" => "ทดสอบ การเมือง",
+                    "data" => [
+                        15,
+                        23,
+                        45
+                    ]
+                ]
+            ]
+        ];
+
+        return parent::handleRespond($jayParsedAry);
+    }
 }
