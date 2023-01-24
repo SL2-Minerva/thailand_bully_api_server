@@ -53,17 +53,16 @@ class RoleController extends Controller
                 $data = $res[BaseModel::DATA_TEXT];
 
                 $handle_data = [];
-
                 if (!$request->status || $request->status) {
                     $handle_data[BaseModel::STATUS] = $request->status ?? 1;
                 }
 
-                if ($request->name) {
-                    $handle_data[BaseModel::NAME] = $request->name;
+                if ($request->role_name) {
+                    $handle_data[BaseModel::ROLE_NAME] = $request->role_name;
                 }
 
-                if ($request->description) {
-                    $handle_data[BaseModel::DESCRIPTION] = $request->description;
+                if ($request->role_description) {
+                    $handle_data[BaseModel::ROLE_DESCRIPTION] = $request->role_description;
                 }
 
                 if ($request->authorized_report) {
