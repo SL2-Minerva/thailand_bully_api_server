@@ -1583,47 +1583,137 @@ class VoiceDashboardController extends Controller
 
     public function DayTimeSentiment(Request $request)
     {
-        $data['day_value'][] = [
-            "name" =>  "Negative",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70,
-            ]
-        ];
 
-        $data['day_value'][] = [
-            "name" =>  "Neutral",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70,
-            ]
-        ];
+        $raw_current = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
 
-        $data['day_value'][] = [
-            "name" =>  "Positive",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20,
-            ]
-        ];
+        $items = $raw_current->get();
 
-        $data['time_value'][] = [
-            "name" =>  "Negative",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
-            ]
-        ];
+        foreach ($items as $item) {
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            $date_h = Carbon::parse($item->date_m)->format('H');
 
-        $data['time_value'][] = [
-            "name" =>  "Neutral",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
+            if (isset($data['day_value'][$item->classification_name])) {
+                if ($date_d == "Mon") {
+                    $data['day_value'][$item->classification_name]["data"][0] += 1;
+                } else if ($date_d == "Tue") {
+                    $data['day_value'][$item->classification_name]["data"][1] += 1;
+                } else if ($date_d == "Wed") {
+                    $data['day_value'][$item->classification_name]["data"][2] += 1;
+                } else if ($date_d == "Thu") {
+                    $data['day_value'][$item->classification_name]["data"][3] += 1;
+                } else if ($date_d == "Fri") {
+                    $data['day_value'][$item->classification_name]["data"][4] += 1;
+                } else if ($date_d == "Sat") {
+                    $data['day_value'][$item->classification_name]["data"][5] += 1;
+                } else if ($date_d == "Sun") {
+                    $data['day_value'][$item->classification_name]["data"][6] += 1;
+                }
 
-        $data['time_value'][] = [
-            "name" =>  "Positive",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
+                if (isset($data['time_value'][$item->classification_name]["data"][$date_h])) {
+                    $data['time_value'][$item->classification_name]["data"][$date_h] += 1;
+                } else {
+                    $data['time_value'][$item->classification_name]["data"][$date_h] = 1;
+                }
+
+            } else {
+                $data['day_value'][$item->classification_name] = [
+                    "name" => $item->classification_name,
+                ];
+
+                $data['time_value'][$item->classification_name] = [
+                    "name" => $item->classification_name,
+                ];
+
+                for ($i = 0; $i < 7; $i++) {
+                    $data['day_value'][$item->classification_name]["data"][$i] = 0;
+                }
+
+                for ($i = 0; $i < 25; $i++) {
+                    $data['time_value'][$item->classification_name]["data"][$i] = 0;
+                }
+
+                if ($date_d == "Mon") {
+                    $data['day_value'][$item->classification_name]["data"][0] += 1;
+                } else if ($date_d == "Tue") {
+                    $data['day_value'][$item->classification_name]["data"][1] += 1;
+                } else if ($date_d == "Wed") {
+                    $data['day_value'][$item->classification_name]["data"][2] += 1;
+                } else if ($date_d == "Thu") {
+                    $data['day_value'][$item->classification_name]["data"][3] += 1;
+                } else if ($date_d == "Fri") {
+                    $data['day_value'][$item->classification_name]["data"][4] += 1;
+                } else if ($date_d == "Sat") {
+                    $data['day_value'][$item->classification_name]["data"][5] += 1;
+                } else if ($date_d == "Sun") {
+                    $data['day_value'][$item->classification_name]["data"][6] += 1;
+                }
+
+
+                if (isset($data['time_value'][$item->classification_name]["data"][$date_h])) {
+                    $data['time_value'][$item->classification_name]["data"][$date_h] += 1;
+                } else {
+                    $data['time_value'][$item->classification_name]["data"][$date_h] = 1;
+                }
+
+
+            }
+        }
+
+        foreach ($data as $key => $value) {
+            $data[$key] = array_values($value);
+        }
+
+        foreach ($data['day_value'] as $key => $value) {
+            $data['day_value'][$key]["data"] = array_values($value["data"]);
+        }
+
+        foreach ($data['time_value'] as $key => $value) {
+            $data['time_value'][$key]["data"] = array_values($value["data"]);
+        }
+//        $data['day_value'][] = [
+//            "name" =>  "Negative",
+//            "data" => [
+//                10, 20, 30, 40, 50, 60, 70,
+//            ]
+//        ];
+//
+//        $data['day_value'][] = [
+//            "name" =>  "Neutral",
+//            "data" => [
+//                10, 20, 30, 20, 60, 100, 70,
+//            ]
+//        ];
+//
+//        $data['day_value'][] = [
+//            "name" =>  "Positive",
+//            "data" => [
+//                10, 20, 20, 20, 60, 100, 20,
+//            ]
+//        ];
+//
+//        $data['time_value'][] = [
+//            "name" =>  "Negative",
+//            "data" => [
+//                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
+//            ]
+//        ];
+//
+//        $data['time_value'][] = [
+//            "name" =>  "Neutral",
+//            "data" => [
+//                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
+//            ]
+//        ];
+//
+//        $data['time_value'][] = [
+//            "name" =>  "Positive",
+//            "data" => [
+//                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
+//            ]
+//        ];
 
         return parent::handleRespond($data);
     }
