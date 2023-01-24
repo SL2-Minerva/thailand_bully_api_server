@@ -140,9 +140,11 @@ Route::group(['middleware' => ['api']], function () {
 
         });
 
-        Route::get('/keywords', [KeywordController::class, 'keywords']);
+
 
     });
+
+    Route::get('/keywords', [KeywordController::class, 'keywords']);
 
     Route::group(['prefix' => 'dashboard-overall'], function () {
         Route::get('/', [DashboardController::class, 'overAll']);

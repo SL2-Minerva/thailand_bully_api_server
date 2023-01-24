@@ -8,6 +8,7 @@ use App\Models\Campaign;
 use App\Models\Domain;
 use App\Models\Keyword;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Util\Exception;
 
 class KeywordController extends Controller
@@ -71,10 +72,14 @@ class KeywordController extends Controller
     public function keywords(Request $request) {
         $campaing_id = $request->campaing_id;
 
+
         if (!$campaing_id) return parent::handleNotFound();
 
-        $campaings = Keyword::where(Campaign::ID, $campaing_id)->get();
-        parent::handleRespond($campaings);
+        $campaings = DB::table('keywords')
+            ->where('campaign_id', $campaing_id)->get();
+
+
+        return parent::handleRespond($campaings);
 
     }
 }
