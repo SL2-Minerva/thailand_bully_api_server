@@ -1275,7 +1275,7 @@ class VoiceDashboardController extends Controller
 
         foreach ($items as $item) {
 
-            $date_format = Carbon::parse($item->date_m)->format('m/d');
+            $date_format = Carbon::parse($item->date_m)->format('m/d/Y');
             // date
             if (!isset($data[$date_format])) {
                 $date[$date_format] = 1;
@@ -1465,16 +1465,65 @@ class VoiceDashboardController extends Controller
 
     public function PeriodOverPeriod(Request $request)
     {
-        $data['total_messages'] = [
-            "total_message" => 40000,
-            "percentage" => "10",
-            "type" => "minus",
-        ];
+        $raw_current = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
 
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [1]);
+
+
+        $items_current = $raw_current->get();
+        $items_previous = $raw_previous->get();
+
+        $total_message_current = 0;
+        $total_message_previous = 0;
+
+        $total_account_current = [];
+        $total_account_previous = [];
+
+
+        foreach ($items_current as $current) {
+            $total_message_current += 1;
+            if (isset($total_account_current[$current->author])) {
+                $total_account_current[$current->author] += 1;
+            } else {
+                $total_account_current[$current->author] = 1;
+            }
+
+        }
+
+
+        foreach ($items_previous as $previous) {
+            $total_message_previous += 1;
+            if (isset($total_account_previous[$previous->author])) {
+                $total_account_previous[$previous->author] = $previous->author;
+            } else {
+                $total_account_previous[$previous->author] = $previous->author;
+            }
+
+        }
+
+
+
+        $date = [];
+
+        $total_account_current = count($total_account_current);
+        $total_account_previous = count($total_account_previous);
+
+        $data['total_messages'] = [
+            "total_message" => $total_message_current,
+            "percentage" => parent::point_two_digits($total_message_previous !== 0 ? ($total_message_current - $total_message_previous) / $total_message_previous * 100 : 0),
+            "type" => $total_message_current - $total_message_previous > 0 ? "plus" :"minus",
+        ];
+//
         $data['total_account'] = [
-            "total_message" => 200,
-            "percentage" => "20",
-            "type" => "plus",
+            "total_message" => $total_account_current,
+            "percentage" => parent::point_two_digits($total_account_previous !== 0 ? ($total_account_current - $total_account_previous) / $total_account_previous * 100 : 0),
+            "type" => $total_account_current - $total_account_previous > 0 ? "plus" :"minus",
         ];
 
         return parent::handleRespond($data);
@@ -1482,54 +1531,52 @@ class VoiceDashboardController extends Controller
 
     public function DayTimeComparison(Request $request)
     {
-        $data[] = [
-            "name" =>  "Mon.",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
-            ]
-        ];
 
-        $data[] = [
-            "name" =>  "Tue.",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
+        $raw_current = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
 
-        $data[] = [
-            "name" =>  "Wed.",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
+        $items = $raw_current->get();
 
-        $data[] = [
-            "name" =>  "Thu.",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
+        foreach ($items as $item) {
+            $date_h = Carbon::parse($item->date_m)->format('H');
+            $date_d = Carbon::parse($item->date_m)->format('D');
+//            dd($item->date_m, $test_h, $test_d);
 
-        $data[] = [
-            "name" =>  "Fri.",
-            "data" => [
-                10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 10, 20, 30, 40,
-            ]
-        ];
+            if (isset($data[$date_d])) {
+                if (isset($data[$date_d]["data"][$date_h])) {
+                    $data[$date_d]["data"][$date_h] += 1;
+                } else {
+                    $data[$date_d]["data"][$date_h] = 1;
+                }
+            } else {
+                $data[$date_d] = [
+                    "name" => $date_d,
+                ];
 
-        $data[] = [
-            "name" =>  "Sat.",
-            "data" => [
-                10, 20, 30, 20, 60, 100, 70, 40, 90, 140, 20, 20, 100, 70, 40, 90, 140, 80, 10, 20, 30, 20, 60, 100,
-            ]
-        ];
+                for ($i = 0; $i < 24; $i++) {
+                    $data[$date_d]["data"][$i] = 0;
+                }
 
-        $data[] = [
-            "name" =>  "Sun.",
-            "data" => [
-                10, 20, 20, 20, 60, 100, 20, 20, 30, 20, 60, 100, 100, 70, 90, 100, 10, 80, 10, 20, 90, 140, 20, 20,
-            ]
-        ];
+                if (isset($data[$date_d]["data"][$date_h])) {
+                    $data[$date_d]["data"][$date_h] += 1;
+                } else {
+                    $data[$date_d]["data"][$date_h] = 1;
+                }
+
+
+            }
+        }
+
+
+        foreach ($data as $key => $value) {
+            $data[$key]["data"] = array_values($value["data"]);
+        }
+
+        if ($data) {
+            $data = array_values($data);
+        }
 
         return parent::handleRespond($data);
     }
