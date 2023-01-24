@@ -1262,145 +1262,203 @@ class VoiceDashboardController extends Controller
 
     public function NumberOfAccount(Request $request)
     {
-        $data[] = [
-            "name" =>  "Keyword 1",
-            "data" => [
-                44,
-                55,
-                41,
-                67,
-                22,
-                43,
-                21,
-                49,
-                29,
-                36,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
+        $data = null;
 
-        $data[] = [
-            "name" =>  "Keyword 2",
-            "data" => [
-                13,
-                23,
-                20,
-                8,
-                13,
-                27,
-                33,
-                12,
-                29,
-                34,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->where('message_type', 'Post')
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
 
-        $data[] = [
-            "name" =>  "Keyword 3",
-            "data" => [
-                11,
-                17,
-                15,
-                15,
-                21,
-                14,
-                15,
-                13,
-                65,
-                29,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
+        $items = $raw->get();
+        $date = [];
 
-        $data[] = [
-            "name" =>  "Keyword 4",
-            "data" => [
-                44,
-                55,
-                41,
-                67,
-                22,
-                43,
-                21,
-                49,
-                58,
-                37,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
+        foreach ($items as $item) {
 
-        $data[] = [
-            "name" =>  "Keyword 5",
-            "data" => [
-                30,
-                23,
-                20,
-                8,
-                13,
-                27,
-                33,
-                12,
-                62,
-                43,
-            ],
-            "date" => [
-                "01/10",
-                "02/10",
-                "03/10",
-                "04/10",
-                "05/10",
-                "06/10",
-                "07/10",
-                "08/10",
-                "09/10",
-                "10/10",
-            ]
-        ];
+            $date_format = Carbon::parse($item->date_m)->format('m/d');
+            // date
+            if (!isset($data[$date_format])) {
+                $date[$date_format] = 1;
+            }
+
+            if (isset($data[$item->keyword_id])) {
+
+                if (isset($data[$item->keyword_id]['data'][$date_format])) {
+                    $data[$item->keyword_id]['data'][$date_format] += 1;
+                } else {
+                    $data[$item->keyword_id]['data'][$date_format] = 1;
+                }
+
+                $data[$item->keyword_id]['date'][$date_format] = $date_format;
+            } else {
+                $data[$item->keyword_id] = [
+                    "name" => $item->keyword_name,
+                ];
+
+                if (isset($data[$item->keyword_id]['data'][$date_format])) {
+                    $data[$item->keyword_id]['data'][$date_format] += 1;
+                } else {
+                    $data[$item->keyword_id]['data'][$date_format] = 1;
+                }
+
+
+                if (!isset($data[$item->keyword_id]['date'][$date_format])) {
+                    $data[$item->keyword_id]['date'][$date_format] = $date_format;
+                }
+            }
+        }
+
+
+
+        foreach ($data as $keyword_id => $item) {
+
+            $data[$keyword_id]['date'] = array_values($item['date']);
+            $data[$keyword_id]['data'] = array_values($item['data']);
+        }
+
+        if ($data) {
+            $data = array_values($data);
+        }
+
+//        $data[] = [
+//            "name" =>  "Keyword 1",
+//            "data" => [
+//                44,
+//                55,
+//                41,
+//                67,
+//                22,
+//                43,
+//                21,
+//                49,
+//                29,
+//                36,
+//            ],
+//            "date" => [
+//                "01/10",
+//                "02/10",
+//                "03/10",
+//                "04/10",
+//                "05/10",
+//                "06/10",
+//                "07/10",
+//                "08/10",
+//                "09/10",
+//                "10/10",
+//            ]
+//        ];
+//
+//        $data[] = [
+//            "name" =>  "Keyword 2",
+//            "data" => [
+//                13,
+//                23,
+//                20,
+//                8,
+//                13,
+//                27,
+//                33,
+//                12,
+//                29,
+//                34,
+//            ],
+//            "date" => [
+//                "01/10",
+//                "02/10",
+//                "03/10",
+//                "04/10",
+//                "05/10",
+//                "06/10",
+//                "07/10",
+//                "08/10",
+//                "09/10",
+//                "10/10",
+//            ]
+//        ];
+//
+//        $data[] = [
+//            "name" =>  "Keyword 3",
+//            "data" => [
+//                11,
+//                17,
+//                15,
+//                15,
+//                21,
+//                14,
+//                15,
+//                13,
+//                65,
+//                29,
+//            ],
+//            "date" => [
+//                "01/10",
+//                "02/10",
+//                "03/10",
+//                "04/10",
+//                "05/10",
+//                "06/10",
+//                "07/10",
+//                "08/10",
+//                "09/10",
+//                "10/10",
+//            ]
+//        ];
+//
+//        $data[] = [
+//            "name" =>  "Keyword 4",
+//            "data" => [
+//                44,
+//                55,
+//                41,
+//                67,
+//                22,
+//                43,
+//                21,
+//                49,
+//                58,
+//                37,
+//            ],
+//            "date" => [
+//                "01/10",
+//                "02/10",
+//                "03/10",
+//                "04/10",
+//                "05/10",
+//                "06/10",
+//                "07/10",
+//                "08/10",
+//                "09/10",
+//                "10/10",
+//            ]
+//        ];
+//
+//        $data[] = [
+//            "name" =>  "Keyword 5",
+//            "data" => [
+//                30,
+//                23,
+//                20,
+//                8,
+//                13,
+//                27,
+//                33,
+//                12,
+//                62,
+//                43,
+//            ],
+//            "date" => [
+//                "01/10",
+//                "02/10",
+//                "03/10",
+//                "04/10",
+//                "05/10",
+//                "06/10",
+//                "07/10",
+//                "08/10",
+//                "09/10",
+//                "10/10",
+//            ]
+//        ];
 
         return parent::handleRespond($data);
     }
