@@ -15,7 +15,6 @@ class CampaignController extends Controller
     public function index(Request $request)
     {
 
-
         $campaigns = Campaign::all();
 
         if ($request->organization_id) {
@@ -57,8 +56,6 @@ class CampaignController extends Controller
     public function show(Request $request)
     {
         $id = $request->id;
-
-
 
         $res = $this->find($id);
         if ($res[BaseModel::STATUS] !== 200) return parent::handleNotFound($res, $res[BaseModel::STATUS]);
