@@ -163,7 +163,6 @@ Route::group(['middleware' => ['api']], function () {
     Route::group(['prefix' => 'dashboard-voice'], function () {
         Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
         Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
-        // new
         Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
 
         Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDayold']);
@@ -175,16 +174,27 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/message-by-level', [VoiceDashboardController::class, 'MessageByLevelold']);
         Route::get('/message-by-type', [VoiceDashboardController::class, 'MessageByTypeold']);
 
-
+        Route::get('/number-of-account-period-over-period', [VoiceDashboardController::class, 'NumberOfAccountPeriodOverPeriod']);
         Route::get('/number-of-account', [VoiceDashboardController::class, 'NumberOfAccount']);
         Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
+
+        //todo
+        Route::get('daytime-by', [VoiceDashboardController::class, 'daytimeBy']);
+
         Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);
         Route::get('/day-time-sentiment', [VoiceDashboardController::class, 'DayTimeSentiment']);
         Route::get('/day-time-level', [VoiceDashboardController::class, 'DayTimeLevel']);
         Route::get('/day-time-type', [VoiceDashboardController::class, 'DayTimeType']);
+
+        //todo
+        Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
+
         Route::get('/channel-platform', [VoiceDashboardController::class, 'ChannelPlatform']);
         Route::get('/device', [VoiceDashboardController::class, 'Device']);
         Route::get('/channel-device', [VoiceDashboardController::class, 'ChannelDevice']);
+
+        //todo
+        Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
 
         Route::get('/keyword-channel', [VoiceDashboardController::class, 'KeywordChannel']);
         Route::get('/keyword-sentiment', [VoiceDashboardController::class, 'KeywordSentiment']);

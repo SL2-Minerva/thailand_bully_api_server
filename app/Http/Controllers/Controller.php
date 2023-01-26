@@ -200,7 +200,7 @@ class Controller extends BaseController
 
     public static function listSource()
     {
-        $sources = Sources::all();
+        $sources = Sources::where('status', 1)->get();
         $data['labels'] = [];
 
         foreach ($sources as $source) {

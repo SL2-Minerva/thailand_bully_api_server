@@ -557,7 +557,6 @@ class VoiceDashboardController extends Controller
 
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                 }
-
             }
         }
 
@@ -617,7 +616,7 @@ class VoiceDashboardController extends Controller
             }
         }
 
-        if ($data) {
+        if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
 
@@ -643,7 +642,8 @@ class VoiceDashboardController extends Controller
 
     }
 
-    private function messageByLevel($raw = null) {
+    private function messageByLevel($raw = null)
+    {
         $data = [];
 
         if (!$raw) {
@@ -705,7 +705,6 @@ class VoiceDashboardController extends Controller
             ->whereIn('classification_type_id', [3]);
 
 
-
 //        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
 //            ->whereBetween('date_m', [$this->start_date, $this->end_date])
 //            ->where('classification_type_id', 3);
@@ -747,7 +746,8 @@ class VoiceDashboardController extends Controller
     }
 
 
-    private function messageByType($raw = null) {
+    private function messageByType($raw = null)
+    {
         $data = [];
 
         if (!$raw) {
@@ -798,6 +798,7 @@ class VoiceDashboardController extends Controller
 
         return $data;
     }
+
     public function MessageByTypeold(Request $request)
     {
         $raw = DB::table('message_result_full_data')
@@ -808,115 +809,6 @@ class VoiceDashboardController extends Controller
         return parent::handleRespond($this->messageByType($raw));
     }
 
-    public function ChannelPlatform(Request $request)
-    {
-        $label = Sources::where('status', 1)->get();
-
-        $data['current_period']['label'] = [];
-        $data['previous_period']['label'] = [];
-
-        foreach ($label as $item) {
-            $data['current_period']['label'][] = $item->name;
-            $data['current_period']['data'][] = 0;
-
-            $data['previous_period']['label'][] = $item->name;
-            $data['previous_period']['data'][] = 0;
-        }
-
-        $items_current = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-
-        $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
-
-        foreach ($items_current->get() as $item) {
-            $index_label = 0;
-            $index_label = array_search($item->source_name, $data['current_period']['label']);
-
-            if (isset($data['current_period']['data'])) {
-                $data['current_period']['data'][$index_label] += $item->total_at_date;
-            } else {
-                $data['current_period'] = [
-                    'data' => [0, 0, 0, 0, 0, 0]
-                ];
-
-                $data['current_period']['data'][$index_label] += $item->total_at_date;
-            }
-        }
-
-        $data['current_period']['total'] = array_sum($data['current_period']['data']);
-
-        foreach ($items_previous->get() as $item) {
-            $index_label = 0;
-            $index_label = array_search($item->source_name, $data['previous_period']['label']);
-
-            if (isset($data['previous_period']['data'])) {
-                $data['previous_period']['data'][$index_label] += $item->total_at_date;
-            } else {
-                $data['previous_period'] = [
-                    'data' => [0, 0, 0, 0, 0, 0]
-                ];
-
-                $data['previous_period']['data'][$index_label] += $item->total_at_date;
-            }
-        }
-
-        $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
-
-        return parent::handleRespond($data);
-    }
-
-    public function Device(Request $request)
-    {
-        $data['previous_period']['label'] = [
-            "Andriod",
-            "Iphone",
-            "Web App"
-        ];
-
-        $data['current_period']['label'] = [
-            "Andriod",
-            "Iphone",
-            "Web App"
-        ];
-
-        $data['previous_period']['data'] = [0, 0, 0];
-        $data['current_period']['data'] = [0, 0, 0];
-
-        $items_current = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-        $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
-
-        foreach ($items_current->get() as $item) {
-            if ($item->device === "android") {
-                $data['current_period']['data'][0] += $item->total_at_date;
-            }
-            if ($item->device === "iphone") {
-                $data['current_period']['data'][1] += $item->total_at_date;
-            }
-            if ($item->device === "webapp") {
-                $data['current_period']['data'][2] += $item->total_at_date;
-            }
-        }
-        $data['current_period']['total'] = array_sum($data['current_period']['data']);
-
-
-        foreach ($items_previous->get() as $item) {
-            if ($item->device === "android") {
-                $data['previous_period']['data'][0] += $item->total_at_date;
-            }
-            if ($item->device === "iphone") {
-                $data['previous_period']['data'][1] += $item->total_at_date;
-            }
-            if ($item->device === "webapp") {
-                $data['previous_period']['data'][2] += $item->total_at_date;
-            }
-        }
-        $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
-
-        return parent::handleRespond($data);
-    }
 
     public function ChannelDevice(Request $request)
     {
@@ -945,307 +837,305 @@ class VoiceDashboardController extends Controller
 
     public function KeywordSentiment(Request $request)
     {
-        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+        $data = null;
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('classification_type_id', 1);
+            ->whereIn('classification_type_id', [1]);
 
-        $level = Classification::where('classification_type_id', 1)->get();
-        $data['labels'] = [];
 
-        foreach ($level as $item) {
-            $data['labels'][] = $item->name;
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        foreach ($items->get() as $item) {
-
-            $index_label = 0;
-            $index_label = array_search($item->classification_name, $data['labels']);
-
-
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            }
-
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
+//
+        $items = $raw->get();
+//
+//        foreach ($items as $item) {
+//            if ($data[''])
+//        }
+//
 
+//        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+//            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+//            ->where('classification_type_id', 1);
+//
+//        $level = Classification::where('classification_type_id', 1)->get();
+//        $data['labels'] = [];
+//
+//        foreach ($level as $item) {
+//            $data['labels'][] = $item->name;
+//        }
+//
+//        foreach ($items->get() as $item) {
+//
+//            $index_label = 0;
+//            $index_label = array_search($item->classification_name, $data['labels']);
+//
+//
+//            if (isset($data['value'][$item->keyword_id])) {
+//                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+//            } else {
+//                $data['value'][$item->keyword_id] = [
+//                    'id' => $item->keyword_id,
+//                    'keyword_id' => $item->keyword_id,
+//                    'keyword_name' => $item->keyword_name,
+//                    'data' => [0, 0, 0]
+//                ];
+//
+//                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+//            }
+//
+//        }
+//
+//
+//        if (isset($data['value'])) {
+//            $data['value'] = array_values($data['value']);
+//        }
 
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
-
-        return parent::handleRespond($data);
+        return parent::handleRespond($this->getKeywordSentiment(['items' => $items, 'raw' => $raw]));
     }
 
     public function KeywordBullyLevel(Request $request)
     {
-        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('classification_type_id', 3);
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $level = Classification::where('classification_type_id', 3)->get();
-        $data['labels'] = [];
+        $raw_wherein = $raw->whereIn('classification_type_id', [3]);
 
-        foreach ($level as $item) {
-            $data['labels'][] = $item->name;
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        foreach ($items->get() as $item) {
+        $items = $raw->get();
 
-            $index_label = 0;
-            $index_label = array_search($item->classification_name, $data['labels']);
-
-
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'data' => [0, 0, 0, 0]
-                ];
-
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            }
-
-        }
-
-
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
-
-        return parent::handleRespond($data);
+        return parent::handleRespond($this->getKeywordBullyLevel(['items' => $items, 'raw' => $raw]));
     }
 
     public function KeywordBullyType(Request $request)
     {
-
-        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('classification_type_id', 2);
-
-        $level = Classification::where('classification_type_id', 2)->get();
-        $data['labels'] = [];
-
-        foreach ($level as $item) {
-            $data['labels'][] = $item->name;
-        }
-
-        foreach ($items->get() as $item) {
-            $index_label = 0;
-            $index_label = array_search($item->classification_name, $data['labels']);
-
-
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'data' => [0, 0, 0, 0, 0, 0]
-                ];
-
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            }
-
-        }
-
-
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
-
-        return parent::handleRespond($data);
+        return parent::handleRespond($this->getKeywordBullyType());
     }
 
     public function KeywordChannel(Request $request)
     {
 
-        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-
-        $level = Sources::where('status', 1)->get();
-        $data['labels'] = [];
-
-        foreach ($level as $item) {
-            $data['labels'][] = $item->name;
-        }
-
-        foreach ($items->get() as $item) {
-            $index_label = 0;
-            $index_label = array_search($item->source_name, $data['labels']);
-
-
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'data' => [0, 0, 0, 0, 0, 0]
-                ];
-
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-            }
-
-        }
-
-
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
-
-        return parent::handleRespond($data);
-    }
-
-
-    public function NumberOfAccount(Request $request)
-    {
-        $data = null;
+//        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
+//            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+//
+//        $level = Sources::where('status', 1)->get();
+//        $data['labels'] = [];
+//
+//        foreach ($level as $item) {
+//            $data['labels'][] = $item->name;
+//        }
+//
+//        foreach ($items->get() as $item) {
+//            $index_label = 0;
+//            $index_label = array_search($item->source_name, $data['labels']);
+//
+//
+//            if (isset($data['value'][$item->keyword_id])) {
+//                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+//            } else {
+//                $data['value'][$item->keyword_id] = [
+//                    'id' => $item->keyword_id,
+//                    'keyword_id' => $item->keyword_id,
+//                    'keyword_name' => $item->keyword_name,
+//                    'data' => [0, 0, 0, 0, 0, 0]
+//                ];
+//
+//                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+//            }
+//
+//        }
+//
+//
+//        if (isset($data['value'])) {
+//            $data['value'] = array_values($data['value']);
+//        }
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->where('message_type', 'Post')
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        $raw_wherein = $raw->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $items = $raw->get();
-        $date = [];
-
-        foreach ($items as $item) {
-
-            $date_format = Carbon::parse($item->date_m)->format('m/d/Y');
-            // date
-            if (!isset($data[$date_format])) {
-                $date[$date_format] = 1;
-            }
-
-            if (isset($data[$item->keyword_id])) {
-
-                if (isset($data[$item->keyword_id]['data'][$date_format])) {
-                    $data[$item->keyword_id]['data'][$date_format] += 1;
-                } else {
-                    $data[$item->keyword_id]['data'][$date_format] = 1;
-                }
-
-                $data[$item->keyword_id]['date'][$date_format] = $date_format;
-            } else {
-                $data[$item->keyword_id] = [
-                    "name" => $item->keyword_name,
-                ];
-
-                if (isset($data[$item->keyword_id]['data'][$date_format])) {
-                    $data[$item->keyword_id]['data'][$date_format] += 1;
-                } else {
-                    $data[$item->keyword_id]['data'][$date_format] = 1;
-                }
 
 
-                if (!isset($data[$item->keyword_id]['date'][$date_format])) {
-                    $data[$item->keyword_id]['date'][$date_format] = $date_format;
-                }
-            }
-        }
+        return parent::handleRespond($this->getKeywordChannel(['raw' => $raw_wherein, 'items' => $items]));
+    }
 
 
-        foreach ($data as $keyword_id => $item) {
-
-            $data[$keyword_id]['date'] = array_values($item['date']);
-            $data[$keyword_id]['data'] = array_values($item['data']);
-        }
-
-        if ($data) {
-            $data = array_values($data);
-        }
-
+    public function NumberOfAccountPeriodOverPeriod(Request $request)
+    {
+        $data['numberOfAccount'] = $this->factoryNumberOfAccountPeriodOverPeriod('numberOfAccount');
+        $data['PeriodOverPeriod'] = $this->factoryNumberOfAccountPeriodOverPeriod('PeriodOverPeriod');
 
         return parent::handleRespond($data);
     }
 
+    private function factoryNumberOfAccountPeriodOverPeriod($type = null)
+    {
+        if ($type === 'numberOfAccount') {
+            $data = null;
+
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->where('message_type', 'Post')
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1]);
+
+            $items = $raw->get();
+            $date = [];
+
+            foreach ($items as $item) {
+
+                $date_format = Carbon::parse($item->date_m)->format('m/d/Y');
+                // date
+                if (!isset($data[$date_format])) {
+                    $date[$date_format] = 1;
+                }
+
+                if (isset($data[$item->keyword_id])) {
+
+                    if (isset($data[$item->keyword_id]['data'][$date_format])) {
+                        $data[$item->keyword_id]['data'][$date_format] += 1;
+                    } else {
+                        $data[$item->keyword_id]['data'][$date_format] = 1;
+                    }
+
+                    $data[$item->keyword_id]['date'][$date_format] = $date_format;
+                } else {
+                    $data[$item->keyword_id] = [
+                        "name" => $item->keyword_name,
+                    ];
+
+                    if (isset($data[$item->keyword_id]['data'][$date_format])) {
+                        $data[$item->keyword_id]['data'][$date_format] += 1;
+                    } else {
+                        $data[$item->keyword_id]['data'][$date_format] = 1;
+                    }
+
+
+                    if (!isset($data[$item->keyword_id]['date'][$date_format])) {
+                        $data[$item->keyword_id]['date'][$date_format] = $date_format;
+                    }
+                }
+            }
+
+
+            if ($data) {
+
+                foreach ($data as $keyword_id => $item) {
+
+                    $data[$keyword_id]['date'] = array_values($item['date']);
+                    $data[$keyword_id]['data'] = array_values($item['data']);
+                }
+
+                $data = array_values($data);
+            }
+
+
+            return $data;
+        }
+
+        if ($type === 'PeriodOverPeriod') {
+            $raw_current = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1]);
+
+            $raw_previous = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+                ->whereIn('classification_type_id', [1]);
+
+
+            $items_current = $raw_current->get();
+            $items_previous = $raw_previous->get();
+
+            $total_message_current = 0;
+            $total_message_previous = 0;
+
+            $total_account_current = [];
+            $total_account_previous = [];
+
+
+            foreach ($items_current as $current) {
+                $total_message_current += 1;
+                if (isset($total_account_current[$current->author])) {
+                    $total_account_current[$current->author] += 1;
+                } else {
+                    $total_account_current[$current->author] = 1;
+                }
+
+            }
+
+
+            foreach ($items_previous as $previous) {
+                $total_message_previous += 1;
+                if (isset($total_account_previous[$previous->author])) {
+                    $total_account_previous[$previous->author] = $previous->author;
+                } else {
+                    $total_account_previous[$previous->author] = $previous->author;
+                }
+
+            }
+
+
+            $date = [];
+
+            $total_account_current = count($total_account_current);
+            $total_account_previous = count($total_account_previous);
+
+            $data['total_messages'] = [
+                "total_message" => $total_message_current,
+                "percentage" => parent::point_two_digits($total_message_previous !== 0 ? ($total_message_current - $total_message_previous) / $total_message_previous * 100 : 0),
+                "type" => $total_message_current - $total_message_previous > 0 ? "plus" : "minus",
+            ];
+//
+            $data['total_account'] = [
+                "total_message" => $total_account_current,
+                "percentage" => parent::point_two_digits($total_account_previous !== 0 ? ($total_account_current - $total_account_previous) / $total_account_previous * 100 : 0),
+                "type" => $total_account_current - $total_account_previous > 0 ? "plus" : "minus",
+            ];
+
+            return $data;
+        }
+    }
+
+    public function NumberOfAccount(Request $request)
+    {
+        return parent::handleRespond($this->factoryNumberOfAccountPeriodOverPeriod('numberOfAccount'));
+    }
+
+
     public function PeriodOverPeriod(Request $request)
     {
-        $raw_current = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [1]);
-
-        $raw_previous = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
-            ->whereIn('classification_type_id', [1]);
-
-
-        $items_current = $raw_current->get();
-        $items_previous = $raw_previous->get();
-
-        $total_message_current = 0;
-        $total_message_previous = 0;
-
-        $total_account_current = [];
-        $total_account_previous = [];
-
-
-        foreach ($items_current as $current) {
-            $total_message_current += 1;
-            if (isset($total_account_current[$current->author])) {
-                $total_account_current[$current->author] += 1;
-            } else {
-                $total_account_current[$current->author] = 1;
-            }
-
-        }
-
-
-        foreach ($items_previous as $previous) {
-            $total_message_previous += 1;
-            if (isset($total_account_previous[$previous->author])) {
-                $total_account_previous[$previous->author] = $previous->author;
-            } else {
-                $total_account_previous[$previous->author] = $previous->author;
-            }
-
-        }
-
-
-        $date = [];
-
-        $total_account_current = count($total_account_current);
-        $total_account_previous = count($total_account_previous);
-
-        $data['total_messages'] = [
-            "total_message" => $total_message_current,
-            "percentage" => parent::point_two_digits($total_message_previous !== 0 ? ($total_message_current - $total_message_previous) / $total_message_previous * 100 : 0),
-            "type" => $total_message_current - $total_message_previous > 0 ? "plus" : "minus",
-        ];
-//
-        $data['total_account'] = [
-            "total_message" => $total_account_current,
-            "percentage" => parent::point_two_digits($total_account_previous !== 0 ? ($total_account_current - $total_account_previous) / $total_account_previous * 100 : 0),
-            "type" => $total_account_current - $total_account_previous > 0 ? "plus" : "minus",
-        ];
-
-        return parent::handleRespond($data);
+        return parent::handleRespond($this->factoryNumberOfAccountPeriodOverPeriod('PeriodOverPeriod'));
     }
 
     public function DayTimeComparison(Request $request)
     {
-
+        $data = null;
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $items = $raw_current->get();
 
@@ -1280,11 +1170,12 @@ class VoiceDashboardController extends Controller
         }
 
 
-        foreach ($data as $key => $value) {
-            $data[$key]["data"] = array_values($value["data"]);
-        }
-
         if ($data) {
+
+            foreach ($data as $key => $value) {
+                $data[$key]["data"] = array_values($value["data"]);
+            }
+
             $data = array_values($data);
         }
 
@@ -1293,7 +1184,7 @@ class VoiceDashboardController extends Controller
 
     public function DayTimeSentiment(Request $request)
     {
-
+        $data = null;
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -1301,6 +1192,10 @@ class VoiceDashboardController extends Controller
 
         $items = $raw_current->get();
 
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
+
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             $date_h = Carbon::parse($item->date_m)->format('H');
@@ -1372,27 +1267,36 @@ class VoiceDashboardController extends Controller
             }
         }
 
-        foreach ($data as $key => $value) {
-            $data[$key] = array_values($value);
+
+        if ($data) {
+            foreach ($data as $key => $value) {
+                $data[$key] = array_values($value);
+            }
+
+            foreach ($data['day_value'] as $key => $value) {
+                $data['day_value'][$key]["data"] = array_values($value["data"]);
+            }
+
+            foreach ($data['time_value'] as $key => $value) {
+                $data['time_value'][$key]["data"] = array_values($value["data"]);
+            }
         }
 
-        foreach ($data['day_value'] as $key => $value) {
-            $data['day_value'][$key]["data"] = array_values($value["data"]);
-        }
-
-        foreach ($data['time_value'] as $key => $value) {
-            $data['time_value'][$key]["data"] = array_values($value["data"]);
-        }
 
         return parent::handleRespond($data);
     }
 
     public function DayTimeLevel(Request $request)
     {
+        $data = null;
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [3]);
+
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $items = $raw_current->get();
 
@@ -1467,27 +1371,37 @@ class VoiceDashboardController extends Controller
             }
         }
 
-        foreach ($data as $key => $value) {
-            $data[$key] = array_values($value);
+
+        if ($data) {
+            foreach ($data as $key => $value) {
+                $data[$key] = array_values($value);
+            }
+
+            foreach ($data['day_value'] as $key => $value) {
+                $data['day_value'][$key]["data"] = array_values($value["data"]);
+            }
+
+            foreach ($data['time_value'] as $key => $value) {
+                $data['time_value'][$key]["data"] = array_values($value["data"]);
+            }
         }
 
-        foreach ($data['day_value'] as $key => $value) {
-            $data['day_value'][$key]["data"] = array_values($value["data"]);
-        }
-
-        foreach ($data['time_value'] as $key => $value) {
-            $data['time_value'][$key]["data"] = array_values($value["data"]);
-        }
 
         return parent::handleRespond($data);
     }
 
     public function DayTimeType(Request $request)
     {
+
+        $data = null;
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [2]);
+
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $items = $raw_current->get();
 
@@ -1562,20 +1476,463 @@ class VoiceDashboardController extends Controller
             }
         }
 
-        foreach ($data as $key => $value) {
-            $data[$key] = array_values($value);
-        }
 
-        foreach ($data['day_value'] as $key => $value) {
-            $data['day_value'][$key]["data"] = array_values($value["data"]);
-        }
+        if ($data) {
+            foreach ($data as $key => $value) {
+                $data[$key] = array_values($value);
+            }
 
-        foreach ($data['time_value'] as $key => $value) {
-            $data['time_value'][$key]["data"] = array_values($value["data"]);
+            foreach ($data['day_value'] as $key => $value) {
+                $data['day_value'][$key]["data"] = array_values($value["data"]);
+            }
+
+            foreach ($data['time_value'] as $key => $value) {
+                $data['time_value'][$key]["data"] = array_values($value["data"]);
+            }
         }
 
 
         return parent::handleRespond($data);
     }
+
+
+    public function channelPlatformChannelDevice(Request $request)
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [3]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+
+        $data['channel-platform'] = $this->getChannelPlatform(['raw' => $raw]);
+        $data['device'] = $this->getDevice(['raw' => $raw]);
+        $data['Channel-device'] = $this->getChannelDevice(['raw' => $raw]);
+        return parent::handleRespond($data);
+    }
+
+    public function ChannelPlatform(Request $request)
+    {
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [3]);
+
+        return parent::handleRespond($this->getChannelPlatform(['raw' => $raw]));
+    }
+
+    private function getChannelPlatform($condition = null)
+    {
+        $data = null;
+        $labels = parent::listSource();
+        $raw = $condition['raw'] ?? null;
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [3]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+        $items_previous = $raw_previous->get();
+
+        $data['current_period']['label'] = $labels['labels'];
+        $data['previous_period']['label'] = $labels['labels'];
+        $data['current_period']['total'] = 0;
+        $data['previous_period']['total'] = 0;
+
+        for ($i = 0; $i < count($labels['labels']); $i++) {
+            $data['current_period']['data'][] = 0;
+            $data['previous_period']['data'][] = 0;
+        }
+
+        if ($items) {
+            foreach ($items as $item) {
+                $index_label = array_search($item->source_name, $data['current_period']['label']);
+                $data['current_period']['data'][$index_label] += 1;
+                $data['current_period']['total'] += 1;
+            }
+        }
+
+        if ($items_previous) {
+            foreach ($items as $item) {
+                $index_label = array_search($item->source_name, $data['previous_period']['label']);
+                $data['previous_period']['data'][$index_label] += 1;
+                $data['previous_period']['total'] += 1;
+            }
+        }
+
+        return $data;
+    }
+
+    private function getDevice($condition = null)
+    {
+        $data = null;
+        $labels = ["labels" => ['Andriod', 'Iphone', 'Web App']];
+        $raw = $condition['raw'] ?? null;
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+        $items_previous = $raw_previous->get();
+
+        $data['current_period']['label'] = $labels['labels'];
+        $data['previous_period']['label'] = $labels['labels'];
+        $data['current_period']['total'] = 0;
+        $data['previous_period']['total'] = 0;
+
+        for ($i = 0; $i < count($labels['labels']); $i++) {
+            $data['current_period']['data'][] = 0;
+            $data['previous_period']['data'][] = 0;
+        }
+
+        if ($items) {
+            foreach ($items as $item) {
+
+
+                if ($item->device === "android") {
+                    $data['current_period']['data'][0] += 1;
+                }
+                if ($item->device === "iphone") {
+                    $data['current_period']['data'][1] += 1;
+                }
+                if ($item->device === "webapp") {
+                    $data['current_period']['data'][2] += 1;
+                }
+
+                $data['current_period']['total'] += 1;
+            }
+        }
+
+        if ($items_previous) {
+            foreach ($items as $item) {
+                if ($item->device === "android") {
+
+                    $data['previous_period']['data'][0] += 1;
+                }
+                if ($item->device === "iphone") {
+                    $data['previous_period']['data'][1] += 1;
+                }
+                if ($item->device === "webapp") {
+                    $data['previous_period']['data'][2] += 1;
+                }
+
+                $data['previous_period']['total'] += 1;
+            }
+        }
+
+        return $data;
+    }
+
+
+    public function Device(Request $request)
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+
+//        $data['previous_period']['label'] = [
+//            "Andriod",
+//            "Iphone",
+//            "Web App"
+//        ];
+//
+//        $data['current_period']['label'] = [
+//            "Andriod",
+//            "Iphone",
+//            "Web App"
+//        ];
+//
+//        $data['previous_period']['data'] = [0, 0, 0];
+//        $data['current_period']['data'] = [0, 0, 0];
+//
+//        $items_current = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+//            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+//        $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+//            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+//
+//        foreach ($items_current->get() as $item) {
+//            if ($item->device === "android") {
+//                $data['current_period']['data'][0] += $item->total_at_date;
+//            }
+//            if ($item->device === "iphone") {
+//                $data['current_period']['data'][1] += $item->total_at_date;
+//            }
+//            if ($item->device === "webapp") {
+//                $data['current_period']['data'][2] += $item->total_at_date;
+//            }
+//        }
+//        $data['current_period']['total'] = array_sum($data['current_period']['data']);
+//
+//
+//        foreach ($items_previous->get() as $item) {
+//            if ($item->device === "android") {
+//                $data['previous_period']['data'][0] += $item->total_at_date;
+//            }
+//            if ($item->device === "iphone") {
+//                $data['previous_period']['data'][1] += $item->total_at_date;
+//            }
+//            if ($item->device === "webapp") {
+//                $data['previous_period']['data'][2] += $item->total_at_date;
+//            }
+//        }
+//        $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
+
+        return parent::handleRespond($this->getDevice(['raw' => $raw]));
+    }
+
+
+    private function getChannelDevice($conditions = null)
+    {
+
+        $data = null;
+        $labels = ["labels" => ['Andriod', 'Iphone', 'Web App']];
+        $raw = $condition['raw'] ?? null;
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+        $items_previous = $raw_previous->get();
+    }
+
+    public function keywordBy(Request $request)
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+
+        $data['keyword-channel'] = $this->getKeywordChannel(['raw' => $raw, 'items' => $items]);
+        $data['keyword-sentiment'] = $this->getKeywordSentiment(['raw' => $raw, 'items' => $items]);
+        $data['keyword-bully-level'] = $this->getKeywordBullyLevel(['raw' => $raw, 'items' => $items]);
+        $data['keyword-bully-type'] = $this->getKeywordBullyType(['raw' => $raw, 'items' => $items]);
+
+        return parent::handleRespond($data);
+
+    }
+
+    private function getKeywordChannel($conditions = null)
+    {
+
+        $data = parent::listSource();
+        $raw = $conditions['raw'] ?? null;
+        $meesage_total = 0;
+//        $raw_previous = DB::table('message_result_full_data')
+//            ->where('campaign_id', $this->campaign_id)
+//            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+//            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+//            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+        if ($items) {
+            foreach ($items as $item) {
+                $meesage_total += 1;
+                $index_label = array_search($item->source_name, $data['labels']);
+                if (isset($data['value'][$item->keyword_id])) {
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->keyword_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_id' => $item->keyword_name,
+                        'keyword_name' => $item->keyword_name
+                    ];
+
+                    for ($i = 0; $i < count($data['labels']); $i++) {
+                        $data['value'][$item->keyword_id]['data'][] = 0;
+                    }
+
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
+            }
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
+    private function getKeywordSentiment($condition = null)
+    {
+        $data = null;
+        $raw = $condition['raw'] ?? null;
+
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [1]);
+
+        if (isset($condition['items']) && $condition['items']) {
+            $items = $condition['items'];
+        } else {
+            if ($this->keyword_id) {
+                $raw->whereIn('keyword_id', $this->keyword_id);
+                $raw_previous->whereIn('keyword_id', $this->keyword_id);
+            }
+            $items = $raw->get();
+        }
+
+        $sentiments = Classification::where('classification_type_id', 1)->get();
+        $message_total = 0;
+
+        foreach ($sentiments as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        if ($items) {
+            foreach ($items as $item) {
+                $index_label = array_search($item->classification_name, $data['labels']);
+                $message_total += 1;
+                if (isset($data['value'][$item->keyword_id])) {
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->keyword_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_id' => $item->keyword_id,
+                        'keyword_name' => $item->keyword_name,
+                        'data' => [0, 0, 0]
+                    ];
+
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
+            }
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
+    private function getKeywordBullyLevel($condition = null)
+    {
+        $data = null;
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [3]);
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [3]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $levels = Classification::where('classification_type_id', 3)->get();
+        $message_total = 0;
+
+        foreach ($levels as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        $items = $raw->get();
+        $items_previous = $raw_previous->get();
+
+        foreach ($items as $item) {
+            $index_label = array_search($item->classification_name, $data['labels']);
+            $message_total += 1;
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'data' => [0, 0, 0, 0]
+                ];
+
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            }
+        }
+        return $data;
+    }
+
+    private function getKeywordBullyType($condition = null)
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [2]);
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [2]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $levels = Classification::where('classification_type_id', 2)->get();
+        $message_total = 0;
+
+        foreach ($levels as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        $items = $raw->get();
+        $items_previous = $raw_previous->get();
+
+        foreach ($items as $item) {
+            $index_label = array_search($item->classification_name, $data['labels']);
+            $message_total += 1;
+            if (isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                ];
+
+                for ($i = 0; $i < count($data['labels']); $i++) {
+                    $data['value'][$item->keyword_id]['data'][] = 0;
+                }
+
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            }
+        }
+        return $data;
+    }
+
 
 }
