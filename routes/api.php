@@ -139,9 +139,6 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/list', [SourceController::class, 'index']);
 
         });
-
-
-
     });
 
     Route::get('/keywords', [KeywordController::class, 'keywords']);
@@ -166,14 +163,19 @@ Route::group(['middleware' => ['api']], function () {
     Route::group(['prefix' => 'dashboard-voice'], function () {
         Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
         Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
-        Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDay']);
-        Route::get('/message-by-time', [VoiceDashboardController::class, 'MessageByTime']);
-        Route::get('/message-by-device', [VoiceDashboardController::class, 'MessageByDevice']);
-        Route::get('/message-by-account', [VoiceDashboardController::class, 'MessageByAccount']);
-        Route::get('/message-by-channel', [VoiceDashboardController::class, 'MessageByChannel']);
-        Route::get('/message-by-sentiment', [VoiceDashboardController::class, 'MessageBySentiment']);
-        Route::get('/message-by-level', [VoiceDashboardController::class, 'MessageByLevel']);
-        Route::get('/message-by-type', [VoiceDashboardController::class, 'MessageByType']);
+        // new
+        Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
+
+        Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDayold']);
+        Route::get('/message-by-time', [VoiceDashboardController::class, 'MessageByTimeold']);
+        Route::get('/message-by-device', [VoiceDashboardController::class, 'MessageByDeviceold']);
+        Route::get('/message-by-account', [VoiceDashboardController::class, 'MessageByAccountold']);
+        Route::get('/message-by-channel', [VoiceDashboardController::class, 'MessageByChannelold']);
+        Route::get('/message-by-sentiment', [VoiceDashboardController::class, 'MessageBySentimentold']);
+        Route::get('/message-by-level', [VoiceDashboardController::class, 'MessageByLevelold']);
+        Route::get('/message-by-type', [VoiceDashboardController::class, 'MessageByTypeold']);
+
+
         Route::get('/number-of-account', [VoiceDashboardController::class, 'NumberOfAccount']);
         Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
         Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);

@@ -36,7 +36,7 @@ class ChannelDashboardController extends Controller
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
         $this->source_id = $request->source_id;
-        
+
         $fillter_keywords = $request->fillter_keywords;
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
@@ -121,7 +121,7 @@ class ChannelDashboardController extends Controller
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
 
             if (isset($data[$item->source_id])) {
-                
+
                 if (isset($data[$item->source_id]['value'][$date_format])) {
                     $data[$item->source_id]['value'][$date_format]['total_at_date'] += 1;
                 } else {
@@ -132,7 +132,7 @@ class ChannelDashboardController extends Controller
                         'total_at_date' => 1
                     ];
                 }
-               
+
             } else {
                 $data[$item->source_id] = [
                     "source_id" =>  $item->source_id,
@@ -149,10 +149,10 @@ class ChannelDashboardController extends Controller
             }
         }
 
-     
+
         foreach($data as $key => $item) {
             if ($item) {
-               $data[$key]['value'] = array_values($item['value']);     
+               $data[$key]['value'] = array_values($item['value']);
             }
         }
 
@@ -235,7 +235,7 @@ class ChannelDashboardController extends Controller
         }
 
         $data['value'] = null;
-           
+
         foreach ($raw->get() as $item) {
 
 
@@ -422,9 +422,9 @@ class ChannelDashboardController extends Controller
         }
 
         $data['value'] = null;
-    
+
         foreach ($raw->get() as $item) {
-        
+
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
@@ -478,9 +478,9 @@ class ChannelDashboardController extends Controller
         }
 
         $data['value'] = null;
-    
+
         foreach ($raw->get() as $item) {
-        
+
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
@@ -532,9 +532,9 @@ class ChannelDashboardController extends Controller
         }
 
         $data['value'] = null;
-    
+
         foreach ($raw->get() as $item) {
-        
+
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
@@ -580,15 +580,15 @@ class ChannelDashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$start_date, $end_date])
                 ->whereIn('classification_type_id', [1]);
-                
+
 
             if ($this->keyword_id) {
                 $channal_message_current->whereIn('keyword_id', $this->keyword_id);
             }
-                
+
                 return $channal_message_current->get()->count();
             }
-            
+
         $channal_message_current = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
@@ -696,7 +696,7 @@ class ChannelDashboardController extends Controller
         if ($this->keyword_id) {
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
         }
-            
+
         foreach ($percentage_of_channal->get() as $channal) {
             $source_id = $channal->source_id;
             $data[$source_id]['keyword_id'] = $channal->keyword_id;

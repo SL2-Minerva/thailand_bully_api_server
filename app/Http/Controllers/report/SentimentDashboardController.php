@@ -379,7 +379,7 @@ class SentimentDashboardController extends Controller
     public function SentimentByChannel(Request $request)
     {
 
-        $data = $this->listSource();
+        $data = parent::listSource();
 
         $table = 'message_result_bully';
 
@@ -685,7 +685,7 @@ class SentimentDashboardController extends Controller
     public function ComparisonByChannel(Request $request)
     {
 
-        $data = $this->listSource();
+        $data = parent::listSource();
 
         $analysis_current = $this->factoryComparisonByChangel($this->start_date, $this->end_date);
         $analysis_previous = $this->factoryComparisonByChangel($this->start_date_previous, $this->end_date_previous);
@@ -1548,17 +1548,17 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function listSource()
-    {
-        $sources = Sources::all();
-        $data['labels'] = [];
-
-        foreach ($sources as $source) {
-            $data['labels'][] = $source->name;
-        }
-
-        return $data;
-    }
+//    private function listSource()
+//    {
+//        $sources = Sources::all();
+//        $data['labels'] = [];
+//
+//        foreach ($sources as $source) {
+//            $data['labels'][] = $source->name;
+//        }
+//
+//        return $data;
+//    }
 
     private function overPeriodComparison($current, $previous)
     {
