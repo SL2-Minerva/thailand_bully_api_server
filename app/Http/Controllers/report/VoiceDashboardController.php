@@ -806,24 +806,60 @@ class VoiceDashboardController extends Controller
 
     public function ChannelDevice(Request $request)
     {
+        $data = null;
+        $labels = parent::listSource();
+        $devices = ['Android', 'Iphone', 'Web app'];
 
-        $data = [];
-
-        $items = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->groupBy('device', 'source_name');
+            ->whereIn('classification_type_id', [1]);
 
-        foreach ($items->get() as $item) {
-            $data['labels'][] = [
-                $item->device !== "" ? $item->device : "unknow",
-                $item->source_name,
-            ];
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
-            $data['data'][] = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                ->where('device', $item->device)
-                ->where('source_name', $item->source_name)
-                ->sum('total_at_date');
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
+
+        $items = $raw->get();
+
+
+        foreach ($labels['labels'] as $label) {
+            foreach ($devices as $device) {
+                $data['labels'][$label.'-'.$device] = [$label, $device];
+                $data['data'][$label.'-'.$device] = 0;
+            }
+        }
+
+
+        foreach ($items as $item) {
+            $device = 'empty';
+
+            if ($item->device === 'android') {
+                $device = 'Android';
+            } else if ($item->device === 'iphone') {
+                $device = 'Iphone';
+            } else if ($item->device === 'webapp') {
+                $device = 'Web app';
+            }
+
+            if ($device !== 'empty') {
+                if (isset($data['data'][$item->source_name.'-'.$device])) {
+                    $data['data'][$item->source_name.'-'.$device] += 1;
+                } else {
+                    $data['data'][$item->source_name.'-'.$device] = 1;
+                }
+            }
+        }
+
+        if (isset($data['data'])) {
+            $data['data'] = array_values($data['data']);
+        }
+
+        if (isset($data['labels'])) {
+            $data['labels'] = array_values($data['labels']);
         }
 
         return parent::handleRespond($data);
@@ -1502,9 +1538,9 @@ class VoiceDashboardController extends Controller
         }
 
 
-        $data['channel-platform'] = $this->getChannelPlatform(['raw' => $raw]);
+        $data['channelPlatform'] = $this->getChannelPlatform(['raw' => $raw]);
         $data['device'] = $this->getDevice(['raw' => $raw]);
-        $data['Channel-device'] = $this->getChannelDevice(['raw' => $raw]);
+        $data['channelDevice'] = $this->getChannelDevice(['raw' => $raw]);
         return parent::handleRespond($data);
     }
 
@@ -1696,20 +1732,62 @@ class VoiceDashboardController extends Controller
     {
 
         $data = null;
-        $labels = ["labels" => ['Andriod', 'Iphone', 'Web App']];
-        $raw = $condition['raw'] ?? null;
-        $raw_previous = DB::table('message_result_full_data')
+        $labels = parent::listSource();
+        $devices = ['Android', 'Iphone', 'Web app'];
+
+        $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
-            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
-        $items_previous = $raw_previous->get();
+
+
+        foreach ($labels['labels'] as $label) {
+            foreach ($devices as $device) {
+                $data['labels'][$label.'-'.$device] = [$label, $device];
+                $data['data'][$label.'-'.$device] = 0;
+            }
+        }
+
+
+        foreach ($items as $item) {
+            $device = 'empty';
+
+            if ($item->device === 'android') {
+                $device = 'Android';
+            } else if ($item->device === 'iphone') {
+                $device = 'Iphone';
+            } else if ($item->device === 'webapp') {
+                $device = 'Web app';
+            }
+
+            if ($device !== 'empty') {
+                if (isset($data['data'][$item->source_name.'-'.$device])) {
+                    $data['data'][$item->source_name.'-'.$device] += 1;
+                } else {
+                    $data['data'][$item->source_name.'-'.$device] = 1;
+                }
+            }
+        }
+
+        if (isset($data['data'])) {
+            $data['data'] = array_values($data['data']);
+        }
+
+        if (isset($data['labels'])) {
+            $data['labels'] = array_values($data['labels']);
+        }
+
+        return $data;
     }
 
     public function keywordBy(Request $request)
