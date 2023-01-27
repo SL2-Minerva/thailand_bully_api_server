@@ -5,12 +5,7 @@ namespace App\Http\Controllers\report;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Classification;
-use App\Models\Message;
 use Illuminate\Support\Carbon;
-use App\Models\DailyMessage;
-use App\Models\MessageResultBully;
-use App\Models\PercentageOfMessages;
-use App\Models\Sources;
 use Illuminate\Support\Facades\DB;
 
 class VoiceDashboardController extends Controller

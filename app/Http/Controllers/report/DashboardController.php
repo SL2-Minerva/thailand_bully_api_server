@@ -3,11 +3,8 @@
 namespace App\Http\Controllers\report;
 
 use App\Http\Controllers\Controller;
-use App\Models\DailyMessage;
 use App\Models\Keyword;
 use App\Models\Message;
-use App\Models\MessageResultSemetic;
-use App\Models\PercentageOfMessages;
 use App\Models\SNA;
 use App\Models\SNAChildNode;
 use App\Models\SNARootNode;
@@ -38,7 +35,7 @@ class DashboardController extends Controller
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
         $this->source_id = $request->source_id;
-        
+
         $fillter_keywords = $request->fillter_keywords;
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
@@ -49,9 +46,9 @@ class DashboardController extends Controller
 
     public function overAll(Request $request)
     {
-       
+
         $data = null;
-        
+
         $data['daily_message'] = $this->dailyMessage($this->start_date, $this->end_date);
         $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $this->source_id ?? null);
         $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $this->source_id ?? null);
@@ -133,7 +130,7 @@ class DashboardController extends Controller
 
     private function dailyMessage($start_date, $end_date)
     {
-        
+
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -150,7 +147,7 @@ class DashboardController extends Controller
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
 
             if (isset($data[$item->keyword_name])) {
-                
+
                 if (isset($data[$item->keyword_name]['value'][$date_format])) {
                     $data[$item->keyword_name]['value'][$date_format]['total_at_date'] += 1;
                 } else {
@@ -161,7 +158,7 @@ class DashboardController extends Controller
                         'total_at_date' => 1
                     ];
                 }
-               
+
             } else {
                 $data[$item->keyword_name] = [
                     "keyword_id" =>  $item->keyword_id,
@@ -180,10 +177,10 @@ class DashboardController extends Controller
             }
         }
 
-     
+
         foreach($data as $key => $item) {
             if ($item) {
-               $data[$key]['value'] = array_values($item['value']);     
+               $data[$key]['value'] = array_values($item['value']);
             }
         }
 
@@ -191,7 +188,7 @@ class DashboardController extends Controller
             $data = array_values($data);
         }
 
-    
+
         return $data;
     }
 
@@ -243,7 +240,7 @@ class DashboardController extends Controller
             $data[$keyword_id]['keyword_name'] = $item->keyword_name;
             $data[$keyword_id]['campaign_id'] = $item->campaign_id;
             $data[$keyword_id]['campaign_name'] = $item->campaign_name;
-        }   
+        }
 
 
         if ($data) {
@@ -295,7 +292,7 @@ class DashboardController extends Controller
         if ($this->keyword_id) {
             $results->whereIn('keyword_id', $this->keyword_id);
         }
-        
+
         $results = $results->get();
 
         if ($results->count() > 0) {
@@ -310,7 +307,7 @@ class DashboardController extends Controller
                 }
             }
 
-            $sentiment_score = (((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
+            $sentiment_score = (((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
         }
 
 
@@ -382,7 +379,7 @@ class DashboardController extends Controller
 
         $diff_date = $this->diff_date($this->start_date, $this->end_date);
         $id = 1;
-        
+
         foreach ($total_keywords->get() as $item) {
             $message = $this->messagesTable($this->start_date, $this->end_date, $item->keyword_id, 'message_result_full_data');
             $engagement = $this->engagementTable($this->start_date, $this->end_date, $item->keyword_id, 'message_result_full_data');
@@ -402,7 +399,7 @@ class DashboardController extends Controller
 
             $data[] = $data_push;
         }
-        
+
 
         return parent::handleRespond($data);
     }
@@ -410,7 +407,7 @@ class DashboardController extends Controller
     public function keywordSummaryTop(Request $request)
     {
         $data = null;
-        
+
         $data['main_keyword'] = $this->mainKeyWords($this->start_date, $this->end_date);
         $data['top_sites'] = $this->topSites($this->start_date, $this->end_date);
         $data['top_hastag'] = $this->topHashtag($this->start_date, $this->end_date);
@@ -455,7 +452,7 @@ class DashboardController extends Controller
             "percentage" => $this->point_two_digits($percentage),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
-        
+
     }
 
     private function totalEngagement($start_date, $end_date, $source, $start_date_previous, $end_date_previous)
@@ -469,7 +466,7 @@ class DashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
             ->whereIn('classification_type_id', [1]);
-            
+
 
         if ($this->keyword_id) {
             $total_current->whereIn('keyword_id', $this->keyword_id);
@@ -590,7 +587,7 @@ class DashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_type_id', [1]);
-        
+
         if ($this->keyword_id) {
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
@@ -631,7 +628,7 @@ class DashboardController extends Controller
         if ($data) {
             $data = array_values($data);
         }
-        
+
         return $data;
 
     }
@@ -744,20 +741,20 @@ class DashboardController extends Controller
 
             if ($this->keyword_id) {
                 $total_message->whereIn('keyword_id', $this->keyword_id);
-            }  
+            }
 
             $total_message = $total_message->get()->count();
 
-    
+
             $percentage = ($message / $total_message) * 100;
-    
+
             $push_data = [
                 'channel' => $item->source_name,
                 'percentage' => self::point_two_digits($percentage),
                 'number_of_message' => $message,
                 // 'highlight' =>
             ];
-    
+
             $data[$keyword_id]['value'][] = $push_data;
         }
 //
@@ -775,7 +772,7 @@ class DashboardController extends Controller
         $raw_query = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
-        
+
         if ($this->keyword_id) {
             $raw_query->whereIn('keyword_id', $this->keyword_id);
         }
@@ -802,7 +799,7 @@ class DashboardController extends Controller
             }
 
         }
-    
+
 
         if ($data) {
             return parent::handleRespond(array_values($data));
