@@ -1885,10 +1885,10 @@ class VoiceDashboardController extends Controller
 
         $items = $raw->get();
 
-        $data['keyword-channel'] = $this->getKeywordChannel(['raw' => $raw, 'items' => $items]);
-        $data['keyword-sentiment'] = $this->getKeywordSentiment(['raw' => $raw, 'items' => $items]);
-        $data['keyword-bully-level'] = $this->getKeywordBullyLevel(['raw' => $raw, 'items' => $items]);
-        $data['keyword-bully-type'] = $this->getKeywordBullyType(['raw' => $raw, 'items' => $items]);
+        $data['keywordChannel'] = $this->getKeywordChannel(['raw' => $raw, 'items' => $items]);
+        $data['keywordSentiment'] = $this->getKeywordSentiment(['raw' => $raw, 'items' => $items]);
+        $data['keywordBullyLevel'] = $this->getKeywordBullyLevel(['raw' => $raw, 'items' => $items]);
+        $data['keywordBullyType'] = $this->getKeywordBullyType(['raw' => $raw, 'items' => $items]);
 
         return parent::handleRespond($data);
 
