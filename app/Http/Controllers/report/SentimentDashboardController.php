@@ -1548,17 +1548,6 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-//    private function listSource()
-//    {
-//        $sources = Sources::all();
-//        $data['labels'] = [];
-//
-//        foreach ($sources as $source) {
-//            $data['labels'][] = $source->name;
-//        }
-//
-//        return $data;
-//    }
 
     private function overPeriodComparison($current, $previous)
     {

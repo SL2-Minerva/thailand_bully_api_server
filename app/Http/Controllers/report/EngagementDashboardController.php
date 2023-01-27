@@ -20,6 +20,7 @@ class EngagementDashboardController extends Controller
     private $end_date_previous;
     private $campaign_id;
     private $keyword_id;
+    private $source_id;
 
     public function __construct(Request $request)
     {
@@ -31,6 +32,9 @@ class EngagementDashboardController extends Controller
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
 
+        if ($request->secure !== 'all') {
+            $this->source_id = $request->source_id;
+        }
 
         $fillter_keywords = $request->fillter_keywords;
 

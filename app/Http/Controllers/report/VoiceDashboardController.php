@@ -31,11 +31,15 @@ class VoiceDashboardController extends Controller
         $this->campaign_id = $request->campaign_id;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
-        $this->source_id = $request->source_id;
+
         $fillter_keywords = $request->fillter_keywords;
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
             $this->keyword_id = explode(',', $fillter_keywords);
+        }
+
+        if ($request->secure !== 'all') {
+            $this->source_id = $request->source_id;
         }
     }
 
@@ -57,6 +61,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -110,6 +117,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -179,6 +189,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -251,6 +264,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -326,6 +342,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -396,6 +415,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -515,6 +537,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -569,6 +594,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -625,6 +653,9 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -645,7 +676,10 @@ class VoiceDashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
                 ->whereIn('classification_type_id', [3]);
+        }
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         if ($this->keyword_id) {
@@ -750,6 +784,10 @@ class VoiceDashboardController extends Controller
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
                 ->whereIn('classification_type_id', [2]);
 
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         if ($this->keyword_id) {
@@ -935,7 +973,12 @@ class VoiceDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $raw_wherein = $raw->whereIn('classification_type_id', [3]);
+        $raw->whereIn('classification_type_id', [3]);
+
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -997,6 +1040,10 @@ class VoiceDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1167,6 +1214,10 @@ class VoiceDashboardController extends Controller
             $raw_current->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if ($this->source_id) {
+            $raw_current->where('source_id', $this->source_id);
+        }
+
         $items = $raw_current->get();
 
         foreach ($items as $item) {
@@ -1224,6 +1275,10 @@ class VoiceDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw_current->where('source_id', $this->source_id);
         }
 
         foreach ($items as $item) {
@@ -1326,6 +1381,10 @@ class VoiceDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw_current->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw_current->get();
@@ -1433,6 +1492,10 @@ class VoiceDashboardController extends Controller
             $raw_current->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if ($this->source_id) {
+            $raw_current->where('source_id', $this->source_id);
+        }
+
         $items = $raw_current->get();
 
         foreach ($items as $item) {
@@ -1537,6 +1600,10 @@ class VoiceDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
+
 
         $data['channelPlatform'] = $this->getChannelPlatform(['raw' => $raw]);
         $data['device'] = $this->getDevice(['raw' => $raw]);
@@ -1568,6 +1635,11 @@ class VoiceDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
             $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_previous->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1615,6 +1687,11 @@ class VoiceDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
             $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_previous->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1802,6 +1879,10 @@ class VoiceDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
+
         $items = $raw->get();
 
         $data['keyword-channel'] = $this->getKeywordChannel(['raw' => $raw, 'items' => $items]);
@@ -1827,6 +1908,10 @@ class VoiceDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
 //            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1875,6 +1960,12 @@ class VoiceDashboardController extends Controller
             if ($this->keyword_id) {
                 $raw->whereIn('keyword_id', $this->keyword_id);
                 $raw_previous->whereIn('keyword_id', $this->keyword_id);
+            }
+
+
+            if ($this->source_id) {
+                $raw->where('source_id', $this->source_id);
+                $raw_previous->where('source_id', $this->source_id);
             }
             $items = $raw->get();
         }
@@ -1929,6 +2020,11 @@ class VoiceDashboardController extends Controller
             $raw_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_previous->where('source_id', $this->source_id);
+        }
+
         $levels = Classification::where('classification_type_id', 3)->get();
         $message_total = 0;
 
@@ -1977,6 +2073,11 @@ class VoiceDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
             $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_previous->where('source_id', $this->source_id);
         }
 
         $levels = Classification::where('classification_type_id', 2)->get();
