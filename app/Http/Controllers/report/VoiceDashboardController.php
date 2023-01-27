@@ -348,7 +348,6 @@ class VoiceDashboardController extends Controller
             "Iphone",
             "Web App",
         ];
-        $data = [];
 
         if ($items) {
             foreach ($items as $item) {
@@ -1878,6 +1877,11 @@ class VoiceDashboardController extends Controller
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             }
         }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
         return $data;
     }
 
@@ -1926,6 +1930,11 @@ class VoiceDashboardController extends Controller
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             }
         }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
         return $data;
     }
 
