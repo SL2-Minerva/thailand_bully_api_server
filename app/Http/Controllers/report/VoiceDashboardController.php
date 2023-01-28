@@ -1202,7 +1202,7 @@ class VoiceDashboardController extends Controller
         return parent::handleRespond($this->factoryNumberOfAccountPeriodOverPeriod('PeriodOverPeriod'));
     }
 
-    public function DayTimeComparison(Request $request)
+    public function DayTimeComparison(Request $request, $only_Data = false)
     {
         $data = null;
         $raw_current = DB::table('message_result_full_data')
@@ -1260,10 +1260,14 @@ class VoiceDashboardController extends Controller
             $data = array_values($data);
         }
 
+
+        if ($only_Data) {
+            return $data;
+        }
         return parent::handleRespond($data);
     }
 
-    public function DayTimeSentiment(Request $request)
+    public function DayTimeSentiment(Request $request, $only_Data = false)
     {
         $data = null;
         $raw_current = DB::table('message_result_full_data')
@@ -1366,12 +1370,14 @@ class VoiceDashboardController extends Controller
                 $data['time_value'][$key]["data"] = array_values($value["data"]);
             }
         }
-
+        if ($only_Data) {
+            return $data;
+        }
 
         return parent::handleRespond($data);
     }
 
-    public function DayTimeLevel(Request $request)
+    public function DayTimeLevel(Request $request, $only_Data = false)
     {
         $data = null;
         $raw_current = DB::table('message_result_full_data')
@@ -1384,7 +1390,7 @@ class VoiceDashboardController extends Controller
         }
 
         if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
+            $raw_current->where('source_id', $this->source_id);
         }
 
         $items = $raw_current->get();
@@ -1475,11 +1481,15 @@ class VoiceDashboardController extends Controller
             }
         }
 
+        if ($only_Data) {
+            return $data;
+        }
+
 
         return parent::handleRespond($data);
     }
 
-    public function DayTimeType(Request $request)
+    public function DayTimeType(Request $request, $only_Data = false)
     {
 
         $data = null;
@@ -1584,6 +1594,17 @@ class VoiceDashboardController extends Controller
             }
         }
 
+
+        return parent::handleRespond($data);
+    }
+
+    public function DayTimeBy(Request $request) {
+        $data = [
+            'DayTimeComparison' => $this->DayTimeComparison($request, true),
+            'DayTimeSentiment' => $this->DayTimeSentiment($request, true),
+            'DayTimeLevel' => $this->DayTimeLevel($request, true),
+            'DayTimeType' => $this->DayTimeLevel($request, true),
+        ];
 
         return parent::handleRespond($data);
     }

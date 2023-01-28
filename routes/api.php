@@ -180,7 +180,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
 
         //todo
-        Route::get('daytime-by', [VoiceDashboardController::class, 'daytimeBy']);
+        Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
 
         Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);
         Route::get('/day-time-sentiment', [VoiceDashboardController::class, 'DayTimeSentiment']);
