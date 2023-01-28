@@ -18,7 +18,7 @@ class ChannelDashboardController extends Controller
     private $start_date_previous;
     private $end_date_previous;
     private $campaign_id;
-    private $source_id;
+    private $source;
     private $keyword_id;
 
     public function __construct(Request $request)
@@ -29,7 +29,7 @@ class ChannelDashboardController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
-        $this->source_id = $request->source_id;
+        $this->source = $request->source === "all" ? "" : $request->source;
 
         $fillter_keywords = $request->fillter_keywords;
 
@@ -37,6 +37,18 @@ class ChannelDashboardController extends Controller
             $this->keyword_id = explode(',' , $fillter_keywords);
         }
 
+    }
+
+    public function dailyBy(Request $request)
+    {
+        $data = null;
+
+        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date);
+        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous);
+        $data['daily_message'] = $this->DailyChannelGroup();
+
+        return parent::handleRespond($data);
+        
     }
 
     public function PercentageOfChannel(Request $request)
@@ -60,6 +72,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $percentage_of_channal->where('source_id', $this->source);
         }
 
         foreach ($percentage_of_channal->get() as $channal) {
@@ -108,6 +124,10 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
         $items = $raw->get();
         $data = null;
 
@@ -143,16 +163,99 @@ class ChannelDashboardController extends Controller
             }
         }
 
+        if ($data) {
 
-        foreach($data as $key => $item) {
-            if ($item) {
-               $data[$key]['value'] = array_values($item['value']);
+            foreach($data as $key => $item) {
+                if ($item) {
+                   $data[$key]['value'] = array_values($item['value']);
+                }
             }
         }
 
         if ($data) {
             return parent::handleRespond(array_values($data));
         }
+
+        return parent::handleRespond($data);
+    }
+
+    public function DailyChannelGroup()
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $items = $raw->get();
+        $data = null;
+
+        foreach ($items as $item) {
+            $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
+
+            if (isset($data[$item->source_id])) {
+
+                if (isset($data[$item->source_id]['value'][$date_format])) {
+                    $data[$item->source_id]['value'][$date_format]['total_at_date'] += 1;
+                } else {
+                    $data[$item->source_id]['value'][$date_format] = [
+                        "keyword_id" => $item->keyword_id,
+                        "keyword_name" => $item->keyword_name,
+                        "date_m" => $date_format,
+                        'total_at_date' => 1
+                    ];
+                }
+
+            } else {
+                $data[$item->source_id] = [
+                    "source_id" =>  $item->source_id,
+                    "source_name" => $item->source_name,
+                    "campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                ];
+                $data[$item->source_id]['value'][$date_format] = [
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'date_m' => $item->date_m,
+                    'total_at_date' => 1
+                ];
+            }
+        }
+
+        if ($data) {
+
+            foreach($data as $key => $item) {
+                if ($item) {
+                   $data[$key]['value'] = array_values($item['value']);
+                }
+            }
+        }
+
+        if ($data) {
+            return array_values($data);
+        }
+
+        return $data;
+    }
+
+    public function channelBy()
+    {
+        $data = null;
+
+        $data['channel_by_day'] = $this->ChannelByDayGroup();
+        $data['channel_by_time'] = $this->ChannelByTimeGroup();
+        $data['channel_by_device'] = $this->ChannelByDeviceGroup();
+        $data['channel_by_account'] = $this->ChannelByAccountGroup();
+        $data['channel_by_sentiment'] = $this->ChannelBySentimentGroup();
+        $data['channel_by_level'] = $this->ChannelBullyLevelGroup();
+        $data['channel_by_bully_type'] = $this->ChannelBullyTypeGroup();
 
         return parent::handleRespond($data);
     }
@@ -176,6 +279,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
         }
 
         $data['value'] = null;
@@ -209,6 +316,62 @@ class ChannelDashboardController extends Controller
 
         return parent::handleRespond($data);
     }
+    private function ChannelByDayGroup()
+    {
+        $data['labels'] = [
+            "Mon",
+            "Tue",
+            "Wed",
+            "Thu",
+            "Fri",
+            "Sat",
+            "Sun"
+        ];
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $data['value'] = null;
+
+        foreach ($raw->get() as $item) {
+
+            $day_name = Carbon::parse($item->date_m)->format('D');
+            $index_label = array_search($day_name, $data['labels']);
+
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            } else {
+
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'name' => $item->source_name,
+                    'keyword_name' => $item->source_name,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0, 0, 0, 0, 0, 0, 0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            }
+
+        }
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
 
     public function ChannelByTime(Request $request)
     {
@@ -226,6 +389,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
         }
 
         $data['value'] = null;
@@ -281,6 +448,81 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function ChannelByTimeGroup()
+    {
+        $data['labels'] = [
+            "Before 6 AM",
+            "6 AM-12 PM",
+            "12 PM-6 PM",
+            "After 6 PM"
+        ];
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $data['value'] = null;
+
+        foreach ($raw->get() as $item) {
+
+
+            $sixAM = Carbon::parse("06:00:00");
+            $time = Carbon::parse($item->date_m)->format('H:i:s');
+            $index_label = 3;
+
+            if (Carbon::parse($time)->lt($sixAM)) {
+                $index_label = 0;
+            }
+
+            if (Carbon::parse($time)->between($sixAM, Carbon::parse("12:00:00"))) {
+                $index_label = 1;
+            }
+
+            if (Carbon::parse($time)->between(Carbon::parse("12:00:00"), Carbon::parse("18:00:00"))) {
+                $index_label = 2;
+            }
+
+            if (Carbon::parse($time)->gt(Carbon::parse("18:00:00"))) {
+                $index_label = 3;
+            }
+
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+
+
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'keyword_name' => $item->keyword_name,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'source_id' => $item->source_id,
+                    'source_name' => $item->source_name,
+                    'data' => [0, 0, 0, 0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
     public function ChannelByDevice(Request $request)
     {
         $data['labels'] = [
@@ -296,6 +538,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
         }
 
         $data['value'] = null;
@@ -337,6 +583,66 @@ class ChannelDashboardController extends Controller
 
     }
 
+    public function ChannelByDeviceGroup()
+    {
+        $data['labels'] = [
+            "Android",
+            "Iphone",
+            "Web App",
+        ];
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $data['value'] = null;
+
+        foreach ($raw->get() as $item) {
+            $index_label = 0;
+
+            if ($item->device == 'iphone') {
+                $index_label = 1;
+            }
+
+            if ($item->device == 'webapp') {
+                $index_label = 2;
+            }
+
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_name' => $item->keyword_name,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'source_id' => $item->source_id,
+                    'source_name' => $item->source_name,
+                    'data' => [0, 0, 0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            }
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+
+    }
+
     public function ChannelByAccount(Request $request)
     {
         $data['labels'] = [
@@ -358,6 +664,16 @@ class ChannelDashboardController extends Controller
             ->orWhere('reference_message_id',null)
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->keyword_id) {
+            $raw_child->whereIn('keyword_id', $this->keyword_id);
+            $raw_root->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw_child->where('source_id', $this->source);
+            $raw_root->where('source_id', $this->source);
+        }
+
         $soures = parent::listSource();
 
 
@@ -370,10 +686,7 @@ class ChannelDashboardController extends Controller
 
         }
 
-//        if ($this->keyword_id) {
-//            $raw_child->where('keyword_id', $this->keyword_id);
-//            $raw_root->where('keyword_id', $this->keyword_id);
-//        }
+
 
         $items_root = $raw_root->get();
         $items_child = $raw_child->get();
@@ -396,6 +709,70 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function ChannelByAccountGroup()
+    {
+        $data['labels'] = [
+            "Infulencer",
+            "Follower",
+        ];
+
+        $raw_child = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('reference_message_id', '!=', null)
+            ->whereIn('classification_type_id', [1]);
+
+
+        $raw_root = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->where('reference_message_id','')
+            ->orWhere('reference_message_id',null)
+            ->whereIn('classification_type_id', [1]);
+
+        $soures = parent::listSource();
+
+        if ($this->keyword_id) {
+            $raw_child->whereIn('keyword_id', $this->keyword_id);
+            $raw_root->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw_child->where('source_id', $this->source);
+            $raw_root->where('source_id', $this->source);
+        }
+
+
+        for ($i = 0; $i < count($soures['labels']); $i++) {
+            $data['value'][$soures['labels'][$i]] = [
+                "id" => $i,
+                "keyword_name" => $soures['labels'][$i],
+                'data' => [0, 0]
+            ];
+
+        }
+
+        $items_root = $raw_root->get();
+        $items_child = $raw_child->get();
+
+        foreach ($items_root as $key => $item) {
+            $source_id = $item->source_id;
+            $data['value'][$item->source_name]['data'][0] += 1;
+        }
+
+
+        foreach ($items_child as $key => $item) {
+            $source_id = $item->source_id;
+            $data['value'][$item->source_name]['data'][1] += 1;
+        }
+
+        if ($data['value']) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
     public function ChannelBySentiment(Request $request)
     {
 
@@ -413,6 +790,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
         }
 
         $data['value'] = null;
@@ -452,6 +833,66 @@ class ChannelDashboardController extends Controller
 
     }
 
+    public function ChannelBySentimentGroup()
+    {
+
+        $sentiment = Classification::where('classification_type_id', 1)->get();
+        $data['labels'] = [];
+
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $data['value'] = null;
+
+        foreach ($raw->get() as $item) {
+
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'name' => $item->keyword_name,
+                    'keyword_name' => $item->keyword_name,
+                    'source_name' => $this->source_name($item->source_id),
+                    'classification_name' => $item->classification_name,
+                    'classification_id' => $item->classification_id,
+                    'source_id' => $item->source_id,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0, 0, 0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+
+    }
+
     public function ChannelBullyLevel(Request $request)
     {
 
@@ -469,6 +910,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
         }
 
         $data['value'] = null;
@@ -507,6 +952,65 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function ChannelBullyLevelGroup()
+    {
+
+        $sentiment = Classification::where('classification_type_id', 3)->get();
+        $data['labels'] = [];
+
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [3]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $data['value'] = null;
+
+        foreach ($raw->get() as $item) {
+
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'name' => $item->keyword_name,
+                    'keyword_name' => $item->keyword_name,
+                    'source_name' => $this->source_name($item->source_id),
+                    'classification_name' => $item->classification_name,
+                    'classification_id' => $item->classification_id,
+                    'source_id' => $item->source_id,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0, 0, 0, 0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
     public function ChannelBullyType(Request $request)
     {
         $sentiment = Classification::where('classification_type_id', 2)->get();
@@ -523,6 +1027,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
         }
 
         $data['value'] = null;
@@ -561,6 +1069,64 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function ChannelBullyTypeGroup()
+    {
+        $sentiment = Classification::where('classification_type_id', 2)->get();
+        $data['labels'] = [];
+
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [2]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+        }
+
+        $data['value'] = null;
+
+        foreach ($raw->get() as $item) {
+
+            $index_label = 0;
+            $index_label = array_search($item->classification_name, $data['labels']);
+
+            if (isset($data['value'][$item->source_id])) {
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            } else {
+                $data['value'][$item->source_id] = [
+                    'id' => $item->source_id,
+                    'name' => $item->keyword_name,
+                    'keyword_name' => $item->keyword_name,
+                    'source_name' => $this->source_name($item->source_id),
+                    'classification_name' => $item->classification_name,
+                    'classification_id' => $item->classification_id,
+                    'source_id' => $item->source_id,
+                    'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,
+                    'data' => [0, 0, 0, 0, 0, 0]
+                ];
+
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            }
+
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
     public function bully_type_name($class_id)
     {
         $classfication = Classification::where('id', $class_id)->first();
@@ -580,6 +1146,10 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->whereIn('keyword_id', $this->keyword_id);
             }
 
+            if ($this->source) {
+                $channal_message_current->where('source_id', $this->source);
+            }
+
                 return $channal_message_current->get()->count();
             }
 
@@ -593,7 +1163,22 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->whereIn('keyword_id', $this->keyword_id);
             }
 
+            if ($this->source) {
+                $channal_message_current->where('source_id', $this->source);
+            }
+
         return $channal_message_current->get()->count();
+    }
+
+    public function engagementBy()
+    {
+        $data = null;
+
+        $data['period_over_period'] = $this->PeriodOverPeriodGroup();
+        $data['engagement_rate'] = $this->EngagementRateGroup();
+        $data['engagement_rate_previous'] = $this->EngagementRatePreviousGroup();
+
+        return parent::handleRespond($data);
     }
 
     public function PeriodOverPeriod(Request $request)
@@ -617,11 +1202,39 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function PeriodOverPeriodGroup()
+    {
+        $source = Sources::where('status', 1)->get();
+        foreach ($source as $item) {
+
+            $channal_message_current = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
+            $channal_message_previous = $this->total_message_by_source_id('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $item->id);
+
+            $comparison = $channal_message_current - $channal_message_previous;
+            $percentage = ($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous) * 100;
+
+            $data[$item->name] = [
+                "comparison_value" => $this->point_two_digits($comparison),
+                "percentage" => $this->point_two_digits($percentage),
+                "type" => ($comparison >= 0 ? "plus" : "minus"),
+            ];
+        }
+
+        return $data;
+    }
+
     public function EngagementRate(Request $request)
     {
         $data = $this->totalFromEngagementRate( $this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
+    }
+
+    public function EngagementRateGroup()
+    {
+        $data = $this->totalFromEngagementRate( $this->start_date, $this->end_date);
+
+        return $data;
     }
 
     public function EngagementRatePrevious(Request $request)
@@ -633,12 +1246,39 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+    public function EngagementRatePreviousGroup()
+    {
+        $data = null;
+
+        $data = $this->totalFromEngagementRate($this->start_date_previous, $this->end_date_previous);
+
+        return $data;
+    }
+
+    public function sentimentBy()
+    {
+        $data = null;
+        $data['sentiment_score'] = $this->SentimentScoreGroup();
+        $data['sentiment_score_previous'] = $this->SentimentScorePreviousGroup();
+        $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group();
+        $data['sentiment_by_level'] = $this->SentimentLevelGroup();
+        return parent::handleRespond($data);
+    }
+
     public function SentimentScore(Request $request)
     {
         $data = null;
         $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
 
         return parent::handleRespond($data);
+    }
+
+    private function SentimentScoreGroup()
+    {
+        $data = null;
+        $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
+
+        return $data;
     }
 
     public function SentimentScorePrevious(Request $request)
@@ -648,6 +1288,15 @@ class ChannelDashboardController extends Controller
         $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
 
         return parent::handleRespond($data);
+    }
+
+    private function SentimentScorePreviousGroup()
+    {
+
+        $data = null;
+        $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+
+        return $data;
     }
 
     public function ChannelBySentiment2(Request $request)
@@ -676,6 +1325,32 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond(array_values($data));
     }
 
+    private function ChannelBySentiment2Group()
+    {
+        $data = null;
+        $source = Sources::where('status', 1)->get();
+        $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
+
+        $data["all"] = [
+            "keyword_name" => "All",
+            "total_value" => $channal_message_all,
+        ];
+        foreach ($source as $item) {
+
+            $channal_message = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
+            $data[$item->name] = [
+                "keyword_name" => $item->name,
+                "total_value" => $channal_message,
+            ];
+        }
+
+        if (!$data) {
+            return parent::handleNotFound($data);
+        }
+
+        return array_values($data);
+    }
+
     public function SentimentLevel(Request $request)
     {
         $data = null;
@@ -687,6 +1362,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $percentage_of_channal->where('source_id', $this->source);
         }
 
         foreach ($percentage_of_channal->get() as $channal) {
@@ -731,6 +1410,67 @@ class ChannelDashboardController extends Controller
         }
 
         return parent::handleRespond($data);
+    }
+
+    public function SentimentLevelGroup()
+    {
+        $data = null;
+        $percentage_of_channal = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1])
+            ->groupBy('source_id');
+
+        if ($this->keyword_id) {
+            $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $percentage_of_channal->where('source_id', $this->source);
+        }
+
+        foreach ($percentage_of_channal->get() as $channal) {
+            $source_id = $channal->source_id;
+            $data[$source_id]['keyword_id'] = $channal->keyword_id;
+            $data[$source_id]['keyword_name'] = $channal->keyword_name;
+            $data[$source_id]['campaign_id'] = $channal->campaign_id;
+            $data[$source_id]['campaign_name'] = $channal->campaign_name;
+            $data[$source_id]['source_id'] = $channal->source_id;
+            $data[$source_id]['source_name'] = $this->source_name($channal->source_id);
+            $data[$source_id]['negative'] = 0;
+            $data[$source_id]['neutral'] = 0;
+            $data[$source_id]['positive'] = 0;
+            $data[$source_id]['total'] = 0;
+
+            $sum = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1])
+                ->where('source_id', $channal->source_id)->get();
+            foreach ($sum as $item) {
+                if (isset($item->classification_name) && $item->classification_name === "Negative") {
+                    $data[$source_id]['negative'] = $data[$source_id]['negative'] + 1;
+                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
+                    $data[$source_id]['positive'] = $data[$source_id]['positive'] + 1;
+                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
+                    $data[$source_id]['neutral'] = $data[$source_id]['neutral'] + 1;
+                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                }
+
+            }
+
+            $data[$source_id]['negative'] = $this->point_two_digits(($data[$source_id]['negative'] / $data[$source_id]['total']) * 100);
+            $data[$source_id]['positive'] = $this->point_two_digits(($data[$source_id]['positive'] / $data[$source_id]['total']) * 100);
+            $data[$source_id]['neutral'] = $this->point_two_digits(($data[$source_id]['neutral'] / $data[$source_id]['total']) * 100);
+        }
+
+        if ($data) {
+            return array_values($data);
+        }
+
+        return $data;
     }
 
     private function channelTable($start_date, $end_date, $source_id)
@@ -780,7 +1520,13 @@ class ChannelDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
             $raw_child->whereIn('keyword_id', $this->keyword_id);
-//            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+            $raw_child_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $raw->where('source_id', $this->source);
+            $raw_child->where('source_id', $this->source);
+            $raw_child_previous->where('source_id', $this->source);
         }
 
         $items = $raw->get();
@@ -834,6 +1580,10 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $engagement_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source) {
+            $engagement_previous->where('source_id', $this->source);
         }
 
         $source = Sources::where('status', 1)->get();
