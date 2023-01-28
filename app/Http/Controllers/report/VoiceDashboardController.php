@@ -18,6 +18,8 @@ class VoiceDashboardController extends Controller
     private $campaign_id;
     private $keyword_id;
 
+    private $source_id;
+
     public function __construct(Request $request)
     {
 

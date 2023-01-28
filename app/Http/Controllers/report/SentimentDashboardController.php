@@ -28,6 +28,16 @@ class SentimentDashboardController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
+
+        $fillter_keywords = $request->fillter_keywords;
+
+        if ($fillter_keywords && $fillter_keywords !== 'all') {
+            $this->keyword_id = explode(',', $fillter_keywords);
+        }
+
+        if ($request->secure !== 'all') {
+            $this->source_id = $request->source_id;
+        }
     }
 
     public function DailySeniment(Request $request)
