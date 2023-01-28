@@ -23,7 +23,7 @@ class DashboardController extends Controller
     private $start_date_previous;
     private $end_date_previous;
     private $campaign_id;
-    private $source;
+    private $source_id;
     private $keyword_id;
 
     public function __construct(Request $request)
@@ -34,7 +34,7 @@ class DashboardController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
-        $this->source = $request->source === "all" ? "" : $request->source;
+        $this->source_id = $request->source === "all" ? "" : $request->source;
 
         $fillter_keywords = $request->fillter_keywords;
 
@@ -54,8 +54,8 @@ class DashboardController extends Controller
         $data = null;
 
         $data['daily_message'] = $this->dailyMessage($this->start_date, $this->end_date);
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $this->source ?? null);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $this->source ?? null);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $this->source_id ?? null);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $this->source_id ?? null);
 
         return parent::handleRespond($data);
     }
@@ -72,8 +72,8 @@ class DashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
         
         $items = $raw->get();
@@ -130,7 +130,7 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function percentageOfMessages($start_date, $end_date, $source_id = null)
+    private function percentageOfMessages($start_date, $end_date, $source_id_id = null)
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
@@ -141,8 +141,8 @@ class DashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -196,11 +196,11 @@ class DashboardController extends Controller
     public function keyStats(Request $request)
     {
         $data = null;
-        $source = $request->source ?? null;
+        $source_id = $request->source ?? null;
 
-        $data['total_messages'] = $this->totalMessages($this->start_date, $this->end_date, $source, $this->start_date_previous, $this->end_date_previous);
-        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source, $this->start_date_previous, $this->end_date_previous);
-        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source, $this->start_date_previous, $this->end_date_previous);
+        $data['total_messages'] = $this->totalMessages($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -208,8 +208,8 @@ class DashboardController extends Controller
     public function sentimentScore(Request $request)
     {
 
-        $current = $this->findSentiment('message_result_full_data', $this->start_date, $this->end_date, $this->source);
-        $pervious = $this->findSentiment('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $this->source);
+        $current = $this->findSentiment('message_result_full_data', $this->start_date, $this->end_date, $this->source_id);
+        $pervious = $this->findSentiment('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $this->source_id);
 
         return parent::handleRespond([
             "neutral_value" => (float)self::point_two_digits($current['results']),
@@ -219,7 +219,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function findSentiment($table, $start_date, $end_date, $source_id = null)
+    private function findSentiment($table, $start_date, $end_date, $source_id_id = null)
     {
         $positive = 0;
         $negative = 0;
@@ -235,8 +235,8 @@ class DashboardController extends Controller
             $results->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $results->where('source_id', $this->source);
+        if ($this->source_id) {
+            $results->where('source_id', $this->source_id);
         }
 
         $results = $results->get();
@@ -301,7 +301,7 @@ class DashboardController extends Controller
     public function sentimentType(Request $request)
     {
 
-        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->source);
+        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->source_id);
         $message_total = $current['positive'] + $current['negative'] + $current['neutral'];
 
         return parent::handleRespond([
@@ -323,8 +323,8 @@ class DashboardController extends Controller
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_keywords->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
         }
 
         $diff_date = $this->diff_date($this->start_date, $this->end_date);
@@ -365,7 +365,7 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function totalMessages($start_date, $end_date, $source, $start_date_previous, $end_date_previous)
+    private function totalMessages($start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
     {
 
         $total_current = DB::table('message_result_full_data')
@@ -383,9 +383,9 @@ class DashboardController extends Controller
             $total_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_current->where('source_id', $this->source);
-            $total_previous->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_current->where('source_id', $this->source_id);
+            $total_previous->where('source_id', $this->source_id);
         }
 
         $total_current = $total_current->get()->count();
@@ -410,7 +410,7 @@ class DashboardController extends Controller
 
     }
 
-    private function totalEngagement($start_date, $end_date, $source, $start_date_previous, $end_date_previous)
+    private function totalEngagement($start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
     {
         $total_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
@@ -428,9 +428,9 @@ class DashboardController extends Controller
             $total_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_current->where('source_id', $this->source);
-            $total_previous->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_current->where('source_id', $this->source_id);
+            $total_previous->where('source_id', $this->source_id);
         }
 
         $total_current = $total_current->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
@@ -454,7 +454,7 @@ class DashboardController extends Controller
         ];
     }
 
-    private function totalAccounts($start_date, $end_date, $source, $start_date_previous, $end_date_previous)
+    private function totalAccounts($start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
     {
         $total_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
@@ -473,9 +473,9 @@ class DashboardController extends Controller
             $total_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_current->where('source_id', $this->source);
-            $total_previous->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_current->where('source_id', $this->source_id);
+            $total_previous->where('source_id', $this->source_id);
         }
 
         $total_current = $total_current->get()->count();
@@ -513,8 +513,8 @@ class DashboardController extends Controller
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_keywords->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
         }
 
         $id = 1;
@@ -561,8 +561,8 @@ class DashboardController extends Controller
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_keywords->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
         }
 
         $total_keywords = $total_keywords->get();
@@ -670,8 +670,8 @@ class DashboardController extends Controller
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_keywords->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
         }
 
         foreach ($total_keywords->get() as $item) {
@@ -701,8 +701,8 @@ class DashboardController extends Controller
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_keywords->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
         }
 
         foreach ($total_keywords->get() as $item) {
@@ -724,8 +724,8 @@ class DashboardController extends Controller
                 $total_message->whereIn('keyword_id', $this->keyword_id);
             }
 
-            if ($this->source) {
-                $total_message->where('source_id', $this->source);
+            if ($this->source_id) {
+                $total_message->where('source_id', $this->source_id);
             }
 
             $total_message = $total_message->get()->count();
@@ -762,8 +762,8 @@ class DashboardController extends Controller
             $raw_query->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw_query->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw_query->where('source_id', $this->source_id);
         }
 
         $raw_query = $raw_query->get();
@@ -791,10 +791,13 @@ class DashboardController extends Controller
 
         }
     
-        foreach ($data as $item) {
-            $data[$item['keyword_id']]['Negative'] = $item['total'] ? self::point_two_digits(($item['Negative'] / $item['total']) * 100) : 0;
-            $data[$item['keyword_id']]['Positive'] = $item['total'] ? self::point_two_digits(($item['Positive'] / $item['total']) * 100) : 0;
-            $data[$item['keyword_id']]['Neutral'] = $item['total'] ? self::point_two_digits(($item['Neutral'] / $item['total']) * 100) : 0;
+        if ($data) {
+
+            foreach ($data as $item) {
+                $data[$item['keyword_id']]['Negative'] = $item['total'] ? self::point_two_digits(($item['Negative'] / $item['total']) * 100) : 0;
+                $data[$item['keyword_id']]['Positive'] = $item['total'] ? self::point_two_digits(($item['Positive'] / $item['total']) * 100) : 0;
+                $data[$item['keyword_id']]['Neutral'] = $item['total'] ? self::point_two_digits(($item['Neutral'] / $item['total']) * 100) : 0;
+            }
         }
 
 
@@ -1326,8 +1329,8 @@ class DashboardController extends Controller
             $count->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $count->where('source_id', $this->source);
+        if ($this->source_id) {
+            $count->where('source_id', $this->source_id);
         }
 
         $count = $count->get()->count();
@@ -1347,8 +1350,8 @@ class DashboardController extends Controller
             $count->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $count->where('source_id', $this->source);
+        if ($this->source_id) {
+            $count->where('source_id', $this->source_id);
         }
 
         $count = $count->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));;
@@ -1369,8 +1372,8 @@ class DashboardController extends Controller
             $count->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $count->where('source_id', $this->source);
+        if ($this->source_id) {
+            $count->where('source_id', $this->source_id);
         }
 
         $count = $count->get()->count();
@@ -1390,8 +1393,8 @@ class DashboardController extends Controller
             $total_account->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_account->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_account->where('source_id', $this->source_id);
         }
 
         $total_account = $total_account->get()->count();
@@ -1399,21 +1402,21 @@ class DashboardController extends Controller
         return $total_account;
     }
 
-    private function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id)
+    private function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id_id)
     {
         $total_message = DB::table('message_result_full_data')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('keyword_id', $keyword_id)
-            ->where('source_id', $source_id)
+            ->where('source_id', $source_id_id)
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $total_message->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $total_message->where('source_id', $this->source);
+        if ($this->source_id) {
+            $total_message->where('source_id', $this->source_id);
         }
 
         $total_message = $total_message->get()->count();
@@ -1438,7 +1441,7 @@ class DashboardController extends Controller
         $start_date = $this->date_carbon($request->start_date) ?? null;
         $end_date = $this->date_carbon($request->end_date) ?? null;
         $keyword_id = $request->keyword_id ?? null;
-        $source = $request->source ?? null;
+        $source_id = $request->source ?? null;
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -1454,9 +1457,9 @@ class DashboardController extends Controller
             ->whereDate('created_at', '<=', $end_date)
             ->offset($start)->limit($limit);
 
-        if ($source !== 'all') {
-            $message = $message->where('source_id', $source);
-            $total = $total->where('source_id', $source);
+        if ($source_id !== 'all') {
+            $message = $message->where('source_id', $source_id);
+            $total = $total->where('source_id', $source_id);
         }
 
         foreach ($message->get() as $item) {

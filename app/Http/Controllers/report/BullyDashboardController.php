@@ -18,7 +18,7 @@ class BullyDashboardController extends Controller
     private $start_date_previous;
     private $end_date_previous;
     private $campaign_id;
-    private $source;
+    private $source_id;
     private $keyword_id;
 
     public function __construct(Request $request)
@@ -29,7 +29,7 @@ class BullyDashboardController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
-        $this->source = $request->source === "all" ? "" : $request->source;
+        $this->source_id = $request->source === "all" ? "" : $request->source;
 
         $fillter_keywords = $request->fillter_keywords;
 
@@ -93,8 +93,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -136,8 +136,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -203,8 +203,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -281,8 +281,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -339,8 +339,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -393,8 +393,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -466,8 +466,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -538,8 +538,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -597,8 +597,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -655,8 +655,8 @@ class BullyDashboardController extends Controller
             $infulencer_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $infulencer_root->where('source_id', $this->source);
+        if ($this->source_id) {
+            $infulencer_root->where('source_id', $this->source_id);
         }
 
         $infulencers = $infulencer_root->get();
@@ -684,8 +684,8 @@ class BullyDashboardController extends Controller
             $follower_raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $follower_raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $follower_raw->where('source_id', $this->source_id);
         }
 
         $followers = $follower_raw->get();
@@ -728,8 +728,8 @@ class BullyDashboardController extends Controller
             $infulencer_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $infulencer_root->where('source_id', $this->source);
+        if ($this->source_id) {
+            $infulencer_root->where('source_id', $this->source_id);
         }
 
         $infulencers = $infulencer_root->get();
@@ -757,8 +757,8 @@ class BullyDashboardController extends Controller
             $follower_raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $follower_raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $follower_raw->where('source_id', $this->source_id);
         }
 
         $followers = $follower_raw->get();
@@ -786,11 +786,11 @@ class BullyDashboardController extends Controller
 
     public function BullyByChannel(Request $request)
     {
-        $sources = parent::listSource();
+        $source_ids = parent::listSource();
         $data['labels'] = [];
 
-        foreach ($sources as $source) {
-            $data['labels'][] = $source->name;
+        foreach ($source_ids as $source_id) {
+            $data['labels'] = $source_id;
         }
 
         $raw = DB::table('message_result_full_data')
@@ -802,8 +802,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -838,11 +838,11 @@ class BullyDashboardController extends Controller
 
     private function BullyByChannelGroup()
     {
-        $sources = parent::listSource();
+        $source_ids = parent::listSource();
         $data['labels'] = [];
 
-        foreach ($sources as $source) {
-            $data['labels'][] = $source->name;
+        foreach ($source_ids as $source_id) {
+            $data['labels'][] = $source_id->name;
         }
 
         $raw = DB::table('message_result_full_data')
@@ -854,8 +854,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -910,8 +910,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -972,8 +972,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1060,8 +1060,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1126,8 +1126,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1203,8 +1203,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1261,8 +1261,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1315,8 +1315,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1388,8 +1388,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1460,8 +1460,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1519,8 +1519,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1577,8 +1577,8 @@ class BullyDashboardController extends Controller
             $infulencer_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $infulencer_root->where('source_id', $this->source);
+        if ($this->source_id) {
+            $infulencer_root->where('source_id', $this->source_id);
         }
 
         $infulencers = $infulencer_root->get();
@@ -1606,8 +1606,8 @@ class BullyDashboardController extends Controller
             $follower_raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $follower_raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $follower_raw->where('source_id', $this->source_id);
         }
 
 
@@ -1651,8 +1651,8 @@ class BullyDashboardController extends Controller
             $infulencer_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $infulencer_root->where('source_id', $this->source);
+        if ($this->source_id) {
+            $infulencer_root->where('source_id', $this->source_id);
         }
 
         $infulencers = $infulencer_root->get();
@@ -1680,8 +1680,8 @@ class BullyDashboardController extends Controller
             $follower_raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $follower_raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $follower_raw->where('source_id', $this->source_id);
         }
 
 
@@ -1710,11 +1710,11 @@ class BullyDashboardController extends Controller
 
     public function BullyTypeByChannel(Request $request)
     {
-        $sources = Sources::all();
+        $source_ids = Sources::all();
         $data['labels'] = [];
 
-        foreach ($sources as $source) {
-            $data['labels'][] = $source->name;
+        foreach ($source_ids as $source_id) {
+            $data['labels'][] = $source_id->name;
         }
 
         $raw = DB::table('message_result_full_data')
@@ -1726,8 +1726,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1762,11 +1762,11 @@ class BullyDashboardController extends Controller
 
     private function BullyTypeByChannelGroup()
     {
-        $sources = Sources::all();
+        $source_ids = Sources::all();
         $data['labels'] = [];
 
-        foreach ($sources as $source) {
-            $data['labels'][] = $source->name;
+        foreach ($source_ids as $source_id) {
+            $data['labels'][] = $source_id->name;
         }
 
         $raw = DB::table('message_result_full_data')
@@ -1778,8 +1778,8 @@ class BullyDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1839,8 +1839,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1894,8 +1894,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1947,8 +1947,8 @@ class BullyDashboardController extends Controller
             $bully->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $bully->where('source_id', $this->source);
+        if ($this->source_id) {
+            $bully->where('source_id', $this->source_id);
         }
 
         $bully = $bully->get();
@@ -1994,8 +1994,8 @@ class BullyDashboardController extends Controller
             $bully->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $bully->where('source_id', $this->source);
+        if ($this->source_id) {
+            $bully->where('source_id', $this->source_id);
         }
 
         $bully = $bully->get();
@@ -2040,8 +2040,8 @@ class BullyDashboardController extends Controller
             $bully->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $bully->where('source_id', $this->source);
+        if ($this->source_id) {
+            $bully->where('source_id', $this->source_id);
         }
 
         $bully = $bully->get();
@@ -2087,8 +2087,8 @@ class BullyDashboardController extends Controller
             $bully->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $bully->where('source_id', $this->source);
+        if ($this->source_id) {
+            $bully->where('source_id', $this->source_id);
         }
 
         $bully = $bully->get();
@@ -2134,8 +2134,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -2230,8 +2230,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -2326,8 +2326,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -2421,8 +2421,8 @@ class BullyDashboardController extends Controller
             $raw->where('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();

@@ -18,7 +18,7 @@ class ChannelDashboardController extends Controller
     private $start_date_previous;
     private $end_date_previous;
     private $campaign_id;
-    private $source;
+    private $source_id;
     private $keyword_id;
 
     public function __construct(Request $request)
@@ -29,7 +29,7 @@ class ChannelDashboardController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
-        $this->source = $request->source === "all" ? "" : $request->source;
+        $this->source_id = $request->source === "all" ? "" : $request->source;
 
         $fillter_keywords = $request->fillter_keywords;
 
@@ -74,22 +74,22 @@ class ChannelDashboardController extends Controller
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $percentage_of_channal->where('source_id', $this->source);
+        if ($this->source_id) {
+            $percentage_of_channal->where('source_id', $this->source_id);
         }
 
         foreach ($percentage_of_channal->get() as $channal) {
-            $source_id = $channal->source_id;
-            $data[$source_id]['keyword_id'] = $channal->keyword_id;
-            $data[$source_id]['keyword_name'] = $channal->keyword_name;
-            $data[$source_id]['campaign_id'] = $channal->campaign_id;
-            $data[$source_id]['campaign_name'] = $channal->campaign_name;
-            // $data[$source_id]['organization_id'] = $channal->organization_id;
-            // $data[$source_id]['organizations_name'] = $channal->organizations_name;
-            $data[$source_id]['source_id'] = $channal->source_id;
-            $data[$source_id]['source_name'] = $channal->source_name;
+            $source_id_id = $channal->source_id;
+            $data[$source_id_id]['keyword_id'] = $channal->keyword_id;
+            $data[$source_id_id]['keyword_name'] = $channal->keyword_name;
+            $data[$source_id_id]['campaign_id'] = $channal->campaign_id;
+            $data[$source_id_id]['campaign_name'] = $channal->campaign_name;
+            // $data[$source_id_id]['organization_id'] = $channal->organization_id;
+            // $data[$source_id_id]['organizations_name'] = $channal->organizations_name;
+            $data[$source_id_id]['source_id'] = $channal->source_id;
+            $data[$source_id_id]['source_name'] = $channal->source_name;
 
-            $channal_message = $this->channelTable($start_date, $end_date, $source_id);
+            $channal_message = $this->channelTable($start_date, $end_date, $source_id_id);
             $channal_message_total = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$start_date, $end_date])
@@ -103,7 +103,7 @@ class ChannelDashboardController extends Controller
                 'percentage' => $this->point_two_digits(($channal_message / $channal_message_total) * 100),
             ];
 
-            $data[$source_id]['value'][] = $nestData;
+            $data[$source_id_id]['value'][] = $nestData;
         }
 
         if ($data) {
@@ -124,8 +124,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -190,8 +190,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -281,8 +281,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -337,8 +337,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -391,8 +391,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -466,8 +466,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -540,8 +540,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -600,8 +600,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -669,9 +669,9 @@ class ChannelDashboardController extends Controller
             $raw_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw_child->where('source_id', $this->source);
-            $raw_root->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw_child->where('source_id', $this->source_id);
+            $raw_root->where('source_id', $this->source_id);
         }
 
         $soures = parent::listSource();
@@ -692,13 +692,13 @@ class ChannelDashboardController extends Controller
         $items_child = $raw_child->get();
 
         foreach ($items_root as $key => $item) {
-            $source_id = $item->source_id;
+            $source_id_id = $item->source_id;
             $data['value'][$item->source_name]['data'][0] += 1;
         }
 
 
         foreach ($items_child as $key => $item) {
-            $source_id = $item->source_id;
+            $source_id_id = $item->source_id;
             $data['value'][$item->source_name]['data'][1] += 1;
         }
 
@@ -737,9 +737,9 @@ class ChannelDashboardController extends Controller
             $raw_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw_child->where('source_id', $this->source);
-            $raw_root->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw_child->where('source_id', $this->source_id);
+            $raw_root->where('source_id', $this->source_id);
         }
 
 
@@ -756,13 +756,13 @@ class ChannelDashboardController extends Controller
         $items_child = $raw_child->get();
 
         foreach ($items_root as $key => $item) {
-            $source_id = $item->source_id;
+            $source_id_id = $item->source_id;
             $data['value'][$item->source_name]['data'][0] += 1;
         }
 
 
         foreach ($items_child as $key => $item) {
-            $source_id = $item->source_id;
+            $source_id_id = $item->source_id;
             $data['value'][$item->source_name]['data'][1] += 1;
         }
 
@@ -792,8 +792,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -852,8 +852,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -912,8 +912,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -971,8 +971,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -1029,8 +1029,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -1087,8 +1087,8 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -1133,9 +1133,9 @@ class ChannelDashboardController extends Controller
         return $classfication->name;
     }
 
-    private function total_message_by_source_id($table, $start_date, $end_date, $source_id)
+    private function total_message_by_source_id($table, $start_date, $end_date, $source_id_id)
     {
-        if ($source_id === "all") {
+        if ($source_id_id === "all") {
             $channal_message_current = DB::table($table)
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$start_date, $end_date])
@@ -1146,8 +1146,8 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->whereIn('keyword_id', $this->keyword_id);
             }
 
-            if ($this->source) {
-                $channal_message_current->where('source_id', $this->source);
+            if ($this->source_id) {
+                $channal_message_current->where('source_id', $this->source_id);
             }
 
                 return $channal_message_current->get()->count();
@@ -1157,14 +1157,14 @@ class ChannelDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_type_id', [1])
-            ->where('source_id', $source_id);
+            ->where('source_id', $source_id_id);
 
             if ($this->keyword_id) {
                 $channal_message_current->whereIn('keyword_id', $this->keyword_id);
             }
 
-            if ($this->source) {
-                $channal_message_current->where('source_id', $this->source);
+            if ($this->source_id) {
+                $channal_message_current->where('source_id', $this->source_id);
             }
 
         return $channal_message_current->get()->count();
@@ -1183,8 +1183,8 @@ class ChannelDashboardController extends Controller
 
     public function PeriodOverPeriod(Request $request)
     {
-        $source = Sources::where('status', 1)->get();
-        foreach ($source as $item) {
+        $source_id = Sources::where('status', 1)->get();
+        foreach ($source_id as $item) {
 
             $channal_message_current = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
             $channal_message_previous = $this->total_message_by_source_id('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $item->id);
@@ -1204,8 +1204,8 @@ class ChannelDashboardController extends Controller
 
     public function PeriodOverPeriodGroup()
     {
-        $source = Sources::where('status', 1)->get();
-        foreach ($source as $item) {
+        $source_id = Sources::where('status', 1)->get();
+        foreach ($source_id as $item) {
 
             $channal_message_current = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
             $channal_message_previous = $this->total_message_by_source_id('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $item->id);
@@ -1302,14 +1302,14 @@ class ChannelDashboardController extends Controller
     public function ChannelBySentiment2(Request $request)
     {
         $data = null;
-        $source = Sources::where('status', 1)->get();
+        $source_id = Sources::where('status', 1)->get();
         $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
 
         $data["all"] = [
             "keyword_name" => "All",
             "total_value" => $channal_message_all,
         ];
-        foreach ($source as $item) {
+        foreach ($source_id as $item) {
 
             $channal_message = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
             $data[$item->name] = [
@@ -1328,14 +1328,14 @@ class ChannelDashboardController extends Controller
     private function ChannelBySentiment2Group()
     {
         $data = null;
-        $source = Sources::where('status', 1)->get();
+        $source_id = Sources::where('status', 1)->get();
         $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
 
         $data["all"] = [
             "keyword_name" => "All",
             "total_value" => $channal_message_all,
         ];
-        foreach ($source as $item) {
+        foreach ($source_id as $item) {
 
             $channal_message = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
             $data[$item->name] = [
@@ -1364,22 +1364,22 @@ class ChannelDashboardController extends Controller
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $percentage_of_channal->where('source_id', $this->source);
+        if ($this->source_id) {
+            $percentage_of_channal->where('source_id', $this->source_id);
         }
 
         foreach ($percentage_of_channal->get() as $channal) {
-            $source_id = $channal->source_id;
-            $data[$source_id]['keyword_id'] = $channal->keyword_id;
-            $data[$source_id]['keyword_name'] = $channal->keyword_name;
-            $data[$source_id]['campaign_id'] = $channal->campaign_id;
-            $data[$source_id]['campaign_name'] = $channal->campaign_name;
-            $data[$source_id]['source_id'] = $channal->source_id;
-            $data[$source_id]['source_name'] = $this->source_name($channal->source_id);
-            $data[$source_id]['negative'] = 0;
-            $data[$source_id]['neutral'] = 0;
-            $data[$source_id]['positive'] = 0;
-            $data[$source_id]['total'] = 0;
+            $source_id_id = $channal->source_id;
+            $data[$source_id_id]['keyword_id'] = $channal->keyword_id;
+            $data[$source_id_id]['keyword_name'] = $channal->keyword_name;
+            $data[$source_id_id]['campaign_id'] = $channal->campaign_id;
+            $data[$source_id_id]['campaign_name'] = $channal->campaign_name;
+            $data[$source_id_id]['source_id'] = $channal->source_id;
+            $data[$source_id_id]['source_name'] = $this->source_name($channal->source_id);
+            $data[$source_id_id]['negative'] = 0;
+            $data[$source_id_id]['neutral'] = 0;
+            $data[$source_id_id]['positive'] = 0;
+            $data[$source_id_id]['total'] = 0;
 
             $sum = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
@@ -1388,21 +1388,21 @@ class ChannelDashboardController extends Controller
                 ->where('source_id', $channal->source_id)->get();
             foreach ($sum as $item) {
                 if (isset($item->classification_name) && $item->classification_name === "Negative") {
-                    $data[$source_id]['negative'] = $data[$source_id]['negative'] + 1;
-                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                    $data[$source_id_id]['negative'] = $data[$source_id_id]['negative'] + 1;
+                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
                 } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
-                    $data[$source_id]['positive'] = $data[$source_id]['positive'] + 1;
-                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                    $data[$source_id_id]['positive'] = $data[$source_id_id]['positive'] + 1;
+                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
                 } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
-                    $data[$source_id]['neutral'] = $data[$source_id]['neutral'] + 1;
-                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                    $data[$source_id_id]['neutral'] = $data[$source_id_id]['neutral'] + 1;
+                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
                 }
 
             }
 
-            $data[$source_id]['negative'] = $this->point_two_digits(($data[$source_id]['negative'] / $data[$source_id]['total']) * 100);
-            $data[$source_id]['positive'] = $this->point_two_digits(($data[$source_id]['positive'] / $data[$source_id]['total']) * 100);
-            $data[$source_id]['neutral'] = $this->point_two_digits(($data[$source_id]['neutral'] / $data[$source_id]['total']) * 100);
+            $data[$source_id_id]['negative'] = $this->point_two_digits(($data[$source_id_id]['negative'] / $data[$source_id_id]['total']) * 100);
+            $data[$source_id_id]['positive'] = $this->point_two_digits(($data[$source_id_id]['positive'] / $data[$source_id_id]['total']) * 100);
+            $data[$source_id_id]['neutral'] = $this->point_two_digits(($data[$source_id_id]['neutral'] / $data[$source_id_id]['total']) * 100);
         }
 
         if ($data) {
@@ -1425,22 +1425,22 @@ class ChannelDashboardController extends Controller
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $percentage_of_channal->where('source_id', $this->source);
+        if ($this->source_id) {
+            $percentage_of_channal->where('source_id', $this->source_id);
         }
 
         foreach ($percentage_of_channal->get() as $channal) {
-            $source_id = $channal->source_id;
-            $data[$source_id]['keyword_id'] = $channal->keyword_id;
-            $data[$source_id]['keyword_name'] = $channal->keyword_name;
-            $data[$source_id]['campaign_id'] = $channal->campaign_id;
-            $data[$source_id]['campaign_name'] = $channal->campaign_name;
-            $data[$source_id]['source_id'] = $channal->source_id;
-            $data[$source_id]['source_name'] = $this->source_name($channal->source_id);
-            $data[$source_id]['negative'] = 0;
-            $data[$source_id]['neutral'] = 0;
-            $data[$source_id]['positive'] = 0;
-            $data[$source_id]['total'] = 0;
+            $source_id_id = $channal->source_id;
+            $data[$source_id_id]['keyword_id'] = $channal->keyword_id;
+            $data[$source_id_id]['keyword_name'] = $channal->keyword_name;
+            $data[$source_id_id]['campaign_id'] = $channal->campaign_id;
+            $data[$source_id_id]['campaign_name'] = $channal->campaign_name;
+            $data[$source_id_id]['source_id'] = $channal->source_id;
+            $data[$source_id_id]['source_name'] = $this->source_name($channal->source_id);
+            $data[$source_id_id]['negative'] = 0;
+            $data[$source_id_id]['neutral'] = 0;
+            $data[$source_id_id]['positive'] = 0;
+            $data[$source_id_id]['total'] = 0;
 
             $sum = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
@@ -1449,21 +1449,21 @@ class ChannelDashboardController extends Controller
                 ->where('source_id', $channal->source_id)->get();
             foreach ($sum as $item) {
                 if (isset($item->classification_name) && $item->classification_name === "Negative") {
-                    $data[$source_id]['negative'] = $data[$source_id]['negative'] + 1;
-                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                    $data[$source_id_id]['negative'] = $data[$source_id_id]['negative'] + 1;
+                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
                 } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
-                    $data[$source_id]['positive'] = $data[$source_id]['positive'] + 1;
-                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                    $data[$source_id_id]['positive'] = $data[$source_id_id]['positive'] + 1;
+                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
                 } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
-                    $data[$source_id]['neutral'] = $data[$source_id]['neutral'] + 1;
-                    $data[$source_id]['total'] = $data[$source_id]['total'] + 1;
+                    $data[$source_id_id]['neutral'] = $data[$source_id_id]['neutral'] + 1;
+                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
                 }
 
             }
 
-            $data[$source_id]['negative'] = $this->point_two_digits(($data[$source_id]['negative'] / $data[$source_id]['total']) * 100);
-            $data[$source_id]['positive'] = $this->point_two_digits(($data[$source_id]['positive'] / $data[$source_id]['total']) * 100);
-            $data[$source_id]['neutral'] = $this->point_two_digits(($data[$source_id]['neutral'] / $data[$source_id]['total']) * 100);
+            $data[$source_id_id]['negative'] = $this->point_two_digits(($data[$source_id_id]['negative'] / $data[$source_id_id]['total']) * 100);
+            $data[$source_id_id]['positive'] = $this->point_two_digits(($data[$source_id_id]['positive'] / $data[$source_id_id]['total']) * 100);
+            $data[$source_id_id]['neutral'] = $this->point_two_digits(($data[$source_id_id]['neutral'] / $data[$source_id_id]['total']) * 100);
         }
 
         if ($data) {
@@ -1473,12 +1473,12 @@ class ChannelDashboardController extends Controller
         return $data;
     }
 
-    private function channelTable($start_date, $end_date, $source_id)
+    private function channelTable($start_date, $end_date, $source_id_id)
     {
         return DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
-            ->where('source_id', $source_id)
+            ->where('source_id', $source_id_id)
             ->whereIn('classification_type_id', [1])
             ->get()
             ->count();
@@ -1523,10 +1523,10 @@ class ChannelDashboardController extends Controller
             $raw_child_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $raw->where('source_id', $this->source);
-            $raw_child->where('source_id', $this->source);
-            $raw_child_previous->where('source_id', $this->source);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_child->where('source_id', $this->source_id);
+            $raw_child_previous->where('source_id', $this->source_id);
         }
 
         $items = $raw->get();
@@ -1582,13 +1582,13 @@ class ChannelDashboardController extends Controller
             $engagement_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source) {
-            $engagement_previous->where('source_id', $this->source);
+        if ($this->source_id) {
+            $engagement_previous->where('source_id', $this->source_id);
         }
 
-        $source = Sources::where('status', 1)->get();
-        foreach ($source as $source) {
-            $data['labels'][] = $this->source_name($source->id);
+        $source_id = Sources::where('status', 1)->get();
+        foreach ($source_id as $source_id) {
+            $data['labels'][] = $this->source_name($source_id->id);
         }
 
         foreach ($engagement_previous->get() as $item) {
@@ -1609,10 +1609,10 @@ class ChannelDashboardController extends Controller
         return $data;
     }
 
-    private function source_name($source_id)
+    private function source_name($source_id_id)
     {
-        $source = Sources::where('id', $source_id)->first();
-        return $source->name;
+        $source_id = Sources::where('id', $source_id_id)->first();
+        return $source_id->name;
     }
 
 }
