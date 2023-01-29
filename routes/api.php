@@ -225,24 +225,32 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-engagement'], function () {
         Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
+
+        Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
+
         Route::get('/engagement-day', [EngagementDashboardController::class, 'EngagementByDay']);
         Route::get('/engagement-time', [EngagementDashboardController::class, 'EngagementByTime']);
         Route::get('/engagement-device', [EngagementDashboardController::class, 'EngagementByDevice']);
         Route::get('/engagement-account', [EngagementDashboardController::class, 'EngagementByAccount']);
         Route::get('/engagement-channel', [EngagementDashboardController::class, 'EngagementChannel']);
+        Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
+
+
+
         Route::get('/engagement-type', [EngagementDashboardController::class, 'EngagementType']);
         Route::get('/engagement-type-by-day', [EngagementDashboardController::class, 'EngagementByDayKey']);
         Route::get('/engagement-type-by-time', [EngagementDashboardController::class, 'EngagementByTimeKey']);
         Route::get('/engagement-type-by-device', [EngagementDashboardController::class, 'EngagementByDeviceKey']);
         Route::get('/engagement-type-by-account', [EngagementDashboardController::class, 'EngagementByAccountKey']);
         Route::get('/engagement-type-by-channel', [EngagementDashboardController::class, 'EngagementChannelKey']);
+
         Route::get('/engagement-comparison', [EngagementDashboardController::class, 'EngagementComparison']);
         Route::get('/engagement-period-platform', [EngagementDashboardController::class, 'EngagementPeriodPlarform']);
         Route::get('/engagement-period-sentiment', [EngagementDashboardController::class, 'EngagementPeriodSentiment']);
         Route::get('/engagement-type-comparison', [EngagementDashboardController::class, 'EngagementTypeComparison']);
         Route::get('/engagement-action-comparison', [EngagementDashboardController::class, 'EngagementActionComparison']);
         Route::get('/engagement-infulencer', [EngagementDashboardController::class, 'EngagementByInfulencer']);
-        Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
+
 
     });
 

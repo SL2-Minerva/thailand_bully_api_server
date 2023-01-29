@@ -42,13 +42,25 @@ class SentimentDashboardController extends Controller
 
     public function DailySeniment(Request $request)
     {
-        $table = 'message_result_semetic';
+        $table = 'message_result_full_data';
         $data = null;
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
         $raw_pre = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+
+        if ($this->source_id) {
+            $raw_current->where('source_id', $this->source_id);
+            $raw_pre->where('source_id', $this->source_id);
+        }
+
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+            $raw_pre->whereIn('keyword_id', $this->keyword_id);
+        }
+
+
 
         $data['sentiment'] = $this->sentiment($raw_current);
         $data['prcentage_of_messages_current'] = $this->percentageOfMessages($raw_current, $this->start_date, $this->end_date);
