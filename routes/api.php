@@ -221,14 +221,14 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/channel-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment']);
         Route::get('/channel-bully-level', [ChannelDashboardController::class, 'ChannelBullyLevel']);
         Route::get('/channel-bully-type', [ChannelDashboardController::class, 'ChannelBullyType']);
-        
+
         //todo
         Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
 
         Route::get('/engagement-rate', [ChannelDashboardController::class, 'EngagementRate']);
         Route::get('/engagement-rate-previous', [ChannelDashboardController::class, 'EngagementRatePrevious']);
-        Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']); 
-       
+        Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']);
+
         //todo
         Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
 
@@ -250,7 +250,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/engagement-channel', [EngagementDashboardController::class, 'EngagementChannel']);
         Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
 
-
+        Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
 
         Route::get('/engagement-type', [EngagementDashboardController::class, 'EngagementType']);
         Route::get('/engagement-type-by-day', [EngagementDashboardController::class, 'EngagementByDayKey']);
@@ -258,6 +258,8 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/engagement-type-by-device', [EngagementDashboardController::class, 'EngagementByDeviceKey']);
         Route::get('/engagement-type-by-account', [EngagementDashboardController::class, 'EngagementByAccountKey']);
         Route::get('/engagement-type-by-channel', [EngagementDashboardController::class, 'EngagementChannelKey']);
+
+        Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
 
         Route::get('/engagement-comparison', [EngagementDashboardController::class, 'EngagementComparison']);
         Route::get('/engagement-period-platform', [EngagementDashboardController::class, 'EngagementPeriodPlarform']);
@@ -312,10 +314,10 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::get('/bully-type-daily', [BullyDashboardController::class, 'BullyTypeDaily']);
         Route::get('/bully-type-percentage-daily', [BullyDashboardController::class, 'BullyTypePercentageDaily']);
-        
+
         //todo
         Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
-        
+
         Route::get('/bully-type-day', [BullyDashboardController::class, 'BullyTypeByDay']);
         Route::get('/bully-type-time', [BullyDashboardController::class, 'BullyTypeByTime']);
         Route::get('/bully-type-device', [BullyDashboardController::class, 'BullyTypeByDevice']);
