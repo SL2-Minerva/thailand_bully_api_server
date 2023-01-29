@@ -1023,6 +1023,14 @@ class EngagementDashboardController extends Controller
         $infulencer_root = DB::table($table_root)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
+        if ($this->source_id) {
+            $infulencer_root->where('source_id', $this->source_id);
+        }
+
+        if ($this->keyword_id) {
+            $infulencer_root->whereIn('keyword_id', $this->keyword_id);
+        }
+
         $infulencers = $infulencer_root->get();
 
 
@@ -1057,6 +1065,14 @@ class EngagementDashboardController extends Controller
 
         $follower_raw = DB::table($table_child)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+
+        if ($this->source_id) {
+            $follower_raw->where('source_id', $this->source_id);
+        }
+
+        if ($this->keyword_id) {
+            $follower_raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
 
         $followers = $follower_raw->get();
@@ -1093,6 +1109,14 @@ class EngagementDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
         $items = $raw->get();
 
