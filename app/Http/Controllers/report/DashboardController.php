@@ -75,7 +75,7 @@ class DashboardController extends Controller
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
         }
-        
+
         $items = $raw->get();
         $data = null;
 
@@ -767,7 +767,7 @@ class DashboardController extends Controller
         }
 
         $raw_query = $raw_query->get();
-        
+
         foreach ($raw_query as $index => $result) {
 
             if (isset($data[$result->keyword_id])) {
@@ -790,7 +790,7 @@ class DashboardController extends Controller
             }
 
         }
-    
+
         if ($data) {
 
             foreach ($data as $item) {
@@ -1433,36 +1433,37 @@ class DashboardController extends Controller
     public function dailyMessageLevelThree(Request $request)
     {
 
-        $campaign_id = $request->campaign_id ?? null;
-        if (!$campaign_id) {
-            return parent::handleNotFound('Campaign id is required');
-        }
 
-        $start_date = $this->date_carbon($request->start_date) ?? null;
-        $end_date = $this->date_carbon($request->end_date) ?? null;
-        $keyword_id = $request->keyword_id ?? null;
-        $source_id = $request->source ?? null;
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
 
-        $data = null;
-        $total = Message::where('keyword_id', $keyword_id)
-            ->whereDate('created_at', '>=', $start_date)
-            ->whereDate('created_at', '<=', $end_date);
 
-        $message = Message::where('keyword_id', $keyword_id)
-            ->whereDate('created_at', '>=', $start_date)
-            ->whereDate('created_at', '<=', $end_date)
+        $data = null;
+        $total = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1]);
+
+//
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1])
             ->offset($start)->limit($limit);
 
-        if ($source_id !== 'all') {
-            $message = $message->where('source_id', $source_id);
-            $total = $total->where('source_id', $source_id);
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
-        foreach ($message->get() as $item) {
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $items = $raw->get();
+
+        foreach ($items as $item) {
             $data_push = [
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
