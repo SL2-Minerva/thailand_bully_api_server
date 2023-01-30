@@ -1470,11 +1470,11 @@ class SentimentDashboardController extends Controller
     }
 
     public function SummaryBy(Request $request) {
-        return [
+        return parent::handleRespond([
             "SummaryScoreAccount" => $this->SummaryScoreAccount($request, true),
             "SummaryScoreChannel" => $this->SummaryScoreChannel($request, true),
             "SummaryKeyword" => $this->SummaryKeyword($request, true),
-        ];
+        ]);
     }
 
     public function SummaryScoreAccount(Request $request, $only_data = false)
