@@ -1225,6 +1225,10 @@ class EngagementDashboardController extends Controller
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
+        if ($only_data) {
+            return $data;
+        }
+
         return parent::handleRespond($data);
     }
 
