@@ -694,31 +694,31 @@ class EngagementDashboardController extends Controller
 
 
         $data['prcentage_of_engagement_current'][1]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_share_current['total'] / $total_engaement) * 100),
+            "percentage" => $total_engaement ? self::point_two_digits(($percentages_share_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
         ];
 
         $data['prcentage_of_engagement_current'][2]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_comment_current['total'] / $total_engaement) * 100),
+            "percentage" => $total_engaement ? self::point_two_digits(($percentages_comment_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
         ];
         $data['prcentage_of_engagement_current'][3]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_reactions_current['total'] / $total_engaement) * 100),
+            "percentage" => $total_engaement ? self::point_two_digits(($percentages_reactions_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
         ];
 
 
         $data['prcentage_of_engagement_previous'][1]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_share_previous['total'] / $total_engaement_previous) * 100),
+            "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_share_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
         ];
 
         $data['prcentage_of_engagement_previous'][2]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_comment_previous['total'] / $total_engaement_previous) * 100),
+            "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_comment_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
         ];
         $data['prcentage_of_engagement_previous'][3]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100),
+            "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
         ];
 
@@ -909,7 +909,8 @@ class EngagementDashboardController extends Controller
             }
         }
 
-        if ($data['value']) {
+
+        if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
 
@@ -998,7 +999,7 @@ class EngagementDashboardController extends Controller
 
 
 
-        if ($data['value']) {
+        if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
 
@@ -1222,7 +1223,7 @@ class EngagementDashboardController extends Controller
 
         $data['reaction'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
-            "comparison" => (float)parent::point_two_digits(($total_reactions_current- $total_reactions_previous) / $total_reactions_previous),
+            "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current- $total_reactions_previous) / $total_reactions_previous) : 0,
             "type" => $total_reactions_current- $total_reactions_previous > 0 ? "plus" :"minus",
         ];
 
@@ -1620,32 +1621,35 @@ class EngagementDashboardController extends Controller
 
 //        dd($current, $previous);
 
-        foreach ($current as $key => $item) {
+        if ($current) {
 
-            $data[] = [
-                'keyword_id' => $key,
-                'keyword_name' => $item['keyword_name'],
-                'total' => [
-                    "value" => $item['total'] - $previous[$key]['total'],
-                    "percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
-                    "type" => $item['total'] - $previous[$key]['total'] >0 ? "plus" : "minus",
-                ],
-                'share' => [
-                    "value" => $item['share'] - $previous[$key]['share'],
-                    "percentage" => $this->overPeriodComparison($item['share'], $previous[$key]['share']),
-                    "type" => $item['share'] - $previous[$key]['share'] > 0 ? "plus" : "minus",
-                ],
-                'comment' => [
-                    "value" => $item['comment'] - $previous[$key]['comment'],
-                    "percentage" => $this->overPeriodComparison($item['comment'], $previous[$key]['comment']),
-                    "type" => $item['comment'] - $previous[$key]['comment'] > 0 ? "plus" : "minus",
-                ],
-                'reaction' => [
-                    "value" => $item['reaction'] - $previous[$key]['reaction'],
-                    "percentage" => $this->overPeriodComparison($item['reaction'], $previous[$key]['reaction']),
-                    "type" => $item['reaction'] - $previous[$key]['reaction'] > 0 ? "plus" : "minus",
-                ],
-            ];
+            foreach ($current as $key => $item) {
+    
+                $data[] = [
+                    'keyword_id' => $key,
+                    'keyword_name' => $item['keyword_name'],
+                    'total' => [
+                        "value" => $item['total'] - $previous[$key]['total'],
+                        "percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
+                        "type" => $item['total'] - $previous[$key]['total'] >0 ? "plus" : "minus",
+                    ],
+                    'share' => [
+                        "value" => $item['share'] - $previous[$key]['share'],
+                        "percentage" => $this->overPeriodComparison($item['share'], $previous[$key]['share']),
+                        "type" => $item['share'] - $previous[$key]['share'] > 0 ? "plus" : "minus",
+                    ],
+                    'comment' => [
+                        "value" => $item['comment'] - $previous[$key]['comment'],
+                        "percentage" => $this->overPeriodComparison($item['comment'], $previous[$key]['comment']),
+                        "type" => $item['comment'] - $previous[$key]['comment'] > 0 ? "plus" : "minus",
+                    ],
+                    'reaction' => [
+                        "value" => $item['reaction'] - $previous[$key]['reaction'],
+                        "percentage" => $this->overPeriodComparison($item['reaction'], $previous[$key]['reaction']),
+                        "type" => $item['reaction'] - $previous[$key]['reaction'] > 0 ? "plus" : "minus",
+                    ],
+                ];
+            }
         }
 
 
@@ -1847,7 +1851,7 @@ class EngagementDashboardController extends Controller
     //todo mamybe is wrong
     public function EngagementByInfulencer(Request $request, $only_data = false)
     {
-
+        $data = null;
         $page = $request->page ?? null;
         $limit = $request->limit ?? 5;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -1905,19 +1909,22 @@ class EngagementDashboardController extends Controller
 
 //        dd($current, $previous);
 
-        foreach ($current as $key => $item) {
-            $previous_total = isset($previous[$key]['total']) ? $previous[$key]['total'] : 0;
-            $data[] = [
-                'message_id' => $item['message_id'],
-                'infulencer' => $item['infulencer'],
-                "total" => $item['total'],
-                "share" => $item['share'],
-                "comment" => $item['comment'],
-                "reaction" => $item['reaction'],
-                "period_over_preiod" => $item['total'] - $previous_total,
-                "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous_total),
+        if ($current) {
 
-            ];
+            foreach ($current as $key => $item) {
+                $previous_total = isset($previous[$key]['total']) ? $previous[$key]['total'] : 0;
+                $data[] = [
+                    'message_id' => $item['message_id'],
+                    'infulencer' => $item['infulencer'],
+                    "total" => $item['total'],
+                    "share" => $item['share'],
+                    "comment" => $item['comment'],
+                    "reaction" => $item['reaction'],
+                    "period_over_preiod" => $item['total'] - $previous_total,
+                    "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous_total),
+    
+                ];
+            }
         }
 
 
@@ -1935,7 +1942,7 @@ class EngagementDashboardController extends Controller
                 $data = array_slice($data, 0, 100);
                 break;
             default:
-                $data = $data;
+                $data = $data ? $data : null;
         }
 
         if ($only_data) {
@@ -2052,9 +2059,12 @@ class EngagementDashboardController extends Controller
             }
         }
 
-        foreach ($data as $k => $value) {
-            if ($value['value']) {
-                $data[$k]['value'] = array_values($value['value']);
+        if ($data) {
+
+            foreach ($data as $k => $value) {
+                if ($value['value']) {
+                    $data[$k]['value'] = array_values($value['value']);
+                }
             }
         }
 

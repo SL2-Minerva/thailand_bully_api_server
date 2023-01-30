@@ -1588,11 +1588,11 @@ class ChannelDashboardController extends Controller
 
         $source_id = Sources::where('status', 1)->get();
         foreach ($source_id as $source_id) {
-            $data['labels'][] = $this->source_name($source_id->id);
+            $data['labels'][] = $source_id->name;
         }
 
         foreach ($engagement_previous->get() as $item) {
-            $source_name = $this->source_name($item->source_id);
+            $source_name = $item->source_name;
             $index_label = array_search($source_name, $data['labels']);
 
             if (isset($data['value'][$value_name])) {

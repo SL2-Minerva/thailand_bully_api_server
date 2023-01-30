@@ -176,10 +176,12 @@ class BullyDashboardController extends Controller
             }
         }
 
+        if ($data) {
 
-        foreach($data as $key => $item) {
-            if ($item) {
-               $data[$key]['value'] = array_values($item['value']);
+            foreach($data as $key => $item) {
+                if ($item) {
+                   $data[$key]['value'] = array_values($item['value']);
+                }
             }
         }
 
@@ -1100,10 +1102,12 @@ class BullyDashboardController extends Controller
             }
         }
 
+        if ($data) {
 
-        foreach($data as $key => $item) {
-            if ($item) {
-               $data[$key]['value'] = array_values($item['value']);
+            foreach($data as $key => $item) {
+                if ($item) {
+                   $data[$key]['value'] = array_values($item['value']);
+                }
             }
         }
 
@@ -2191,18 +2195,19 @@ class BullyDashboardController extends Controller
         $data = [];
 
         foreach ($anylsys as $key => $item) {
+            // dd($item);
             $total = $item['total'];
             $data[$key] = [
                 'id' => $item['id'],
                 'keyword_name' => $item['keyword_name'],
-                'campaign_id' => $item['campaign_id'],
-                'campaign_name' => $item['campaign_name'],
+                // 'campaign_id' => $item['campaign_id'],
+                // 'campaign_name' => $item['campaign_name'],
                 'value' => $item['value'],
                 'total' => $item['total'],
             ];
 
             foreach ($item['value'] as $index => $value) {
-                $data[$key]['value'][$index]['percentage'] = $value['total'] / $total * 100;
+                $data[$key]['value'][$index]['percentage'] = $value['total'] ? $value['total'] / $total * 100 : 0;
             }
 
         }
@@ -2386,14 +2391,14 @@ class BullyDashboardController extends Controller
             $data[$key] = [
                 'id' => $item['id'],
                 'keyword_name' => $item['keyword_name'],
-                'campaign_id' => $item['campaign_id'],
-                'campaign_name' => $item['campaign_name'],
+                // 'campaign_id' => $item['campaign_id'],
+                // 'campaign_name' => $item['campaign_name'],
                 'value' => $item['value'],
                 'total' => $item['total'],
             ];
 
             foreach ($item['value'] as $index => $value) {
-                $data[$key]['value'][$index]['percentage'] = $value['total'] / $total * 100;
+                $data[$key]['value'][$index]['percentage'] = $value['total'] ? $value['total'] / $total * 100 : 0;
             }
 
         }
