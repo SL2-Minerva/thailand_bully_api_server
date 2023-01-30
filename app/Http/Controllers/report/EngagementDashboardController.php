@@ -1992,8 +1992,8 @@ class EngagementDashboardController extends Controller
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => $percentage,
                 'total' => $message_total,
-                "keyword_name" => $value['name'],
-                "name" => $value['name'],
+                "keyword_name" => $value['keyword_name'],
+                "name" => $value['keyword_name'],
             ];
         }
 

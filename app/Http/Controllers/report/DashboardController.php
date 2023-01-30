@@ -1455,10 +1455,12 @@ class DashboardController extends Controller
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
+            $total->where('source_id', $this->source_id);
         }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+            $total->whereIn('keyword_id', $this->keyword_id);
         }
 
         $items = $raw->get();
@@ -1511,46 +1513,60 @@ class DashboardController extends Controller
     public function dailyMessageLevelFour(Request $request)
     {
 
-        $campaign_id = $request->campaign_id;
-        $keyword_id = $request->keyword_id ?? null;
-        $message_id = $request->message_id ?? null;
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-        $report_number = $request->report_number ?? null;
-        $data = null;
-
-//
-        if (!$this->campaign_id) {
-            return parent::handleNotFound('Campaign id is required');
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
-        $condition_root = [
-            'root' => true,
-            "message_id" => $message_id,
-            "keyword_id" => $keyword_id,
-            "report_number" => $report_number,
-            "classification_type_id" => [1]
-        ];
-
-        $parent = $this->factoryDataLevelFour($this->start_date, $this->end_date, $condition_root);
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $data = [];
-        $roots = $this->getRootNode($campaign_id, $keyword_id, $message_id, $this->start_date, $this->end_date);
-        $childs = $this->getChildNode($campaign_id, $keyword_id, $message_id, $this->start_date, $this->end_date);
-        $data['nodes'] = array_merge($roots, $childs);
 
-        foreach ($childs as $child) {
-            foreach ($roots as $root) {
-                if ($child['parent_id'] == $root['id']) {
-                    $data['edges'][] = [
-                        "from" => $child['id'],
-                        "to" => $root['id'],
-                        "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
-                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
-                        "color" => $child['color']
-                    ];
-                }
-            }
-        }
+//        $campaign_id = $request->campaign_id;
+//        $keyword_id = $request->keyword_id ?? null;
+//        $message_id = $request->message_id ?? null;
+//
+        $report_number = $request->report_number ?? null;
+//        $data = null;
+//
+////
+//        if (!$this->campaign_id) {
+//            return parent::handleNotFound('Campaign id is required');
+//        }
+//
+//        $condition_root = [
+//            'root' => true,
+//            "message_id" => $message_id,
+//            "keyword_id" => $keyword_id,
+//            "report_number" => $report_number,
+//            "classification_type_id" => [1]
+//        ];
+//
+//        $parent = $this->factoryDataLevelFour($this->start_date, $this->end_date, $condition_root);
+//
+//        $data = [];
+//        $roots = $this->getRootNode($campaign_id, $keyword_id, $message_id, $this->start_date, $this->end_date);
+//        $childs = $this->getChildNode($campaign_id, $keyword_id, $message_id, $this->start_date, $this->end_date);
+//        $data['nodes'] = array_merge($roots, $childs);
+//
+//        foreach ($childs as $child) {
+//            foreach ($roots as $root) {
+//                if ($child['parent_id'] == $root['id']) {
+//                    $data['edges'][] = [
+//                        "from" => $child['id'],
+//                        "to" => $root['id'],
+//                        "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
+//                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
+//                        "color" => $child['color']
+//                    ];
+//                }
+//            }
+//        }
 
         return parent::handleRespond($data);
 
