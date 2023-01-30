@@ -316,6 +316,7 @@ class ChannelDashboardController extends Controller
 
         return parent::handleRespond($data);
     }
+
     private function ChannelByDayGroup()
     {
         $data['labels'] = [
@@ -660,8 +661,8 @@ class ChannelDashboardController extends Controller
         $raw_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('reference_message_id','')
-            ->orWhere('reference_message_id',null)
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -685,7 +686,6 @@ class ChannelDashboardController extends Controller
             ];
 
         }
-
 
 
         $items_root = $raw_root->get();
@@ -726,8 +726,8 @@ class ChannelDashboardController extends Controller
         $raw_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('reference_message_id','')
-            ->orWhere('reference_message_id',null)
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         $soures = parent::listSource();
@@ -1150,8 +1150,8 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->where('source_id', $this->source_id);
             }
 
-                return $channal_message_current->get()->count();
-            }
+            return $channal_message_current->get()->count();
+        }
 
         $channal_message_current = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
@@ -1159,13 +1159,13 @@ class ChannelDashboardController extends Controller
             ->whereIn('classification_type_id', [1])
             ->where('source_id', $source_id_id);
 
-            if ($this->keyword_id) {
-                $channal_message_current->whereIn('keyword_id', $this->keyword_id);
-            }
+        if ($this->keyword_id) {
+            $channal_message_current->whereIn('keyword_id', $this->keyword_id);
+        }
 
-            if ($this->source_id) {
-                $channal_message_current->where('source_id', $this->source_id);
-            }
+        if ($this->source_id) {
+            $channal_message_current->where('source_id', $this->source_id);
+        }
 
         return $channal_message_current->get()->count();
     }
@@ -1225,14 +1225,15 @@ class ChannelDashboardController extends Controller
 
     public function EngagementRate(Request $request)
     {
-        $data = $this->totalFromEngagementRate("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
+        $data = $this->totalFromEngagementRate($this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
     }
 
     public function EngagementRateGroup()
     {
-        $data = $this->totalFromEngagementRate("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
+        $data = $this->totalFromEngagementRate($this->start_date, $this->end_date);
+
         return $data;
     }
 
@@ -1240,7 +1241,7 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
 
-        $data = $this->totalFromEngagementRate("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+        $data = $this->totalFromEngagementRate($this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -1249,7 +1250,7 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
 
-        $data = $this->totalFromEngagementRate("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+        $data = $this->totalFromEngagementRate($this->start_date_previous, $this->end_date_previous);
 
         return $data;
     }
@@ -1483,42 +1484,87 @@ class ChannelDashboardController extends Controller
             ->count();
     }
 
-    private function totalFromEngagementRate($table, $start_date, $end_date, $keyword_name, $value_name)
+    private function totalFromEngagementRate($start_date, $end_date)
     {
 
+        $labels = parent::listSource();
+        $data['current_period']['label'] = $labels['labels'];
+        $data['current_period']['total'] = 0;
+        $data['previous_period']['label'] = $labels['labels'];
 
-        $engagement_previous = DB::table($table)
+        $data['previous_period']['total'] = 0;
+
+        for ($i = 0; $i < count($labels['labels']); $i++) {
+            $data['current_period']['data'][] = ['total' => 0, 'follower' => 0];
+            $data['previous_period']['data'][] = ['total' => 0, 'follower' => 0];
+        }
+
+        $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date, $start_date])
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
+            ->whereIn('classification_type_id', [1]);
+
+        $raw_child = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$start_date, $start_date])
+            ->where('reference_message_id', '!=', null)
+            ->whereIn('classification_type_id', [1]);
+
+        $raw_child_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
-            $engagement_previous->whereIn('keyword_id', $this->keyword_id);
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_child->whereIn('keyword_id', $this->keyword_id);
+            $raw_child_previous->whereIn('keyword_id', $this->keyword_id);
         }
 
         if ($this->source_id) {
-            $engagement_previous->where('source_id', $this->source_id);
+            $raw->where('source_id', $this->source_id);
+            $raw_child->where('source_id', $this->source_id);
+            $raw_child_previous->where('source_id', $this->source_id);
         }
 
-        $source_id = Sources::where('status', 1)->get();
-        foreach ($source_id as $source_id) {
-            $data['labels'][] = $source_id->name;
+        $items = $raw->get();
+        $items_child = $raw_child->get();
+        $items_previous = $raw_child_previous->get();
+        $message_total = 0;
+        $analysis = [];
+        foreach ($items as $item) {
+            $analysis[$item->message_id][$item->source_name] = $item->number_of_views + $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $analysis[$item->message_id]['follows'] = 0;
+            $data['current_period']['total'] += 1;
+            $message_total += 1;
         }
 
-        foreach ($engagement_previous->get() as $item) {
+        // todo check
+        foreach ($items_child as $child) {
+            $analysis[$child->reference_message_id]['follows'] += 1;
+        }
 
-            $source_name = $item->source_name;
-            $index_label = array_search($source_name, $data['labels']);
+        foreach ($analysis as $item) {
+            foreach ($item as $key => $value) {
 
-            if (isset($data['value'][$value_name])) {
-                $data['value'][$value_name]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            } else {
-                $data['value'][$value_name] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $keyword_name,
-                    'data' => [0, 0, 0, 0, 0, 0]
-                ];
+                if ($key !== 'follows') {
+                    $index_label = array_search($key, $labels['labels']);
+
+                    if ($index_label !== -1) {
+                        $data['current_period']['data'][$index_label]['total'] += $value;
+                        $data['current_period']['data'][$index_label]['follows'] = $item['follows'];
+                    }
+                }
             }
+        }
+
+
+        foreach ($data['current_period']['data'] as $key => $value) {
+
+            $data['current_period']['data'][$key] = (float)$this->point_two_digits(($value['total'] / $message_total) * 100);
+//            $data['current_period']['data'][$key] = (float)$this->point_two_digits(($value['total'] - $message_total) * 100);
         }
 
         return $data;
