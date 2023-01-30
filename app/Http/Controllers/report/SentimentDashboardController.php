@@ -54,7 +54,7 @@ class SentimentDashboardController extends Controller
             "SentimentBullyLevel" => $this->SentimentBullyLevel($request, true),
             "SentimentBullyType" => $this->SentimentBullyType($request, true),
             "SentimentScore" => $this->SentimentScore($request, true),
-            "sentiment-comparison" => $this->SentimentComparison($request, true),
+            "sentimentComparison" => $this->SentimentComparison($request, true),
         ]);
     }
 
