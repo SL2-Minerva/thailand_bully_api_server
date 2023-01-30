@@ -2052,13 +2052,15 @@ class EngagementDashboardController extends Controller
             }
         }
 
-        foreach ($data as $k => $value) {
-            if ($value['value']) {
-                $data[$k]['value'] = array_values($value['value']);
-            }
-        }
 
         if ($data) {
+            foreach ($data as $k => $value) {
+                if ($value['value']) {
+                    $data[$k]['value'] = array_values($value['value']);
+                }
+            }
+
+
             $data = array_values($data);
         }
         return $data;

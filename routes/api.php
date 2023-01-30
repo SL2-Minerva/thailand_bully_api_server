@@ -288,12 +288,14 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
 
         Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
+
         Route::get('/period-over-period', [SentimentDashboardController::class, 'PeriodOverPeriod']);
         Route::get('/comparison-channel', [SentimentDashboardController::class, 'ComparisonByChannel']);
         Route::get('/comparison-engagement-type', [SentimentDashboardController::class, 'ComparisonByEngagementType']);
 
 
         Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
+
         Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
         Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);
         Route::get('/summary-keyword', [SentimentDashboardController::class, 'SummaryKeyword']);

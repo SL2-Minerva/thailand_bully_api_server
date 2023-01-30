@@ -1124,7 +1124,6 @@ class VoiceDashboardController extends Controller
                 $data = array_values($data);
             }
 
-
             return $data;
         }
 

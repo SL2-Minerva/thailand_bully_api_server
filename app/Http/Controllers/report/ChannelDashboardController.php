@@ -34,7 +34,7 @@ class ChannelDashboardController extends Controller
         $fillter_keywords = $request->fillter_keywords;
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
-            $this->keyword_id = explode(',' , $fillter_keywords);
+            $this->keyword_id = explode(',', $fillter_keywords);
         }
 
     }
@@ -48,7 +48,7 @@ class ChannelDashboardController extends Controller
         $data['daily_message'] = $this->DailyChannelGroup();
 
         return parent::handleRespond($data);
-        
+
     }
 
     public function PercentageOfChannel(Request $request)
@@ -149,7 +149,7 @@ class ChannelDashboardController extends Controller
 
             } else {
                 $data[$item->source_id] = [
-                    "source_id" =>  $item->source_id,
+                    "source_id" => $item->source_id,
                     "source_name" => $item->source_name,
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
@@ -165,9 +165,9 @@ class ChannelDashboardController extends Controller
 
         if ($data) {
 
-            foreach($data as $key => $item) {
+            foreach ($data as $key => $item) {
                 if ($item) {
-                   $data[$key]['value'] = array_values($item['value']);
+                    $data[$key]['value'] = array_values($item['value']);
                 }
             }
         }
@@ -215,7 +215,7 @@ class ChannelDashboardController extends Controller
 
             } else {
                 $data[$item->source_id] = [
-                    "source_id" =>  $item->source_id,
+                    "source_id" => $item->source_id,
                     "source_name" => $item->source_name,
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
@@ -231,9 +231,9 @@ class ChannelDashboardController extends Controller
 
         if ($data) {
 
-            foreach($data as $key => $item) {
+            foreach ($data as $key => $item) {
                 if ($item) {
-                   $data[$key]['value'] = array_values($item['value']);
+                    $data[$key]['value'] = array_values($item['value']);
                 }
             }
         }
@@ -316,6 +316,7 @@ class ChannelDashboardController extends Controller
 
         return parent::handleRespond($data);
     }
+
     private function ChannelByDayGroup()
     {
         $data['labels'] = [
@@ -660,8 +661,8 @@ class ChannelDashboardController extends Controller
         $raw_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('reference_message_id','')
-            ->orWhere('reference_message_id',null)
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -685,7 +686,6 @@ class ChannelDashboardController extends Controller
             ];
 
         }
-
 
 
         $items_root = $raw_root->get();
@@ -726,8 +726,8 @@ class ChannelDashboardController extends Controller
         $raw_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->where('reference_message_id','')
-            ->orWhere('reference_message_id',null)
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         $soures = parent::listSource();
@@ -1150,8 +1150,8 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->where('source_id', $this->source_id);
             }
 
-                return $channal_message_current->get()->count();
-            }
+            return $channal_message_current->get()->count();
+        }
 
         $channal_message_current = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
@@ -1159,13 +1159,13 @@ class ChannelDashboardController extends Controller
             ->whereIn('classification_type_id', [1])
             ->where('source_id', $source_id_id);
 
-            if ($this->keyword_id) {
-                $channal_message_current->whereIn('keyword_id', $this->keyword_id);
-            }
+        if ($this->keyword_id) {
+            $channal_message_current->whereIn('keyword_id', $this->keyword_id);
+        }
 
-            if ($this->source_id) {
-                $channal_message_current->where('source_id', $this->source_id);
-            }
+        if ($this->source_id) {
+            $channal_message_current->where('source_id', $this->source_id);
+        }
 
         return $channal_message_current->get()->count();
     }
@@ -1225,14 +1225,14 @@ class ChannelDashboardController extends Controller
 
     public function EngagementRate(Request $request)
     {
-        $data = $this->totalFromEngagementRate( $this->start_date, $this->end_date);
+        $data = $this->totalFromEngagementRate($this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
     }
 
     public function EngagementRateGroup()
     {
-        $data = $this->totalFromEngagementRate( $this->start_date, $this->end_date);
+        $data = $this->totalFromEngagementRate($this->start_date, $this->end_date);
 
         return $data;
     }
@@ -1484,7 +1484,7 @@ class ChannelDashboardController extends Controller
             ->count();
     }
 
-    private function totalFromEngagementRate( $start_date, $end_date)
+    private function totalFromEngagementRate($start_date, $end_date)
     {
 
         $labels = parent::listSource();
@@ -1502,8 +1502,8 @@ class ChannelDashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $start_date])
-            ->where('reference_message_id','')
-            ->orWhere('reference_message_id',null)
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         $raw_child = DB::table('message_result_full_data')
@@ -1559,7 +1559,6 @@ class ChannelDashboardController extends Controller
                 }
             }
         }
-
 
 
         foreach ($data['current_period']['data'] as $key => $value) {
