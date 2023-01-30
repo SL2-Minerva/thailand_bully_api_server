@@ -39,7 +39,7 @@ class DashboardController extends Controller
         $fillter_keywords = $request->fillter_keywords;
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
-            $this->keyword_id = explode(',' , $fillter_keywords);
+            $this->keyword_id = explode(',', $fillter_keywords);
         }
 
     }
@@ -97,7 +97,7 @@ class DashboardController extends Controller
 
             } else {
                 $data[$item->keyword_name] = [
-                    "keyword_id" =>  $item->keyword_id,
+                    "keyword_id" => $item->keyword_id,
                     "keyword_name" => $item->keyword_name,
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
@@ -115,9 +115,9 @@ class DashboardController extends Controller
 
 
         if ($data) {
-            foreach($data as $key => $item) {
+            foreach ($data as $key => $item) {
                 if ($item) {
-                   $data[$key]['value'] = array_values($item['value']);
+                    $data[$key]['value'] = array_values($item['value']);
                 }
             }
         }
@@ -743,9 +743,9 @@ class DashboardController extends Controller
             $data[$keyword_id]['value'][] = $push_data;
         }
 //
-       if ($data) {
-          $data = array_values($data);
-       }
+        if ($data) {
+            $data = array_values($data);
+        }
 
         return parent::handleRespond($data);
     }
@@ -1512,10 +1512,142 @@ class DashboardController extends Controller
 
     public function dailyMessageLevelFour(Request $request)
     {
+        $data = [];
+        //todo something
+        $report_number = $request->report_number ?? null;
+
+        $roots = $this->getNode($request->message_id, $this->start_date, $this->end_date);
+        $childs = $this->getNode($request->message_id, $this->start_date, $this->end_date, true);
+
+
+        if ($childs) {
+            $data['node'] = array_merge($roots['nodes'], $childs['nodes']);
+            foreach ($childs['nodes'] as $child) {
+
+                foreach ($roots['nodes'] as $root) {
+                    if ($child['parent_id'] == $root['id']) {
+                        $data['edges'][] = [
+                            "from" => $child['id'],
+                            "to" => $root['id'],
+                            "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
+                            "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
+                            "color" => $child['color']
+                        ];
+                    }
+                }
+            }
+
+
+        } else {
+            $data = $roots;
+        }
+
+//        if ($data) {
+//            $data = array_values($data);
+//        }
+
+        return parent::handleRespond($data);
+
+    }
+
+    private function getNode($message_id, $start_date, $end_date, $is_child = false)
+    {
+
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+            ->where('message_id', $message_id)
+            ->whereBetween('date_m', [$start_date, $end_date]);
+
+        if ($is_child) {
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->where('reference_message_id', $message_id)
+                ->whereBetween('date_m', [$start_date, $end_date]);
+        }
+
+        $raw_total = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date]);
+
+
+        $total_interaction_from = $raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_total->where('source_id', $this->source_id);
+
+        }
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_total->whereIn('keyword_id', $this->keyword_id);
+
+        }
+
+        $items = $raw->get();
+
+
+        if ($items) {
+
+//            foreach ($items as $sna) {
+//
+
+//
+//                $data['nodes'][0] = [
+//                    "id" => $sna->message_id,
+//                    "label" => $sna->author,
+//                    "title" => $sna->author,
+//                    "color" => $sna->classification_color,
+//                    "shape" => "dot",
+//                    "size" => $this->factorNodeSize($influent_rate),
+//                ];
+//            }
+
+            $type = 0;
+
+            $total_interaction_to = $items[$type]->number_of_comments + $items[$type]->number_of_shares + $items[$type]->number_of_reactions;
+            $influent_rate = ($total_interaction_to / $total_interaction_from) * 100;
+            $data['nodes'][0] = [
+                "id" => $items[$type]->message_id,
+                "label" => $items[$type]->author,
+                "title" => $items[$type]->author,
+                "color" => $items[$type]->classification_color,
+                "shape" => "dot",
+                "size" => $this->factorNodeSize($influent_rate),
+            ];
+
+            if ($is_child) {
+                $data['nodes'][0]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+                $data['nodes'][0]["parent_id"] = $items[$type]->reference_message_id;
+            }
+
+            return $data;
+        }
+
+        return null;
+    }
+
+
+    private function factorNodeSize($influent_rate = 0)
+    {
+        if (!$influent_rate || $influent_rate <= 0) {
+            return 20;
+        }
+        if ($influent_rate > 10) {
+            return $influent_rate * 20;
+        } else {
+            return $influent_rate * 100;
+        }
+
+    }
+
+    private function getChildNode($message_id, $start_date, $end_date)
+    {
+        $raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->where('reference_message_id', $message_id)
+            ->whereBetween('date_m', [$start_date, $end_date]);
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -1525,125 +1657,47 @@ class DashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        $data = [];
+        $items = $raw->get();
 
-//        $campaign_id = $request->campaign_id;
-//        $keyword_id = $request->keyword_id ?? null;
-//        $message_id = $request->message_id ?? null;
-//
-        $report_number = $request->report_number ?? null;
-//        $data = null;
-//
-////
-//        if (!$this->campaign_id) {
-//            return parent::handleNotFound('Campaign id is required');
-//        }
-//
-//        $condition_root = [
-//            'root' => true,
-//            "message_id" => $message_id,
-//            "keyword_id" => $keyword_id,
-//            "report_number" => $report_number,
-//            "classification_type_id" => [1]
-//        ];
-//
-//        $parent = $this->factoryDataLevelFour($this->start_date, $this->end_date, $condition_root);
-//
-//        $data = [];
-//        $roots = $this->getRootNode($campaign_id, $keyword_id, $message_id, $this->start_date, $this->end_date);
-//        $childs = $this->getChildNode($campaign_id, $keyword_id, $message_id, $this->start_date, $this->end_date);
-//        $data['nodes'] = array_merge($roots, $childs);
-//
-//        foreach ($childs as $child) {
-//            foreach ($roots as $root) {
-//                if ($child['parent_id'] == $root['id']) {
-//                    $data['edges'][] = [
-//                        "from" => $child['id'],
-//                        "to" => $root['id'],
-//                        "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
-//                        "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
-//                        "color" => $child['color']
-//                    ];
-//                }
-//            }
-//        }
+        foreach ($items as $sna) {
+//            $size = (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagement / 10;
+//            $length = (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagemen + 10;
 
-        return parent::handleRespond($data);
-
-    }
-
-    private function getRootNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date)
-    {
-        $data = [];
-        $snas = SNARootNode::where('campaign_id', $campaign_id)
-            ->where('keyword_id', $keyword_id)
-            ->where('message_id', $message_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->groupBy('message_id')
-            ->get();
-
-        foreach ($snas as $sna) {
-            $data[] = [
-                "id" => $sna->message_id,
-                "label" => $sna->author,
-                "title" => $sna->author,
-                "color" => $sna->classification_color,
-                "shape" => "dot",
-                "size" => (int)$sna->engagement >= 30 ? (int)$sna->engagement / 10 : ((int)$sna->engagement == 0 ? 10 : (int)$sna->engagement)
-            ];
-        }
-
-        return $data;
-    }
-
-    private function getChildNode($campaign_id, $keyword_id, $message_id, $start_date, $end_date)
-    {
-        $data = [];
-        $snas = SNAChildNode::where('campaign_id', $campaign_id)
-            ->where('keyword_id', $keyword_id)
-            ->where('reference_message_id', $message_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
-            ->groupBy('message_id')
-            ->get();
-
-        foreach ($snas as $sna) {
             $data[] = [
                 "id" => $sna->message_id,
                 "label" => $sna->author,
                 "title" => $sna->author,
                 "parent_id" => $sna->reference_message_id,
                 "color" => $sna->classification_color,
-                "shape" => "dot",
-                "size" => (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagement / 10,
-                "length" => (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagemen + 10
+                "shape" => "dot"
             ];
         }
 
         return $data;
     }
 
-    private function getReferSna($campaign_id, $message_id, $data_node = [])
-    {
-        $data = $data_node;
-        $snas = SNA::where(SNA::CAMPAIGN_ID, $campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, $message_id)->get();
-
-
-        foreach ($snas as $sna) {
-            $data['nodes'][] = [
-                "id" => $sna->message_id,
-                "label" => $sna->author,
-                "title" => $sna->author,
-                "color" => $sna->classification_color,
-                "shape" => "dot",
-                "size" => $sna->engagement,
-            ];
-
-
-            //            $data_node = $this->getReferSna($campaign_id, $sna->message_id, $data_node);
-        }
-
-        return $data;
-    }
+//    private function getReferSna($data_node = [])
+//    {
+//        $data = $data_node;
+////        $snas = SNA::where(SNA::CAMPAIGN_ID, $campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, $message_id)->get();
+//
+//
+//        foreach ($snas as $sna) {
+//            $data['nodes'][] = [
+//                "id" => $sna->message_id,
+//                "label" => $sna->author,
+//                "title" => $sna->author,
+//                "color" => $sna->classification_color,
+//                "shape" => "dot",
+//                "size" => $sna->engagement,
+//            ];
+//
+//
+//            //            $data_node = $this->getReferSna($campaign_id, $sna->message_id, $data_node);
+//        }
+//
+//        return $data;
+//    }
 
     public function wordClouds(Request $request)
     {
