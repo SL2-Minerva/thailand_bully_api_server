@@ -528,14 +528,14 @@ class SentimentDashboardController extends Controller
         }
 
         if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
 
-        if ($data['value']) {
             foreach ($data['value'] as $key => $value) {
                 $data['value'][$key]['data'] = array_values($value['data']);
             }
+
+            $data['value'] = array_values($data['value']);
         }
+
 
         if ($only_data) {
             return $data;

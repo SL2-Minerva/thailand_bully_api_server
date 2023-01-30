@@ -48,8 +48,8 @@ class EngagementDashboardController extends Controller
     {
 
         $data = [
-            "engagement" => $this->engagement( $this->start_date, $this->end_date),
-            "prcentage_of_engagement_current" => $this->percentageOfEngagement( $this->start_date, $this->end_date),
+            "engagement" => $this->engagement($this->start_date, $this->end_date),
+            "prcentage_of_engagement_current" => $this->percentageOfEngagement($this->start_date, $this->end_date),
             "prcentage_of_engagement_previous" => $this->percentageOfEngagement($this->start_date_previous, $this->end_date_previous)
         ];
 
@@ -57,9 +57,10 @@ class EngagementDashboardController extends Controller
     }
 
 
-    public function EngagementBy(Request $request) {
+    public function EngagementBy(Request $request)
+    {
         return parent::handleRespond([
-           "EngagementByDay"  => $this->EngagementByDay($request, true),
+            "EngagementByDay" => $this->EngagementByDay($request, true),
             "EngagementByTime" => $this->EngagementByTime($request, true),
             "EngagementByDevice" => $this->EngagementByDevice($request, true),
             "EngagementByAccount" => $this->EngagementByAccount($request, true),
@@ -127,7 +128,7 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementByTime(Request $request, $only_data = false )
+    public function EngagementByTime(Request $request, $only_data = false)
     {
 
         $data['labels'] = [
@@ -275,8 +276,8 @@ class EngagementDashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->start_date])
-            ->where('reference_message_id','')
-            ->orWhere('reference_message_id',null)
+            ->where('reference_message_id', '')
+            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         $raw_child = DB::table('message_result_full_data')
@@ -420,7 +421,8 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function keywordByEngagementType(Request $request, $only_data = false) {
+    public function keywordByEngagementType(Request $request, $only_data = false)
+    {
 
         $data['labels'] = ["Share of Voice", "Comments", "Reaction"];
 
@@ -478,15 +480,16 @@ class EngagementDashboardController extends Controller
     }
 
 
-    public function EngagementTypeBy(Request $request) {
-       return parent::handleRespond([
-           "EngagementType" => $this->EngagementType($request, true),
-           "EngagementByDayKey" => $this->EngagementByDayKey($request, true),
-           "EngagementByTimeKey" => $this->EngagementByTimeKey($request, true),
-           "EngagementByDeviceKey" => $this->EngagementByDeviceKey($request, true),
-           "EngagementByAccountKey" => $this->EngagementByAccountKey($request, true),
-           "EngagementChannelKey" => $this->EngagementChannelKey($request, true),
-       ]);
+    public function EngagementTypeBy(Request $request)
+    {
+        return parent::handleRespond([
+            "EngagementType" => $this->EngagementType($request, true),
+            "EngagementByDayKey" => $this->EngagementByDayKey($request, true),
+            "EngagementByTimeKey" => $this->EngagementByTimeKey($request, true),
+            "EngagementByDeviceKey" => $this->EngagementByDeviceKey($request, true),
+            "EngagementByAccountKey" => $this->EngagementByAccountKey($request, true),
+            "EngagementChannelKey" => $this->EngagementChannelKey($request, true),
+        ]);
     }
 
 
@@ -572,7 +575,6 @@ class EngagementDashboardController extends Controller
         }
 
 
-
         foreach ($items as $item) {
 
             $date_m = \Illuminate\Support\Carbon::parse($item->date_m)->format('Y-m-d');
@@ -604,13 +606,11 @@ class EngagementDashboardController extends Controller
                 $data['engagement'][1]['value'][] = $shared;
                 $data['engagement'][2]['value'][] = $comment;
                 $data['engagement'][3]['value'][] = $reactions;
-            }
-
-            else {
+            } else {
                 $data['engagement'][1] = [
                     "id" => 1,
                     "name" => 'Share',
-                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -618,7 +618,7 @@ class EngagementDashboardController extends Controller
                 $data['engagement'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -626,7 +626,7 @@ class EngagementDashboardController extends Controller
                 $data['engagement'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -642,7 +642,7 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_current'][1] = [
                     "id" => 1,
                     "name" => 'Share',
-                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -650,7 +650,7 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_current'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -658,7 +658,7 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_current'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -667,7 +667,7 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_previous'][1] = [
                     "id" => 1,
                     "name" => 'Share',
-                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -675,7 +675,7 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_previous'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -683,7 +683,7 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_previous'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
@@ -694,38 +694,37 @@ class EngagementDashboardController extends Controller
 
 
         $data['prcentage_of_engagement_current'][1]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_share_current['total'] / $total_engaement) * 100),
+            "percentage" => $total_engaement !== 0 ? self::point_two_digits(($percentages_share_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
         ];
 
         $data['prcentage_of_engagement_current'][2]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_comment_current['total'] / $total_engaement) * 100),
+            "percentage" => $total_engaement !== 0 ? self::point_two_digits(($percentages_comment_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
         ];
         $data['prcentage_of_engagement_current'][3]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_reactions_current['total'] / $total_engaement) * 100),
+            "percentage" => $total_engaement !== 0 ? self::point_two_digits(($percentages_reactions_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
         ];
 
 
         $data['prcentage_of_engagement_previous'][1]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_share_previous['total'] / $total_engaement_previous) * 100),
+            "percentage" => $total_engaement_previous !== 0 ? self::point_two_digits(($percentages_share_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
         ];
 
         $data['prcentage_of_engagement_previous'][2]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_comment_previous['total'] / $total_engaement_previous) * 100),
+            "percentage" => $total_engaement_previous !== 0 ? self::point_two_digits(($percentages_comment_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
         ];
         $data['prcentage_of_engagement_previous'][3]['value'] = [
-            "percentage" => self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100),
+            "percentage" => $total_engaement_previous !== 0 ? self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
         ];
 
 
-
         $data['engagement'] = isset($data['engagement']) ? array_values($data['engagement']) : null;
-        $data['prcentage_of_engagement_previous'] = isset($data['prcentage_of_engagement_previous'] ) ? array_values($data['prcentage_of_engagement_previous']) : null;
+        $data['prcentage_of_engagement_previous'] = isset($data['prcentage_of_engagement_previous']) ? array_values($data['prcentage_of_engagement_previous']) : null;
         $data['prcentage_of_engagement_current'] = isset($data['prcentage_of_engagement_current']) ? array_values($data['prcentage_of_engagement_current']) : null;
 //
 
@@ -826,7 +825,6 @@ class EngagementDashboardController extends Controller
     {
 
 
-
         $data['labels'] = [
             "Before 6 AM",
             "6 AM-12 PM",
@@ -883,33 +881,33 @@ class EngagementDashboardController extends Controller
 
             } else {
 
-                    $data['value'][1] = [
-                        "id" => 1,
-                        "keyword_name" => 'Share',
-                        "campaign_id" =>  $item->campaign_id,
-                        "campaign_name" => $item->campaign_name,
-                        'data' => [0, 0, 0, 0]
-                    ];
+                $data['value'][1] = [
+                    "id" => 1,
+                    "keyword_name" => 'Share',
+                    "campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    'data' => [0, 0, 0, 0]
+                ];
 
-                    $data['value'][2] = [
-                        "id" => 2,
-                        "name" => 'Comment',
-                        "campaign_id" =>  $this->campaign_id,
-                        "campaign_name" => $item->campaign_name,
-                        'data' => [0, 0, 0, 0]
-                    ];
+                $data['value'][2] = [
+                    "id" => 2,
+                    "name" => 'Comment',
+                    "campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    'data' => [0, 0, 0, 0]
+                ];
 
-                    $data['value'][3] = [
-                        "id" => 3,
-                        "keyword_name" => 'Reactions',
-                        "campaign_id" =>  $this->campaign_id,
-                        "campaign_name" => $item->campaign_name,
-                        'data' => [0, 0, 0, 0]
-                    ];
+                $data['value'][3] = [
+                    "id" => 3,
+                    "keyword_name" => 'Reactions',
+                    "campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,
+                    'data' => [0, 0, 0, 0]
+                ];
             }
         }
 
-        if ($data['value']) {
+        if (isset($data['value']) && $data['value']) {
             $data['value'] = array_values($data['value']);
         }
 
@@ -951,15 +949,15 @@ class EngagementDashboardController extends Controller
 
 
         foreach ($items as $item) {
-                $index_label = 0;
+            $index_label = 0;
 
-                if ($item->device == 'iphone') {
-                    $index_label = 1;
-                }
+            if ($item->device == 'iphone') {
+                $index_label = 1;
+            }
 
-                if ($item->device == 'webapp') {
-                    $index_label = 2;
-                }
+            if ($item->device == 'webapp') {
+                $index_label = 2;
+            }
 
             if (isset($data['value'][1])) {
 
@@ -973,7 +971,7 @@ class EngagementDashboardController extends Controller
                 $data['value'][1] = [
                     "id" => 1,
                     "keyword_name" => 'Share',
-                    "campaign_id" =>  $item->campaign_id,
+                    "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     'data' => [0, 0, 0]
                 ];
@@ -981,7 +979,7 @@ class EngagementDashboardController extends Controller
                 $data['value'][2] = [
                     "id" => 2,
                     "keyword_name" => 'Comment',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     'data' => [0, 0, 0]
                 ];
@@ -989,7 +987,7 @@ class EngagementDashboardController extends Controller
                 $data['value'][3] = [
                     "id" => 3,
                     "keyword_name" => 'Reactions',
-                    "campaign_id" =>  $this->campaign_id,
+                    "campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     'data' => [0, 0, 0]
                 ];
@@ -997,8 +995,7 @@ class EngagementDashboardController extends Controller
         }
 
 
-
-        if ($data['value']) {
+        if (isset($data['value']) && $data['value']) {
             $data['value'] = array_values($data['value']);
         }
 
@@ -1044,19 +1041,19 @@ class EngagementDashboardController extends Controller
                 $data['value'][1] = [
                     'id' => 1,
                     "keyword_name" => "Share",
-                    "data"  => [$infulencer->number_of_shares, 0]
+                    "data" => [$infulencer->number_of_shares, 0]
                 ];
 
                 $data['value'][2] = [
                     'id' => 2,
                     "keyword_name" => "Comment",
-                    "data"  => [$infulencer->number_of_comments, 0]
+                    "data" => [$infulencer->number_of_comments, 0]
                 ];
 
                 $data['value'][3] = [
                     'id' => 3,
                     "keyword_name" => "Reaction",
-                    "data"  => [$infulencer->number_of_reactions, 0]
+                    "data" => [$infulencer->number_of_reactions, 0]
                 ];
 
             }
@@ -1166,7 +1163,8 @@ class EngagementDashboardController extends Controller
     }
 
 
-    public function EngagementComparisonBy(Request $request) {
+    public function EngagementComparisonBy(Request $request)
+    {
         return parent::handleRespond([
             "EngagementComparison" => $this->EngagementComparison($request, true),
             "EngagementPeriodPlarform" => $this->EngagementPeriodPlarform($request, true),
@@ -1204,26 +1202,26 @@ class EngagementDashboardController extends Controller
 
         $data['totalEngagement'] = [
             "totalValue" => $this->custom_number_format((int)$totalEngagement_current),
-            "comparison" => (float)parent::point_two_digits($totalEngagement_current- $totalEngagement_previous !== 0 ? $this->overPeriodComparison($totalEngagement_current, $totalEngagement_previous)  : 0),
-            "type" => $totalEngagement_current- $totalEngagement_previous > 0 ? "plus" :"minus",
+            "comparison" => (float)parent::point_two_digits($totalEngagement_current - $totalEngagement_previous !== 0 ? $this->overPeriodComparison($totalEngagement_current, $totalEngagement_previous) : 0),
+            "type" => $totalEngagement_current - $totalEngagement_previous > 0 ? "plus" : "minus",
         ];
 
         $data['share'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
-            "comparison" => (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous  * 100) : 0),
-            "type" => $total_share_current- $total_share_previous > 0 ? "plus" :"minus",
+            "comparison" => (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0),
+            "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
         ];
 
         $data['comment'] = [
             "totalValue" => $this->custom_number_format((int)$total_comment_current),
             "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
-            "type" => $total_comment_current- $total_comment_previous > 0 ? "plus" :"minus",
+            "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
         ];
 
         $data['reaction'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
-            "comparison" => (float)parent::point_two_digits(($total_reactions_current- $total_reactions_previous) / $total_reactions_previous),
-            "type" => $total_reactions_current- $total_reactions_previous > 0 ? "plus" :"minus",
+            "comparison" => $total_reactions_previous !== 0 ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous) : 0,
+            "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
         return parent::handleRespond($data);
@@ -1336,9 +1334,9 @@ class EngagementDashboardController extends Controller
 
 
         for ($i = 0; $i <= count($data['labels']); $i++) {
-            $data['share'][$i]  = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
-            $data['comment'][$i]  = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
-            $data['reaction'][$i]  = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+            $data['share'][$i] = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
+            $data['comment'][$i] = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
+            $data['reaction'][$i] = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
         }
 
 //        $data['labels'] = [
@@ -1474,22 +1472,20 @@ class EngagementDashboardController extends Controller
 //                    $data['reaction'][$i] = 0;
 //
 //                    $current_share[$i] = 0;
-                    $current_share[$index_label] = $item->number_of_shares;
+                $current_share[$index_label] = $item->number_of_shares;
 //                    $current_comment[$i] = 0;
-                    $current_comment[$index_label] = $item->number_of_comments;
+                $current_comment[$index_label] = $item->number_of_comments;
 //                    $current_reaction[$i] = 0;
-                    $current_reaction[$index_label] = $item->number_of_reactions;
+                $current_reaction[$index_label] = $item->number_of_reactions;
 //
-                    $previous_share[$i] = 0;
-                    $previous_comment[$i] = 0;
-                    $previous_reaction[$i] = 0;
+                $previous_share[$i] = 0;
+                $previous_comment[$i] = 0;
+                $previous_reaction[$i] = 0;
 //                }
 
                 $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);
             }
         }
-
-
 
 
         foreach ($items_previous as $item) {
@@ -1513,9 +1509,9 @@ class EngagementDashboardController extends Controller
 
 
         for ($i = 0; $i < count($data['labels']); $i++) {
-            $data['share'][$i]  = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
-            $data['comment'][$i]  = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
-            $data['reaction'][$i]  = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+            $data['share'][$i] = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
+            $data['comment'][$i] = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
+            $data['reaction'][$i] = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
         }
 
         if (isset($data['value'])) {
@@ -1618,155 +1614,37 @@ class EngagementDashboardController extends Controller
             }
         }
 
-//        dd($current, $previous);
+        if ($current) {
 
-        foreach ($current as $key => $item) {
+            foreach ($current as $key => $item) {
 
-            $data[] = [
-                'keyword_id' => $key,
-                'keyword_name' => $item['keyword_name'],
-                'total' => [
-                    "value" => $item['total'] - $previous[$key]['total'],
-                    "percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
-                    "type" => $item['total'] - $previous[$key]['total'] >0 ? "plus" : "minus",
-                ],
-                'share' => [
-                    "value" => $item['share'] - $previous[$key]['share'],
-                    "percentage" => $this->overPeriodComparison($item['share'], $previous[$key]['share']),
-                    "type" => $item['share'] - $previous[$key]['share'] > 0 ? "plus" : "minus",
-                ],
-                'comment' => [
-                    "value" => $item['comment'] - $previous[$key]['comment'],
-                    "percentage" => $this->overPeriodComparison($item['comment'], $previous[$key]['comment']),
-                    "type" => $item['comment'] - $previous[$key]['comment'] > 0 ? "plus" : "minus",
-                ],
-                'reaction' => [
-                    "value" => $item['reaction'] - $previous[$key]['reaction'],
-                    "percentage" => $this->overPeriodComparison($item['reaction'], $previous[$key]['reaction']),
-                    "type" => $item['reaction'] - $previous[$key]['reaction'] > 0 ? "plus" : "minus",
-                ],
-            ];
+                $data[] = [
+                    'keyword_id' => $key,
+                    'keyword_name' => $item['keyword_name'],
+                    'total' => [
+                        "value" => $item['total'] - $previous[$key]['total'],
+                        "percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
+                        "type" => $item['total'] - $previous[$key]['total'] > 0 ? "plus" : "minus",
+                    ],
+                    'share' => [
+                        "value" => $item['share'] - $previous[$key]['share'],
+                        "percentage" => $this->overPeriodComparison($item['share'], $previous[$key]['share']),
+                        "type" => $item['share'] - $previous[$key]['share'] > 0 ? "plus" : "minus",
+                    ],
+                    'comment' => [
+                        "value" => $item['comment'] - $previous[$key]['comment'],
+                        "percentage" => $this->overPeriodComparison($item['comment'], $previous[$key]['comment']),
+                        "type" => $item['comment'] - $previous[$key]['comment'] > 0 ? "plus" : "minus",
+                    ],
+                    'reaction' => [
+                        "value" => $item['reaction'] - $previous[$key]['reaction'],
+                        "percentage" => $this->overPeriodComparison($item['reaction'], $previous[$key]['reaction']),
+                        "type" => $item['reaction'] - $previous[$key]['reaction'] > 0 ? "plus" : "minus",
+                    ],
+                ];
+            }
         }
 
-
-
-//        $data = [
-//            [
-//                "keyword_name" => "keyword 1",
-//                "total" => [
-//                    "value" => "-500",
-//                    "percentage" => "-20",
-//                    "type" => "minus"
-//                ],
-//                "share" => [
-//                    "value" => "80",
-//                    "percentage" => "5",
-//                    "type" => "plus"
-//                ],
-//                "comment" => [
-//                    "value" => "-200",
-//                    "percentage" => "-10",
-//                    "type" => "minus"
-//                ],
-//                "reaction" => [
-//                    "value" => "-380",
-//                    "percentage" => "-2",
-//                    "type" => "minus"
-//                ]
-//            ],
-//            [
-//                "keyword_name" => "keyword 2",
-//                "total" => [
-//                    "value" => "-500",
-//                    "percentage" => "-20",
-//                    "type" => "minus"
-//                ],
-//                "share" => [
-//                    "value" => "80",
-//                    "percentage" => "5",
-//                    "type" => "plus"
-//                ],
-//                "comment" => [
-//                    "value" => "-200",
-//                    "percentage" => "-10",
-//                    "type" => "minus"
-//                ],
-//                "reaction" => [
-//                    "value" => "-380",
-//                    "percentage" => "-2",
-//                    "type" => "minus"
-//                ]
-//            ],
-//            [
-//                "keyword_name" => "keyword 3",
-//                "total" => [
-//                    "value" => "-500",
-//                    "percentage" => "-20",
-//                    "type" => "minus"
-//                ],
-//                "share" => [
-//                    "value" => "80",
-//                    "percentage" => "5",
-//                    "type" => "plus"
-//                ],
-//                "comment" => [
-//                    "value" => "-200",
-//                    "percentage" => "-10",
-//                    "type" => "minus"
-//                ],
-//                "reaction" => [
-//                    "value" => "-380",
-//                    "percentage" => "-2",
-//                    "type" => "minus"
-//                ]
-//            ],
-//            [
-//                "keyword_name" => "keyword 4",
-//                "total" => [
-//                    "value" => "-500",
-//                    "percentage" => "-20",
-//                    "type" => "minus"
-//                ],
-//                "share" => [
-//                    "value" => "80",
-//                    "percentage" => "5",
-//                    "type" => "plus"
-//                ],
-//                "comment" => [
-//                    "value" => "-200",
-//                    "percentage" => "-10",
-//                    "type" => "minus"
-//                ],
-//                "reaction" => [
-//                    "value" => "-380",
-//                    "percentage" => "-2",
-//                    "type" => "minus"
-//                ]
-//            ],
-//            [
-//                "keyword_name" => "keyword 5",
-//                "total" => [
-//                    "value" => "-500",
-//                    "percentage" => "-20",
-//                    "type" => "minus"
-//                ],
-//                "share" => [
-//                    "value" => "80",
-//                    "percentage" => "5",
-//                    "type" => "plus"
-//                ],
-//                "comment" => [
-//                    "value" => "-200",
-//                    "percentage" => "-10",
-//                    "type" => "minus"
-//                ],
-//                "reaction" => [
-//                    "value" => "-380",
-//                    "percentage" => "-2",
-//                    "type" => "minus"
-//                ]
-//            ]
-//        ];
 
         if ($only_data) {
             return $data;
@@ -1796,17 +1674,16 @@ class EngagementDashboardController extends Controller
 
         $percentages = null;
         foreach ($engagement_actions as $engagement_action) {
-            if (isset($percentages[$engagement_action->keyword_id]) ) {
+            if (isset($percentages[$engagement_action->keyword_id])) {
                 $engagements = ($engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions);
                 $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
                 $percentages[$engagement_action->keyword_id]['share_r'] += (float)$engagement_action->number_of_shares;
                 $percentages[$engagement_action->keyword_id]['comment_r'] += (float)$engagement_action->number_of_comments;
                 $percentages[$engagement_action->keyword_id]['reaction_r'] += (float)$engagement_action->number_of_reactions;
-                $percentages[$engagement_action->keyword_id]['share'] =  $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagements) * 100) : 0;
-                $percentages[$engagement_action->keyword_id]['comment'] =  $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagements) * 100) : 0;
+                $percentages[$engagement_action->keyword_id]['share'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagements) * 100) : 0;
+                $percentages[$engagement_action->keyword_id]['comment'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagements) * 100) : 0;
                 $percentages[$engagement_action->keyword_id]['reaction'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_reactions / (float)$engagements) * 100) : 0;
-            }
-            else {
+            } else {
                 $percentages[$engagement_action->keyword_id] = [
                     'share' => 0,
                     'share_r' => 0,
@@ -1825,10 +1702,10 @@ class EngagementDashboardController extends Controller
                 $percentages[$engagement_action->keyword_id]['share_r'] += (float)$engagement_action->number_of_shares;
                 $percentages[$engagement_action->keyword_id]['comment_r'] += (float)$engagement_action->number_of_comments;
                 $percentages[$engagement_action->keyword_id]['reaction_r'] += (float)$engagement_action->number_of_reactions;
-                $percentages[$engagement_action->keyword_id]['share'] =  $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagements) * 100) : 0;
-                $percentages[$engagement_action->keyword_id]['comment'] =  $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagements) * 100) : 0;
+                $percentages[$engagement_action->keyword_id]['share'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagements) * 100) : 0;
+                $percentages[$engagement_action->keyword_id]['comment'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagements) * 100) : 0;
                 $percentages[$engagement_action->keyword_id]['reaction'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_reactions / (float)$engagements) * 100) : 0;
-                $percentages[$engagement_action->keyword_id]['total'] +=  $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
             }
         }
 
@@ -1868,8 +1745,7 @@ class EngagementDashboardController extends Controller
 
         $items_current = $raw_current->get();
         $items_previous = $raw_previous->get();
-
-
+        $data = null;
         $current = null;
         $previous = null;
 
@@ -1904,39 +1780,42 @@ class EngagementDashboardController extends Controller
         }
 
 //        dd($current, $previous);
+        if ($current) {
+            foreach ($current as $key => $item) {
+                $previous_total = isset($previous[$key]['total']) ? $previous[$key]['total'] : 0;
+                $data[] = [
+                    'message_id' => $item['message_id'],
+                    'infulencer' => $item['infulencer'],
+                    "total" => $item['total'],
+                    "share" => $item['share'],
+                    "comment" => $item['comment'],
+                    "reaction" => $item['reaction'],
+                    "period_over_preiod" => $item['total'] - $previous_total,
+                    "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous_total),
 
-        foreach ($current as $key => $item) {
-            $previous_total = isset($previous[$key]['total']) ? $previous[$key]['total'] : 0;
-            $data[] = [
-                'message_id' => $item['message_id'],
-                'infulencer' => $item['infulencer'],
-                "total" => $item['total'],
-                "share" => $item['share'],
-                "comment" => $item['comment'],
-                "reaction" => $item['reaction'],
-                "period_over_preiod" => $item['total'] - $previous_total,
-                "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous_total),
-
-            ];
+                ];
+            }
         }
 
-
-        switch ($request->select) {
-            case "top10":
-                $data = array_slice($data, 0, 10);
-                break;
-            case "top20":
-                $data = array_slice($data, 0, 20);
-                break;
-            case "top50":
-                $data = array_slice($data, 0, 50);
-                break;
-            case "top100":
-                $data = array_slice($data, 0, 100);
-                break;
-            default:
-                $data = $data;
+        if ($data) {
+            switch ($request->select) {
+                case "top10":
+                    $data = array_slice($data, 0, 10);
+                    break;
+                case "top20":
+                    $data = array_slice($data, 0, 20);
+                    break;
+                case "top50":
+                    $data = array_slice($data, 0, 50);
+                    break;
+                case "top100":
+                    $data = array_slice($data, 0, 100);
+                    break;
+                default:
+                    $data = $data;
+            }
         }
+
 
         if ($only_data) {
             return $data;
@@ -2232,7 +2111,6 @@ class EngagementDashboardController extends Controller
         $message_total = 0;
 
 
-
         foreach ($items as $object) {
             $item = (array)$object;
 
@@ -2275,14 +2153,15 @@ class EngagementDashboardController extends Controller
     private function overPeriodComparison($current, $previous)
     {
 
-        if ( $current - $previous === 0 || $previous === 0) {
+        if ($current - $previous === 0 || $previous === 0) {
             return 0;
         }
 
-        return (float) self::point_two_digits((($current - $previous) / $previous) * 100) ;
+        return (float)self::point_two_digits((($current - $previous) / $previous) * 100);
     }
 
-    private function custom_number_format($n, $precision = 3) {
+    private function custom_number_format($n, $precision = 3)
+    {
         if ($n < 1000000) {
             // Anything less than a million
             $n_format = number_format($n);
@@ -2325,7 +2204,6 @@ class EngagementDashboardController extends Controller
                 $items->groupBy($groupBy);
             }
         }
-
 
 
         if ($keyword_id) {
@@ -2573,7 +2451,6 @@ class EngagementDashboardController extends Controller
             }
 
 
-
             if ($type === 'device') {
                 $index_label = 0;
 
@@ -2747,7 +2624,6 @@ class EngagementDashboardController extends Controller
                 }
 
             }
-
 
 
         }
