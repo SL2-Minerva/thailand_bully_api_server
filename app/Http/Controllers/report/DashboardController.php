@@ -1587,7 +1587,7 @@ class DashboardController extends Controller
 
         $items = $raw->get();
 
-
+        $data = [];
         if ($items) {
 
 //            foreach ($items as $sna) {
@@ -1604,22 +1604,55 @@ class DashboardController extends Controller
 //                ];
 //            }
 
-            $type = 0;
 
-            $total_interaction_to = $items[$type]->number_of_comments + $items[$type]->number_of_shares + $items[$type]->number_of_reactions;
-            $influent_rate = ($total_interaction_to / $total_interaction_from) * 100;
-            $data['nodes'][0] = [
-                "id" => $items[$type]->message_id,
-                "label" => $items[$type]->author,
-                "title" => $items[$type]->author,
-                "color" => $items[$type]->classification_color,
-                "shape" => "dot",
-                "size" => $this->factorNodeSize($influent_rate),
-            ];
+            $type = 1;
 
-            if ($is_child) {
-                $data['nodes'][0]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
-                $data['nodes'][0]["parent_id"] = $items[$type]->reference_message_id;
+            foreach ($items as  $sna) {
+                if ($sna->classification_type_id == 1) {
+
+
+                    $influent_rate = $sna->number_of_comments + $sna->number_of_shares + $sna->number_of_reactions;
+                    $influent_rate = $influent_rate / $total_interaction_from * 100;
+                    $data['nodes'][$type] = [
+                        "id" => $sna->message_id,
+                        "label" => $sna->author,
+                        "title" => $sna->author,
+                        "color" => $sna->classification_color,
+                        "shape" => "dot",
+                        "size" => $this->factorNodeSize($influent_rate),
+                    ];
+
+                    if ($is_child) {
+                        $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+                        $data['nodes'][$type]["parent_id"] = $sna->reference_message_id;
+                    }
+                }
+
+
+
+            }
+
+//            $total_interaction_to = $items[$type]->number_of_comments + $items[$type]->number_of_shares + $items[$type]->number_of_reactions;
+//            $influent_rate = ($total_interaction_to / $total_interaction_from) * 100;
+
+//
+//            $data['nodes'][$type] = [
+//                "id" => $items[$type]->message_id,
+//                "label" => $items[$type]->author,
+//                "title" => $items[$type]->author,
+//                "color" => $items[$type]->classification_color,
+//                "shape" => "dot",
+//                "size" => $this->factorNodeSize($influent_rate),
+//            ];
+
+//            if ($is_child) {
+//                $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+//                $data['nodes'][$type]["parent_id"] = $items[$type]->reference_message_id;
+//            }
+
+
+            if (isset($data['nodes'])) {
+                $data['nodes'] = array_values($data['nodes']);
             }
 
             return $data;
