@@ -84,7 +84,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/', [SourceController::class, 'show']);
             Route::get('/list', [SourceController::class, 'data']);
             Route::post('/create', [SourceController::class, 'store']);
-            Route::put('/update', [SourceController::class, 'update']);
+            Route::post('/update', [SourceController::class, 'update']);
             Route::put('/delete', [SourceController::class, 'destroy']);
         });
 
