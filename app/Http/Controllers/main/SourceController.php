@@ -31,7 +31,7 @@ class SourceController extends Controller
 
         if ($request->image) {
             $file = $request->image;
-            $path = $file->store($request->image, 'source');
+            $path = parent::store($file, 'source');
             $data['image'] = $path;
         }
 
@@ -67,9 +67,10 @@ class SourceController extends Controller
 
         if ($request->image) {
             $file = $request->image;
-            $path = $file->store($request->image, 'source');
+            $path = parent::store($file, 'source');
             $data['image'] = $path;
         }
+
         $sources = Sources::create($data);
         return parent::handleRespond($sources);
     }

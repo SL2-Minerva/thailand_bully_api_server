@@ -139,10 +139,12 @@ class Controller extends BaseController
         return $model::offset($start)->limit($limit)->orderBy('created', 'desc');
     }
 
-    public static function uploadImage($file)
+    public static function uploadImage($file, $path = '')
     {
         if ($file) {
-            return $file->store("organization-content", 'public');
+
+
+            return $file->store($path ??  "organization-content", 'public');
         }
     }
 
