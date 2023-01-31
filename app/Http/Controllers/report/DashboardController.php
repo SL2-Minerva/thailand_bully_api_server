@@ -1521,7 +1521,7 @@ class DashboardController extends Controller
 
 
         if ($childs) {
-            $data['node'] = array_merge($roots['nodes'], $childs['nodes']);
+            $data['nodes'] = array_merge($roots['nodes'], $childs['nodes']);
             foreach ($childs['nodes'] as $child) {
 
                 foreach ($roots['nodes'] as $root) {
