@@ -67,7 +67,7 @@ class SourceController extends Controller
 
         if ($request->image) {
             $file = $request->image;
-            $path = parent::store($file, 'source');
+            $path = parent::uploadImage($file, 'source');
             $data['image'] = $path;
         }
 
