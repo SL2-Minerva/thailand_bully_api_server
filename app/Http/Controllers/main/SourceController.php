@@ -28,6 +28,7 @@ class SourceController extends Controller
         }
 
         $organizationGroup = $res[BaseModel::DATA_TEXT];
+        $data = $request->all();
 
         if ($request->image) {
             $file = $request->image;
@@ -35,8 +36,9 @@ class SourceController extends Controller
         }
 
         if ($organizationGroup) {
-            $data = $request->all();
-            $data['image'] = $path;
+            if (isset($path)) {
+                $data['image'] = $path;
+            }
             $organizationGroup->update($data);
 
             return parent::handleRespond($res);
