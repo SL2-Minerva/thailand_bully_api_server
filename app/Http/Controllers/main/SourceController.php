@@ -29,12 +29,21 @@ class SourceController extends Controller
 
         $organizationGroup = $res[BaseModel::DATA_TEXT];
 
+        if ($request->image) {
+            $file = $request->image;
+            $path = $file->store($request->image, 'source');
+            $data['image'] = $path;
+        }
+
         if ($organizationGroup) {
             $data = $request->all();
             $organizationGroup->update($data);
 
             return parent::handleRespond($res);
         }
+
+
+
     }
 
     private function find($id): array
@@ -55,6 +64,12 @@ class SourceController extends Controller
     public function store(Request $request)
     {
         $data = $request->all();
+
+        if ($request->image) {
+            $file = $request->image;
+            $path = $file->store($request->image, 'source');
+            $data['image'] = $path;
+        }
         $sources = Sources::create($data);
         return parent::handleRespond($sources);
     }
