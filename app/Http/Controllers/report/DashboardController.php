@@ -1454,6 +1454,7 @@ class DashboardController extends Controller
         if($request->report_number) {
             //fillter by Day name
             if ($request->report_number === '2.2.003') {
+                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                 //$raw->where(DB::raw("DATE_FORMAT(date_m, '%a') = '$request->label'"));
             }
         }
@@ -1469,7 +1470,6 @@ class DashboardController extends Controller
         }
 
         $items = $raw->get();
-
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
