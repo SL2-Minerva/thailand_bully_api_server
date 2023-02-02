@@ -1222,9 +1222,8 @@ class VoiceDashboardController extends Controller
         $items = $raw_current->get();
 
         foreach ($items as $item) {
-            $date_h = Carbon::parse($item->date_m)->format('H');
+            $date_h = (int)Carbon::parse($item->date_m)->format('H');
             $date_d = Carbon::parse($item->date_m)->format('D');
-//            dd($item->date_m, $test_h, $test_d);
 
             if (isset($data[$date_d])) {
                 if (isset($data[$date_d]["data"][$date_h])) {
@@ -1241,12 +1240,12 @@ class VoiceDashboardController extends Controller
                     $data[$date_d]["data"][$i] = 0;
                 }
 
+
                 if (isset($data[$date_d]["data"][$date_h])) {
                     $data[$date_d]["data"][$date_h] += 1;
                 } else {
                     $data[$date_d]["data"][$date_h] = 1;
                 }
-
 
             }
         }
@@ -1288,7 +1287,7 @@ class VoiceDashboardController extends Controller
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            $date_h = Carbon::parse($item->date_m)->format('H');
+            $date_h = (int)Carbon::parse($item->date_m)->format('H');
 
             if (isset($data['day_value'][$item->classification_name])) {
                 if ($date_d == "Mon") {
@@ -1398,7 +1397,7 @@ class VoiceDashboardController extends Controller
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            $date_h = Carbon::parse($item->date_m)->format('H');
+            $date_h = (int)Carbon::parse($item->date_m)->format('H');
 
             if (isset($data['day_value'][$item->classification_name])) {
                 if ($date_d == "Mon") {
@@ -1511,7 +1510,7 @@ class VoiceDashboardController extends Controller
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            $date_h = Carbon::parse($item->date_m)->format('H');
+            $date_h = (int)Carbon::parse($item->date_m)->format('H');
 
             if (isset($data['day_value'][$item->classification_name])) {
                 if ($date_d == "Mon") {
