@@ -1433,25 +1433,30 @@ class DashboardController extends Controller
     public function dailyMessageLevelThree(Request $request)
     {
 
-
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
-
-
         $data = null;
+
         $total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
-//
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1])
             ->offset($start)->limit($limit);
+
+
+        if($request->report_number) {
+            //fillter by Day name
+            if ($request->report_number === '2.2.003') {
+                //$raw->where(DB::raw("DATE_FORMAT(date_m, '%a') = '$request->label'"));
+            }
+        }
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -1465,7 +1470,11 @@ class DashboardController extends Controller
 
         $items = $raw->get();
 
+        dd($items, $raw->toSql());
+
         foreach ($items as $item) {
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            dd($date_d);
             $data_push = [
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
@@ -1481,9 +1490,15 @@ class DashboardController extends Controller
 
             $data['message'][] = $data_push;
         }
+
         $data['total'] = $total->get()->count();
 
         return parent::handleRespond($data);
+    }
+
+
+    private function fillterBy($option) {
+
     }
 
 

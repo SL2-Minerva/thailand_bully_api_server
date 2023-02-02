@@ -2085,11 +2085,11 @@ class VoiceDashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [2]);
+            ->whereIn('classification_type_id', [3]);
         $raw_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
-            ->whereIn('classification_type_id', [2]);
+            ->whereIn('classification_type_id', [3]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -2101,7 +2101,7 @@ class VoiceDashboardController extends Controller
             $raw_previous->where('source_id', $this->source_id);
         }
 
-        $levels = Classification::where('classification_type_id', 2)->get();
+        $levels = Classification::where('classification_type_id', 3)->get();
         $message_total = 0;
 
         foreach ($levels as $item) {
