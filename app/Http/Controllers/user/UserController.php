@@ -129,16 +129,15 @@ class UserController extends Controller
         $start = $start === 1 ? null : $start;
         
         $user = User::query()->offset($start)->limit($limit);
-
+        $status = $request->status ?? 1;
 
         if ($request->name) {
             $user = $user->where('name', 'like', "%$request->name%");
         }
 
-        if ($request->status || $request->status === '0') {
-            $user = $user->where('status', $request->status);
+        if (!$status || $status) {
+            $user = $user->where('status', $status);
         }
-
 
         if ($request->organization_id) {
             $user = $user->where('organization_id', $request->organization_id);

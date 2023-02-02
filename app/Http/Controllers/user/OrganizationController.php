@@ -38,6 +38,7 @@ class OrganizationController extends Controller
             BaseModel::NAME => $request->name,
             BaseModel::STATUS => $request->status ?? 1,
             Organization::GROUP_ID => $request->organization_group_id,
+            Organization::DESCRIPTION => $request->description,
             Organization::TYPE_ID => $request->organization_type_id,
             BaseModel::CREATED_BY => auth()->id() ?? null, // todo check auth
             BaseModel::UPDATED_BY => auth()->id() ?? null, // todo check auth

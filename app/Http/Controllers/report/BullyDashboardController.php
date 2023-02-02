@@ -846,7 +846,7 @@ class BullyDashboardController extends Controller
         $data['labels'] = [];
 
         foreach ($source_ids as $source_id) {
-            $data['labels'][] = $source_id;
+            $data['labels'] = $source_id;
         }
 
         $raw = DB::table('message_result_full_data')

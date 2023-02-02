@@ -28,15 +28,17 @@ class SourceController extends Controller
         }
 
         $organizationGroup = $res[BaseModel::DATA_TEXT];
+        $data = $request->all();
 
         if ($request->image) {
             $file = $request->image;
-            $path = parent::store($file, 'source');
-            $data['image'] = $path;
+            $path = parent::uploadImage($file, 'source');
         }
 
         if ($organizationGroup) {
-            $data = $request->all();
+            if (isset($path)) {
+                $data['image'] = $path;
+            }
             $organizationGroup->update($data);
 
             return parent::handleRespond($res);
@@ -67,7 +69,7 @@ class SourceController extends Controller
 
         if ($request->image) {
             $file = $request->image;
-            $path = parent::store($file, 'source');
+            $path = parent::uploadImage($file, 'source');
             $data['image'] = $path;
         }
 
