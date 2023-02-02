@@ -1470,11 +1470,9 @@ class DashboardController extends Controller
 
         $items = $raw->get();
 
-        dd($items, $raw->toSql());
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            dd($date_d);
             $data_push = [
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
