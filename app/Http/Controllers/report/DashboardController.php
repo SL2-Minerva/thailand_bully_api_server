@@ -1464,13 +1464,13 @@ class DashboardController extends Controller
                 $date_request = Carbon::parse($request->label)->format('Y-d-m');
 
                 $raw = DB::table('message_result_full_data')
-                    ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                    ->whereRaw('DATE_FORMAT(date_m, "%Y-%d-%m") = ?', [$date_request])
                     ->where('campaign_id', $this->campaign_id)
                     ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
-                    ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                    ->whereRaw('DATE_FORMAT(date_m, "%Y-%d-%m") = ?', [$date_request])
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->whereIn('classification_type_id', [1]);
 
@@ -1591,6 +1591,7 @@ class DashboardController extends Controller
 
             // day-and-time
             if ($request->report_number === '2.2.016') {
+
                 $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
                 $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
 
@@ -1599,26 +1600,72 @@ class DashboardController extends Controller
 
             }
 
-            if ($request->report_nubmer === '2.2.017') {
-
-                $total->where('classification_name', $request->label);
-                $raw->where('classification_name', $request->label);
-
-                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
-                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
-//                $raw->where('source_name', $request->label); // Mon
-//                $total->where('source_name', $request->ylabel); // Positive
-            }
-
-            if ($request->report_nubmer === '2.2.018') {
-
-                $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
-                $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
+            if ($request->report_number === '2.2.017') {
 
                 $total->where('classification_name', $request->ylabel);
                 $raw->where('classification_name', $request->ylabel);
+
+                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
 //                $raw->where('source_name', $request->label); // Mon
 //                $total->where('source_name', $request->ylabel); // Positive
+            }
+
+            if ($request->report_number === '2.2.018') {
+
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $request->ylabel)
+                    ->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label])
+                    ->whereIn('classification_type_id', [3])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label])
+                    ->where('classification_name', $request->ylabel)
+                    ->whereIn('classification_type_id', [3]);
+
+            }
+
+            if ($request->report_number === '2.2.019') {
+//                dd($request->all());
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $request->ylabel)
+                    ->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label])
+                    ->whereIn('classification_type_id', [2])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $request->ylabel)
+                    ->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label])
+                    ->whereIn('classification_type_id', [2]);
+
+
+
+            }
+
+            if ($request->report_number === '2.2.020') {
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $request->ylabel)
+                    ->whereRaw('HOUR(date_m) = ?', [$request->label])
+                    ->whereIn('classification_type_id', [2])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $request->ylabel)
+                    ->whereRaw('HOUR(date_m) = ?', [$request->label])
+                    ->whereIn('classification_type_id', [2]);
             }
 
 
