@@ -1074,16 +1074,23 @@ class VoiceDashboardController extends Controller
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
                 ->whereIn('classification_type_id', [1]);
 
+
+            if ($this->source_id) {
+                $raw->where('source_id', $this->source_id);
+//                $total->where('source_id', $this->source_id);
+            }
+
+            if ($this->keyword_id) {
+                $raw->whereIn('keyword_id', $this->keyword_id);
+//                $total->whereIn('keyword_id', $this->keyword_id);
+            }
+
             $items = $raw->get();
             $date = [];
 
             foreach ($items as $item) {
 
                 $date_format = Carbon::parse($item->date_m)->format('m/d/Y');
-                // date
-                if (!isset($data[$date_format])) {
-                    $date[$date_format] = 1;
-                }
 
                 if (isset($data[$item->keyword_id])) {
 
@@ -1171,7 +1178,6 @@ class VoiceDashboardController extends Controller
             }
 
 
-            $date = [];
 
             $total_account_current = count($total_account_current);
             $total_account_previous = count($total_account_previous);

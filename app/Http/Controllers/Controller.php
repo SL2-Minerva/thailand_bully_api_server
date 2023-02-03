@@ -210,6 +210,12 @@ class Controller extends BaseController
     }
 
 
+    protected static function checkLabel($label) {
+        $dayname =  ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        return array_search($label, $dayname);
+    }
+
+
 
 }
 
