@@ -993,7 +993,7 @@ class VoiceDashboardController extends Controller
 
     public function KeywordBullyType(Request $request)
     {
-        return parent::handleRespond($this->getKeywordBullyType());
+        return parent::handleRespond($this->getKeywordBullyType(['classification_type_id' => 2]));
     }
 
     public function KeywordChannel(Request $request)
@@ -1594,6 +1594,10 @@ class VoiceDashboardController extends Controller
             }
         }
 
+        if ($only_Data) {
+            return $data;
+        }
+
 
         return parent::handleRespond($data);
     }
@@ -1603,7 +1607,7 @@ class VoiceDashboardController extends Controller
             'DayTimeComparison' => $this->DayTimeComparison($request, true),
             'DayTimeSentiment' => $this->DayTimeSentiment($request, true),
             'DayTimeLevel' => $this->DayTimeLevel($request, true),
-            'DayTimeType' => $this->DayTimeLevel($request, true),
+            'DayTimeType' => $this->DayTimeType($request, true),
         ];
 
         return parent::handleRespond($data);
@@ -1909,7 +1913,7 @@ class VoiceDashboardController extends Controller
         $data['keywordChannel'] = $this->getKeywordChannel(['raw' => $raw, 'items' => $items]);
         $data['keywordSentiment'] = $this->getKeywordSentiment(['raw' => $raw, 'items' => $items]);
         $data['keywordBullyLevel'] = $this->getKeywordBullyLevel(['raw' => $raw, 'items' => $items]);
-        $data['keywordBullyType'] = $this->getKeywordBullyType(['raw' => $raw, 'items' => $items]);
+        $data['keywordBullyType'] = $this->getKeywordBullyType(['classification_type_id' => 2]);
 
         return parent::handleRespond($data);
 
@@ -2082,14 +2086,20 @@ class VoiceDashboardController extends Controller
 
     private function getKeywordBullyType($condition = null)
     {
+
+
+
+        $classification_type_id = $condition['classification_type_id'] ?? 3;
+
+
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [3]);
+            ->whereIn('classification_type_id', [$classification_type_id]);
         $raw_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
-            ->whereIn('classification_type_id', [3]);
+            ->whereIn('classification_type_id', [$classification_type_id]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -2101,7 +2111,7 @@ class VoiceDashboardController extends Controller
             $raw_previous->where('source_id', $this->source_id);
         }
 
-        $levels = Classification::where('classification_type_id', 3)->get();
+        $levels = Classification::where('classification_type_id', $classification_type_id)->get();
         $message_total = 0;
 
         foreach ($levels as $item) {
