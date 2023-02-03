@@ -1460,7 +1460,7 @@ class DashboardController extends Controller
             }
 
             // fillter by date
-            if ($request->report_number === '2.2.002') {
+            if ($request->report_number === '2.2.002' || $request->report_number === '2.2.013') {
                 $date_request = Carbon::parse($request->label)->format('Y-d-m');
 
                 $raw = DB::table('message_result_full_data')
@@ -1567,6 +1567,35 @@ class DashboardController extends Controller
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label)
                     ->whereIn('classification_type_id', [3]);
+
+            }
+
+
+            if ($request->report_number === '2.2.010') {
+                $label = str_replace("+", "", $request->label);
+
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $label)
+                    ->whereIn('classification_type_id', [2])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $label)
+                    ->whereIn('classification_type_id', [2]);
+
+            }
+
+            // day-and-time
+            if ($request->report_number === '2.2.016') {
+                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
+                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
+
+                $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
+                $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
 
             }
         }
