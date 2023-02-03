@@ -1451,11 +1451,123 @@ class DashboardController extends Controller
             ->offset($start)->limit($limit);
 
 
-        if($request->report_number) {
+        if ($request->report_number) {
             //fillter by Day name
             if ($request->report_number === '2.2.003') {
                 $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                 //$raw->where(DB::raw("DATE_FORMAT(date_m, '%a') = '$request->label'"));
+            }
+
+            // fillter by date
+            if ($request->report_number === '2.2.002') {
+                $date_request = Carbon::parse($request->label)->format('Y-d-m');
+
+                $raw = DB::table('message_result_full_data')
+                    ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereIn('classification_type_id', [1])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->whereIn('classification_type_id', [1]);
+
+            }
+
+
+            // fillter by time before ...
+            if ($request->report_number === '2.2.004') {
+
+                if ($request->label === 'Before+6+AM') {
+                    $raw->whereRaw('HOUR(date_m) < ?', [6]);
+                    $total->whereRaw('HOUR(date_m) < ?', [6]);
+
+                }
+
+                if ($request->label === '6+AM-12+PM') {
+                    $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
+                    $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
+                }
+
+                if ($request->label === '12+PM-6+PM') {
+                    $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
+                    $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
+                }
+
+                if ($request->label === 'After+6+PM') {
+                    $raw->whereRaw('HOUR(date_m) >= ?', [18]);
+                    $total->whereRaw('HOUR(date_m) >= ?', [18]);
+                }
+            }
+
+            if ($request->report_number === '2.2.005') {
+                $target = 'andriod';
+
+                if ($request->label === 'Android') {
+                    $target = 'andriod';
+                }
+
+                if ($request->label === 'Iphone') {
+                    $target = 'iphone';
+                }
+
+                if ($request->label === 'Web+App') {
+                    $target = 'webapp';
+                }
+                $raw->where('device', $target);
+                $total->where('device', $target);
+
+            }
+
+
+            // post owner / follower
+            if ($request->report_number === '2.2.006') {
+
+                if ($request->label === 'Post+Owner') {
+                    $raw->where('reference_message_id', '')
+                        ->orWhere('reference_message_id', null);
+
+                    $total->where('reference_message_id', '')
+                        ->orWhere('reference_message_id', null);
+                } else {
+                    $raw->where('reference_message_id', '!=', null);
+                    $total->where('reference_message_id', '!=', null);
+                }
+
+            }
+
+            // source name
+            if ($request->report_number === '2.2.007') {
+                $raw->where('source_name', $request->label);
+                $total->where('source_name', $request->label);
+            }
+
+            // position
+            if ($request->report_number === '2.2.008') {
+                $total->where('classification_name', $request->label);
+                $raw->where('classification_name', $request->label);
+            }
+
+
+            // level 3
+            if ($request->report_number === '2.2.009') {
+                $label = str_replace("+", " ", $request->label);
+
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $label)
+                    ->whereIn('classification_type_id', [3])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $label)
+                    ->whereIn('classification_type_id', [3]);
+
             }
         }
 
@@ -1482,7 +1594,7 @@ class DashboardController extends Controller
                 "day" => Carbon::parse($item->created_at)->diffInDays(Carbon::now()),
                 "device" => $item->device,
                 "channel" => $item->source_id,
-                "bully_level" => "level 3",
+                "bully_level" => $item->classification_name,
                 "bully_type" => $item->message_type
             ];
 
@@ -1495,7 +1607,8 @@ class DashboardController extends Controller
     }
 
 
-    private function fillterBy($option) {
+    private function fillterBy($option)
+    {
 
     }
 
@@ -1620,7 +1733,7 @@ class DashboardController extends Controller
 
             $type = 1;
 
-            foreach ($items as  $sna) {
+            foreach ($items as $sna) {
                 if ($sna->classification_type_id == 1) {
 
 
@@ -1640,7 +1753,6 @@ class DashboardController extends Controller
                         $data['nodes'][$type]["parent_id"] = $sna->reference_message_id;
                     }
                 }
-
 
 
             }
