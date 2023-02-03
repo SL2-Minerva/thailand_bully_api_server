@@ -1598,6 +1598,30 @@ class DashboardController extends Controller
                 $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
 
             }
+
+            if ($request->report_nubmer === '2.2.017') {
+
+                $total->where('classification_name', $request->label);
+                $raw->where('classification_name', $request->label);
+
+                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
+                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
+//                $raw->where('source_name', $request->label); // Mon
+//                $total->where('source_name', $request->ylabel); // Positive
+            }
+
+            if ($request->report_nubmer === '2.2.018') {
+
+                $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
+                $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
+
+                $total->where('classification_name', $request->ylabel);
+                $raw->where('classification_name', $request->ylabel);
+//                $raw->where('source_name', $request->label); // Mon
+//                $total->where('source_name', $request->ylabel); // Positive
+            }
+
+
         }
 
         if ($this->source_id) {
