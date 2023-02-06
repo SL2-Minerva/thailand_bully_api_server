@@ -1035,6 +1035,7 @@ class EngagementDashboardController extends Controller
         foreach ($infulencers as $infulencer) {
 
             if ($infulencer) {
+
                 if (isset($data['value'][1]['data'][0])) {
                     $data['value'][1]['data'][0] += $infulencer->number_of_shares;
                     $data['value'][2]['data'][0] += $infulencer->number_of_comments;
@@ -1902,19 +1903,23 @@ class EngagementDashboardController extends Controller
         $previous = null;
 
         foreach ($items_current as $item) {
-            if (isset($current[$item->author]) && $current[$item->author]) {
-                $current[$item->author]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
-                $current[$item->author]['share'] += $item->number_of_shares;
-                $current[$item->author]['comment'] += $item->number_of_comments;
-                $current[$item->author]['reaction'] += $item->number_of_reactions;
-            } else {
-                $current[$item->author]['message_id'] = $item->message_id;
-                $current[$item->author]['infulencer'] = $item->author;
-                $current[$item->author]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
-                $current[$item->author]['share'] = $item->number_of_shares;
-                $current[$item->author]['comment'] = $item->number_of_comments;
-                $current[$item->author]['reaction'] = $item->number_of_reactions;
+
+            if ($item) {
+                if (isset($current[$item->author]) && $current[$item->author]) {
+                    $current[$item->author]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                    $current[$item->author]['share'] += $item->number_of_shares;
+                    $current[$item->author]['comment'] += $item->number_of_comments;
+                    $current[$item->author]['reaction'] += $item->number_of_reactions;
+                } else {
+                    $current[$item->author]['message_id'] = $item->message_id;
+                    $current[$item->author]['infulencer'] = $item->author;
+                    $current[$item->author]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                    $current[$item->author]['share'] = $item->number_of_shares;
+                    $current[$item->author]['comment'] = $item->number_of_comments;
+                    $current[$item->author]['reaction'] = $item->number_of_reactions;
+                }
             }
+
         }
 
         foreach ($items_previous as $item) {

@@ -1469,7 +1469,9 @@ class DashboardController extends Controller
             if ( $request->report_number === '1.2.002' ||
                 $request->report_number === '2.2.002' ||
                 $request->report_number === '2.2.013' ||
-                $request->report_number === '3.2.002'
+                $request->report_number === '3.2.002' ||
+                $request->report_number === '4.2.002'
+
             ) {
 
 
