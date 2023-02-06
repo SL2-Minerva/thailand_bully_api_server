@@ -1627,18 +1627,18 @@ class DashboardController extends Controller
 
             if ($request->report_number === '2.2.018') {
 
-
+                $ylabel = str_replace("%20", " ", $request->ylabel);
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $request->ylabel)
+                    ->where('classification_name', $ylabel)
                     ->whereIn('classification_type_id', [3])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $request->ylabel)
+                    ->where('classification_name', $ylabel)
                     ->whereIn('classification_type_id', [3]);
 
                 if (parent::checkLabel($request->label) || parent::checkLabel($request->label) === 0) {
@@ -1681,7 +1681,6 @@ class DashboardController extends Controller
                     $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
 
                 }
-
 
             }
 
