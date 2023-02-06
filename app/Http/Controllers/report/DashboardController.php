@@ -1464,9 +1464,16 @@ class DashboardController extends Controller
             // fillter by date
             if ( $request->report_number === '1.2.002' ||
                 $request->report_number === '2.2.002' ||
-                $request->report_number === '2.2.013') {
+                $request->report_number === '2.2.013' ||
+                $request->report_number === '3.2.002'
+            ) {
+
 
                 $date_request = Carbon::parse($request->label)->format('Y-m-d');
+                if ($request->report_number === '3.2.002') {
+                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
+                }
+
 
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)

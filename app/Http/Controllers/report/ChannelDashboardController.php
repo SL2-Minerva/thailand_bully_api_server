@@ -89,6 +89,7 @@ class ChannelDashboardController extends Controller
             $data[$source_id_id]['source_id'] = $channal->source_id;
             $data[$source_id_id]['source_name'] = $channal->source_name;
 
+
             $channal_message = $this->channelTable($start_date, $end_date, $source_id_id);
             $channal_message_total = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
@@ -96,6 +97,9 @@ class ChannelDashboardController extends Controller
                 ->whereIn('classification_type_id', [1])
                 ->get()
                 ->count();
+
+
+            $data[$source_id_id]['total'] = $channal_message_total;
 
 
             $nestData = [
