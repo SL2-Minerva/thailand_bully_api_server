@@ -226,6 +226,7 @@ class DashboardController extends Controller
         $negative = 0;
         $neutral = 0;
         $sentiment_score = 0;
+        $table = 'message_result_full_data';
 
         $results = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
