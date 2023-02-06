@@ -182,6 +182,7 @@ class DashboardController extends Controller
             $data[$keyword_id]['keyword_name'] = $item->keyword_name;
             $data[$keyword_id]['campaign_id'] = $item->campaign_id;
             $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+            $data[$keyword_id]['total'] = $message_total;
         }
 
 
@@ -1460,7 +1461,10 @@ class DashboardController extends Controller
             }
 
             // fillter by date
-            if ($request->report_number === '2.2.002' || $request->report_number === '2.2.013') {
+            if ( $request->report_number === '1.2.002' ||
+                $request->report_number === '2.2.002' ||
+                $request->report_number === '2.2.013') {
+
                 $date_request = Carbon::parse($request->label)->format('Y-m-d');
 
                 $raw = DB::table('message_result_full_data')
