@@ -1458,7 +1458,8 @@ class DashboardController extends Controller
         if ($request->report_number) {
             //fillter by Day name
             if ($request->report_number === '2.2.003' ||
-                $request->report_number === '3.2.003'
+                $request->report_number === '3.2.003' ||
+                $request->report_number === '4.2.003'
             ) {
                 $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                 $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
@@ -1470,15 +1471,16 @@ class DashboardController extends Controller
                 $request->report_number === '2.2.002' ||
                 $request->report_number === '2.2.013' ||
                 $request->report_number === '3.2.002' ||
-                $request->report_number === '4.2.002'
+                $request->report_number === '4.2.002' ||
+                $request->report_number === '4.2.004'
 
             ) {
 
 
-                $date_request = Carbon::parse($request->label)->format('Y-m-d');
-                if ($request->report_number === '3.2.002') {
-                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
-                }
+                $date_request = Carbon::parse($request->label)->format('Y-d-m');
+//                if ($request->report_number === '3.2.002') {
+//                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
+//                }
 
 
                 $raw = DB::table('message_result_full_data')
@@ -1532,7 +1534,10 @@ class DashboardController extends Controller
             }
 
             if ($request->report_number === '2.2.005' ||
-                $request->report_number === '3.2.005') {
+                $request->report_number === '3.2.005' ||
+                $request->report_number === '4.2.005'
+
+            ) {
                 $target = 'dddddd';
 
 
@@ -1561,9 +1566,8 @@ class DashboardController extends Controller
 
             }
 
-
             // post owner / follower
-            if ($request->report_number === '2.2.006') {
+            if ($request->report_number === '2.2.006' || $request->report_number === '4.2.006' || $request->report_number === '3.2.006') {
 
                 if ($request->label === 'Post+Owner' || $request->label === 'Influencer') {
                     $raw->where('reference_message_id', '')
