@@ -1325,6 +1325,8 @@ class EngagementDashboardController extends Controller
 
             if (isset($data['value'][1])) {
                 $data['value'][1]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);
+            } else {
+
             }
 
             $previous_share[$index_label] += $item->number_of_shares;
@@ -1339,9 +1341,31 @@ class EngagementDashboardController extends Controller
 
 
         for ($i = 0; $i <= count($data['labels']); $i++) {
-            $data['share'][$i] = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
-            $data['comment'][$i] = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
-            $data['reaction'][$i] = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+
+            if (isset($data['share'][$i])) {
+                $data['share'][$i] = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
+                $data['comment'][$i] = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
+                $data['reaction'][$i] = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+            } else {
+//                $data['share'][$i] = [
+//                    "totalValue" => 0,
+//                    "comparison" => 0,
+//                    "type" => "minus",
+//                ];
+//
+//                $data['comment'][$i] = [
+//                    "totalValue" => 0,
+//                    "comparison" => 0,
+//                    "type" => "minus",
+//                ];
+//
+//                $data['reaction'][$i] = [
+//                    "totalValue" => 0,
+//                    "comparison" => 0,
+//                    "type" => "minus",
+//                ];
+            }
+
         }
 
 //        $data['labels'] = [

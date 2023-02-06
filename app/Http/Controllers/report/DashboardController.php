@@ -1441,6 +1441,8 @@ class DashboardController extends Controller
         $start = $start === 1 ? null : $start;
         $data = null;
 
+//        dd($this->start_date, $this->end_date, $this->keyword_id, $this->source_id);
+
         $total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -1455,7 +1457,9 @@ class DashboardController extends Controller
 
         if ($request->report_number) {
             //fillter by Day name
-            if ($request->report_number === '2.2.003') {
+            if ($request->report_number === '2.2.003' ||
+                $request->report_number === '3.2.003'
+            ) {
                 $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                 $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                 //$raw->where(DB::raw("DATE_FORMAT(date_m, '%a') = '$request->label'"));
@@ -1499,7 +1503,9 @@ class DashboardController extends Controller
 
 
             // fillter by time before ...
-            if ($request->report_number === '2.2.004') {
+            if ($request->report_number === '2.2.004' ||
+                $request->report_number === '3.2.004'
+            ) {
 
                 if ($request->label === 'Before+6+AM') {
                     $raw->whereRaw('HOUR(date_m) < ?', [6]);
@@ -1523,11 +1529,14 @@ class DashboardController extends Controller
                 }
             }
 
-            if ($request->report_number === '2.2.005') {
-                $target = 'andriod';
+            if ($request->report_number === '2.2.005' ||
+                $request->report_number === '3.2.005') {
+                $target = 'dddddd';
+
+
 
                 if ($request->label === 'Android') {
-                    $target = 'andriod';
+                    $target = 'android';
                 }
 
                 if ($request->label === 'Iphone') {
@@ -1537,8 +1546,16 @@ class DashboardController extends Controller
                 if ($request->label === 'Web+App') {
                     $target = 'webapp';
                 }
-                $raw->where('device', $target);
-                $total->where('device', $target);
+
+                if ($request->report_number === '2.2.005') {
+                    $raw->where('device', $target);
+                    $total->where('device', $target);
+                }
+
+                if ($request->report_number === '3.2.005') {
+                    $raw->where('device', $target);
+                    $total->where('device', $target);
+                }
 
             }
 
@@ -1546,7 +1563,7 @@ class DashboardController extends Controller
             // post owner / follower
             if ($request->report_number === '2.2.006') {
 
-                if ($request->label === 'Post+Owner') {
+                if ($request->label === 'Post+Owner' || $request->label === 'Influencer') {
                     $raw->where('reference_message_id', '')
                         ->orWhere('reference_message_id', null);
 
@@ -1573,7 +1590,7 @@ class DashboardController extends Controller
 
 
             // level 3
-            if ($request->report_number === '2.2.009') {
+            if ($request->report_number === '2.2.009' || $request->report_number === '3.2.007') {
                 $label = str_replace("+", " ", $request->label);
 
                 $raw = DB::table('message_result_full_data')
@@ -1592,7 +1609,7 @@ class DashboardController extends Controller
             }
 
 
-            if ($request->report_number === '2.2.010') {
+            if ($request->report_number === '2.2.010' || $request->report_number === '3.2.008') {
                 $label = str_replace("+", "", $request->label);
 
                 $raw = DB::table('message_result_full_data')
@@ -1667,7 +1684,7 @@ class DashboardController extends Controller
 
             }
 
-            if ($request->report_number === '2.2.019') {
+            if ($request->report_number === '2.2.019' || $request->report_number === '3.2.009') {
 
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
@@ -1707,6 +1724,8 @@ class DashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
             $total->whereIn('keyword_id', $this->keyword_id);
         }
+
+//        dd($raw->toSql());
 
         $items = $raw->get();
 
