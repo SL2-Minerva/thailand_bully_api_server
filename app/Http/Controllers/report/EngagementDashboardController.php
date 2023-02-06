@@ -1034,29 +1034,31 @@ class EngagementDashboardController extends Controller
 
         foreach ($infulencers as $infulencer) {
 
-            if (isset($data['value'][1]['data'][0])) {
-                $data['value'][1]['data'][0] += $infulencer->number_of_shares;
-                $data['value'][2]['data'][0] += $infulencer->number_of_comments;
-                $data['value'][3]['data'][0] += $infulencer->number_of_reactions;
-            } else {
-                $data['value'][1] = [
-                    'id' => 1,
-                    "keyword_name" => "Share",
-                    "data" => [$infulencer->number_of_shares, 0]
-                ];
+            if ($infulencer) {
+                if (isset($data['value'][1]['data'][0])) {
+                    $data['value'][1]['data'][0] += $infulencer->number_of_shares;
+                    $data['value'][2]['data'][0] += $infulencer->number_of_comments;
+                    $data['value'][3]['data'][0] += $infulencer->number_of_reactions;
+                } else {
+                    $data['value'][1] = [
+                        'id' => 1,
+                        "keyword_name" => "Share",
+                        "data" => [$infulencer->number_of_shares, 0]
+                    ];
 
-                $data['value'][2] = [
-                    'id' => 2,
-                    "keyword_name" => "Comment",
-                    "data" => [$infulencer->number_of_comments, 0]
-                ];
+                    $data['value'][2] = [
+                        'id' => 2,
+                        "keyword_name" => "Comment",
+                        "data" => [$infulencer->number_of_comments, 0]
+                    ];
 
-                $data['value'][3] = [
-                    'id' => 3,
-                    "keyword_name" => "Reaction",
-                    "data" => [$infulencer->number_of_reactions, 0]
-                ];
+                    $data['value'][3] = [
+                        'id' => 3,
+                        "keyword_name" => "Reaction",
+                        "data" => [$infulencer->number_of_reactions, 0]
+                    ];
 
+                }
             }
 
         }
