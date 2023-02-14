@@ -1441,7 +1441,7 @@ class DashboardController extends Controller
         $start = $start === 1 ? null : $start;
         $data = null;
 
-        $label = str_replace("+", "", $request->label);
+        $label = str_replace("+", " ", $request->label);
 
 //        dd($this->start_date, $this->end_date, $this->keyword_id, $this->source_id);
 
@@ -1584,14 +1584,18 @@ class DashboardController extends Controller
 
                 if ($request->report_number === '2.2.006') {
 
-                    if ($label === 'Post Owner') {
-                        $raw->where('reference_message_id', '');
-                        $total->where('reference_message_id', '');
-    
+                
+                    if ($request->label === 'Post Owner') {
+                        $raw->where('reference_message_id', '')
+                            ->orWhere('reference_message_id', null);
+
+                        $total->where('reference_message_id', '')
+                            ->orWhere('reference_message_id', null);
                     } else {
-                        $raw->where('reference_message_id', '!=', "");
-                        $total->where('reference_message_id', '!=', "");
+                        $raw->where('reference_message_id', '!=', null);
+                        $total->where('reference_message_id', '!=', null);
                     }
+
                 }
             
 
