@@ -75,7 +75,7 @@ class CampaignController extends Controller
             Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
             Campaign::START_AT => $request->start_at,
             Campaign::END_AT => $request->end_at,
-            Campaign::FREQUENCY => $request->frequency ?? 120,
+            Campaign::FREQUENCY => (int)$request->frequency ?? 120,
         ];
 
         $campaign = Campaign::create($data_submit);
@@ -95,13 +95,36 @@ class CampaignController extends Controller
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                 ];
 
-                Keyword::create($data_submit_keyword);
+                $parent_keyword = Keyword::create($data_submit_keyword);
+
+                $this->extra_keyword($parent_keyword,
+                    collect($keyword[Keyword::KEYWORD_OR] ?? [])->implode(','),
+                    collect($keyword[Keyword::KEYWORD_AND] ?? [])->implode(','),
+                    collect($keyword[Keyword::KEYWORD_EXCLUDE] ?? [])->implode(','),
+                    $request->keywords
+                );
+
+                //todo: create keyword
             }
         }
 
-
         return parent::handleRespond($campaign);
+    }
 
+    private function extra_keyword($parent_id, $keyword_or, $keyword_and, $keyword_exclude, $keyword)
+    {
+        $data_submit_keyword = [
+            Keyword::PARENT_ID => $parent_id,
+            BaseModel::NAME => $keyword[BaseModel::NAME] ?? '',
+            Keyword::KEYWORD_OR => collect($keyword_or ?? [])->implode(','),
+            Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
+            Keyword::KEYWORD_EXCLUDE => collect($keyword_exclude ?? [])->implode(','),
+            BaseModel::STATUS => 1,
+            BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+            BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+        ];
+
+        $parent_keyword = Keyword::create($data_submit_keyword);
     }
 
     public function update(Request $request)

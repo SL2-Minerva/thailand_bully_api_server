@@ -14,6 +14,7 @@ class Keyword extends BaseModel
     public const LABEL = 'label';
     public const KEYWORD_OR = 'keyword_or';
     public const KEYWORD_AND = 'keyword_and';
+    public const PARENT_ID = 'parent_id';
     public const KEYWORD_EXCLUDE = 'keyword_exclude';
     public const CAMPAIGN_ID = 'campaign_id';
 

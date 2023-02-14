@@ -1478,9 +1478,12 @@ class DashboardController extends Controller
 
 
                 $date_request = Carbon::parse($request->label)->format('Y-d-m');
-//                if ($request->report_number === '3.2.002') {
-//                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
-//                }
+                if ($request->report_number === '3.2.002' ||
+                    $request->report_number === '2.2.002' ||
+                    $request->report_number === '4.2.002'
+                    ) {
+                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
+                }
 
 
                 $raw = DB::table('message_result_full_data')
@@ -1542,7 +1545,7 @@ class DashboardController extends Controller
 
 
 
-                if ($request->label === 'Android') {
+                if ($request->label === 'Android' || $request->label === 'Andriod') {
                     $target = 'android';
                 }
 
@@ -1555,6 +1558,7 @@ class DashboardController extends Controller
                 }
 
                 if ($request->report_number === '2.2.005') {
+
                     $raw->where('device', $target);
                     $total->where('device', $target);
                 }
