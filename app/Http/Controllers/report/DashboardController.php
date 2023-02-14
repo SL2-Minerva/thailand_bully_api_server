@@ -1441,6 +1441,8 @@ class DashboardController extends Controller
         $start = $start === 1 ? null : $start;
         $data = null;
 
+        $label = str_replace("+", " ", $request->label);
+
 //        dd($this->start_date, $this->end_date, $this->keyword_id, $this->source_id);
 
         $total = DB::table('message_result_full_data')
@@ -1476,8 +1478,7 @@ class DashboardController extends Controller
 
             ) {
 
-
-                $date_request = Carbon::parse($request->label)->format('Y-d-m');
+                $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
 //                if ($request->report_number === '3.2.002') {
 //                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
 //                }
@@ -1510,24 +1511,25 @@ class DashboardController extends Controller
             if ($request->report_number === '2.2.004' ||
                 $request->report_number === '3.2.004'
             ) {
-
-                if ($request->label === 'Before+6+AM') {
+                
+                if ($label === 'Before 6 AM') {
+                    
                     $raw->whereRaw('HOUR(date_m) < ?', [6]);
                     $total->whereRaw('HOUR(date_m) < ?', [6]);
 
                 }
 
-                if ($request->label === '6+AM-12+PM') {
+                if ($label === ' 6 AM-12 PM') {
                     $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
                     $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
                 }
 
-                if ($request->label === '12+PM-6+PM') {
+                if ($label === '12 PM-6 PM') {
                     $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
                     $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
                 }
 
-                if ($request->label === 'After+6+PM') {
+                if ($label === 'After 6 PM') {
                     $raw->whereRaw('HOUR(date_m) >= ?', [18]);
                     $total->whereRaw('HOUR(date_m) >= ?', [18]);
                 }
@@ -1542,15 +1544,15 @@ class DashboardController extends Controller
 
 
 
-                if ($request->label === 'Android') {
+                if ($label === 'Andriod' || $label === 'Android') {
                     $target = 'android';
                 }
 
-                if ($request->label === 'Iphone') {
+                if ($label === 'Iphone') {
                     $target = 'iphone';
                 }
 
-                if ($request->label === 'Web+App') {
+                if ($label === 'Web App') {
                     $target = 'webapp';
                 }
 
@@ -1569,7 +1571,7 @@ class DashboardController extends Controller
             // post owner / follower
             if ($request->report_number === '2.2.006' || $request->report_number === '4.2.006' || $request->report_number === '3.2.006') {
 
-                if ($request->label === 'Post+Owner' || $request->label === 'Influencer') {
+                if ($label === 'Influencer') {
                     $raw->where('reference_message_id', '')
                         ->orWhere('reference_message_id', null);
 
@@ -1579,6 +1581,23 @@ class DashboardController extends Controller
                     $raw->where('reference_message_id', '!=', null);
                     $total->where('reference_message_id', '!=', null);
                 }
+
+                if ($request->report_number === '2.2.006') {
+
+                
+                    if ($request->label === 'Post Owner') {
+                        $raw->where('reference_message_id', '')
+                            ->orWhere('reference_message_id', null);
+
+                        $total->where('reference_message_id', '')
+                            ->orWhere('reference_message_id', null);
+                    } else {
+                        $raw->where('reference_message_id', '!=', null);
+                        $total->where('reference_message_id', '!=', null);
+                    }
+
+                }
+            
 
             }
 
@@ -1594,11 +1613,28 @@ class DashboardController extends Controller
                 $raw->where('classification_name', $request->label);
             }
 
+            // level 2
+            if ($request->report_number === '3.2.007') {
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $label)
+                    ->whereIn('classification_type_id', [1])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('classification_name', $label)
+                    ->whereIn('classification_type_id', [1]);
+
+
+            }
 
             // level 3
-            if ($request->report_number === '2.2.009' || $request->report_number === '3.2.007') {
-                $label = str_replace("+", " ", $request->label);
-
+            if ($request->report_number === '2.2.009') {
+                // $label = str_replace("+", " ", $request->label);
+                
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -1616,7 +1652,14 @@ class DashboardController extends Controller
 
 
             if ($request->report_number === '2.2.010' || $request->report_number === '3.2.008') {
-                $label = str_replace("+", "", $request->label);
+
+                if ($label === 'Hate Speech') {
+                    $label = 'HateSpeech';
+                } else if ($label === 'No Bully') {
+                    $label = 'NoBully';
+                } else if ($label === 'Trolling/Flaming') {
+                    $label = 'Trolling';                    
+                }
 
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
@@ -1631,13 +1674,28 @@ class DashboardController extends Controller
                     ->where('classification_name', $label)
                     ->whereIn('classification_type_id', [2]);
 
+                if ($request->report_number === '3.2.008') {
+                    $raw = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->where('classification_name', $label)
+                        ->whereIn('classification_type_id', [3])
+                        ->offset($start)->limit($limit);
+
+                    $total = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->where('classification_name', $label)
+                        ->whereIn('classification_type_id', [3]);
+                }
+
             }
 
             // day-and-time
             if ($request->report_number === '2.2.016') {
 
-                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
-                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
+                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
 
                 $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
                 $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
@@ -1646,8 +1704,8 @@ class DashboardController extends Controller
 
             if ($request->report_number === '2.2.017') {
 
-                $total->where('classification_name', $request->ylabel);
-                $raw->where('classification_name', $request->ylabel);
+                $total->where('classification_name', $request->label);
+                $raw->where('classification_name', $request->label);
 
                 if (parent::checkLabel($request->label)) {
 
@@ -1662,18 +1720,18 @@ class DashboardController extends Controller
 
             if ($request->report_number === '2.2.018') {
 
-                $ylabel = str_replace("%20", " ", $request->ylabel);
+                $label = str_replace("%20", " ", $request->label);
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $ylabel)
+                    ->where('classification_name', $label)
                     ->whereIn('classification_type_id', [3])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $ylabel)
+                    ->where('classification_name', $label)
                     ->whereIn('classification_type_id', [3]);
 
                 if (parent::checkLabel($request->label) || parent::checkLabel($request->label) === 0) {
@@ -1692,31 +1750,54 @@ class DashboardController extends Controller
 
             if ($request->report_number === '2.2.019' || $request->report_number === '3.2.009') {
 
+                if ($label === 'Hate Speech') {
+                    $label = 'HateSpeech';
+                } else if ($label === 'No Bully') {
+                    $label = 'NoBully';
+                } else if ($label === 'Trolling/Flaming') {
+                    $label = 'Trolling';                    
+                }
+                
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $request->ylabel)
+                    ->where('classification_name', $label)
                     ->whereIn('classification_type_id', [2])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $request->ylabel)
+                    ->where('classification_name', $label)
                     ->whereIn('classification_type_id', [2]);
 
-                if (parent::checkLabel($request->label) || parent::checkLabel($request->label) === 0) {
+                // if (parent::checkLabel($label) || parent::checkLabel($label) === 0) {
 
-                    $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
-                    $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+                //     $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$label]);
+                //     $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$label]);
 
-                } else {
+                // } else {
 
-                    $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
-                    $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
+                //     $raw->whereRaw('HOUR(date_m) = ?', [$label]);
+                //     $total->whereRaw('HOUR(date_m) = ?', [$label]);
 
-                }
+                // }
 
+            }
+
+            if ($request->report_number === '3.2.014') {
+                $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('source_name', $request->label)
+                    ->whereIn('classification_type_id', [1])
+                    ->offset($start)->limit($limit);
+
+                $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->where('source_name', $request->label)
+                    ->whereIn('classification_type_id', [1]);
             }
 
         }
@@ -1741,9 +1822,9 @@ class DashboardController extends Controller
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->created_at)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->created_at)->format('h:i'),
-                "day" => Carbon::parse($item->created_at)->diffInDays(Carbon::now()),
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('h:i'),
+                "day" => Carbon::parse($item->date_m)->diffInDays(Carbon::now()),
                 "device" => $item->device,
                 "channel" => $item->source_id,
                 "bully_level" => $item->classification_name,
