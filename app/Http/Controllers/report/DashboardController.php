@@ -1346,6 +1346,30 @@ class DashboardController extends Controller
             ]
         ];
 
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
+
+        $raw_total = DB::table('hashtags')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
+            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
+
+
+
+        if ($this->source_id) {
+            $raw_total->where('source_id', $this->source_id);
+        }
+
+
+        $worlds = $raw_total->get();
+
+        $dummy_data = [];
+
+        foreach ($worlds as $world) {
+            $dummy_data[] = [
+                'text' => $world->word,
+                'value' => $world->count_number
+            ];
+        }
+
         return $dummy_data;
     }
 
