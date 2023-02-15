@@ -362,6 +362,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
@@ -507,6 +508,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0, 0]
                 ];
@@ -625,6 +627,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0]
                 ];
@@ -745,6 +748,7 @@ class BullyDashboardController extends Controller
                 $data['value'][$infulencer->classification_id]['data'][0] += 1;
             } else {
                 $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
+                $data['value'][$infulencer->classification_id]['classification_id'] = $infulencer->classification_id;
                 $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->classification_name;
                 $data['value'][$infulencer->classification_id]['data'][0] = 0;
 
@@ -875,6 +879,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 ];
@@ -962,10 +967,10 @@ class BullyDashboardController extends Controller
             "Negative",
         ];
 
-        $data['value'][10] = ["id" => 10, "keyword_name" => "Level 0", "data" => [0, 0, 0]];
-        $data['value'][11] = ["id" => 11, "keyword_name" => "Level 1", "data" => [0, 0, 0]];
-        $data['value'][12] = ["id" => 12, "keyword_name" => "Level 2", "data" => [0, 0, 0]];
-        $data['value'][13] = ["id" => 13, "keyword_name" => "Level 3", "data" => [0, 0, 0]];
+        $data['value'][10] = ["id" => 10, "classification_id" => 10, "keyword_name" => "Level 0", "data" => [0, 0, 0]];
+        $data['value'][11] = ["id" => 11, "classification_id" => 11, "keyword_name" => "Level 1", "data" => [0, 0, 0]];
+        $data['value'][12] = ["id" => 12, "classification_id" => 12, "keyword_name" => "Level 2", "data" => [0, 0, 0]];
+        $data['value'][13] = ["id" => 13, "classification_id" => 13, "keyword_name" => "Level 3", "data" => [0, 0, 0]];
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
@@ -1049,7 +1054,7 @@ class BullyDashboardController extends Controller
         $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, 2);
         $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, 2);
 
-        return parent::handleRespond($data);
+        return $data;
     }
 
     public function BullyTypeDaily(Request $request)
@@ -1185,7 +1190,7 @@ class BullyDashboardController extends Controller
             $data = array_values($data);
         }
 
-        return parent::handleRespond($data);
+        return $data;
     }
 
     public function BullyTypeByDay(Request $request)
@@ -1288,6 +1293,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
@@ -1433,6 +1439,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0, 0]
                 ];
@@ -1551,6 +1558,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0]
                 ];
@@ -1672,6 +1680,7 @@ class BullyDashboardController extends Controller
                 $data['value'][$infulencer->classification_id]['data'][0] += 1;
             } else {
                 $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
+                $data['value'][$infulencer->classification_id]['classification_id'] = $infulencer->classification_id;
                 $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->classification_name;
                 $data['value'][$infulencer->classification_id]['data'][0] = 0;
 
@@ -1803,6 +1812,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
+                    'classification_id' => $item->classification_id,
                     'keyword_name' => $item->classification_name,
                     'data' => [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
                 ];
@@ -1888,6 +1898,7 @@ class BullyDashboardController extends Controller
         foreach ($bully_types as $bully_type) {
             $data['value'][$bully_type->id] = [
                 'id' => $bully_type->id,
+                'classificetion_id' => $bully_type->id,
                 'keyword_name' => $bully_type->name,
                 'data' => [0, 0, 0]
             ];
@@ -2024,6 +2035,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data[$item->classification_id] = [
                     'keyword_name' => $item->classification_name,
+                    'classification_id' => $item->classification_id,
                     'data' => 0
                 ];
             }
@@ -2118,6 +2130,7 @@ class BullyDashboardController extends Controller
             } else {
                 $data[$item->classification_id] = [
                     'keyword_name' => $item->classification_name,
+                    'classification_id' => $item->classification_id,
                     'data' => 0
                 ];
             }
