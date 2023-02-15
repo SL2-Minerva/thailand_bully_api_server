@@ -327,24 +327,38 @@ class CampaignController extends Controller
         }
 
         $data = [];
+
         foreach ($campaigns->get() as $campaign) {
-            // only not
+            $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->whereNull('parent_id')->get();
 
 
-            $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->whereNull('parent_id')
-                ->get();
+
+
 
             if ($campaign->keyword) {
+
                 foreach ($campaign->keyword as $item) {
-//                    if ($campaign->id === 20) {
-//                        dd( $item->keyword_or);
-//                    }
+
+                    if ($item->id === 35) {
+                        $keyword_colors = Keyword::where('campaign_id', $campaign->id)->where('parent_id', $item->id)->get('color');
+
+                        if ($keyword_colors) {
+                            $item->keyword_or_color = explode(',', $keyword_colors->implode('color', ','));
+                            $item->keyword_and_color = $item->color;
+
+                        } else {
+                            $item->keyword_and_color = $item->color;
+                        }
+
+
+                    }
 
                     $item->keyword_or = explode(",", $item->keyword_or);
                     $item->keyword_and = explode(",", $item->keyword_and);
                     $item->keyword_exclude = explode(",", $item->keyword_exclude);
                 }
             }
+
             $campaign->organization = Organization::find($campaign->organization_id)->name;
             $data[] = $campaign;
 
