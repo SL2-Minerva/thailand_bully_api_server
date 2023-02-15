@@ -136,32 +136,36 @@ class VoiceDashboardController extends Controller
             $date_m = Carbon::parse($item->date_m)->format('Y-m-d');
 
             if (isset($data[$keyword_id])) {
-                if (isset($data[$keyword_id][$date_m])) {
+                if (isset($data[$keyword_id]['value'][$date_m])) {
                     $data[$keyword_id]['value'][$date_m]['total_at_date'] += 1;
                 } else {
                     $data[$keyword_id]['value'][$date_m] = [
-                        'date' => $date_m,
+                        "keyword_id" => $item->keyword_id,
+                        "keyword_name" => $item->keyword_name,
+                        "date" => $date_m,
                         'total_at_date' => 1
                     ];
                 }
             } else {
 
-                $nestData = [
+                $data[$keyword_id] = [
                     'source_id' => $item->source_id,
                     'source_name' => $item->source_name,
-                    'date_m' => $date_m,
-                    'total_at_date' => 1
-                ];
-                $data[$keyword_id] = [
-                    "keyword_id" => $item->keyword_id,
-                    "keyword_name" => $item->keyword_name,
+                    // 'date' => $date_m,
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
                     "source_id" => $item->source_id,
                     "source_name" => $item->source_name,
+                    
+                ];
+                $data[$keyword_id]['value'][$date_m] = [
+                    "keyword_id" => $item->keyword_id,
+                    "keyword_name" => $item->keyword_name,
+                    'date' => $date_m,
+                    'total_at_date' => 1
                 ];
 
-                $data[$keyword_id]['value'][$date_m] = $nestData;
+                // $data[$keyword_id]['value'][$date_m] = $nestData;
             }
 
         }
