@@ -339,19 +339,19 @@ class CampaignController extends Controller
 
                 foreach ($campaign->keyword as $item) {
 
-                    if ($item->id === 35) {
-                        $keyword_colors = Keyword::where('campaign_id', $campaign->id)->where('parent_id', $item->id)->get('color');
 
-                        if ($keyword_colors) {
-                            $item->keyword_or_color = explode(',', $keyword_colors->implode('color', ','));
-                            $item->keyword_and_color = $item->color;
+                    $keyword_colors = Keyword::where('campaign_id', $campaign->id)->where('parent_id', $item->id)->get('color');
 
-                        } else {
-                            $item->keyword_and_color = $item->color;
-                        }
+                    if ($keyword_colors) {
+                        $item->keyword_or_color = explode(',', $keyword_colors->implode('color', ','));
+                        $item->keyword_and_color = $item->color;
 
-
+                    } else {
+                        $item->keyword_and_color = $item->color;
                     }
+
+
+
 
                     $item->keyword_or = explode(",", $item->keyword_or);
                     $item->keyword_and = explode(",", $item->keyword_and);
