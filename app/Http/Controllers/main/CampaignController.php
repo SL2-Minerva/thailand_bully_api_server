@@ -331,10 +331,6 @@ class CampaignController extends Controller
         foreach ($campaigns->get() as $campaign) {
             $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->whereNull('parent_id')->get();
 
-
-
-
-
             if ($campaign->keyword) {
 
                 foreach ($campaign->keyword as $item) {
@@ -349,9 +345,6 @@ class CampaignController extends Controller
                     } else {
                         $item->keyword_and_color = $item->color;
                     }
-
-
-
 
                     $item->keyword_or = explode(",", $item->keyword_or);
                     $item->keyword_and = explode(",", $item->keyword_and);

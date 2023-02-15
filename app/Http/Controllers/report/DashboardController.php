@@ -610,13 +610,43 @@ class DashboardController extends Controller
 
     private function topHashtag($start_date, $end_date)
     {
+
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
+
+        $raw_total = DB::table('hashtags')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
+            ->whereBetween('date_count', [$start_date, $end_date]);
+
+        $raw = DB::table('hashtags')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
+            ->whereBetween('date_count', [$start_date, $end_date]);
+
+
+        if ($this->source_id) {
+            $raw_total->where('source_id', $this->source_id);
+        }
+
+        $total_keywords = $raw_total->sum('count_number');
+
+        $hashtags = $raw->get();
+        $data = [];
+
+        foreach ($hashtags as $hashtag) {
+            $data[] = [
+                "id" => $hashtag->id,
+                "hashtag" => $hashtag->hashtag,
+                "keyword_id" => $hashtag->keyword_id,
+                "no_of_message" => $total_keywords,
+                "percentage" => $total_keywords > 0 ? $hashtag->count_number / $total_keywords * 100 : 0,
+                "type" => $hashtag->count_number >= 0 ? 'plus' : 'minus',
+            ];
+        }
+
+
+
+
         $dummy_data[] = [
-            "id" => 1,
-            "hashtag" => '#hashtag1',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
+
         ];
 
         $dummy_data[] = [
@@ -655,7 +685,7 @@ class DashboardController extends Controller
             "type" => 'plus'
         ];
 
-        return $dummy_data;
+        return $data;
     }
 
     public function shareOfVoiceNumber(Request $request)
@@ -1876,7 +1906,9 @@ class DashboardController extends Controller
         //todo something
         $report_number = $request->report_number ?? null;
 
+
         $roots = $this->getNode($request->message_id, $this->start_date, $this->end_date);
+
         $childs = $this->getNode($request->message_id, $this->start_date, $this->end_date, true);
 
 
@@ -1902,17 +1934,12 @@ class DashboardController extends Controller
             $data = $roots;
         }
 
-//        if ($data) {
-//            $data = array_values($data);
-//        }
 
         return parent::handleRespond($data);
-
     }
 
     private function getNode($message_id, $start_date, $end_date, $is_child = false)
     {
-
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
