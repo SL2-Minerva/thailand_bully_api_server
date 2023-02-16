@@ -1630,7 +1630,7 @@ class DashboardController extends Controller
                 }
 
                 if (isset($Llabel)) {
-                    if ($request->report_number === '5.2.002' || $request->report_number === '6.2.002') {
+                    if ($request->report_number === '5.2.002') {
                         $raw->where('classification_name', $Llabel);
                         $total->where('classification_name', $Llabel);
                     }
