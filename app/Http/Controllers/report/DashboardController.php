@@ -1352,12 +1352,9 @@ class DashboardController extends Controller
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
             ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
 
-
-
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
         }
-
 
         $worlds = $raw_total->get();
 
@@ -1930,10 +1927,8 @@ class DashboardController extends Controller
         //todo something
         $report_number = $request->report_number ?? null;
 
-
-        $roots = $this->getNode($request->message_id, $this->start_date, $this->end_date);
-
-        $childs = $this->getNode($request->message_id, $this->start_date, $this->end_date, true);
+        $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date);
+        $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true);
 
 
         if ($childs) {
@@ -1962,113 +1957,130 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function getNode($message_id, $start_date, $end_date, $is_child = false)
+    private function getNode($request ,$message_id, $start_date, $end_date, $is_child = false)
     {
+
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->where('message_id', $message_id)
+            ->where('reference_message_id', '!=', '')
+            ->whereNull('reference_message_id')
             ->whereBetween('date_m', [$start_date, $end_date]);
 
-        if ($is_child) {
-            $raw = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->where('reference_message_id', $message_id)
-                ->whereBetween('date_m', [$start_date, $end_date]);
+        if ($message_id) {
+            $raw = $raw->where('message_id', $message_id);
         }
 
-        $raw_total = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date]);
-
-
-        $total_interaction_from = $raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-            $raw_total->where('source_id', $this->source_id);
-
+        if (!$request->report_number) {
+            $raw->whereIn('classification_type_id', [1]);
         }
 
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-            $raw_total->whereIn('keyword_id', $this->keyword_id);
 
-        }
-
-        $items = $raw->get();
-
-        $data = [];
-        if ($items) {
-
+//
+//        if ($is_child) {
+//            $raw = DB::table('message_result_full_data')
+//                ->where('campaign_id', $this->campaign_id)
+//                ->where('reference_message_id', $message_id)
+//                ->whereBetween('date_m', [$start_date, $end_date]);
+//
+//            if ($message_id) {
+//                $raw = $raw->where('reference_message_id', $message_id);
+//            }
+//        }
+//
+//
+//        $raw_total = DB::table('message_result_full_data')
+//            ->where('campaign_id', $this->campaign_id)
+//            ->whereBetween('date_m', [$start_date, $end_date]);
+//
+//
+//        $total_interaction_from = $raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+//
+//        if ($this->source_id) {
+//            $raw->where('source_id', $this->source_id);
+//            $raw_total->where('source_id', $this->source_id);
+//
+//        }
+//
+//        if ($this->keyword_id) {
+//            $raw->whereIn('keyword_id', $this->keyword_id);
+//            $raw_total->whereIn('keyword_id', $this->keyword_id);
+//
+//        }
+//
+//        $items = $raw->get();
+//
+//        $data = [];
+//        if ($items) {
+//
+////            foreach ($items as $sna) {
+////
+//
+////
+////                $data['nodes'][0] = [
+////                    "id" => $sna->message_id,
+////                    "label" => $sna->author,
+////                    "title" => $sna->author,
+////                    "color" => $sna->classification_color,
+////                    "shape" => "dot",
+////                    "size" => $this->factorNodeSize($influent_rate),
+////                ];
+////            }
+//
+//
+//            $type = 1;
+//
 //            foreach ($items as $sna) {
+//                if ($sna->classification_type_id == 1) {
 //
-
 //
-//                $data['nodes'][0] = [
-//                    "id" => $sna->message_id,
-//                    "label" => $sna->author,
-//                    "title" => $sna->author,
-//                    "color" => $sna->classification_color,
-//                    "shape" => "dot",
-//                    "size" => $this->factorNodeSize($influent_rate),
-//                ];
+//                    $influent_rate = $sna->number_of_comments + $sna->number_of_shares + $sna->number_of_reactions;
+//                    $influent_rate = $influent_rate / $total_interaction_from * 100;
+//                    $data['nodes'][$type] = [
+//                        "id" => $sna->message_id,
+//                        "label" => $sna->author,
+//                        "title" => $sna->author,
+//                        "color" => $sna->classification_color,
+//                        "shape" => "dot",
+//                        "size" => $this->factorNodeSize($influent_rate),
+//                    ];
+//
+//                    if ($is_child) {
+//                        $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+//                        $data['nodes'][$type]["parent_id"] = $sna->reference_message_id;
+//                    }
+//                }
+//
+//
 //            }
-
-
-            $type = 1;
-
-            foreach ($items as $sna) {
-                if ($sna->classification_type_id == 1) {
-
-
-                    $influent_rate = $sna->number_of_comments + $sna->number_of_shares + $sna->number_of_reactions;
-                    $influent_rate = $influent_rate / $total_interaction_from * 100;
-                    $data['nodes'][$type] = [
-                        "id" => $sna->message_id,
-                        "label" => $sna->author,
-                        "title" => $sna->author,
-                        "color" => $sna->classification_color,
-                        "shape" => "dot",
-                        "size" => $this->factorNodeSize($influent_rate),
-                    ];
-
-                    if ($is_child) {
-                        $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
-                        $data['nodes'][$type]["parent_id"] = $sna->reference_message_id;
-                    }
-                }
-
-
-            }
-
-//            $total_interaction_to = $items[$type]->number_of_comments + $items[$type]->number_of_shares + $items[$type]->number_of_reactions;
-//            $influent_rate = ($total_interaction_to / $total_interaction_from) * 100;
-
 //
-//            $data['nodes'][$type] = [
-//                "id" => $items[$type]->message_id,
-//                "label" => $items[$type]->author,
-//                "title" => $items[$type]->author,
-//                "color" => $items[$type]->classification_color,
-//                "shape" => "dot",
-//                "size" => $this->factorNodeSize($influent_rate),
-//            ];
-
-//            if ($is_child) {
-//                $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
-//                $data['nodes'][$type]["parent_id"] = $items[$type]->reference_message_id;
+////            $total_interaction_to = $items[$type]->number_of_comments + $items[$type]->number_of_shares + $items[$type]->number_of_reactions;
+////            $influent_rate = ($total_interaction_to / $total_interaction_from) * 100;
+//
+////
+////            $data['nodes'][$type] = [
+////                "id" => $items[$type]->message_id,
+////                "label" => $items[$type]->author,
+////                "title" => $items[$type]->author,
+////                "color" => $items[$type]->classification_color,
+////                "shape" => "dot",
+////                "size" => $this->factorNodeSize($influent_rate),
+////            ];
+//
+////            if ($is_child) {
+////                $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+////                $data['nodes'][$type]["parent_id"] = $items[$type]->reference_message_id;
+////            }
+//
+//
+//            if (isset($data['nodes'])) {
+//                $data['nodes'] = array_values($data['nodes']);
 //            }
-
-
-            if (isset($data['nodes'])) {
-                $data['nodes'] = array_values($data['nodes']);
-            }
-
-            return $data;
-        }
-
-        return null;
+//
+//            return $data;
+//        }
+//
+//        return null;
     }
 
 

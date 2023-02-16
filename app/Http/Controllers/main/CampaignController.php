@@ -98,6 +98,7 @@ class CampaignController extends Controller
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     "color" => $keyword["keyword_and_color"][$index] ?? "#000000",
+                    "label" => $keyword["name"]
                 ];
 
                 $parent_keyword = Keyword::create($data_submit_keyword);
@@ -120,19 +121,16 @@ class CampaignController extends Controller
     private function extra_keyword($campaign_id, $parent_name, $parent_id, $keyword_ors, $keyword_and, $keyword_exclude, $keyword, $is_update = false)
     {
         $name = $parent_name;
-
         if ($keyword_and) {
-            $name .= "," . $keyword_and;
+            $name = $name . "," . $keyword_and;
         }
-
         // loop for keyword or
         foreach ($keyword_ors as $index => $keyword_or) {
 
-            $name .= "," . $keyword_or;
             $data_submit_keyword = [
                 Keyword::CAMPAIGN_ID => $campaign_id,
                 Keyword::PARENT_ID => $parent_id,
-                BaseModel::NAME => $name,
+                BaseModel::NAME =>  $name. "," . $keyword_or,
                 Keyword::KEYWORD_OR => collect($keyword_or ?? [])->implode(','),
                 Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
                 Keyword::KEYWORD_EXCLUDE => collect($keyword_exclude ?? [])->implode(','),
@@ -142,22 +140,24 @@ class CampaignController extends Controller
                 "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
             ];
 
-            // condition for update
+
             if ($is_update) {
-                $items = Keyword::where('parent_id', $parent_id)->get();
-                foreach ($items as $index => $item) {
-                    $item->name = $name;
-                    $item->keyword_or = collect($keyword['keyword_or'] ?? [])->implode(',');
-                    $item->keyword_and = collect($keyword['$keyword_and'] ?? [])->implode(',');
-                    $item->keyword_exclude = collect($keyword['keyword_exclude'] ?? [])->implode(',');
-                    $item->color = $keyword["keyword_or_color"][$index] ?? "#000000";
-                    $item->save();
+                /// todo
+                if (isset($keyword["delete_keyword_or"]) && count($keyword["delete_keyword_or"]) > 0) {
+                    foreach ($keyword["delete_keyword_or"] as $delete_keyword_or) {
+                        Keyword::where("keyword_or" ,$delete_keyword_or)->delete();
+                    }
                 }
+
+                $items = Keyword::where('parent_id', $parent_id)->get();
+                $items[$index]->update($data_submit_keyword);
+
             } else {
                 Keyword::create($data_submit_keyword);
             }
-
         }
+
+
     }
 
     public function update(Request $request)
@@ -229,7 +229,6 @@ class CampaignController extends Controller
                 $data_submit[Campaign::FREQUENCY] = $request->frequency;
             }
 
-
             $data->update($data_submit);
 
             if ($request->keywords) {
@@ -242,6 +241,7 @@ class CampaignController extends Controller
                         $name .= "," . $keyword_and;
                     }
 
+
                     $data_submit_keyword = [
                         Keyword::CAMPAIGN_ID => $data->id,
                         BaseModel::NAME => $name,
@@ -252,6 +252,8 @@ class CampaignController extends Controller
                         BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                         BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     ];
+
+
 
                     $updated = Keyword::updateOrCreate(['id' => $keyword['id'] ?? null], $data_submit_keyword);
 
@@ -335,7 +337,7 @@ class CampaignController extends Controller
 
                 foreach ($campaign->keyword as $item) {
 
-
+                    $item->name = $item->label ?? $item->name;
                     $keyword_colors = Keyword::where('campaign_id', $campaign->id)->where('parent_id', $item->id)->get('color');
 
                     if ($keyword_colors) {
