@@ -1521,7 +1521,7 @@ class DashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
                 ->whereIn('classification_type_id', [1]);
-    
+
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -1534,10 +1534,10 @@ class DashboardController extends Controller
             //fillter by Day name
             if ($request->report_number === '2.2.003' ||
                 $request->report_number === '3.2.003' ||
-                $request->report_number === '4.2.003' || 
+                $request->report_number === '4.2.003' ||
                 $request->report_number === '4.2.013' ||
                 $request->report_number === '6.2.003' ||
-                $request->report_number === '5.2.003' 
+                $request->report_number === '5.2.003'
             ) {
 
                 $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
@@ -1559,12 +1559,12 @@ class DashboardController extends Controller
                             $raw->where('number_of_shares', '>',  0);
                             $total->where('number_of_shares', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "comment") {
                             $raw->where('number_of_comments', '>',  0);
                             $total->where('number_of_comments', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "reactions") {
                             $raw->where('number_of_reactions', '>',  0);
                             $total->where('number_of_reactions', '>',  0);
@@ -1600,9 +1600,9 @@ class DashboardController extends Controller
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
                         ->whereIn('classification_type_id', [3])
                         ->offset($start)->limit($limit);
-    
-    
-    
+
+
+
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
@@ -1614,9 +1614,9 @@ class DashboardController extends Controller
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
                         ->whereIn('classification_type_id', [1])
                         ->offset($start)->limit($limit);
-    
-    
-    
+
+
+
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
@@ -1650,7 +1650,7 @@ class DashboardController extends Controller
             ) {
 
                 if ($label === 'Before 6 AM') {
-                    
+
                     $raw->whereRaw('HOUR(date_m) < ?', [6]);
                     $total->whereRaw('HOUR(date_m) < ?', [6]);
 
@@ -1692,12 +1692,12 @@ class DashboardController extends Controller
                             $raw->where('number_of_shares', '>',  0);
                             $total->where('number_of_shares', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "comment") {
                             $raw->where('number_of_comments', '>',  0);
                             $total->where('number_of_comments', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "reactions") {
                             $raw->where('number_of_reactions', '>',  0);
                             $total->where('number_of_reactions', '>',  0);
@@ -1740,24 +1740,24 @@ class DashboardController extends Controller
                         $raw->where('source_name', $request->Llabel);
                         $total->where('source_name', $request->Llabel);
                     }
-                    
+
                     if ($request->report_number === '4.2.015') {
-    
+
                         if ($request->Llabel === "share") {
                             $raw->where('number_of_shares', '>',  0);
                             $total->where('number_of_shares', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "comment") {
                             $raw->where('number_of_comments', '>',  0);
                             $total->where('number_of_comments', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "reactions") {
                             $raw->where('number_of_reactions', '>',  0);
                             $total->where('number_of_reactions', '>',  0);
                         }
-                        
+
                     }
 
                 }
@@ -1768,8 +1768,8 @@ class DashboardController extends Controller
             }
 
             // post owner / follower
-            if ($request->report_number === '2.2.006' || 
-                $request->report_number === '4.2.006' || 
+            if ($request->report_number === '2.2.006' ||
+                $request->report_number === '4.2.006' ||
                 $request->report_number === '3.2.006' ||
                 $request->report_number === '4.2.016' ||
                 $request->report_number === '5.2.006' ||
@@ -1804,7 +1804,7 @@ class DashboardController extends Controller
                     }
 
                 }
-                
+
                 if (isset($request->Llabel)) {
 
                     if ($request->report_number === '5.2.006' || $request->report_number === '6.2.006') {
@@ -1818,25 +1818,25 @@ class DashboardController extends Controller
                     }
 
                     if ($request->report_number === '4.2.016') {
-    
+
                         if ($request->Llabel === "share") {
                             $raw->where('number_of_shares', '>',  0);
                             $total->where('number_of_shares', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "comment") {
                             $raw->where('number_of_comments', '>',  0);
                             $total->where('number_of_comments', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "reactions") {
                             $raw->where('number_of_reactions', '>',  0);
                             $total->where('number_of_reactions', '>',  0);
                         }
-                        
+
                     }
                 }
-            
+
 
             }
 
@@ -1845,7 +1845,7 @@ class DashboardController extends Controller
                 $request->report_number === '4.2.007' ||
                 $request->report_number === '4.2.017' ||
                 $request->report_number === '5.2.007' ||
-                $request->report_number === '6.2.007'                
+                $request->report_number === '6.2.007'
             ) {
                 $raw->where('source_name', $request->label);
                 $total->where('source_name', $request->label);
@@ -1858,22 +1858,22 @@ class DashboardController extends Controller
                     }
 
                     if ($request->report_number === '4.2.017') {
-    
+
                         if ($request->Llabel === "share") {
                             $raw->where('number_of_shares', '>',  0);
                             $total->where('number_of_shares', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "comment") {
                             $raw->where('number_of_comments', '>',  0);
                             $total->where('number_of_comments', '>',  0);
                         }
-        
+
                         if ($request->Llabel === "reactions") {
                             $raw->where('number_of_reactions', '>',  0);
                             $total->where('number_of_reactions', '>',  0);
                         }
-                        
+
                     }
                 }
             }
@@ -1922,7 +1922,7 @@ class DashboardController extends Controller
             // level 3
             if ($request->report_number === '2.2.009') {
                 // $label = str_replace("+", " ", $request->label);
-                
+
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -1976,7 +1976,7 @@ class DashboardController extends Controller
                         ->where('classification_name', $label)
                         ->whereIn('classification_type_id', [3]);
                 }
-                
+
 
             }
 
@@ -2108,7 +2108,7 @@ class DashboardController extends Controller
                     $total->where('classification_name', $request->Llabel);
                     $raw->where('classification_name', $request->Llabel);
                 }
-                
+
             }
 
             if ($request->report_number === '6.2.013' ||
@@ -2129,7 +2129,7 @@ class DashboardController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->whereIn('classification_type_id', [2]);
-                
+
                 if ($Llabel === 'Hate Speech') {
                     $Llabel = 'HateSpeech';
                 } else if ($Llabel === 'No Bully') {
@@ -2145,22 +2145,22 @@ class DashboardController extends Controller
 
                 } else if ($request->report_number === '6.2.014') {
                     if ($label === 'Before 6 AM') {
-                    
+
                         $raw->whereRaw('HOUR(date_m) < ?', [6]);
                         $total->whereRaw('HOUR(date_m) < ?', [6]);
-    
+
                     }
-    
+
                     if ($label === '6 AM-12 PM') {
                         $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
                         $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
                     }
-    
+
                     if ($label === '12 PM-6 PM') {
                         $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
                         $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
                     }
-    
+
                     if ($label === 'After 6 PM') {
                         $raw->whereRaw('HOUR(date_m) >= ?', [18]);
                         $total->whereRaw('HOUR(date_m) >= ?', [18]);
@@ -2186,7 +2186,7 @@ class DashboardController extends Controller
                     if ($label === 'Influencer') {
                         $raw->where('reference_message_id', '')
                             ->orWhere('reference_message_id', null);
-    
+
                         $total->where('reference_message_id', '')
                             ->orWhere('reference_message_id', null);
                     } else {
@@ -2214,10 +2214,10 @@ class DashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
             $total->whereIn('keyword_id', $this->keyword_id);
         }
-        
+
         if (isset($request->keyword_id)) {
             if ($request->report_number === '1.2.002' ||
-                $request->report_number === '2.2.002' || 
+                $request->report_number === '2.2.002' ||
                 $request->report_number === '2.2.003' ||
                 $request->report_number === '2.2.004' ||
                 $request->report_number === '2.2.005' ||
@@ -2239,6 +2239,8 @@ class DashboardController extends Controller
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
+
+
             $data_push = [
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
@@ -2249,7 +2251,8 @@ class DashboardController extends Controller
                 "device" => $item->device,
                 "channel" => $item->source_id,
                 "bully_level" => $item->classification_name,
-                "bully_type" => $item->message_type
+                "bully_type" => $item->message_type,
+                "parent" => $item->reference_message_id ?? ''
             ];
 
             $data['message'][] = $data_push;
