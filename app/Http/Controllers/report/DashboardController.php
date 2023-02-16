@@ -2205,8 +2205,6 @@ class DashboardController extends Controller
 
         }
 
-        
-
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
             $total->where('source_id', $this->source_id);
@@ -2217,12 +2215,23 @@ class DashboardController extends Controller
             $total->whereIn('keyword_id', $this->keyword_id);
         }
         
-        // if (isset($request->keyword_id)) {
-            // if ($request->report_number !== '4.2.013' && $request->report_number !== '4.2.015') {
-                // $raw->where('keyword_id', $request->keyword_id);
-                // $total->where('keyword_id', $request->keyword_id);
-            // }
-        // }
+        if (isset($request->keyword_id)) {
+            if ($request->report_number === '1.2.002' ||
+                $request->report_number === '2.2.002' || 
+                $request->report_number === '2.2.003' ||
+                $request->report_number === '2.2.004' ||
+                $request->report_number === '2.2.005' ||
+                $request->report_number === '2.2.006' ||
+                $request->report_number === '2.2.007' ||
+                $request->report_number === '2.2.008' ||
+                $request->report_number === '2.2.009' ||
+                $request->report_number === '2.2.010' ||
+                $request->report_number === '2.2.013'
+            ) {
+                $raw->where('keyword_id', $request->keyword_id);
+                $total->where('keyword_id', $request->keyword_id);
+            }
+        }
 
 //        dd($raw->toSql());
 
