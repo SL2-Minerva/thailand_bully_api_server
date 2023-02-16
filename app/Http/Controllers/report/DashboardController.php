@@ -2090,23 +2090,229 @@ class DashboardController extends Controller
             }
 
             if ($request->report_number === '5.2.008' ||
-                $request->report_number === '5.2.009'
+                $request->report_number === '5.2.009' ||
+                $request->report_number === '6.2.008' ||
+                $request->report_number === '6.2.018'
             ) {
+                if ($request->report_number === '5.2.008') {
 
-                $raw = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->whereIn('classification_type_id', [1, 3])
-                    ->offset($start)->limit($limit);
+                    $raw = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->whereIn('classification_type_id', [1, 3]);
+            
+                    $items = $raw->get();
+            
+            
+                    $anylsys = [];
+            
+                    foreach ($items as $item) {
+                        $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+                        $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                        $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+                        $anylsys[$item->message_id]["account_name"] = $item->author;
+                        $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                        $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('h:i');
+                        $anylsys[$item->message_id]["day"] = Carbon::parse($item->date_m)->diffInDays(Carbon::now());
+                        $anylsys[$item->message_id]["device"] = $item->device;
+                        $anylsys[$item->message_id]["source_id"] = $item->source_id;
+                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
+                    }
+            
+            
+                    foreach ($anylsys as $anylsy) {
+                        if ($anylsy['Bully Level'] === $label) {
+                            if ($anylsy['Sentiment'] === $Llabel) {
+                                $data['message'][] = $anylsy; 
+                            }
+                        }
+            
+                    }
+            
+                    if ($data) {
+                        $data['total'] = count($data['message']);
 
-                $total = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->whereIn('classification_type_id', [1, 3]);
+                        $page = $page < 1 ? 1 : $page;
+                        $start = ($page - 1) * (9 + 1);
+                        $offset = 9 + 1;
+                
+                        $data['message'] = array_slice($data['message'], $start, $offset);
+                        return parent::handleRespond($data);
+                    }
+                    
+            
+                    return $data;
+                }
 
-                if (isset($request->Llabel)) {
-                    $total->where('classification_name', $request->Llabel);
-                    $raw->where('classification_name', $request->Llabel);
+                if ($request->report_number === '5.2.009') {
+
+                    $raw = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->whereIn('classification_type_id', [1, 2]);
+            
+                    $items = $raw->get();
+            
+            
+                    $anylsys = [];
+            
+                    foreach ($items as $item) {
+                        
+                        $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+                        $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                        $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+                        $anylsys[$item->message_id]["account_name"] = $item->author;
+                        $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                        $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('h:i');
+                        $anylsys[$item->message_id]["day"] = Carbon::parse($item->date_m)->diffInDays(Carbon::now());
+                        $anylsys[$item->message_id]["device"] = $item->device;
+                        $anylsys[$item->message_id]["source_id"] = $item->source_id;
+                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
+                    }
+            
+            
+                    foreach ($anylsys as $anylsy) {
+                        if ($label === 'Hate Speech') {
+                            $label = 'HateSpeech';
+                        } else if ($label === 'No Bully') {
+                            $label = 'NoBully';
+                        } else if ($label === 'Trolling/Flaming') {
+                            $label = 'Trolling';
+                        }
+                        if ($anylsy['Bully Type'] === $label) {
+                            if ($anylsy['Sentiment'] === $Llabel) {
+                                $data['message'][] = $anylsy; 
+                            }
+                        }
+            
+                    }
+            
+                    if ($data) {
+                        $data['total'] = count($data['message']);
+
+                        $page = $page < 1 ? 1 : $page;
+                        $start = ($page - 1) * (9 + 1);
+                        $offset = 9 + 1;
+                
+                        $data['message'] = array_slice($data['message'], $start, $offset);
+                        return parent::handleRespond($data);
+                    }
+                    
+            
+                    return $data;
+                }
+
+                if ($request->report_number === '6.2.008') {
+
+                    $raw = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->whereIn('classification_type_id', [1, 3]);
+            
+                    $items = $raw->get();
+            
+            
+                    $anylsys = [];
+            
+                    foreach ($items as $item) {
+                        
+                        $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+                        $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                        $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+                        $anylsys[$item->message_id]["account_name"] = $item->author;
+                        $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                        $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('h:i');
+                        $anylsys[$item->message_id]["day"] = Carbon::parse($item->date_m)->diffInDays(Carbon::now());
+                        $anylsys[$item->message_id]["device"] = $item->device;
+                        $anylsys[$item->message_id]["source_id"] = $item->source_id;
+                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
+                    }
+            
+            
+                    foreach ($anylsys as $anylsy) {
+                        if ($anylsy['Bully Level'] === $Llabel) {
+                            if ($anylsy['Sentiment'] === $label) {
+                                $data['message'][] = $anylsy; 
+                            }
+                        }
+            
+                    }
+            
+                    if ($data) {
+                        $data['total'] = count($data['message']);
+
+                        $page = $page < 1 ? 1 : $page;
+                        $start = ($page - 1) * (9 + 1);
+                        $offset = 9 + 1;
+                
+                        $data['message'] = array_slice($data['message'], $start, $offset);
+                        return parent::handleRespond($data);
+                    }
+                    
+            
+                    return $data;
+                }
+
+                if ($request->report_number === '6.2.018') {
+
+                    $raw = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->whereIn('classification_type_id', [1, 2]);
+            
+                    $items = $raw->get();
+            
+            
+                    $anylsys = [];
+            
+                    foreach ($items as $item) {
+                        
+                        $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+                        $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                        $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+                        $anylsys[$item->message_id]["account_name"] = $item->author;
+                        $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                        $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('h:i');
+                        $anylsys[$item->message_id]["day"] = Carbon::parse($item->date_m)->diffInDays(Carbon::now());
+                        $anylsys[$item->message_id]["device"] = $item->device;
+                        $anylsys[$item->message_id]["source_id"] = $item->source_id;
+                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
+                    }
+            
+            
+                    foreach ($anylsys as $anylsy) {
+                        if ($Llabel === 'Hate Speech') {
+                            $Llabel = 'HateSpeech';
+                        } else if ($Llabel === 'No Bully') {
+                            $Llabel = 'NoBully';
+                        } else if ($Llabel === 'Trolling/Flaming') {
+                            $Llabel = 'Trolling';
+                        }
+                        if ($anylsy['Bully Type'] === $Llabel) {
+                            if ($anylsy['Sentiment'] === $label) {
+                                $data['message'][] = $anylsy; 
+                            }
+                        }
+            
+                    }
+            
+                    if ($data) {
+                        $data['total'] = count($data['message']);
+
+                        $page = $page < 1 ? 1 : $page;
+                        $start = ($page - 1) * (9 + 1);
+                        $offset = 9 + 1;
+                
+                        $data['message'] = array_slice($data['message'], $start, $offset);
+                        return parent::handleRespond($data);
+                    }
+                    
+            
+                    return $data;
                 }
 
             }
