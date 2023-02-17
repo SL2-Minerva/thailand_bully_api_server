@@ -2500,7 +2500,8 @@ class DashboardController extends Controller
         $report_number = $request->report_number ?? null;
         $type = 1;
 
-      if ($report_number === 'sna') {
+      if ($report_number === 'sna' || $report_number === '4.2.007') {
+
           $data = [
               "sentiment" => $this->getSNAbyType($request, 1),
               "bullyLevel" => $this->getSNAbyType($request, 2),
@@ -2638,28 +2639,28 @@ class DashboardController extends Controller
 
 
 
-            if ($is_child) {
+//            if ($is_child) {
                 $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
                 $data_push["parent_id"] = $item->reference_message_id;
-            }
-
-
-//            if ($message_id && $item->reference_message_id !== '') {
-//                $parent = DB::table('message_result_full_data')
-//                    ->where('message_id', $item->reference_message_id)
-//                    ->first();
-//                $parent_data = [
-//                    "id" => $parent->message_id,
-//                    "label" => $parent->author,
-//                    "title" => $parent->author,
-//                    "color" => $parent->classification_color,
-//                    "shape" => "dot",
-//                    "size" => $this->factorNodeSize($influent_rate),
-//                ];
-//
-//                $data['nodes'][] = $parent_data;
-//
 //            }
+
+
+            if ($message_id && $item->reference_message_id !== '') {
+                $parent = DB::table('message_result_full_data')
+                    ->where('message_id', $item->reference_message_id)
+                    ->first();
+                $parent_data = [
+                    "id" => $parent->message_id,
+                    "label" => $parent->author,
+                    "title" => $parent->author,
+                    "color" => $parent->classification_color,
+                    "shape" => "dot",
+                    "size" => $this->factorNodeSize($influent_rate),
+                ];
+
+                $data['nodes'][] = $parent_data;
+
+            }
 
             $data['nodes'][] = $data_push;
         }
