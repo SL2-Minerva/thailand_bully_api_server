@@ -2559,14 +2559,13 @@ class DashboardController extends Controller
         if ($message_id) {
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereIn('classification_type_id', [1])
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         } else {
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->where('message_type', 'Post')
-                ->orWhere('reference_message_id', '')
-                ->whereIn('classification_type_id', [1])
+//                ->where('message_type', 'Post')
+                ->Where('reference_message_id', '')
+                ->where('classification_type_id', [$type])
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
 
@@ -2584,6 +2583,7 @@ class DashboardController extends Controller
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->where('reference_message_id', '!=', '')
+                ->where('classification_type_id', [$type])
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
 
@@ -2597,12 +2597,13 @@ class DashboardController extends Controller
         }
 
         if ($type) {
-            $raw->whereIn('classification_type_id', [$type]);
+
+
         }
 
         $raw_total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereIn('classification_type_id', [1])
+            ->whereIn('classification_type_id', [$type])
             ->whereBetween('date_m', [$start_date, $end_date]);
 
         $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
@@ -2615,6 +2616,7 @@ class DashboardController extends Controller
 
 
         $items = $raw->get();
+
 
 //        if ($is_child) {
 //            dd($items);
