@@ -614,11 +614,11 @@ class DashboardController extends Controller
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
 
         $raw_total = DB::table('hashtags')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereBetween('date_count', [$start_date, $end_date]);
 
         $raw = DB::table('hashtags')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereBetween('date_count', [$start_date, $end_date]);
 
 
@@ -641,8 +641,6 @@ class DashboardController extends Controller
                 "type" => $hashtag->count_number >= 0 ? 'plus' : 'minus',
             ];
         }
-
-
 
 
         $dummy_data[] = [
@@ -1349,9 +1347,8 @@ class DashboardController extends Controller
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
 
         $raw_total = DB::table('hashtags')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray() )
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
-
 
 
         if ($this->source_id) {
@@ -1549,25 +1546,25 @@ class DashboardController extends Controller
                         $total->where('classification_name', $request->Llabel);
                     }
 
-                    if($request->report_number === '3.2.003') {
+                    if ($request->report_number === '3.2.003') {
                         $raw->where('source_name', $request->Llabel);
                         $total->where('source_name', $request->Llabel);
                     }
 
                     if ($request->report_number === '4.2.013') {
                         if ($request->Llabel === "share") {
-                            $raw->where('number_of_shares', '>',  0);
-                            $total->where('number_of_shares', '>',  0);
+                            $raw->where('number_of_shares', '>', 0);
+                            $total->where('number_of_shares', '>', 0);
                         }
 
                         if ($request->Llabel === "comment") {
-                            $raw->where('number_of_comments', '>',  0);
-                            $total->where('number_of_comments', '>',  0);
+                            $raw->where('number_of_comments', '>', 0);
+                            $total->where('number_of_comments', '>', 0);
                         }
 
                         if ($request->Llabel === "reactions") {
-                            $raw->where('number_of_reactions', '>',  0);
-                            $total->where('number_of_reactions', '>',  0);
+                            $raw->where('number_of_reactions', '>', 0);
+                            $total->where('number_of_reactions', '>', 0);
                         }
                     }
                 }
@@ -1575,7 +1572,7 @@ class DashboardController extends Controller
             }
 
             // fillter by date
-            if ( $request->report_number === '1.2.002' ||
+            if ($request->report_number === '1.2.002' ||
                 $request->report_number === '2.2.002' ||
                 $request->report_number === '2.2.013' ||
                 $request->report_number === '3.2.002' ||
@@ -1602,7 +1599,6 @@ class DashboardController extends Controller
                         ->offset($start)->limit($limit);
 
 
-
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
@@ -1614,7 +1610,6 @@ class DashboardController extends Controller
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
                         ->whereIn('classification_type_id', [1])
                         ->offset($start)->limit($limit);
-
 
 
                     $total = DB::table('message_result_full_data')
@@ -1682,25 +1677,25 @@ class DashboardController extends Controller
                         $total->where('classification_name', $request->Llabel);
                     }
 
-                    if( $request->report_number === '3.2.004') {
+                    if ($request->report_number === '3.2.004') {
                         $raw->where('source_name', $request->Llabel);
                         $total->where('source_name', $request->Llabel);
                     }
 
                     if ($request->report_number === '4.2.014') {
                         if ($request->Llabel === "share") {
-                            $raw->where('number_of_shares', '>',  0);
-                            $total->where('number_of_shares', '>',  0);
+                            $raw->where('number_of_shares', '>', 0);
+                            $total->where('number_of_shares', '>', 0);
                         }
 
                         if ($request->Llabel === "comment") {
-                            $raw->where('number_of_comments', '>',  0);
-                            $total->where('number_of_comments', '>',  0);
+                            $raw->where('number_of_comments', '>', 0);
+                            $total->where('number_of_comments', '>', 0);
                         }
 
                         if ($request->Llabel === "reactions") {
-                            $raw->where('number_of_reactions', '>',  0);
-                            $total->where('number_of_reactions', '>',  0);
+                            $raw->where('number_of_reactions', '>', 0);
+                            $total->where('number_of_reactions', '>', 0);
                         }
                     }
                 }
@@ -1715,7 +1710,6 @@ class DashboardController extends Controller
 
             ) {
                 $target = 'dddddd';
-
 
 
                 if ($label === 'Andriod' || $label === 'Android') {
@@ -1744,18 +1738,18 @@ class DashboardController extends Controller
                     if ($request->report_number === '4.2.015') {
 
                         if ($request->Llabel === "share") {
-                            $raw->where('number_of_shares', '>',  0);
-                            $total->where('number_of_shares', '>',  0);
+                            $raw->where('number_of_shares', '>', 0);
+                            $total->where('number_of_shares', '>', 0);
                         }
 
                         if ($request->Llabel === "comment") {
-                            $raw->where('number_of_comments', '>',  0);
-                            $total->where('number_of_comments', '>',  0);
+                            $raw->where('number_of_comments', '>', 0);
+                            $total->where('number_of_comments', '>', 0);
                         }
 
                         if ($request->Llabel === "reactions") {
-                            $raw->where('number_of_reactions', '>',  0);
-                            $total->where('number_of_reactions', '>',  0);
+                            $raw->where('number_of_reactions', '>', 0);
+                            $total->where('number_of_reactions', '>', 0);
                         }
 
                     }
@@ -1820,18 +1814,18 @@ class DashboardController extends Controller
                     if ($request->report_number === '4.2.016') {
 
                         if ($request->Llabel === "share") {
-                            $raw->where('number_of_shares', '>',  0);
-                            $total->where('number_of_shares', '>',  0);
+                            $raw->where('number_of_shares', '>', 0);
+                            $total->where('number_of_shares', '>', 0);
                         }
 
                         if ($request->Llabel === "comment") {
-                            $raw->where('number_of_comments', '>',  0);
-                            $total->where('number_of_comments', '>',  0);
+                            $raw->where('number_of_comments', '>', 0);
+                            $total->where('number_of_comments', '>', 0);
                         }
 
                         if ($request->Llabel === "reactions") {
-                            $raw->where('number_of_reactions', '>',  0);
-                            $total->where('number_of_reactions', '>',  0);
+                            $raw->where('number_of_reactions', '>', 0);
+                            $total->where('number_of_reactions', '>', 0);
                         }
 
                     }
@@ -1860,18 +1854,18 @@ class DashboardController extends Controller
                     if ($request->report_number === '4.2.017') {
 
                         if ($request->Llabel === "share") {
-                            $raw->where('number_of_shares', '>',  0);
-                            $total->where('number_of_shares', '>',  0);
+                            $raw->where('number_of_shares', '>', 0);
+                            $total->where('number_of_shares', '>', 0);
                         }
 
                         if ($request->Llabel === "comment") {
-                            $raw->where('number_of_comments', '>',  0);
-                            $total->where('number_of_comments', '>',  0);
+                            $raw->where('number_of_comments', '>', 0);
+                            $total->where('number_of_comments', '>', 0);
                         }
 
                         if ($request->Llabel === "reactions") {
-                            $raw->where('number_of_reactions', '>',  0);
-                            $total->where('number_of_reactions', '>',  0);
+                            $raw->where('number_of_reactions', '>', 0);
+                            $total->where('number_of_reactions', '>', 0);
                         }
 
                     }
@@ -1881,18 +1875,18 @@ class DashboardController extends Controller
             // Reaction
             if ($request->report_number === '4.2.008') {
                 if ($label === "Share of Voice") {
-                    $raw->where('number_of_shares', '>',  0);
-                    $total->where('number_of_shares', '>',  0);
+                    $raw->where('number_of_shares', '>', 0);
+                    $total->where('number_of_shares', '>', 0);
                 }
 
                 if ($label === "Comments") {
-                    $raw->where('number_of_comments', '>',  0);
-                    $total->where('number_of_comments', '>',  0);
+                    $raw->where('number_of_comments', '>', 0);
+                    $total->where('number_of_comments', '>', 0);
                 }
 
                 if ($label === "Reaction") {
-                    $raw->where('number_of_reactions', '>',  0);
-                    $total->where('number_of_reactions', '>',  0);
+                    $raw->where('number_of_reactions', '>', 0);
+                    $total->where('number_of_reactions', '>', 0);
                 }
                 // $total->where('source_name', $request->label);
             }
@@ -2295,164 +2289,136 @@ class DashboardController extends Controller
 
     public function dailyMessageLevelFour(Request $request)
     {
-        $data = [];
+
         //todo something
         $report_number = $request->report_number ?? null;
 
-        $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date);
-        $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true);
-
-
-        if ($childs) {
-            $data['nodes'] = array_merge($roots['nodes'], $childs['nodes']);
-            foreach ($childs['nodes'] as $child) {
-
-                foreach ($roots['nodes'] as $root) {
-                    if ($child['parent_id'] == $root['id']) {
-                        $data['edges'][] = [
-                            "from" => $child['id'],
-                            "to" => $root['id'],
-                            "width" => (int)$child['length'] >= 30 ? (int)$child['length'] / 10 : (int)$child['length'],
-                            "length" => (int)$child['length'] ? (int)$child['length'] * 10 : 150,
-                            "color" => $child['color']
-                        ];
-                    }
-                }
-            }
-
-
-        } else {
-            $data = $roots;
-        }
+        $data = [
+            "sentiment" => $this->getSNAbyType($request, 1),
+            "bullyLevel" => $this->getSNAbyType($request, 2),
+            "bullyType" => $this->getSNAbyType($request, 3),
+        ];
 
 
         return parent::handleRespond($data);
     }
 
-    private function getNode($request ,$message_id, $start_date, $end_date, $is_child = false)
+    private function getSNAbyType ($request, $type = 1) {
+        $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, false, $type);
+        $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true, $type);
+        $nodes = array_merge($roots['nodes'] ?? [], $childs['nodes'] ?? []);
+
+        $data = [];
+
+        $check = [];
+        foreach ($nodes as $node) {
+            // data from each node;
+            $data['nodes'][] = $node;
+
+            if (!isset($check[$node['id']])) {
+                $check[] = $node['id'];
+//                $check[] = $node;
+            }
+
+            if (isset($node['parent_id']) && $node['parent_id']) {
+
+                $data['edges'][] = [
+//                    'from' => $node['parent_id'],
+//                    'to' => $node['id'],
+
+                    'from' => $node['id'],
+                    'to' => $node['parent_id'],
+                    "width" => (int)$node['length'] >= 30 ? (int)$node['length'] / 10 : (int)$node['length'],
+                    "length" => (int)$node['length'] ? (int)$node['length'] * 10 : 150,
+                    "color" => $node['color']
+                ];
+            }
+        }
+
+        return $data;
+    }
+
+    private function getNode($request, $message_id, $start_date, $end_date, $is_child = false, $type = 1)
     {
 
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->where('reference_message_id', '!=', '')
-            ->whereNull('reference_message_id')
-            ->whereBetween('date_m', [$start_date, $end_date]);
+            ->where('message_type', 'Post')
+            ->orWhere('reference_message_id', '')
+            ->whereIn('classification_type_id', [1])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+
+//        17-02-2566 14:05 debug not use
+//        $raw_total = DB::table('message_result_full_data')
+//            ->where('campaign_id', $this->campaign_id)
+//            ->where('message_type', 'Post')
+//            ->orWhere('reference_message_id',  '')
+//            ->whereIn('classification_type_id', [1])
+//            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+
+        if ($is_child) {
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->where('reference_message_id', '!=', '')
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        }
+
 
         if ($message_id) {
             $raw = $raw->where('message_id', $message_id);
         }
 
-        if (!$request->report_number) {
-            $raw->whereIn('classification_type_id', [1]);
+        if ($type) {
+            $raw->whereIn('classification_type_id', [$type]);
+        }
+
+        $raw_total = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereIn('classification_type_id', [1])
+            ->whereBetween('date_m', [$start_date, $end_date]);
+
+        $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_total->where('source_id', $this->source_id);
+
+        }
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw_total->whereIn('keyword_id', $this->keyword_id);
+
+        }
+
+        $items = $raw->get();
+        $data = [];
+
+        foreach ($items as $item) {
+            $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100: 0;
+            $data_push = [
+                "id" => $item->message_id,
+                "label" => $item->author,
+                "title" => $item->author,
+                "color" => $item->classification_color,
+                "shape" => "dot",
+                "size" => $this->factorNodeSize($influent_rate),
+            ];
+
+            if ($is_child) {
+                $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+                $data_push["parent_id"] = $item->reference_message_id;
+            }
+
+            $data['nodes'][] = $data_push;
         }
 
 
-//
-//        if ($is_child) {
-//            $raw = DB::table('message_result_full_data')
-//                ->where('campaign_id', $this->campaign_id)
-//                ->where('reference_message_id', $message_id)
-//                ->whereBetween('date_m', [$start_date, $end_date]);
-//
-//            if ($message_id) {
-//                $raw = $raw->where('reference_message_id', $message_id);
-//            }
-//        }
-//
-//
-//        $raw_total = DB::table('message_result_full_data')
-//            ->where('campaign_id', $this->campaign_id)
-//            ->whereBetween('date_m', [$start_date, $end_date]);
-//
-//
-//        $total_interaction_from = $raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
-//
-//        if ($this->source_id) {
-//            $raw->where('source_id', $this->source_id);
-//            $raw_total->where('source_id', $this->source_id);
-//
-//        }
-//
-//        if ($this->keyword_id) {
-//            $raw->whereIn('keyword_id', $this->keyword_id);
-//            $raw_total->whereIn('keyword_id', $this->keyword_id);
-//
-//        }
-//
-//        $items = $raw->get();
-//
-//        $data = [];
-//        if ($items) {
-//
-////            foreach ($items as $sna) {
-////
-//
-////
-////                $data['nodes'][0] = [
-////                    "id" => $sna->message_id,
-////                    "label" => $sna->author,
-////                    "title" => $sna->author,
-////                    "color" => $sna->classification_color,
-////                    "shape" => "dot",
-////                    "size" => $this->factorNodeSize($influent_rate),
-////                ];
-////            }
-//
-//
-//            $type = 1;
-//
-//            foreach ($items as $sna) {
-//                if ($sna->classification_type_id == 1) {
-//
-//
-//                    $influent_rate = $sna->number_of_comments + $sna->number_of_shares + $sna->number_of_reactions;
-//                    $influent_rate = $influent_rate / $total_interaction_from * 100;
-//                    $data['nodes'][$type] = [
-//                        "id" => $sna->message_id,
-//                        "label" => $sna->author,
-//                        "title" => $sna->author,
-//                        "color" => $sna->classification_color,
-//                        "shape" => "dot",
-//                        "size" => $this->factorNodeSize($influent_rate),
-//                    ];
-//
-//                    if ($is_child) {
-//                        $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
-//                        $data['nodes'][$type]["parent_id"] = $sna->reference_message_id;
-//                    }
-//                }
-//
-//
-//            }
-//
-////            $total_interaction_to = $items[$type]->number_of_comments + $items[$type]->number_of_shares + $items[$type]->number_of_reactions;
-////            $influent_rate = ($total_interaction_to / $total_interaction_from) * 100;
-//
-////
-////            $data['nodes'][$type] = [
-////                "id" => $items[$type]->message_id,
-////                "label" => $items[$type]->author,
-////                "title" => $items[$type]->author,
-////                "color" => $items[$type]->classification_color,
-////                "shape" => "dot",
-////                "size" => $this->factorNodeSize($influent_rate),
-////            ];
-//
-////            if ($is_child) {
-////                $data['nodes'][$type]["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
-////                $data['nodes'][$type]["parent_id"] = $items[$type]->reference_message_id;
-////            }
-//
-//
-//            if (isset($data['nodes'])) {
-//                $data['nodes'] = array_values($data['nodes']);
-//            }
-//
-//            return $data;
-//        }
-//
-//        return null;
+        return $data;
     }
 
 

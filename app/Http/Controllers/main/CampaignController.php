@@ -254,6 +254,9 @@ class CampaignController extends Controller
                     ];
 
 
+                    if (isset($keyword['keyword_and_color'])) {
+                        $data_submit_keyword["color"] = $keyword['keyword_and_color'][0];
+                    }
 
                     $updated = Keyword::updateOrCreate(['id' => $keyword['id'] ?? null], $data_submit_keyword);
 
