@@ -2498,6 +2498,7 @@ class DashboardController extends Controller
 
         //todo something
         $report_number = $request->report_number ?? null;
+        $type = 1;
 
       if ($report_number === 'sna') {
           $data = [
@@ -2510,7 +2511,7 @@ class DashboardController extends Controller
       }
 
       else {
-          return $this->getSNAbyType($request, 1);
+          return parent::handleRespond($this->getSNAbyType($request, $type));
       }
 
 
