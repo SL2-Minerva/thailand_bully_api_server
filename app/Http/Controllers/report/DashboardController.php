@@ -2094,12 +2094,12 @@ class DashboardController extends Controller
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date])
                         ->whereIn('classification_type_id', [1, 3]);
-            
+
                     $items = $raw->get();
-            
-            
+
+
                     $anylsys = [];
-            
+
                     foreach ($items as $item) {
                         $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
                         $anylsys[$item->message_id]["message_id"] = $item->message_id;
@@ -2113,29 +2113,29 @@ class DashboardController extends Controller
                         $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
                         $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
                     }
-            
-            
+
+
                     foreach ($anylsys as $anylsy) {
                         if ($anylsy['Bully Level'] === $label) {
                             if ($anylsy['Sentiment'] === $Llabel) {
-                                $data['message'][] = $anylsy; 
+                                $data['message'][] = $anylsy;
                             }
                         }
-            
+
                     }
-            
+
                     if ($data) {
                         $data['total'] = count($data['message']);
 
                         $page = $page < 1 ? 1 : $page;
                         $start = ($page - 1) * (9 + 1);
                         $offset = 9 + 1;
-                
+
                         $data['message'] = array_slice($data['message'], $start, $offset);
                         return parent::handleRespond($data);
                     }
-                    
-            
+
+
                     return $data;
                 }
 
@@ -2145,14 +2145,14 @@ class DashboardController extends Controller
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date])
                         ->whereIn('classification_type_id', [1, 2]);
-            
+
                     $items = $raw->get();
-            
-            
+
+
                     $anylsys = [];
-            
+
                     foreach ($items as $item) {
-                        
+
                         $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
                         $anylsys[$item->message_id]["message_id"] = $item->message_id;
                         $anylsys[$item->message_id]["message_detail"] = $item->full_message;
@@ -2165,8 +2165,8 @@ class DashboardController extends Controller
                         $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
                         $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
                     }
-            
-            
+
+
                     foreach ($anylsys as $anylsy) {
                         if ($label === 'Hate Speech') {
                             $label = 'HateSpeech';
@@ -2177,24 +2177,24 @@ class DashboardController extends Controller
                         }
                         if ($anylsy['Bully Type'] === $label) {
                             if ($anylsy['Sentiment'] === $Llabel) {
-                                $data['message'][] = $anylsy; 
+                                $data['message'][] = $anylsy;
                             }
                         }
-            
+
                     }
-            
+
                     if ($data) {
                         $data['total'] = count($data['message']);
 
                         $page = $page < 1 ? 1 : $page;
                         $start = ($page - 1) * (9 + 1);
                         $offset = 9 + 1;
-                
+
                         $data['message'] = array_slice($data['message'], $start, $offset);
                         return parent::handleRespond($data);
                     }
-                    
-            
+
+
                     return $data;
                 }
 
@@ -2204,14 +2204,14 @@ class DashboardController extends Controller
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date])
                         ->whereIn('classification_type_id', [1, 3]);
-            
+
                     $items = $raw->get();
-            
-            
+
+
                     $anylsys = [];
-            
+
                     foreach ($items as $item) {
-                        
+
                         $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
                         $anylsys[$item->message_id]["message_id"] = $item->message_id;
                         $anylsys[$item->message_id]["message_detail"] = $item->full_message;
@@ -2224,29 +2224,29 @@ class DashboardController extends Controller
                         $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
                         $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
                     }
-            
-            
+
+
                     foreach ($anylsys as $anylsy) {
                         if ($anylsy['Bully Level'] === $Llabel) {
                             if ($anylsy['Sentiment'] === $label) {
-                                $data['message'][] = $anylsy; 
+                                $data['message'][] = $anylsy;
                             }
                         }
-            
+
                     }
-            
+
                     if ($data) {
                         $data['total'] = count($data['message']);
 
                         $page = $page < 1 ? 1 : $page;
                         $start = ($page - 1) * (9 + 1);
                         $offset = 9 + 1;
-                
+
                         $data['message'] = array_slice($data['message'], $start, $offset);
                         return parent::handleRespond($data);
                     }
-                    
-            
+
+
                     return $data;
                 }
 
@@ -2256,14 +2256,14 @@ class DashboardController extends Controller
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date])
                         ->whereIn('classification_type_id', [1, 2]);
-            
+
                     $items = $raw->get();
-            
-            
+
+
                     $anylsys = [];
-            
+
                     foreach ($items as $item) {
-                        
+
                         $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
                         $anylsys[$item->message_id]["message_id"] = $item->message_id;
                         $anylsys[$item->message_id]["message_detail"] = $item->full_message;
@@ -2276,8 +2276,8 @@ class DashboardController extends Controller
                         $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
                         $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
                     }
-            
-            
+
+
                     foreach ($anylsys as $anylsy) {
                         if ($Llabel === 'Hate Speech') {
                             $Llabel = 'HateSpeech';
@@ -2288,24 +2288,24 @@ class DashboardController extends Controller
                         }
                         if ($anylsy['Bully Type'] === $Llabel) {
                             if ($anylsy['Sentiment'] === $label) {
-                                $data['message'][] = $anylsy; 
+                                $data['message'][] = $anylsy;
                             }
                         }
-            
+
                     }
-            
+
                     if ($data) {
                         $data['total'] = count($data['message']);
 
                         $page = $page < 1 ? 1 : $page;
                         $start = ($page - 1) * (9 + 1);
                         $offset = 9 + 1;
-                
+
                         $data['message'] = array_slice($data['message'], $start, $offset);
                         return parent::handleRespond($data);
                     }
-                    
-            
+
+
                     return $data;
                 }
 
@@ -2514,7 +2514,7 @@ class DashboardController extends Controller
         $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true, $type);
         $nodes = array_merge($roots['nodes'] ?? [], $childs['nodes'] ?? []);
 
-        $data = [];
+        $data = [ 'nodes' => null, 'edges' => null];
 
         $check = [];
         foreach ($nodes as $node) {
@@ -2573,8 +2573,12 @@ class DashboardController extends Controller
         }
 
 
-        if ($message_id) {
+        if ($message_id && !$is_child) {
             $raw = $raw->where('message_id', $message_id);
+        }
+
+        if ($message_id && $is_child) {
+            $raw = $raw->where('reference_message_id', $message_id);
         }
 
         if ($type) {
@@ -2594,13 +2598,11 @@ class DashboardController extends Controller
 
         }
 
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-            $raw_total->whereIn('keyword_id', $this->keyword_id);
-
-        }
-
         $items = $raw->get();
+
+//        if ($is_child) {
+//            dd($items);
+//        }
         $data = [];
 
         foreach ($items as $item) {
