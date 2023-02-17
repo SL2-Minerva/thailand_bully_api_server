@@ -1346,10 +1346,10 @@ class DashboardController extends Controller
 
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
 
-        $raw_total = DB::table('hashtags')
+
+        $raw_total = DB::table('word_clouds')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
-
 
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
@@ -2500,30 +2500,29 @@ class DashboardController extends Controller
         $report_number = $request->report_number ?? null;
         $type = 1;
 
-      if ($report_number === 'sna' || $report_number === '4.2.007') {
+        if ($report_number === 'sna' || $report_number === '4.2.007') {
 
-          $data = [
-              "sentiment" => $this->getSNAbyType($request, 1),
-              "bullyLevel" => $this->getSNAbyType($request, 2),
-              "bullyType" => $this->getSNAbyType($request, 3),
-          ];
+            $data = [
+                "sentiment" => $this->getSNAbyType($request, 1),
+                "bullyLevel" => $this->getSNAbyType($request, 2),
+                "bullyType" => $this->getSNAbyType($request, 3),
+            ];
 
-          return parent::handleRespond($data);
-      }
-
-      else {
-          return parent::handleRespond($this->getSNAbyType($request, $type));
-      }
+            return parent::handleRespond($data);
+        } else {
+            return parent::handleRespond($this->getSNAbyType($request, $type));
+        }
 
 
     }
 
-    private function getSNAbyType ($request, $type = 1) {
+    private function getSNAbyType($request, $type = 1)
+    {
         $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, false, $type);
         $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true, $type);
         $nodes = array_merge($roots['nodes'] ?? [], $childs['nodes'] ?? []);
 
-        $data = [ 'nodes' => null, 'edges' => null];
+        $data = ['nodes' => null, 'edges' => null];
 
         $check = [];
         foreach ($nodes as $node) {
@@ -2557,7 +2556,6 @@ class DashboardController extends Controller
     {
 
 
-
         if ($message_id) {
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
@@ -2571,7 +2569,6 @@ class DashboardController extends Controller
                 ->whereIn('classification_type_id', [1])
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
-
 
 
 //        17-02-2566 14:05 debug not use
@@ -2626,7 +2623,7 @@ class DashboardController extends Controller
         $checkparent = [];
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100: 0;
+            $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100 : 0;
             $data_push = [
                 "id" => $item->message_id,
                 "label" => $item->author,
@@ -2637,11 +2634,9 @@ class DashboardController extends Controller
             ];
 
 
-
-
 //            if ($is_child) {
-                $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
-                $data_push["parent_id"] = $item->reference_message_id;
+            $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+            $data_push["parent_id"] = $item->reference_message_id;
 //            }
 
 
@@ -2753,8 +2748,49 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
 
         $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['word_clouds_table'] = $this->wordCloudsMessageTable();
 
         return parent::handleRespond($data);
+    }
+
+    private function wordCloudsMessageTable()
+    {
+        $data = null;
+
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
+
+        $raw = DB::table('word_clouds')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
+
+        $raw_total = DB::table('message_result_full_data')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
+
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+            $raw_total->where('source_id', $this->source_id);
+        }
+
+
+        $wordclouds = $raw->get();
+        $total = $raw_total->count();
+        $data = [];
+        $list_keywords = $keywords->pluck('name', 'id')->toArray();
+        foreach ($wordclouds as $wordcloud) {
+
+            $data[] = [
+                'keyword' => $wordcloud->word,
+                'keyword_id' => $wordcloud->keyword_id,
+                'keyword_name' => $list_keywords[$wordcloud->keyword_id],
+                'total' => $wordcloud->count_number,
+                'percent' => round(($wordcloud->count_number / $total * 100), 2)
+            ];
+        }
+
+        return $data;
     }
 
     public function wordCloudsPlateform(Request $request)
