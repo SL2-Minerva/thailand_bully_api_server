@@ -2499,14 +2499,21 @@ class DashboardController extends Controller
         //todo something
         $report_number = $request->report_number ?? null;
 
-        $data = [
-            "sentiment" => $this->getSNAbyType($request, 1),
-            "bullyLevel" => $this->getSNAbyType($request, 2),
-            "bullyType" => $this->getSNAbyType($request, 3),
-        ];
+      if ($report_number === 'sna') {
+          $data = [
+              "sentiment" => $this->getSNAbyType($request, 1),
+              "bullyLevel" => $this->getSNAbyType($request, 2),
+              "bullyType" => $this->getSNAbyType($request, 3),
+          ];
+
+          return parent::handleRespond($data);
+      }
+
+      else {
+          return $this->getSNAbyType($request, 1);
+      }
 
 
-        return parent::handleRespond($data);
     }
 
     private function getSNAbyType ($request, $type = 1) {
