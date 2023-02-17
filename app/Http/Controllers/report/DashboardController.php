@@ -2548,12 +2548,21 @@ class DashboardController extends Controller
     {
 
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->where('message_type', 'Post')
-            ->orWhere('reference_message_id', '')
-            ->whereIn('classification_type_id', [1])
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($message_id) {
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereIn('classification_type_id', [1])
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        } else {
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->where('message_type', 'Post')
+                ->orWhere('reference_message_id', '')
+                ->whereIn('classification_type_id', [1])
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        }
+
 
 
 //        17-02-2566 14:05 debug not use
@@ -2598,6 +2607,7 @@ class DashboardController extends Controller
 
         }
 
+
         $items = $raw->get();
 
 //        if ($is_child) {
@@ -2617,15 +2627,36 @@ class DashboardController extends Controller
                 "size" => $this->factorNodeSize($influent_rate),
             ];
 
+
+
+
             if ($is_child) {
                 $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
                 $data_push["parent_id"] = $item->reference_message_id;
             }
 
+
+//            if ($message_id && $item->reference_message_id !== '') {
+//                $parent = DB::table('message_result_full_data')
+//                    ->where('message_id', $item->reference_message_id)
+//                    ->first();
+//                $parent_data = [
+//                    "id" => $parent->message_id,
+//                    "label" => $parent->author,
+//                    "title" => $parent->author,
+//                    "color" => $parent->classification_color,
+//                    "shape" => "dot",
+//                    "size" => $this->factorNodeSize($influent_rate),
+//                ];
+//
+//                $data['nodes'][] = $parent_data;
+//
+//            }
+
             $data['nodes'][] = $data_push;
         }
 
-
+//        dd($data);
         return $data;
     }
 
