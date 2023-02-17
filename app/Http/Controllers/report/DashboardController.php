@@ -2623,7 +2623,7 @@ class DashboardController extends Controller
 //            dd($items);
 //        }
         $data = [];
-
+        $checkparent = [];
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100: 0;
@@ -2645,22 +2645,23 @@ class DashboardController extends Controller
 //            }
 
 
-            if ($message_id && $item->reference_message_id !== '') {
-                $parent = DB::table('message_result_full_data')
-                    ->where('message_id', $item->reference_message_id)
-                    ->first();
-                $parent_data = [
-                    "id" => $parent->message_id,
-                    "label" => $parent->author,
-                    "title" => $parent->author,
-                    "color" => $parent->classification_color,
-                    "shape" => "dot",
-                    "size" => $this->factorNodeSize($influent_rate),
-                ];
-
-                $data['nodes'][] = $parent_data;
-
-            }
+//            if ($message_id && $item->reference_message_id !== '') {
+//                $parent = DB::table('message_result_full_data')
+//                    ->where('message_id', $item->reference_message_id)
+//                    ->first();
+//                $checkparent[] = $parent->message_id;
+//                $parent_data = [
+//                    "id" => $parent->message_id,
+//                    "label" => $parent->author,
+//                    "title" => $parent->author,
+//                    "color" => $parent->classification_color,
+//                    "shape" => "dot",
+//                    "size" => $this->factorNodeSize($influent_rate),
+//                ];
+//
+//                $data['nodes'][] = $parent_data;
+//
+//            }
 
             $data['nodes'][] = $data_push;
         }
