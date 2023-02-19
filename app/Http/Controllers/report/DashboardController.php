@@ -2793,22 +2793,23 @@ class DashboardController extends Controller
         }
         $select = $request->select ?? null;
 
-        switch ($select) {
-            case "top10":
-                $data = array_slice($dummy_data, 0, 10);
-                break;
-            case "top20":
-                $data = array_slice($dummy_data, 0, 20);
-                break;
-            case "top50":
-                $data = array_slice($dummy_data, 0, 50);
-                break;
-            case "top100":
-                $data = array_slice($dummy_data, 0, 100);
-                break;
-            default:
-                $data = $data;
+        if (count($data) > 0) {
+            switch ($select) {
+                case "top10":
+                    $data = array_slice($data, 0, 10);
+                    break;
+                case "top20":
+                    $data = array_slice($data, 0, 20);
+                    break;
+                case "top50":
+                    $data = array_slice($data, 0, 50);
+                    break;
+                default:
+                    $data = array_slice($data, 0, 100);
+            }
         }
+
+
         return $data;
     }
 
