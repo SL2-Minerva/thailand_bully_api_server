@@ -636,7 +636,8 @@ class DashboardController extends Controller
                 "id" => $hashtag->id,
                 "hashtag" => $hashtag->hashtag,
                 "keyword_id" => $hashtag->keyword_id,
-                "no_of_message" => $total_keywords,
+                "no_of_message" => $hashtag->count_number,
+                "total_keyword" => $total_keywords,
                 "percentage" => $total_keywords > 0 ? $hashtag->count_number / $total_keywords * 100 : 0,
                 "type" => $hashtag->count_number >= 0 ? 'plus' : 'minus',
             ];
