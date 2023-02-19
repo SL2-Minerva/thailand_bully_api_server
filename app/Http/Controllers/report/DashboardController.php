@@ -557,15 +557,17 @@ class DashboardController extends Controller
         $total_keywords = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
+            ->where('source_id', 5)
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $total_keywords->whereIn('keyword_id', $this->keyword_id);
         }
 
-        if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
-        }
+
+//        if ($this->source_id) {
+//            $total_keywords->where('source_id', $this->source_id);
+//        }
 
         $total_keywords = $total_keywords->get();
 
