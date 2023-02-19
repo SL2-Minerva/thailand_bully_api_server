@@ -619,7 +619,7 @@ class DashboardController extends Controller
 
         $raw = DB::table('hashtags')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_count', [$start_date, $end_date]);
+            ->whereBetween('date_count', [$start_date, $end_date])->orderBy('count_number', 'desc');
 
 
         if ($this->source_id) {
