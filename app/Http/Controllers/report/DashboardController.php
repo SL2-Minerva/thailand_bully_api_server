@@ -2791,7 +2791,24 @@ class DashboardController extends Controller
                 'percent' => round(($wordcloud->count_number / $total * 100), 2)
             ];
         }
+        $select = $request->select ?? null;
 
+        switch ($select) {
+            case "top10":
+                $data = array_slice($dummy_data, 0, 10);
+                break;
+            case "top20":
+                $data = array_slice($dummy_data, 0, 20);
+                break;
+            case "top50":
+                $data = array_slice($dummy_data, 0, 50);
+                break;
+            case "top100":
+                $data = array_slice($dummy_data, 0, 100);
+                break;
+            default:
+                $data = $data;
+        }
         return $data;
     }
 
@@ -2840,11 +2857,13 @@ class DashboardController extends Controller
             case "top50":
                 $data = array_slice($dummy_data, 0, 50);
                 break;
-            case "top100":
-                $data = array_slice($dummy_data, 0, 100);
-                break;
+//            case "top100":
+//                $data = array_slice($dummy_data, 0, 100);
+//                break;
+//            default:
+//                $data = $dummy_data;
             default:
-                $data = $dummy_data;
+                $data = array_slice($dummy_data, 0, 100);
         }
 
         return $data;
