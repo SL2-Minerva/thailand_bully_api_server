@@ -2750,12 +2750,12 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
 
         $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
-        $data['word_clouds_table'] = $this->wordCloudsMessageTable();
+        $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsMessageTable()
+    private function wordCloudsMessageTable($request)
     {
         $data = null;
 
