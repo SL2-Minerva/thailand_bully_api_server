@@ -424,10 +424,12 @@ class SentimentDashboardController extends Controller
         ];
 
 
-        $table = 'sna_root_node';
+        $table = 'message_result_full_data';
 
         $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
+            ->where('classification_type_id', 1)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
 
         if ($this->source_id) {
             $infulencer_root->where('source_id', $this->source_id);
@@ -441,20 +443,23 @@ class SentimentDashboardController extends Controller
 
 
         foreach ($infulencers as $infulencer) {
-
-            if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
-                $data['value'][$infulencer->classification_id]['data'][0] += 1;
-            } else {
-                $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
-                $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->keyword_name;
-                $data['value'][$infulencer->classification_id]['data'][0] = 1;
-
+            if($infulencer->reference_message_id === null || $infulencer->reference_message_id === '') {
+                if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
+                    $data['value'][$infulencer->classification_id]['data'][0] += 1;
+                } else {
+                    $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
+                    $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->keyword_name;
+                    $data['value'][$infulencer->classification_id]['data'][0] = 1;
+    
+                }
             }
         }
 
-        $table = 'sna_child_node';
+        $table = 'message_result_full_data';
         $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
+            ->where('classification_type_id', 1)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
 
         if ($this->source_id) {
             $follower_raw->where('source_id', $this->source_id);
@@ -468,13 +473,14 @@ class SentimentDashboardController extends Controller
 
 
         foreach ($followers as $follower) {
-
-            if (isset($data['value'][$follower->classification_id]['data'][1])) {
-                $data['value'][$follower->classification_id]['data'][1] += 1;
-            } else {
-                $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
-                $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
-                $data['value'][$follower->classification_id]['data'][1] = 1;
+            if($infulencer->reference_message_id !== null || $infulencer->reference_message_id !== '') {
+                if (isset($data['value'][$follower->classification_id]['data'][1])) {
+                    $data['value'][$follower->classification_id]['data'][1] += 1;
+                } else {
+                    $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
+                    $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
+                    $data['value'][$follower->classification_id]['data'][1] = 1;
+                }
             }
 
         }
