@@ -209,7 +209,7 @@ class LevelfourController extends Controller
 
         $raw_total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereIn('classification_type_id', [$type])
+            ->where('classification_type_id', $type)
             ->whereBetween('date_m', [$start_date, $end_date]);
 
         $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
