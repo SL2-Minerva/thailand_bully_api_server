@@ -240,8 +240,10 @@ class EngagementDashboardController extends Controller
                 $index_label = 2;
             }
 
+
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+
             } else {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
@@ -294,7 +296,6 @@ class EngagementDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
             $raw_child->whereIn('keyword_id', $this->keyword_id);
         }
-
 
 
         $items = $raw->get();

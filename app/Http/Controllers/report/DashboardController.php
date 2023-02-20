@@ -1687,8 +1687,28 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
 
         $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
 
         return parent::handleRespond($data);
+    }
+
+    private function wordCloudByAccount($request) {
+        $data =  [
+            [
+                "author" => "Nguyễn Văn A",
+                "source_id" => 1,
+                "total_message" => 100,
+                "engagements" => 12000
+            ],
+            [
+                "author" => "aadads",
+                "source_id" => 1,
+                "total_message" => 100,
+                "engagements" => 12000
+            ],
+        ];
+
+        return $data;
     }
 
     public function wordCloudsPosition(Request $request)
@@ -1703,11 +1723,31 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
 
         $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($campaign_id, $start_date, $end_date, $select);
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsMessage($campaign_id, $start_date, $end_date, $select)
+    private function wordCloudBySentimentType($request) {
+        $data =  [
+            [
+                "author" => "Nguyễn Văn A",
+                "source_id" => 1,
+                "total_message" => 100,
+                "engagements" => 12000
+            ],
+            [
+                "author" => "aadads",
+                "source_id" => 1,
+                "total_message" => 100,
+                "engagements" => 12000
+            ],
+        ];
+
+        return $data;
+    }
+
+    private function wordCloudsMessage($campaign_id, $start_date, $end_date, $select, $type)
     {
         $dummy_data = $this->wordCloudsData();
         switch ($select) {
