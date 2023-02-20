@@ -1697,12 +1697,22 @@ class DashboardController extends Controller
             [
                 "author" => "Nguyễn Văn A",
                 "source_id" => 1,
+                "source_name" => "Facebook",
                 "total_message" => 100,
                 "engagements" => 12000
             ],
             [
+                "author" => "Nguyễn Văn A",
+                "source_id" => 6,
+                "source_name" => "Pantip",
+                "total_message" => 100,
+                "engagements" => 12000
+            ],
+
+            [
                 "author" => "aadads",
                 "source_id" => 1,
+                "source_name" => "Facebook",
                 "total_message" => 100,
                 "engagements" => 12000
             ],
@@ -1733,12 +1743,22 @@ class DashboardController extends Controller
             [
                 "author" => "Nguyễn Văn A",
                 "source_id" => 1,
+                "source_name" => "Facebook",
                 "total_message" => 100,
                 "engagements" => 12000
             ],
             [
+                "author" => "Nguyễn Văn A",
+                "source_id" => 6,
+                "source_name" => "Pantip",
+                "total_message" => 100,
+                "engagements" => 12000
+            ],
+
+            [
                 "author" => "aadads",
                 "source_id" => 1,
+                "source_name" => "Facebook",
                 "total_message" => 100,
                 "engagements" => 12000
             ],
