@@ -66,7 +66,7 @@ class LevelfourController extends Controller
         $report_number === '3.2.007' ||
         $report_number === '3.2.008' ||
         $report_number === '3.2.009'
-        
+
         // // Engagement Dashboard
         // $report_number === '4.2.002' ||
         // $report_number === '4.2.003' ||
@@ -133,26 +133,32 @@ class LevelfourController extends Controller
         $check = [];
         foreach ($nodes as $node) {
             // data from each node;
-            $data['nodes'][] = $node;
+
 
             if (!isset($check[$node['id']])) {
                 $check[] = $node['id'];
+                $data['nodes'][] = $node;
+
+                if (isset($node['parent_id']) && $node['parent_id']) {
+
+                    $data['edges'][] = [
+//                    'from' => $node['parent_id'],
+//                    'to' => $node['id'],
+                        'from' => $node['id'],
+                        'to' => $node['parent_id'],
+                        "width" => (int)$node['length'] >= 30 ? (int)$node['length'] / 10 : (int)$node['length'],
+                        "length" => (int)$node['length'] ? (int)$node['length'] * 10 : 150,
+                        "color" => $node['color']
+                    ];
+                }
+
+
 //                $check[] = $node;
             }
 
-            if (isset($node['parent_id']) && $node['parent_id']) {
 
-                $data['edges'][] = [
-//                    'from' => $node['parent_id'],
-//                    'to' => $node['id'],
 
-                    'from' => $node['id'],
-                    'to' => $node['parent_id'],
-                    "width" => (int)$node['length'] >= 30 ? (int)$node['length'] / 10 : (int)$node['length'],
-                    "length" => (int)$node['length'] ? (int)$node['length'] * 10 : 150,
-                    "color" => $node['color']
-                ];
-            }
+
         }
 
         return $data;

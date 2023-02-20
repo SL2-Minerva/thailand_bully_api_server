@@ -1693,6 +1693,8 @@ class DashboardController extends Controller
     }
 
     private function wordCloudByAccount($request) {
+
+
         $data =  [
             [
                 "author" => "Nguyễn Văn A",
