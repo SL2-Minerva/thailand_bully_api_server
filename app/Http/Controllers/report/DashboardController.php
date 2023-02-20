@@ -1716,13 +1716,17 @@ class DashboardController extends Controller
         $start = $start === 1 ? null : $start - 1;
 
         $data = [];
+
         $raw = DB::table('word_clouds')
             ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
             ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
             ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
-            ->whereIn('keyword_id', $this->keyword_id)
             ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
             ->offset($start)->limit($limit);
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
