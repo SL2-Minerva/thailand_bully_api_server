@@ -1666,34 +1666,46 @@ class EngagementDashboardController extends Controller
             }
         }
 
-//        dd($current, $previous);
+
 
         if ($current) {
 
             foreach ($current as $key => $item) {
 
+                $p_total = 0;
+                $s_total = 0;
+                $c_total = 0;
+                $r_total = 0;
+
+                if (isset($previous[$key])) {
+                    $p_total =  $previous[$key]['total'];
+                    $s_total =  $previous[$key]['share'];
+                    $c_total =  $previous[$key]['comment'];
+                    $r_total =  $previous[$key]['reaction'];
+                }
+
                 $data[] = [
                     'keyword_id' => $key,
                     'keyword_name' => $item['keyword_name'],
                     'total' => [
-                        "value" => $item['total'] - $previous[$key]['total'],
-                        "percentage" => $this->overPeriodComparison($item['total'], $previous[$key]['total']),
-                        "type" => $item['total'] - $previous[$key]['total'] > 0 ? "plus" : "minus",
+                        "value" => $item['total'] - $p_total,
+                        "percentage" => $this->overPeriodComparison($item['total'], $p_total),
+                        "type" => $item['total'] - $p_total > 0 ? "plus" : "minus",
                     ],
                     'share' => [
-                        "value" => $item['share'] - $previous[$key]['share'],
-                        "percentage" => $this->overPeriodComparison($item['share'], $previous[$key]['share']),
-                        "type" => $item['share'] - $previous[$key]['share'] > 0 ? "plus" : "minus",
+                        "value" => $item['share'] - $s_total,
+                        "percentage" => $this->overPeriodComparison($item['share'], $s_total),
+                        "type" => $item['share'] - $s_total > 0 ? "plus" : "minus" ,
                     ],
                     'comment' => [
-                        "value" => $item['comment'] - $previous[$key]['comment'],
-                        "percentage" => $this->overPeriodComparison($item['comment'], $previous[$key]['comment']),
-                        "type" => $item['comment'] - $previous[$key]['comment'] > 0 ? "plus" : "minus",
+                        "value" => $item['comment'] - $c_total,
+                        "percentage" => $this->overPeriodComparison($item['comment'], $c_total),
+                        "type" => $item['comment'] - $c_total > 0 ? "plus" : "minus",
                     ],
                     'reaction' => [
-                        "value" => $item['reaction'] - $previous[$key]['reaction'],
-                        "percentage" => $this->overPeriodComparison($item['reaction'], $previous[$key]['reaction']),
-                        "type" => $item['reaction'] - $previous[$key]['reaction'] > 0 ? "plus" : "minus",
+                        "value" => $item['reaction'] - $r_total,
+                        "percentage" => $this->overPeriodComparison($item['reaction'], $r_total),
+                        "type" => $item['reaction'] - $r_total > 0 ? "plus" : "minus" ,
                     ],
                 ];
             }
