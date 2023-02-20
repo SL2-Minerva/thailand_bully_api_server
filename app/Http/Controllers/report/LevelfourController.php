@@ -134,8 +134,8 @@ class LevelfourController extends Controller
         foreach ($nodes as $node) {
             // data from each node;
 
-
-            if (!isset($check[$node['id']])) {
+            if (!in_array($node['id'], $check))
+            {
                 $check[] = $node['id'];
                 $data['nodes'][] = $node;
 
