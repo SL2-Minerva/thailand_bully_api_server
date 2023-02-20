@@ -43,7 +43,7 @@ class LevelfourController extends Controller
         $report_number = $request->report_number ?? null;
         $type = 1;
 
-        if ($report_number === 'sna' || $report_number === '4.2.007') {
+        if ($report_number === 'sna' || $report_number === '4.2.007' ) {
 
             $data = [
                 "sentiment" => $this->getSNAbyType($request, 1),

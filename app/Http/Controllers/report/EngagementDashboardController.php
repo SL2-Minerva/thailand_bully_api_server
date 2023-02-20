@@ -275,14 +275,13 @@ class EngagementDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->start_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '')
-            ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         $raw_child = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '!=', null)
             ->whereIn('classification_type_id', [1]);
 
@@ -295,6 +294,8 @@ class EngagementDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
             $raw_child->whereIn('keyword_id', $this->keyword_id);
         }
+
+
 
         $items = $raw->get();
         $items_child = $raw_child->get();
