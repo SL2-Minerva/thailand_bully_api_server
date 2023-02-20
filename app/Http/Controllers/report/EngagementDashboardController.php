@@ -282,7 +282,7 @@ class EngagementDashboardController extends Controller
         $raw_child = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->where('reference_message_id', '!=', null)
+            ->where('reference_message_id', '!=', '')
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -304,9 +304,9 @@ class EngagementDashboardController extends Controller
 
         foreach ($items as $item) {
             if (isset($analysis[$item->message_id])) {
-                $analysis[$item->message_id]['follows'] += 1;
+                $analysis[$item->message_id]['Infulencer'] += 1;
             } else {
-                $analysis[$item->message_id]['follows'] = 0;
+                $analysis[$item->message_id]['Follower'] = 0;
                 $analysis[$item->message_id]['Infulencer'] = 0;
                 $analysis[$item->message_id]['keyword_id'] = $item->keyword_id;
                 $analysis[$item->message_id]['keyword_name'] = $item->keyword_name;
@@ -318,43 +318,61 @@ class EngagementDashboardController extends Controller
             $message_total += 1;
         }
 
-        // todo check
         foreach ($items_child as $child) {
             if (isset($analysis[$child->reference_message_id])) {
-                $analysis[$child->reference_message_id]['follows'] += 1;
+                $analysis[$child->reference_message_id]['Follower'] += 1;
             }
         }
 
-        foreach ($analysis as $item) {
-            foreach ($item as $key => $value) {
 
-                if ($key !== 'follows') {
-                    $index_label = array_search($key, $data['labels']);
-
-                    if ($index_label !== -1) {
-                        if (isset($data['value'][$item['keyword_id']])) {
-
-
-                            if ($key === 'Infulencer' || $key === 'Follower') {
-                                $data['value'][$item['keyword_id']]['data'][$index_label] += 1;
-                            }
-
-//                            $data[$item['keyword_id']]['data'][$index_label] += $value;
-                        } else {
-                            $data['value'][$item['keyword_id']] = [
-                                'id' => $item['keyword_id'],
-                                'keyword_name' => $item['keyword_name'],
-                                'campaign_id' => $item['campaign_id'],
-                                'campaign_name' => $item['campaign_name'],
-                                'data' => [0, 0]
-                            ];
-                            $data['value'][$item['keyword_id']]['data'][$index_label] = 1;
-                        }
-
-                    }
-                }
+        foreach ($analysis as $message_id => $item) {
+            if (isset($data['value'][$item['keyword_id']])) {
+                $data['value'][$item['keyword_id']]['data'][0] += 1;
+                $data['value'][$item['keyword_id']]['data'][1] += $item['Follower'];
+            } else {
+                $data['value'][$item['keyword_id']] = [
+                    'id' => $item['keyword_id'],
+                    'keyword_name' => $item['keyword_name'],
+                    'campaign_id' => $item['campaign_id'],
+                    'campaign_name' => $item['campaign_name'],
+                    'data' => [0, 0]
+                ];
+                $data['value'][$item['keyword_id']]['data'][0] = $item['Infulencer'];
+                $data['value'][$item['keyword_id']]['data'][1] = $item['Follower'];
             }
         }
+
+
+//        foreach ($analysis as $item) {
+//            foreach ($item as $key => $value) {
+//
+//                if ($key !== 'follows') {
+//                    $index_label = array_search($key, $data['labels']);
+//
+//                    if ($index_label !== -1) {
+//                        if (isset($data['value'][$item['keyword_id']])) {
+//
+//
+//                            if ($key === 'Infulencer' || $key === 'Follower') {
+//                                $data['value'][$item['keyword_id']]['data'][$index_label] += 1;
+//                            }
+//
+////                            $data[$item['keyword_id']]['data'][$index_label] += $value;
+//                        } else {
+//                            $data['value'][$item['keyword_id']] = [
+//                                'id' => $item['keyword_id'],
+//                                'keyword_name' => $item['keyword_name'],
+//                                'campaign_id' => $item['campaign_id'],
+//                                'campaign_name' => $item['campaign_name'],
+//                                'data' => [0, 0]
+//                            ];
+//                            $data['value'][$item['keyword_id']]['data'][$index_label] = 1;
+//                        }
+//
+//                    }
+//                }
+//            }
+//        }
 
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
