@@ -664,18 +664,26 @@ class LevelthreeController extends Controller
             }
 
             if ($request->report_number === '3.2.014') {
+                if ($request->select_period === 'previous') {
+                    $start_date = $this->start_date_previous;
+                    $end_date = $this->end_date_previous;
+                } else {
+                    $start_date = $this->start_date;
+                    $end_date = $this->end_date;
+                }
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->whereBetween('date_m', [$start_date, $end_date])
                     ->where('source_name', $request->label)
                     ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->whereBetween('date_m', [$start_date, $end_date])
                     ->where('source_name', $request->label)
                     ->whereIn('classification_type_id', [1]);
+                
             }
 
             if ($request->report_number === '5.2.008' ||
