@@ -1773,23 +1773,21 @@ class DashboardController extends Controller
                 $request->report_number === '6.2.006'
             ) {
 
-                if ($label === 'Influencer') {
-                    $raw->where('reference_message_id', '')
-                        ->orWhere('reference_message_id', null);
-
-                    $total->where('reference_message_id', '')
-                        ->orWhere('reference_message_id', null);
-                } else {
-                    $raw->where('reference_message_id', '!=', null)
-                        ->where('reference_message_id', '!=', '');
-                    $total->where('reference_message_id', '!=', null)
-                        ->where('reference_message_id', '!=', '');
-                }
-
                 if ($request->report_number === '2.2.006') {
 
 
                     if ($request->label === 'Post Owner') {
+                        $raw->where('reference_message_id', '');
+                        $total->where('reference_message_id', '');
+                    } else {
+                        $raw->where('reference_message_id', '!=', '');
+                        $total->where('reference_message_id', '!=', '');
+                    }
+
+                }
+
+                if ($request->report_number === '3.2.006') {
+                    if ($label === 'Influencer') {
                         $raw->where('reference_message_id', '')
                             ->orWhere('reference_message_id', null);
 
@@ -1799,34 +1797,77 @@ class DashboardController extends Controller
                         $raw->where('reference_message_id', '!=', null);
                         $total->where('reference_message_id', '!=', null);
                     }
-
                 }
+
+                if ($request->report_number === '4.2.006') {
+                    if ($label === 'Influencer') {
+                        $raw->where('reference_message_id', '');
+
+                        $total->where('reference_message_id', '');
+                    } else {
+                        $raw->where('reference_message_id', '!=', '');
+                        $total->where('reference_message_id', '!=', '');
+                    }
+                }
+
+                if ($request->report_number === '5.2.006') {
+                    if ($label === 'Influencer') {
+                        $raw->where('reference_message_id', '');
+
+                        $total->where('reference_message_id', '');
+                    } else {
+                        $raw->where('reference_message_id', '!=', null);
+                        $total->where('reference_message_id', '!=', null);
+                    }
+                }
+
+                if ($request->report_number === '6.2.006') {
+                    if ($label === 'Influencer') {
+                        $raw->where('reference_message_id', '');
+                        $total->where('reference_message_id', '');
+                    } else {
+                        $raw->where('reference_message_id', '!=', null);
+                        $total->where('reference_message_id', '!=', null);;
+                    }
+                }
+
 
                 if (isset($request->Llabel)) {
 
-                    if ($request->report_number === '5.2.006' || $request->report_number === '6.2.006') {
+                    if ($request->report_number === '5.2.006') {
                         $raw->where('classification_name', $request->Llabel);
                         $total->where('classification_name', $request->Llabel);
                     }
+
+                    if ($request->report_number === '6.2.006') {
+                        $raw->where('classification_name', '=', $request->Llabel);
+                        $total->where('classification_name', '=', $request->Llabel);
+                    }
+
 
                     if ($request->report_number === '3.2.006') {
                         $raw->where('source_name', $request->Llabel);
                         $total->where('source_name', $request->Llabel);
                     }
 
+                    if ($request->report_number === '4.2.006') {
+                        $raw->where('keyword_name', $request->Llabel);
+                        $total->where('keyword_name', $request->Llabel);
+                    }
+
                     if ($request->report_number === '4.2.016') {
 
-                        if ($request->Llabel === "share") {
+                        if ($request->Llabel === "Share") {
                             $raw->where('number_of_shares', '>', 0);
                             $total->where('number_of_shares', '>', 0);
                         }
 
-                        if ($request->Llabel === "comment") {
+                        if ($request->Llabel === "Comment") {
                             $raw->where('number_of_comments', '>', 0);
                             $total->where('number_of_comments', '>', 0);
                         }
 
-                        if ($request->Llabel === "reactions") {
+                        if ($request->Llabel === "Reaction") {
                             $raw->where('number_of_reactions', '>', 0);
                             $total->where('number_of_reactions', '>', 0);
                         }
@@ -1856,17 +1897,17 @@ class DashboardController extends Controller
 
                     if ($request->report_number === '4.2.017') {
 
-                        if ($request->Llabel === "share") {
+                        if ($request->Llabel === "Share") {
                             $raw->where('number_of_shares', '>', 0);
                             $total->where('number_of_shares', '>', 0);
                         }
 
-                        if ($request->Llabel === "comment") {
+                        if ($request->Llabel === "Comment") {
                             $raw->where('number_of_comments', '>', 0);
                             $total->where('number_of_comments', '>', 0);
                         }
 
-                        if ($request->Llabel === "reactions") {
+                        if ($request->Llabel === "Reaction") {
                             $raw->where('number_of_reactions', '>', 0);
                             $total->where('number_of_reactions', '>', 0);
                         }
@@ -1877,17 +1918,17 @@ class DashboardController extends Controller
 
             // Reaction
             if ($request->report_number === '4.2.008') {
-                if ($label === "Share of Voice") {
+                if ($request->Llabel === "Share") {
                     $raw->where('number_of_shares', '>', 0);
                     $total->where('number_of_shares', '>', 0);
                 }
 
-                if ($label === "Comments") {
+                if ($request->Llabel === "Comment") {
                     $raw->where('number_of_comments', '>', 0);
                     $total->where('number_of_comments', '>', 0);
                 }
 
-                if ($label === "Reaction") {
+                if ($request->Llabel === "Reaction") {
                     $raw->where('number_of_reactions', '>', 0);
                     $total->where('number_of_reactions', '>', 0);
                 }
@@ -2387,14 +2428,11 @@ class DashboardController extends Controller
                     $total->where('device', $target);
                 } else if ($request->report_number === '6.2.016') {
                     if ($label === 'Influencer') {
-                        $raw->where('reference_message_id', '')
-                            ->orWhere('reference_message_id', null);
-
-                        $total->where('reference_message_id', '')
-                            ->orWhere('reference_message_id', null);
+                        $raw->where('reference_message_id', '');
+                        $total->where('reference_message_id', '');
                     } else {
                         $raw->where('reference_message_id', '!=', null);
-                        $total->where('reference_message_id', '!=', null);
+                        $total->where('reference_message_id', '!=', null);;
                     }
                 } else if ($request->report_number === '6.2.017') {
                     $raw->where('source_name', $request->label);
