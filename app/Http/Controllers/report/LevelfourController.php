@@ -171,7 +171,7 @@ class LevelfourController extends Controller
                 ->where('campaign_id', $this->campaign_id)
 //                ->where('message_type', 'Post')
                 ->Where('reference_message_id', '')
-                ->where('classification_type_id', [$type])
+                ->where('classification_type_id', $type)
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
 
