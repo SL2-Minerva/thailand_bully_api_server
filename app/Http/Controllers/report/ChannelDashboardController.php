@@ -1567,7 +1567,7 @@ class ChannelDashboardController extends Controller
 
         foreach ($data['current_period']['data'] as $key => $value) {
 
-            $data['current_period']['data'][$key] = (float)$this->point_two_digits(($value['total'] / $message_total) * 100);
+            $data['current_period']['data'][$key] = $message_total > 0 ? (float)$this->point_two_digits(($value['total'] / $message_total) * 100) : 0;
 //            $data['current_period']['data'][$key] = (float)$this->point_two_digits(($value['total'] - $message_total) * 100);
         }
 
