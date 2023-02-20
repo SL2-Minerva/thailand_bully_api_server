@@ -572,8 +572,8 @@ class LevelthreeController extends Controller
             // day-and-time
             if ($request->report_number === '2.2.016') {
 
-                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
-                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+                $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
+                $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->ylabel]);
 
                 $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
                 $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
@@ -582,8 +582,8 @@ class LevelthreeController extends Controller
 
             if ($request->report_number === '2.2.017') {
 
-                $total->where('classification_name', $request->label);
-                $raw->where('classification_name', $request->label);
+                $total->where('classification_name', $request->ylabel);
+                $raw->where('classification_name', $request->ylabel);
 
                 if (parent::checkLabel($request->label)) {
 
@@ -598,7 +598,7 @@ class LevelthreeController extends Controller
 
             if ($request->report_number === '2.2.018') {
 
-                $label = str_replace("%20", " ", $request->label);
+                $label = str_replace("%20", " ", $request->ylabel);
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -627,7 +627,7 @@ class LevelthreeController extends Controller
             }
 
             if ($request->report_number === '2.2.019' || $request->report_number === '3.2.009') {
-
+                $label = $request->ylabel;
                 if ($label === 'Hate Speech') {
                     $label = 'HateSpeech';
                 } else if ($label === 'No Bully') {
@@ -683,7 +683,7 @@ class LevelthreeController extends Controller
                     ->whereBetween('date_m', [$start_date, $end_date])
                     ->where('source_name', $request->label)
                     ->whereIn('classification_type_id', [1]);
-                
+
             }
 
             if ($request->report_number === '5.2.008' ||
