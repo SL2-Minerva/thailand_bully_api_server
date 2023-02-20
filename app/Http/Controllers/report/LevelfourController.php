@@ -43,7 +43,69 @@ class LevelfourController extends Controller
         $report_number = $request->report_number ?? null;
         $type = 1;
 
-        if ($report_number === 'sna' || $report_number === '4.2.007' ) {
+        if ($report_number === 'sna' ||
+            // Over all
+            $report_number === '1.2.002' ||
+            // Voice Dashboard
+            $report_number === '2.2.002' ||
+            $report_number === '2.2.003' ||
+            $report_number === '2.2.004' ||
+            $report_number === '2.2.005' ||
+            $report_number === '2.2.006' ||
+            $report_number === '2.2.007' ||
+            $report_number === '2.2.008' ||
+            $report_number === '2.2.009' ||
+            $report_number === '2.2.010' ||
+            $report_number === '2.2.013' ||
+            // Channel Dashboard
+            $report_number === '3.2.002' ||
+            $report_number === '3.2.003' ||
+            $report_number === '3.2.004' ||
+            $report_number === '3.2.005' ||
+            $report_number === '3.2.006' ||
+            $report_number === '3.2.007' ||
+            $report_number === '3.2.008' ||
+            $report_number === '3.2.009' ||
+            
+            // Engagement Dashboard
+            $report_number === '4.2.002' ||
+            $report_number === '4.2.003' ||
+            $report_number === '4.2.004' ||
+            $report_number === '4.2.005' ||
+            $report_number === '4.2.006' ||
+            $report_number === '4.2.007' ||
+            $report_number === '4.2.008' ||
+            $report_number === '4.2.012' ||
+            $report_number === '4.2.013' ||
+            $report_number === '4.2.014' ||
+            $report_number === '4.2.015' ||
+            $report_number === '4.2.016' ||
+            $report_number === '4.2.017' ||
+            // Sentiment Dashboard
+            $report_number === '5.2.002' ||
+            $report_number === '5.2.003' ||
+            $report_number === '5.2.004' ||
+            $report_number === '5.2.005' ||
+            $report_number === '5.2.006' ||
+            $report_number === '5.2.007' ||
+            $report_number === '5.2.008' ||
+            $report_number === '5.2.009' ||
+            // Bully Dashboard
+            $report_number === '6.2.002' ||
+            $report_number === '6.2.003' ||
+            $report_number === '6.2.004' ||
+            $report_number === '6.2.005' ||
+            $report_number === '6.2.006' ||
+            $report_number === '6.2.007' ||
+            $report_number === '6.2.008' ||
+            $report_number === '6.2.012' ||
+            $report_number === '6.2.013' ||
+            $report_number === '6.2.014' ||
+            $report_number === '6.2.015' ||
+            $report_number === '6.2.016' ||
+            $report_number === '6.2.017' ||
+            $report_number === '6.2.018'
+            ) {
 
             $data = [
                 "sentiment" => $this->getSNAbyType($request, 1),
@@ -127,7 +189,7 @@ class LevelfourController extends Controller
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->where('reference_message_id', '!=', '')
-                ->where('classification_type_id', [$type])
+                ->where('classification_type_id', $type)
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
 
@@ -140,17 +202,18 @@ class LevelfourController extends Controller
             $raw = $raw->where('reference_message_id', $message_id);
         }
 
-        if ($type) {
-
-
-        }
-
         $raw_total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereIn('classification_type_id', [$type])
+            ->where('classification_type_id', $type)
             ->whereBetween('date_m', [$start_date, $end_date]);
 
         $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+
+        if ($type) {
+            $raw = $raw->where('classification_type_id', $type);
+            $raw_total = $raw_total->where('classification_type_id', $type);
+
+        }
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -160,7 +223,6 @@ class LevelfourController extends Controller
 
 
         $items = $raw->get();
-
 
 //        if ($is_child) {
 //            dd($items);
@@ -203,11 +265,20 @@ class LevelfourController extends Controller
 //                $data['nodes'][] = $parent_data;
 //
 //            }
+            
+            if (isset($data['nodes'])) {
+                $search = print_r(array_search($data_push['id'], $data['nodes']));
+            } else {
+                $search = false;
+            }
 
-            $data['nodes'][] = $data_push;
+            if(!$search) {
+                $data['nodes'][] = $data_push;
+            }
+            
         }
-
-//        dd($data);
+        // dd($data);
+        
         return $data;
     }
 
