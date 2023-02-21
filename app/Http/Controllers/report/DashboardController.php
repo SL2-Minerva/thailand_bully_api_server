@@ -1696,9 +1696,6 @@ class DashboardController extends Controller
             }
         }
 
-        $data['total'] = $total;
-
-
         return $data;
     }
 
