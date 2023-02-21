@@ -572,18 +572,15 @@ class LevelthreeController extends Controller
             }
 
             if ($request->report_number === '1.2.02') {
-                $message_id = $request->message_id;
-
-                $message = Message::where('message_id', $message_id)->first();
-
-
+                $author_name = urldecode($request->author_name);
 
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
-                    ->where('author', $message->author)
-                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+                    ->where('author', $author_name)
+//                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                     ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
+
             }
 
             // day-and-time
