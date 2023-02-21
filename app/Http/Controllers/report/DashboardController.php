@@ -1331,9 +1331,9 @@ class DashboardController extends Controller
                 ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
         }
 
-        if ($request->classification_types) {
+        if ($request->sentiment_type) {
             $raw->where('word_clouds.classification_type_id', 1)
-            ->where('word_clouds.classification_id', $request->classification_types);
+            ->where('word_clouds.classification_id', 1);
 
         }
 
