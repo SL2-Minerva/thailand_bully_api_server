@@ -156,7 +156,7 @@ class VoiceDashboardController extends Controller
                     "campaign_name" => $item->campaign_name,
                     "source_id" => $item->source_id,
                     "source_name" => $item->source_name,
-                    
+
                 ];
                 $data[$keyword_id]['value'][$date_m] = [
                     "keyword_id" => $item->keyword_id,
@@ -192,7 +192,7 @@ class VoiceDashboardController extends Controller
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -267,7 +267,7 @@ class VoiceDashboardController extends Controller
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
