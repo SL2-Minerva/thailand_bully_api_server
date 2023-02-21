@@ -1270,6 +1270,7 @@ class DashboardController extends Controller
             } else {
                 $data[$wordcloud->author] = [
                     "author" => $wordcloud->author,
+                    "message_id" => $wordcloud->message_id,
                     "source_id" => $wordcloud->source_id,
                     "source_name" => $wordcloud->source_name,
                     "total_message" => 1,
@@ -1373,6 +1374,7 @@ class DashboardController extends Controller
             } else {
                 $data[$wordcloud->author] = [
                     "author" => $wordcloud->author,
+                    "message_id" => $wordcloud->message_id,
                     "source_id" => $wordcloud->source_id,
                     "source_name" => $wordcloud->source_name,
                     "total_message" => 1,
