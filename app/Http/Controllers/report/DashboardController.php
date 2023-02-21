@@ -1612,9 +1612,22 @@ class DashboardController extends Controller
         $start_date = $request->start_date ?? null;
         $end_date = $request->end_date ?? null;
         $select = $request->select ?? null;
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
+
+        $raw_total = DB::table('message_result_full_data')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->source_id) {
+            $raw_total->where('source_id', $this->source_id);
+        }
+
+        $total = $raw_total->count();
 
         $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
         $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
+        $data['total'] = $total;
 
         return parent::handleRespond($data);
     }

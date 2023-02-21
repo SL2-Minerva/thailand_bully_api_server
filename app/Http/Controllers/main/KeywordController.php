@@ -73,7 +73,7 @@ class KeywordController extends Controller
         $campaing_id = $request->campaing_id;
 
 
-        if (!$campaing_id) return parent::handleNotFound();
+        if (!$campaing_id) return parent::handleNotFound($request->campaing_id);
 
         $campaings = DB::table('keywords')
             ->where('campaign_id', $campaing_id)->get();
