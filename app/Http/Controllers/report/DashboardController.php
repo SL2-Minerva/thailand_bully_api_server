@@ -1331,11 +1331,11 @@ class DashboardController extends Controller
                 ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
         }
 
-        if ($request->sentiment_type) {
-            $raw->where('word_clouds.classification_type_id', 1)
-            ->where('word_clouds.classification_id', 1);
-
-        }
+//        if ($request->sentiment_type) {
+//            $raw->where('word_clouds.classification_type_id', 1)
+//            ->where('word_clouds.classification_id', 1);
+//
+//        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
