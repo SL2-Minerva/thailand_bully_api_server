@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\report;
 
 use App\Http\Controllers\Controller;
+use App\Models\Message;
+use App\Models\MessageResult;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -570,31 +572,18 @@ class LevelthreeController extends Controller
             }
 
             if ($request->report_number === '1.2.02') {
-                $author_name = $request->author_name;
+                $message_id = $request->message_id;
+
+                $message = Message::where('message_id', $message_id)->first();
+
+
 
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
-                    ->where('author', $author_name)
+                    ->where('author', $message->author)
                     ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                     ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
-
-
-                dd($author_name, $request->all(), $raw->get());
-
-
-                $raw = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [3])
-                    ->offset($start)->limit($limit);
-
-                    $total = DB::table('message_result_full_data')
-                        ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                        ->where('classification_name', $label)
-                        ->whereIn('classification_type_id', [3]);
             }
 
             // day-and-time
