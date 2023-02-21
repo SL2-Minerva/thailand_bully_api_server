@@ -767,14 +767,6 @@ class SentimentDashboardController extends Controller
         $current = $raw_current->get();
         $previous = $raw_previous->get();
 
-//        foreach ($current as $item) {
-//
-//        }
-//
-//        foreach ($previous as $item) {
-//
-//        }
-
 
         $total_share_current = $raw_current->where('classification_name', 'Positive')->count();
         $total_share_previous = $raw_previous->where('classification_name', 'Positive')->count();
@@ -797,7 +789,7 @@ class SentimentDashboardController extends Controller
 
         $data['positive'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
-            "comparison" => (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0),
+            "comparison" => $total_share_previous ? (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0) : 0,
             "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
         ];
 
@@ -1358,7 +1350,7 @@ class SentimentDashboardController extends Controller
                 "total" => $item['total'],
                 "comparison" => [
                     "value" => $item['total'] - $analysis_previous_key,
-                    "percentage" => self::point_two_digits((($item['total'] - $analysis_previous_key) / $analysis_previous_key) * 100),
+                    "percentage" => $analysis_previous_key ? self::point_two_digits((($item['total'] - $analysis_previous_key) / $analysis_previous_key) * 100) : 0,
                     "type" => $item['total'] - $analysis_previous_key > 0 ? "plus" : "minus"
                 ],
             ];
