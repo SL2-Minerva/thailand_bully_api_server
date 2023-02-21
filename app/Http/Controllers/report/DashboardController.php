@@ -1212,7 +1212,7 @@ class DashboardController extends Controller
 
         $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
         $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
-        $data['total'] = $this->wordCloudByAccount($request, true);
+//        $data['total'] = $this->wordCloudByAccount($request, true);
 
         return parent::handleRespond($data);
     }
