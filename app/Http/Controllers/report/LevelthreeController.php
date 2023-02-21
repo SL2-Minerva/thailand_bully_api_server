@@ -577,14 +577,14 @@ class LevelthreeController extends Controller
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->where('author', $author_name)
-                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+//                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                     ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->where('author', $author_name)
-                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+//                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                     ->whereIn('classification_type_id', [1]);
 
             }
