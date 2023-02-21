@@ -842,14 +842,22 @@ class SentimentDashboardController extends Controller
         }
 
         foreach ($analysis_current as $index => $value) {
+            $analysis_previous_position = 0;
+            $analysis_previous_neutral = 0;
+            $analysis_previous_negative = 0;
 
+            if (isset($analysis_previous[$index])) {
+                $analysis_previous_posotion = $analysis_previous[$index]['positive'];
+                $analysis_previous_neutral = $analysis_previous[$index]['neutral'];
+                $analysis_previous_negative = $analysis_previous[$index]['negative'];
+            }
 
             $index_label = array_search($value['source_name'], $data['labels']);
             $data['value'][0]['data'][$index_label] = $value['total'];
 
-            $data['positive'][$index_label] = self::overPeriodComparison($value['positive'], $analysis_previous[$index]['positive']);
-            $data['neutral'][$index_label] = self::overPeriodComparison($value['neutral'], $analysis_previous[$index]['neutral']);
-            $data['negative'][$index_label] = self::overPeriodComparison($value['negative'], $analysis_previous[$index]['negative']);
+            $data['positive'][$index_label] = self::overPeriodComparison($value['positive'], $analysis_previous_posotion);
+            $data['neutral'][$index_label] = self::overPeriodComparison($value['neutral'], $analysis_previous_neutral);
+            $data['negative'][$index_label] = self::overPeriodComparison($value['negative'], $analysis_previous_negative);
         }
 
 
