@@ -1301,7 +1301,7 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
 
         $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
-//        $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($campaign_id, $start_date, $end_date, $select);
+        $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($request);
         $data['total'] = $this->wordCloudBySentimentType($request, true);
         return parent::handleRespond($data);
     }
