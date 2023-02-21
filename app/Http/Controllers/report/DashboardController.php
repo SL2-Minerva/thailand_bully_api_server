@@ -1634,7 +1634,7 @@ class DashboardController extends Controller
         $raw = DB::table('word_clouds')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
-            ;
+            ->whereIn('classification_type_id', [1]);
 
         $raw_total = DB::table('message_result_full_data')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
@@ -1682,6 +1682,8 @@ class DashboardController extends Controller
                     $data = array_slice($data, 0, 100);
             }
         }
+
+        $data['total'] = $total;
 
 
         return $data;
