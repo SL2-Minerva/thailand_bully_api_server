@@ -847,7 +847,7 @@ class SentimentDashboardController extends Controller
             $analysis_previous_negative = 0;
 
             if (isset($analysis_previous[$index])) {
-                $analysis_previous_posotion = $analysis_previous[$index]['positive'];
+                $analysis_previous_position = $analysis_previous[$index]['positive'];
                 $analysis_previous_neutral = $analysis_previous[$index]['neutral'];
                 $analysis_previous_negative = $analysis_previous[$index]['negative'];
             }
@@ -855,7 +855,7 @@ class SentimentDashboardController extends Controller
             $index_label = array_search($value['source_name'], $data['labels']);
             $data['value'][0]['data'][$index_label] = $value['total'];
 
-            $data['positive'][$index_label] = self::overPeriodComparison($value['positive'], $analysis_previous_posotion);
+            $data['positive'][$index_label] = self::overPeriodComparison($value['positive'], $analysis_previous_position);
             $data['neutral'][$index_label] = self::overPeriodComparison($value['neutral'], $analysis_previous_neutral);
             $data['negative'][$index_label] = self::overPeriodComparison($value['negative'], $analysis_previous_negative);
         }
