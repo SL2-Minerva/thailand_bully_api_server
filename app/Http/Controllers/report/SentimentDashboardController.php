@@ -44,9 +44,10 @@ class SentimentDashboardController extends Controller
         }
     }
 
-    public function sentimentBy (Request $request) {
+    public function sentimentBy(Request $request)
+    {
         return parent::handleRespond([
-           "SentimentByDay" => $this->SentimentByDay($request, true)   ,
+            "SentimentByDay" => $this->SentimentByDay($request, true),
             "SentimentByTime" => $this->SentimentByTime($request, true),
             "SentimentByDevice" => $this->SentimentByDevice($request, true),
             "SentimentByAccount" => $this->SentimentByAccount($request, true),
@@ -77,7 +78,6 @@ class SentimentDashboardController extends Controller
             $raw_current->whereIn('keyword_id', $this->keyword_id);
             $raw_pre->whereIn('keyword_id', $this->keyword_id);
         }
-
 
 
         $data['sentiment'] = $this->sentiment($raw_current);
@@ -124,9 +124,6 @@ class SentimentDashboardController extends Controller
 
             $message_total += 1;
         }
-
-
-
 
 
         foreach ($message_keyword as $classification_id => $value) {
@@ -190,14 +187,12 @@ class SentimentDashboardController extends Controller
                 ];
 
                 $data[$index_label]['value'][$date_m] = [
-                    'date' =>$date_m,
+                    'date' => $date_m,
                     'source_id' => $item->source_id,
                     'total_at_date' => 1
                 ];
             }
         }
-
-
 
 
         if ($data) {
@@ -346,7 +341,7 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SentimentByDevice(Request $request ,$only_data = false)
+    public function SentimentByDevice(Request $request, $only_data = false)
     {
 
         $raw = DB::table('message_result_full_data')
@@ -368,8 +363,6 @@ class SentimentDashboardController extends Controller
             "Iphone",
             "Web App",
         ];
-
-
 
 
         $items = $raw->get();
@@ -443,14 +436,14 @@ class SentimentDashboardController extends Controller
 
 
         foreach ($infulencers as $infulencer) {
-            if($infulencer->reference_message_id === null || $infulencer->reference_message_id === '') {
+            if ($infulencer->reference_message_id === null || $infulencer->reference_message_id === '') {
                 if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
                     $data['value'][$infulencer->classification_id]['data'][0] += 1;
                 } else {
                     $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
                     $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->keyword_name;
                     $data['value'][$infulencer->classification_id]['data'][0] = 1;
-    
+
                 }
             }
         }
@@ -473,7 +466,7 @@ class SentimentDashboardController extends Controller
 
 
         foreach ($followers as $follower) {
-            if($infulencer->reference_message_id !== null || $infulencer->reference_message_id !== '') {
+            if ($infulencer->reference_message_id !== null || $infulencer->reference_message_id !== '') {
                 if (isset($data['value'][$follower->classification_id]['data'][1])) {
                     $data['value'][$follower->classification_id]['data'][1] += 1;
                 } else {
@@ -500,7 +493,7 @@ class SentimentDashboardController extends Controller
 
 
         $data = parent::listSource();
-        $raw =  DB::table('message_result_full_data')
+        $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
@@ -738,13 +731,15 @@ class SentimentDashboardController extends Controller
     }
 
 
-    public function periodAndComparison(Request $request) {
+    public function periodAndComparison(Request $request)
+    {
         return parent::handleRespond([
             "PeriodOverPeriod" => $this->PeriodOverPeriod($request, true),
             "ComparisonByChannel" => $this->ComparisonByChannel($request, true),
             "ComparisonByEngagementType" => $this->ComparisonByEngagementType($request, true),
         ]);
     }
+
     public function PeriodOverPeriod(Request $request, $only_data = false)
     {
 
@@ -937,7 +932,7 @@ class SentimentDashboardController extends Controller
     }
 
 
-    public function ComparisonByEngagementType(Request $request , $only_data = false)
+    public function ComparisonByEngagementType(Request $request, $only_data = false)
     {
 
 
@@ -1187,8 +1182,14 @@ class SentimentDashboardController extends Controller
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
+        $check = [];
         foreach ($items as $item) {
             $message_total += 1;
+
+            if (!in_array($item->keyword_id, $check)) {
+                $check[] = $item->keyword_id;
+            }
+
             if (isset($analysis[$item->keyword_id])) {
                 $analysis[$item->keyword_id]['total'] += 1;
                 if ($item->classification_id === 1) {
@@ -1216,6 +1217,7 @@ class SentimentDashboardController extends Controller
             }
 
         }
+
 
         $results = [];
 
@@ -1252,10 +1254,23 @@ class SentimentDashboardController extends Controller
             $neutral = $item['neutral'];
             $negative = $item['negative'];
             $total = $item['total'];
+
+            $p_positive = 0;
+            $p_negative = 0;
+            $p_neutral = 0;
+            $total_positive_negative_neutral = 0;
+
+            if (isset($analysis_previous[$keyword_id])) {
+                $p_positive = $analysis_previous[$keyword_id]['positive'];
+                $p_negative = $analysis_previous[$keyword_id]['negative'];
+                $p_neutral = $analysis_previous[$keyword_id]['neutral'];
+                $total_positive_negative_neutral = $p_positive + $p_negative + $p_neutral;
+            }
+
             $data['senitment_score_data'][$keyword_id] = [
                 'keyword_name' => $item['keyword_name'],
                 "sentimentScore" => (((1 * $positive) + (-1 * $negative)) / ($positive + $negative + $neutral)) * 5,
-                "previous_period" => (((1 * $analysis_previous[$keyword_id]['positive']) + (-1 * $analysis_previous[$keyword_id]['negative'])) / ($analysis_previous[$keyword_id]['positive'] + $analysis_previous[$keyword_id]['negative'] + $analysis_previous[$keyword_id]['neutral'])) * 5,
+                "previous_period" => $total_positive_negative_neutral ? (((1 * $p_positive) + (-1 * $p_negative / $total_positive_negative_neutral) * 5)) : 0,
                 "hightlightColor" => $item['hightlightColor']
             ];
 
@@ -1278,103 +1293,7 @@ class SentimentDashboardController extends Controller
         }
 
 
-//        $sentiment_score = ( ((1 * $positive ?? 1) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral) ) * 5;
-//        $data = [
-//            "senitment_score_data" => [
-//                [
-//                    "keyword_name" => "keyword 1",
-//                    "sentimentScore" => 3.2,
-//                    "previous_period" => 2.55,
-//                    "type" => "plus",
-//                    "hightlightColor" => "neutral"
-//                ],
-//                [
-//                    "keyword_name" => "keyword 2",
-//                    "sentimentScore" => 4.7,
-//                    "previous_period" => 4.6,
-//                    "type" => "plus",
-//                    "hightlightColor" => "positive"
-//                ],
-//                [
-//                    "keyword_name" => "keyword 3",
-//                    "sentimentScore" => 1.8,
-//                    "previous_period" => 2.75,
-//                    "type" => "minus",
-//                    "hightlightColor" => "negative"
-//                ],
-//                [
-//                    "keyword_name" => "keyword 4",
-//                    "sentimentScore" => 4.9,
-//                    "previous_period" => 2.6,
-//                    "type" => "minus",
-//                    "hightlightColor" => "positive"
-//                ],
-//                [
-//                    "keyword_name" => "keyword 5",
-//                    "sentimentScore" => 3.1,
-//                    "previous_period" => 4,
-//                    "type" => "minus",
-//                    "hightlightColor" => "neutral"
-//                ]
-//            ],
-//            "senitment_score_percentage" => [
-//                [
-//                    "keyword_id" => 1,
-//                    "keyword_name" => "keyword_name 1",
-//                    "campaign_id" => 1,
-//                    "campaign_name" => "campaign_name 1",
-//                    "organization_id" => 1,
-//                    "organizations_name" => "organizations_name 1",
-//                    "negative" => 10,
-//                    "neutral" => 60,
-//                    "positive" => 40
-//                ],
-//                [
-//                    "keyword_id" => 2,
-//                    "keyword_name" => "keyword_name 2",
-//                    "campaign_id" => 2,
-//                    "campaign_name" => "campaign_name 1",
-//                    "organization_id" => 2,
-//                    "organizations_name" => "organizations_name 1",
-//                    "negative" => 20,
-//                    "neutral" => 20,
-//                    "positive" => 60
-//                ],
-//                [
-//                    "keyword_id" => 3,
-//                    "keyword_name" => "keyword_name 3",
-//                    "campaign_id" => 3,
-//                    "campaign_name" => "campaign_name 1",
-//                    "organization_id" => 3,
-//                    "organizations_name" => "organizations_name 1",
-//                    "negative" => 60,
-//                    "neutral" => 30,
-//                    "positive" => 20
-//                ],
-//                [
-//                    "keyword_id" => 4,
-//                    "keyword_name" => "keyword_name 4",
-//                    "campaign_id" => 4,
-//                    "campaign_name" => "campaign_name 1",
-//                    "organization_id" => 4,
-//                    "organizations_name" => "organizations_name 1",
-//                    "negative" => 10,
-//                    "neutral" => 30,
-//                    "positive" => 60
-//                ],
-//                [
-//                    "keyword_id" => 5,
-//                    "keyword_name" => "keyword_name 5",
-//                    "campaign_id" => 5,
-//                    "campaign_name" => "campaign_name 1",
-//                    "organization_id" => 5,
-//                    "organizations_name" => "organizations_name 1",
-//                    "negative" => 10,
-//                    "neutral" => 60,
-//                    "positive" => 30
-//                ]
-//            ]
-//        ];
+//
 
 
         if ($only_data) {
@@ -1426,14 +1345,21 @@ class SentimentDashboardController extends Controller
         $data = [];
 
         foreach ($analysis_current as $key => $item) {
+
+            $analysis_previous_key = 0;
+
+            if (isset($analysis_previous[$key])) {
+                $analysis_previous_key = $analysis_previous[$key]['total'];
+            }
+
             $data[$key] = [
                 "keyword_id" => $item['keyword_id'],
                 "keyword_name" => $item['keyword_name'],
                 "total" => $item['total'],
                 "comparison" => [
-                    "value" => $item['total'] - $analysis_previous[$key]['total'] ?? 0,
-                    "percentage" => self::point_two_digits((($item['total'] - $analysis_previous[$key]['total']) / $analysis_previous[$key]['total']) * 100),
-                    "type" => $item['total'] - $analysis_previous[$key]['total'] > 0 ? "plus" : "minus"
+                    "value" => $item['total'] - $analysis_previous_key,
+                    "percentage" => self::point_two_digits((($item['total'] - $analysis_previous_key) / $analysis_previous_key) * 100),
+                    "type" => $item['total'] - $analysis_previous_key > 0 ? "plus" : "minus"
                 ],
             ];
         }
@@ -1475,7 +1401,8 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SummaryBy(Request $request) {
+    public function SummaryBy(Request $request)
+    {
         return parent::handleRespond([
             "SummaryScoreAccount" => $this->SummaryScoreAccount($request, true),
             "SummaryScoreChannel" => $this->SummaryScoreChannel($request, true),
