@@ -844,511 +844,7 @@ class DashboardController extends Controller
     private function wordCloudsData()
     {
 
-        $dummy_data = [
-            [
-                "text" => "told",
-                "value" => 64
-            ],
-            [
-                "text" => "mistake",
-                "value" => 11
-            ],
-            [
-                "text" => "thought",
-                "value" => 16
-            ],
-            [
-                "text" => "bad",
-                "value" => 17
-            ],
-            [
-                "text" => "ถูก",
-                "value" => 10
-            ],
-            [
-                "text" => "day",
-                "value" => 54
-            ],
-            [
-                "text" => "prescription",
-                "value" => 12
-            ],
-            [
-                "text" => "เวลา",
-                "value" => 77
-            ],
-            [
-                "text" => "thing",
-                "value" => 45
-            ],
-            [
-                "text" => "ซ้าย",
-                "value" => 19
-            ],
-            [
-                "text" => "pay",
-                "value" => 13
-            ],
-            [
-                "text" => "people",
-                "value" => 32
-            ],
-            [
-                "text" => "month",
-                "value" => 22
-            ],
-            [
-                "text" => "again",
-                "value" => 35
-            ],
-            [
-                "text" => "review",
-                "value" => 24
-            ],
-            [
-                "text" => "call",
-                "value" => 38
-            ],
-            [
-                "text" => "doctor",
-                "value" => 70
-            ],
-            [
-                "text" => "asked",
-                "value" => 26
-            ],
-            [
-                "text" => "finally",
-                "value" => 14
-            ],
-            [
-                "text" => "insurance",
-                "value" => 29
-            ],
-            [
-                "text" => "week",
-                "value" => 41
-            ],
-            [
-                "text" => "called",
-                "value" => 49
-            ],
-            [
-                "text" => "ปัญหา",
-                "value" => 20
-            ],
-            [
-                "text" => "going",
-                "value" => 59
-            ],
-            [
-                "text" => "help",
-                "value" => 49
-            ],
-            [
-                "text" => "felt",
-                "value" => 45
-            ],
-            [
-                "text" => "discomfort",
-                "value" => 11
-            ],
-            [
-                "text" => "lower",
-                "value" => 22
-            ],
-            [
-                "text" => "severe",
-                "value" => 12
-            ],
-            [
-                "text" => "free",
-                "value" => 38
-            ],
-            [
-                "text" => "better",
-                "value" => 54
-            ],
-            [
-                "text" => "muscle",
-                "value" => 14
-            ],
-            [
-                "text" => "neck",
-                "value" => 41
-            ],
-            [
-                "text" => "root",
-                "value" => 24
-            ],
-            [
-                "text" => "adjustment",
-                "value" => 16
-            ],
-            [
-                "text" => "therapy",
-                "value" => 29
-            ],
-            [
-                "text" => "injury",
-                "value" => 20
-            ],
-            [
-                "text" => "excruciating",
-                "value" => 10
-            ],
-            [
-                "text" => "chronic",
-                "value" => 13
-            ],
-            [
-                "text" => "chiropractor",
-                "value" => 35
-            ],
-            [
-                "text" => "treatment",
-                "value" => 59
-            ],
-            [
-                "text" => "tooth",
-                "value" => 32
-            ],
-            [
-                "text" => "chiropractic",
-                "value" => 17
-            ],
-            [
-                "text" => "dr",
-                "value" => 77
-            ],
-            [
-                "text" => "relief",
-                "value" => 19
-            ],
-            [
-                "text" => "shoulder",
-                "value" => 26
-            ],
-            [
-                "text" => "nurse",
-                "value" => 17
-            ],
-            [
-                "text" => "room",
-                "value" => 22
-            ],
-            [
-                "text" => "ชั่วโมง",
-                "value" => 35
-            ],
-            [
-                "text" => "wait",
-                "value" => 38
-            ],
-            [
-                "text" => "โรงพยาบาล",
-                "value" => 11
-            ],
-            [
-                "text" => "eye",
-                "value" => 13
-            ],
-            [
-                "text" => "ทดสอบ",
-                "value" => 10
-            ],
-            [
-                "text" => "appointment",
-                "value" => 49
-            ],
-            [
-                "text" => "medical",
-                "value" => 19
-            ],
-            [
-                "text" => "คำถาม",
-                "value" => 20
-            ],
-            [
-                "text" => "ออฟฟิศ",
-                "value" => 64
-            ],
-            [
-                "text" => "care",
-                "value" => 54
-            ],
-            [
-                "text" => "minute",
-                "value" => 29
-            ],
-            [
-                "text" => "waiting",
-                "value" => 16
-            ],
-            [
-                "text" => "patient",
-                "value" => 59
-            ],
-            [
-                "text" => "health",
-                "value" => 49
-            ],
-            [
-                "text" => "alternative",
-                "value" => 24
-            ],
-            [
-                "text" => "holistic",
-                "value" => 19
-            ],
-            [
-                "text" => "traditional",
-                "value" => 20
-            ],
-            [
-                "text" => "symptom",
-                "value" => 29
-            ],
-            [
-                "text" => "internal",
-                "value" => 17
-            ],
-            [
-                "text" => "prescribed",
-                "value" => 26
-            ],
-            [
-                "text" => "acupuncturist",
-                "value" => 16
-            ],
-            [
-                "text" => "pain",
-                "value" => 64
-            ],
-            [
-                "text" => "integrative",
-                "value" => 10
-            ],
-            [
-                "text" => "สมุนไพร",
-                "value" => 13
-            ],
-            [
-                "text" => "sport",
-                "value" => 22
-            ],
-            [
-                "text" => "physician",
-                "value" => 41
-            ],
-            [
-                "text" => "herbal",
-                "value" => 11
-            ],
-            [
-                "text" => "eastern",
-                "value" => 12
-            ],
-            [
-                "text" => "chinese",
-                "value" => 32
-            ],
-            [
-                "text" => "acupuncture",
-                "value" => 45
-            ],
-            [
-                "text" => "prescribe",
-                "value" => 14
-            ],
-            [
-                "text" => "medication",
-                "value" => 38
-            ],
-            [
-                "text" => "western",
-                "value" => 35
-            ],
-            [
-                "text" => "sure",
-                "value" => 38
-            ],
-            [
-                "text" => "งาน",
-                "value" => 64
-            ],
-            [
-                "text" => "ยิ้ม",
-                "value" => 17
-            ],
-            [
-                "text" => "teeth",
-                "value" => 26
-            ],
-            [
-                "text" => "pair",
-                "value" => 11
-            ],
-            [
-                "text" => "wanted",
-                "value" => 20
-            ],
-            [
-                "text" => "frame",
-                "value" => 13
-            ],
-            [
-                "text" => "lasik",
-                "value" => 10
-            ],
-            [
-                "text" => "amazing",
-                "value" => 41
-            ],
-            [
-                "text" => "fit",
-                "value" => 14
-            ],
-            [
-                "text" => "ความสุข",
-                "value" => 22
-            ],
-            [
-                "text" => "feel",
-                "value" => 49
-            ],
-            [
-                "text" => "glasse",
-                "value" => 19
-            ],
-            [
-                "text" => "vision",
-                "value" => 12
-            ],
-            [
-                "text" => "pressure",
-                "value" => 16
-            ],
-            [
-                "text" => "find",
-                "value" => 29
-            ],
-            [
-                "text" => "experience",
-                "value" => 59
-            ],
-            [
-                "text" => "year",
-                "value" => 70
-            ],
-            [
-                "text" => "ข้อความ",
-                "value" => 35
-            ],
-            [
-                "text" => "best",
-                "value" => 54
-            ],
-            [
-                "text" => "เดือน",
-                "value" => 20
-            ],
-            [
-                "text" => "staff",
-                "value" => 64
-            ],
-            [
-                "text" => "gum",
-                "value" => 10
-            ],
-            [
-                "text" => "chair",
-                "value" => 12
-            ],
-            [
-                "text" => "ray",
-                "value" => 22
-            ],
-            [
-                "text" => "dentistry",
-                "value" => 11
-            ],
-            [
-                "text" => "canal",
-                "value" => 13
-            ],
-            [
-                "text" => "procedure",
-                "value" => 100
-            ],
-            [
-                "text" => "filling",
-                "value" => 26
-            ],
-            [
-                "text" => "gentle",
-                "value" => 19
-            ],
-            [
-                "text" => "cavity",
-                "value" => 17
-            ],
-            [
-                "text" => "crown",
-                "value" => 14
-            ],
-            [
-                "text" => "cleaning",
-                "value" => 38
-            ],
-            [
-                "text" => "hygienist",
-                "value" => 24
-            ],
-            [
-                "text" => "dental",
-                "value" => 59
-            ],
-            [
-                "text" => "charge",
-                "value" => 24
-            ],
-            [
-                "text" => "cost",
-                "value" => 29
-            ],
-            [
-                "text" => "charged",
-                "value" => 13
-            ],
-            [
-                "text" => "spent",
-                "value" => 17
-            ],
-            [
-                "text" => "จ่ายแล้ว",
-                "value" => 14
-            ],
-            [
-                "text" => "pocket",
-                "value" => 12
-            ],
-            [
-                "text" => "dollar",
-                "value" => 11
-            ],
-            [
-                "text" => "business",
-                "value" => 32
-            ],
-            [
-                "text" => "refund",
-                "value" => 10
-            ]
-        ];
-
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
-
 
         $raw_total = DB::table('word_clouds')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
@@ -1716,11 +1212,12 @@ class DashboardController extends Controller
 
         $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
         $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
+        $data['total'] = $this->wordCloudByAccount($request, true);
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudByAccount($request) {
+    private function wordCloudByAccount($request, $only_total = false) {
 
         $page = $request->page ?? null;
         $limit = $request->limit ?? 5;
@@ -1736,12 +1233,24 @@ class DashboardController extends Controller
             ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
             ->offset($start)->limit($limit);
 
+        if ($only_total) {
+            $raw = DB::table('word_clouds')
+                ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
+                ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
+                ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
+                ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
+        }
+
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
+        }
+
+        if ($only_total) {
+            return $raw->count();
         }
 
         $wordclouds = $raw->select(
@@ -1793,35 +1302,85 @@ class DashboardController extends Controller
 
         $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
         $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($campaign_id, $start_date, $end_date, $select);
-
+        $data['total'] = $this->wordCloudBySentimentType($request, true);
         return parent::handleRespond($data);
     }
 
-    private function wordCloudBySentimentType($request) {
-        $data =  [
-            [
-                "author" => "Nguyễn Văn A",
-                "source_id" => 1,
-                "source_name" => "Facebook",
-                "total_message" => 100,
-                "engagements" => 12000
-            ],
-            [
-                "author" => "Nguyễn Văn A",
-                "source_id" => 6,
-                "source_name" => "Pantip",
-                "total_message" => 100,
-                "engagements" => 12000
-            ],
+    private function wordCloudBySentimentType($request, $only_total = false) {
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 5;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start - 1;
 
-            [
-                "author" => "aadads",
-                "source_id" => 1,
-                "source_name" => "Facebook",
-                "total_message" => 100,
-                "engagements" => 12000
-            ],
-        ];
+        $data = [];
+
+
+
+        $raw = DB::table('word_clouds')
+            ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
+            ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
+            ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
+            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
+            ->offset($start)->limit($limit);
+
+        if ($only_total) {
+            $raw = DB::table('word_clouds')
+                ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
+                ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
+                ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
+                ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
+        }
+
+        if ($request->classification_types) {
+            $raw->where('word_clouds.classification_type_id', 1)
+            ->where('word_clouds.classification_id', $request->classification_types);
+
+        }
+
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
+
+        if ($only_total) {
+            return $raw->count();
+        }
+
+
+        $wordclouds = $raw->select(
+            'word_clouds.*',
+            'sources.name as source_name',
+            'classifications.name as classification_name',
+            'classification_types.name as classification_type_name')
+            ->get();
+
+        $total_message = 0;
+
+        foreach ($wordclouds as $wordcloud) {
+
+            if (isset($data[$wordcloud->author])) {
+                $data[$wordcloud->author]["total_message"] += 1;
+                $data[$wordcloud->author]["engagements"] += 1;
+            } else {
+                $data[$wordcloud->author] = [
+                    "author" => $wordcloud->author,
+                    "source_id" => $wordcloud->source_id,
+                    "source_name" => $wordcloud->source_name,
+                    "total_message" => 1,
+                    "engagements" => 1
+                ];
+
+            }
+            $total_message += 1;
+        }
+
+
+        if ($data) {
+            $data = array_values($data);
+        }
 
         return $data;
     }
