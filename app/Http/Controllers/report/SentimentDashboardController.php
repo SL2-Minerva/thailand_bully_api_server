@@ -346,7 +346,7 @@ class SentimentDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -354,7 +354,7 @@ class SentimentDashboardController extends Controller
         }
 
         if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
+            $raw->where('keyword_id', $this->keyword_id);
         }
 
 
@@ -366,9 +366,20 @@ class SentimentDashboardController extends Controller
 
 
         $items = $raw->get();
-        foreach ($items as $item) {
 
-            $index_label = 0;
+        $check = [];
+        
+        foreach ($items as $item) {
+            
+            $index_label = null;
+
+            if (!in_array($item->device, $check)) {
+                $check[] = $item->device;
+            }
+            
+            if ($item->device === 'android') {
+                $index_label = 0;
+            }
 
             if ($item->device == 'iphone') {
                 $index_label = 1;
@@ -378,28 +389,33 @@ class SentimentDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if (isset($data['value'][$item->classification_id])) {
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->classification_id] = [
-                    'id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
-                    'source_id' => $item->source_id,
-                    'source_name' => $item->source_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
+            if ($index_label !== null) {
+                
+                if (isset($data['value'][$item->classification_id])) {
+                    $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->classification_id] = [
+                        'id' => $item->classification_id,
+                        'keyword_name' => $item->classification_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'data' => [0, 0, 0]
+                    ];
+    
+                    if ($index_label) {
+                        $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                    }
+                }
             }
-
         }
 
+    
         if (isset($data['value']) && $data['value']) {
             $data['value'] = array_values($data['value']);
         }
-
+        
         if ($only_data) {
             return $data;
         }
