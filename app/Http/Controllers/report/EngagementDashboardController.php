@@ -621,11 +621,36 @@ class EngagementDashboardController extends Controller
             ];
 
 
-            if (isset($data['engagement'][1])) {
+            if (isset($data['engagement'][1]) || isset($data['engagement'][2]) || isset($data['engagement'][3])) {
+                if ($item->number_of_shares  > 0) {
+                    if (isset($data['engagement'][1]['value'][$date_m])) {
+                        $data['engagement'][1]['value'][$date_m]['total_at_date'] += $item->number_of_shares;
+                    } else {
+                        $data['engagement'][1]['value'][$date_m] = $shared;
+                    }
 
-                $data['engagement'][1]['value'][] = $shared;
-                $data['engagement'][2]['value'][] = $comment;
-                $data['engagement'][3]['value'][] = $reactions;
+                }
+
+                if ($item->number_of_comments  > 0) {
+                    if (isset($data['engagement'][2]['value'][$date_m])) {
+                        $data['engagement'][2]['value'][$date_m]['total_at_date'] += $item->number_of_comments;
+                    } else {
+                        $data['engagement'][2]['value'][$date_m] = $comment;
+                    }
+
+                }
+
+                if ($item->number_of_reactions  > 0) {
+                    if (isset($data['engagement'][3]['value'][$date_m])) {
+                        $data['engagement'][3]['value'][$date_m]['total_at_date'] += $item->number_of_reactions;
+                    } else {
+                        $data['engagement'][3]['value'][$date_m] = $reactions;
+                    }
+
+                }
+                
+                // $data['engagement'][2]['value'][$date_m][] = $comment;
+                // $data['engagement'][3]['value'][$date_m][] = $reactions;
             } else {
                 $data['engagement'][1] = [
                     "id" => 1,
@@ -653,9 +678,9 @@ class EngagementDashboardController extends Controller
 
                 // engagement
 
-                $data['engagement'][1]['value'][] = $shared;
-                $data['engagement'][2]['value'][] = $comment;
-                $data['engagement'][3]['value'][] = $reactions;
+                // $data['engagement'][1]['value'][] = $shared;
+                // $data['engagement'][2]['value'][] = $comment;
+                // $data['engagement'][3]['value'][] = $reactions;
 
                 // prcentage_of_engagement_current
 
@@ -743,7 +768,15 @@ class EngagementDashboardController extends Controller
         ];
 
 
-        $data['engagement'] = isset($data['engagement']) ? array_values($data['engagement']) : null;
+        if (isset($data['engagement'])) {
+            foreach($data['engagement'] as $index => $engagement) {
+                $data['engagement'][$index]['value'] = array_values($data['engagement'][$index]['value']);
+                
+            }
+
+            $data['engagement'] = array_values($data['engagement'] );
+        }
+        // $data['engagement'] = isset($data['engagement']) ? array_values($data['engagement']['value']) : null;
         $data['prcentage_of_engagement_previous'] = isset($data['prcentage_of_engagement_previous']) ? array_values($data['prcentage_of_engagement_previous']) : null;
         $data['prcentage_of_engagement_current'] = isset($data['prcentage_of_engagement_current']) ? array_values($data['prcentage_of_engagement_current']) : null;
 //
