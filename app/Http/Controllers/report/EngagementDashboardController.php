@@ -741,30 +741,36 @@ class EngagementDashboardController extends Controller
         $data['prcentage_of_engagement_current'][1]['value'] = [
             "percentage" => $total_engaement ? self::point_two_digits(($percentages_share_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
+            'total' => $total_engaement
         ];
 
         $data['prcentage_of_engagement_current'][2]['value'] = [
             "percentage" => $total_engaement ? self::point_two_digits(($percentages_comment_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
+            'total' => $total_engaement
         ];
         $data['prcentage_of_engagement_current'][3]['value'] = [
             "percentage" => $total_engaement ? self::point_two_digits(($percentages_reactions_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
+            'total' => $total_engaement
         ];
 
 
         $data['prcentage_of_engagement_previous'][1]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_share_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
+            'total' => $total_engaement_previous
         ];
 
         $data['prcentage_of_engagement_previous'][2]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_comment_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
+            'total' => $total_engaement_previous
         ];
         $data['prcentage_of_engagement_previous'][3]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
+            'total' => $total_engaement_previous
         ];
 
 
@@ -1265,19 +1271,19 @@ class EngagementDashboardController extends Controller
 
         $data['share'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
-            "comparison" => (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0),
+            "comparison" => $total_share_previous !== 0 ? (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0) : 0,
             "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
         ];
 
         $data['comment'] = [
             "totalValue" => $this->custom_number_format((int)$total_comment_current),
-            "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
+            "comparison" => $total_comment_previous !== 0 ? (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0, 
             "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
         ];
 
         $data['reaction'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
-            "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous) : 0,
+            "comparison" => $total_reactions_previous !== 0 ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous) : 0,
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
@@ -2056,7 +2062,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
