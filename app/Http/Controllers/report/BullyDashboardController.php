@@ -101,9 +101,9 @@ class BullyDashboardController extends Controller
         $message_total = 0;
 
         foreach ($items as $item) {
-            $message_total += 1;
             if (isset($data[$item->classification_id])) {
                 $data[$item->classification_id]['value']['total'] += 1;
+                $message_total += 1;
             } else {
                 $data[$item->classification_id]['bully_level'] = $item->classification_name;
                 $data[$item->classification_id]['campaign_id'] = $item->campaign_id;
@@ -115,6 +115,7 @@ class BullyDashboardController extends Controller
 
         foreach ($data as $key => $value) {
             $data[$key]['value']['percentage'] = $this->point_two_digits(($data[$key]['value']['total'] / $message_total) * 100);
+            $data[$key]['value']['total'] = $message_total;
         }
 
         if ($data) {
@@ -1031,7 +1032,7 @@ class BullyDashboardController extends Controller
     public function dailyTypeBy()
     {
         $data = null;
-        $data['bully_type_daily'] = $this->BullyTypePercentageDailyGroup();
+        // $data['bully_type_daily'] = $this->BullyTypePercentageDailyGroup();
         $data['bully_type_percentage'] = $this->BullyTypePercentageDailyGroup();
         $data['bully_type_daily'] = $this->BullyTypeDailyGroup();
         $data['bully_type_by_day'] = $this->BullyTypeByDayGroup();
@@ -1153,12 +1154,12 @@ class BullyDashboardController extends Controller
         foreach ($items as $item) {
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
 
-            if (isset($data[$item->source_id])) {
+            if (isset($data[$item->classification_id])) {
 
-                if (isset($data[$item->source_id]['value'][$date_format])) {
-                    $data[$item->source_id]['value'][$date_format]['total_at_date'] += 1;
+                if (isset($data[$item->classification_id]['value'][$date_format])) {
+                    $data[$item->classification_id]['value'][$date_format]['total_at_date'] += 1;
                 } else {
-                    $data[$item->source_id]['value'][$date_format] = [
+                    $data[$item->classification_id]['value'][$date_format] = [
                         "keyword_id" => $item->keyword_id,
                         "keyword_name" => $item->keyword_name,
                         "date_m" => $date_format,
@@ -1167,7 +1168,7 @@ class BullyDashboardController extends Controller
                 }
 
             } else {
-                $data[$item->source_id] = [
+                $data[$item->classification_id] = [
                     "classification_id" =>  $item->classification_id,
                     "bully_level" => $item->classification_name,
                     "source_id" =>  $item->source_id,
@@ -1175,7 +1176,7 @@ class BullyDashboardController extends Controller
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
                 ];
-                $data[$item->source_id]['value'][$date_format] = [
+                $data[$item->classification_id]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
                     'keyword_name' => $item->keyword_name,
                     'date_m' => $item->date_m,
@@ -1186,15 +1187,15 @@ class BullyDashboardController extends Controller
 
         if ($data) {
 
-            foreach($data as $key => $item) {
+            foreach ($data as $key => $item) {
                 if ($item) {
-                   $data[$key]['value'] = array_values($item['value']);
+                    $data[$key]['value'] = array_values($item['value']);
                 }
             }
         }
 
         if ($data) {
-            $data = array_values($data);
+            return array_values($data);
         }
 
         return $data;
