@@ -115,7 +115,7 @@ class BullyDashboardController extends Controller
 
         foreach ($data as $key => $value) {
             $data[$key]['value']['percentage'] = $this->point_two_digits(($data[$key]['value']['total'] / $message_total) * 100);
-            $data[$key]['value']['total'] = $message_total;
+            $data[$key]['value']['total'] = self::point_two_digits($message_total, 0);
         }
 
         if ($data) {

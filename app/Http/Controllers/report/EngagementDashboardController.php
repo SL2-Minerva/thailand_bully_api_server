@@ -741,36 +741,36 @@ class EngagementDashboardController extends Controller
         $data['prcentage_of_engagement_current'][1]['value'] = [
             "percentage" => $total_engaement ? self::point_two_digits(($percentages_share_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
-            'total' => $total_engaement
+            'total' => self::point_two_digits($total_engaement, 0)
         ];
 
         $data['prcentage_of_engagement_current'][2]['value'] = [
             "percentage" => $total_engaement ? self::point_two_digits(($percentages_comment_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
-            'total' => $total_engaement
+            'total' => self::point_two_digits($total_engaement, 0)
         ];
         $data['prcentage_of_engagement_current'][3]['value'] = [
             "percentage" => $total_engaement ? self::point_two_digits(($percentages_reactions_current['total'] / $total_engaement) * 100) : 0,
             "date" => $percentages_share_current['date'],
-            'total' => $total_engaement
+            'total' => self::point_two_digits($total_engaement, 0)
         ];
 
 
         $data['prcentage_of_engagement_previous'][1]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_share_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
-            'total' => $total_engaement_previous
+            'total' => self::point_two_digits($total_engaement_previous, 0)
         ];
 
         $data['prcentage_of_engagement_previous'][2]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_comment_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
-            'total' => $total_engaement_previous
+            'total' => self::point_two_digits($total_engaement_previous, 0)
         ];
         $data['prcentage_of_engagement_previous'][3]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
-            'total' => $total_engaement_previous
+            'total' => self::point_two_digits($total_engaement_previous, 0)
         ];
 
 
@@ -2097,7 +2097,7 @@ class EngagementDashboardController extends Controller
             $data[$keyword_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => $percentage,
-                'total' => $message_total,
+                'total' => self::point_two_digits($message_total, 0),
                 "keyword_name" => $value['keyword_name'],
                 "name" => $value['keyword_name'],
             ];

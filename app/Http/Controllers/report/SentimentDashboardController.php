@@ -135,7 +135,7 @@ class SentimentDashboardController extends Controller
             $data[$classification_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => $percentage,
-                'total' => $message_total
+                'total' => self::point_two_digits($message_total, 0)
             ];
         }
 

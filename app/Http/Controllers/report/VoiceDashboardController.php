@@ -100,7 +100,7 @@ class VoiceDashboardController extends Controller
             $data[$keyword_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => self::point_two_digits(($message_keyword['total'] / $message_total ?? 1) * 100),
-                'total' => $message_total
+                'total' => self::point_two_digits($message_total, 0)
 
             ];
         }

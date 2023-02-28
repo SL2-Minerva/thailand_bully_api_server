@@ -182,7 +182,7 @@ class DashboardController extends Controller
             $data[$keyword_id]['keyword_name'] = $item->keyword_name;
             $data[$keyword_id]['campaign_id'] = $item->campaign_id;
             $data[$keyword_id]['campaign_name'] = $item->campaign_name;
-            $data[$keyword_id]['total'] = $message_total;
+            $data[$keyword_id]['total'] = self::point_two_digits($message_total, 0);
         }
 
 
