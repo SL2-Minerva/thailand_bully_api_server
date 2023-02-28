@@ -1041,6 +1041,7 @@ class LevelthreeController extends Controller
 
         if (isset($request->keyword_id)) {
             if ($request->report_number === '1.2.002' ||
+                $request->report_number === '1.2.009' ||
                 $request->report_number === '2.2.002' ||
                 $request->report_number === '2.2.003' ||
                 $request->report_number === '2.2.004' ||
