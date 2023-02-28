@@ -174,6 +174,10 @@ class LevelthreeController extends Controller
                         ->whereIn('classification_type_id', [1]);
                 }
 
+                if ($request->report_number === '4.2.002') {
+                    $total->where('keyword_name', $Llabel);
+                    $raw->where('keyword_name', $Llabel);
+                }
 
                 if ($request->report_number === '2.2.013') {
                     $total->where('message_type', 'Post');
