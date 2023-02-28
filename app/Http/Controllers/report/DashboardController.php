@@ -403,10 +403,10 @@ class DashboardController extends Controller
         }
 
         return [
-            "total_message" => $this->point_two_digits($total_current),
-            "average_message" => $diff_date ? $this->point_two_digits($total_current / $diff_date) : 0,
-            "comparison" => $this->point_two_digits($comparison),
-            "percentage" => $this->point_two_digits($percentage),
+            "total_message" => $this->point_two_digits($total_current, 0),
+            "average_message" => $diff_date ? $this->point_two_digits($total_current / $diff_date, 1) : 0,
+            "comparison" => $this->point_two_digits($comparison, 0),
+            "percentage" => $this->point_two_digits($percentage, 0),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
 
@@ -448,10 +448,10 @@ class DashboardController extends Controller
         }
 
         return [
-            "total_engagement" => $this->point_two_digits($total_current),
-            "average_engagement" => $this->point_two_digits($total_current / $diff_date),
-            "comparison" => $this->point_two_digits($comparison),
-            "percentage" => $this->point_two_digits($percentage),
+            "total_engagement" => $this->point_two_digits($total_current, 0),
+            "average_engagement" => $this->point_two_digits($total_current / $diff_date, 1),
+            "comparison" => $this->point_two_digits($comparison, 0),
+            "percentage" => $this->point_two_digits($percentage, 0),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }
@@ -493,10 +493,10 @@ class DashboardController extends Controller
         }
 
         return [
-            "total_account" => $this->point_two_digits($total_current),
-            "average_account" => $this->point_two_digits($total_current / $diff_date),
-            "comparison" => $this->point_two_digits($comparison),
-            "percentage" => $this->point_two_digits($percentage),
+            "total_account" => $this->point_two_digits($total_current, 0),
+            "average_account" => $this->point_two_digits($total_current / $diff_date, 1),
+            "comparison" => $this->point_two_digits($comparison, 0),
+            "percentage" => $this->point_two_digits($percentage, 0),
             "type" => ($comparison >= 0 ? "plus" : "minus")
         ];
     }

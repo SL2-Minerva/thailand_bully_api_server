@@ -1699,7 +1699,7 @@ class VoiceDashboardController extends Controller
         }
 
         if ($items_previous) {
-            foreach ($items as $item) {
+            foreach ($items_previous as $item) {
                 $index_label = array_search($item->source_name, $data['previous_period']['label']);
                 $data['previous_period']['data'][$index_label] += 1;
                 $data['previous_period']['total'] += 1;
@@ -1761,7 +1761,7 @@ class VoiceDashboardController extends Controller
         }
 
         if ($items_previous) {
-            foreach ($items as $item) {
+            foreach ($items_previous as $item) {
                 if ($item->device === "android") {
 
                     $data['previous_period']['data'][0] += 1;

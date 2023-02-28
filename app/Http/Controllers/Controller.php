@@ -192,9 +192,12 @@ class Controller extends BaseController
         return $length != 0 ? $length : 1;
     }
 
-    public static function point_two_digits($number)
+    public static function point_two_digits($number, $digit = null)
     {
-        return $number !== null ? number_format($number, 2) : null;
+        if ($digit === null) {
+            $digit = 2;
+        }
+        return $number !== null ? number_format($number, $digit) : null;
     }
 
     public static function listSource()
