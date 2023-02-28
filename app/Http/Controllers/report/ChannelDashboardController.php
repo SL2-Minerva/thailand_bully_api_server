@@ -102,7 +102,7 @@ class ChannelDashboardController extends Controller
 
             $channal_message = $this->channelTable($start_date, $end_date, $source_id_id);
 
-            $data[$source_id_id]['total'] = $channal_message_total;
+            $data[$source_id_id]['total'] = self::point_two_digits($channal_message_total, 0);
 
 
             $nestData = [
