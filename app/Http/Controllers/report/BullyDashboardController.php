@@ -101,9 +101,9 @@ class BullyDashboardController extends Controller
         $message_total = 0;
 
         foreach ($items as $item) {
+            $message_total += 1;
             if (isset($data[$item->classification_id])) {
                 $data[$item->classification_id]['value']['total'] += 1;
-                $message_total += 1;
             } else {
                 $data[$item->classification_id]['bully_level'] = $item->classification_name;
                 $data[$item->classification_id]['campaign_id'] = $item->campaign_id;

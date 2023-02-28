@@ -69,14 +69,24 @@ class ChannelDashboardController extends Controller
             ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_type_id', [1])
             ->groupBy('source_id');
+        $channal_message_total = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereIn('classification_type_id', [1]);
+            // ->get()
+            // ->count();
 
         if ($this->keyword_id) {
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+            $channal_message_total->whereIn('keyword_id', $this->keyword_id);
         }
 
         if ($this->source_id) {
             $percentage_of_channal->where('source_id', $this->source_id);
+            $channal_message_total->where('source_id', $this->source_id);
         }
+
+        $channal_message_total = $channal_message_total->get()->count();
 
         foreach ($percentage_of_channal->get() as $channal) {
             $source_id_id = $channal->source_id;
@@ -91,13 +101,6 @@ class ChannelDashboardController extends Controller
 
 
             $channal_message = $this->channelTable($start_date, $end_date, $source_id_id);
-            $channal_message_total = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$start_date, $end_date])
-                ->whereIn('classification_type_id', [1])
-                ->get()
-                ->count();
-
 
             $data[$source_id_id]['total'] = $channal_message_total;
 
@@ -1479,13 +1482,25 @@ class ChannelDashboardController extends Controller
 
     private function channelTable($start_date, $end_date, $source_id_id)
     {
-        return DB::table('message_result_full_data')
+        $count =  DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date, $end_date])
             ->where('source_id', $source_id_id)
-            ->whereIn('classification_type_id', [1])
-            ->get()
-            ->count();
+            ->whereIn('classification_type_id', [1]);
+            // ->get()
+            // ->count();
+
+        if ($this->keyword_id) {
+            $count->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if ($this->source_id) {
+            $count->where('source_id', $this->source_id);
+        }
+
+        $count = $count->get()->count();
+
+        return $count;
     }
 
     private function totalFromEngagementRate($start_date, $end_date)

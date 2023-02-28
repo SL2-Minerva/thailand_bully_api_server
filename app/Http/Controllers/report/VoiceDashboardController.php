@@ -60,7 +60,7 @@ class VoiceDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$start_date, $end_date])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -100,7 +100,7 @@ class VoiceDashboardController extends Controller
             $data[$keyword_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => self::point_two_digits(($message_keyword['total'] / $message_total ?? 1) * 100),
-                'total' => $message_keyword['total']
+                'total' => $message_total
 
             ];
         }
