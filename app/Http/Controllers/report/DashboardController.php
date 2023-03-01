@@ -862,7 +862,8 @@ class DashboardController extends Controller
         foreach ($worlds as $world) {
             $dummy_data[] = [
                 'text' => $world->word,
-                'value' => $world->count_number
+                'value' => $world->count_number,
+                'total' => self::point_two_digits($worlds->count(), 0)
             ];
         }
 
