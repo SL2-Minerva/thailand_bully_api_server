@@ -1221,8 +1221,8 @@ class ChannelDashboardController extends Controller
             $percentage = ($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous) * 100;
 
             $data[$item->name] = [
-                "comparison_value" => $this->point_two_digits($comparison),
-                "percentage" => $this->point_two_digits($percentage),
+                "comparison_value" => $this->point_two_digits($comparison, 0),
+                "percentage" => $this->point_two_digits($percentage, 0),
                 "type" => ($comparison >= 0 ? "plus" : "minus"),
             ];
         }
