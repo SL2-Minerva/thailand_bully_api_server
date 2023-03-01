@@ -50,7 +50,7 @@ class LevelthreeController extends Controller
 
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
-//        dd($this->start_date, $this->end_date, $this->keyword_id, $this->source_id);
+
 
         if ($request->report_number === '6.2.003' ||
             $request->report_number === '6.2.004' ||
@@ -60,25 +60,11 @@ class LevelthreeController extends Controller
         ) {
             $total = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                ->whereIn('classification_type_id', [3]);
+                ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                ->whereIn('classification_type_id', [3])
-                ->offset($start)->limit($limit);
-        } else {
-
-            $total = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                ->whereIn('classification_type_id', [1]);
-
-            $raw = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                ->whereIn('classification_type_id', [1])
                 ->offset($start)->limit($limit);
         }
 
@@ -124,7 +110,6 @@ class LevelthreeController extends Controller
                         }
                     }
                 }
-                //$raw->where(DB::raw("DATE_FORMAT(date_m, '%a') = '$request->label'"));
             }
 
             // fillter by date
@@ -151,14 +136,12 @@ class LevelthreeController extends Controller
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-                        ->whereIn('classification_type_id', [3])
                         ->offset($start)->limit($limit);
 
 
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-                        ->whereIn('classification_type_id', [3]);
                 } else {
 
                     $raw = DB::table('message_result_full_data')
@@ -504,14 +487,12 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [1]);
+                    ->where('classification_name', $label);
             }
 
             // level 3
@@ -522,19 +503,18 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [3])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [3]);
+                    ->where('classification_name', $label);
 
             }
 
 
-            if ($request->report_number === '2.2.010' || $request->report_number === '3.2.008') {
+            if ($request->report_number === '2.2.010' ||
+                $request->report_number === '3.2.008') {
 
                 if ($label === 'Hate Speech') {
                     $label = 'HateSpeech';
@@ -548,30 +528,25 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [2])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [2]);
+                    ->where('classification_name', $label);
 
                 if ($request->report_number === '3.2.008') {
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date])
                         ->where('classification_name', $label)
-                        ->whereIn('classification_type_id', [3])
                         ->offset($start)->limit($limit);
 
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                        ->where('classification_name', $label)
-                        ->whereIn('classification_type_id', [3]);
+                        ->where('classification_name', $label);
                 }
-
 
             }
 
@@ -582,7 +557,6 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->where('author', $author_name)
 //                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
@@ -610,11 +584,9 @@ class LevelthreeController extends Controller
                 $raw->where('classification_name', $request->ylabel);
 
                 if (parent::checkLabel($request->label)) {
-
                     $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                     $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
                 } else {
-
                     $raw->whereRaw('HOUR(date_m) = ?', [$request->label]);
                     $total->whereRaw('HOUR(date_m) = ?', [$request->label]);
                 }
@@ -627,14 +599,12 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [3])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [3]);
+                    ->where('classification_name', $label);
 
                 if (parent::checkLabel($request->label) || parent::checkLabel($request->label) === 0) {
 
@@ -664,14 +634,12 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [2])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->where('classification_name', $label)
-                    ->whereIn('classification_type_id', [2]);
+                    ->where('classification_name', $label);
 
                 // if (parent::checkLabel($label) || parent::checkLabel($label) === 0) {
 
@@ -705,8 +673,7 @@ class LevelthreeController extends Controller
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$start_date, $end_date])
-                    ->where('source_name', $request->label)
-                    ->whereIn('classification_type_id', [1]);
+                    ->where('source_name', $request->label);
 
             }
 
@@ -719,8 +686,7 @@ class LevelthreeController extends Controller
 
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                        ->whereIn('classification_type_id', [1, 3]);
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
                     $items = $raw->get();
 
@@ -770,14 +736,13 @@ class LevelthreeController extends Controller
 
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                        ->whereIn('classification_type_id', [1, 2]);
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
                     $items = $raw->get();
 
 
                     $anylsys = [];
-
+                    //todo
                     foreach ($items as $item) {
 
                         $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
@@ -789,8 +754,8 @@ class LevelthreeController extends Controller
                         $anylsys[$item->message_id]["day"] = Carbon::parse($item->date_m)->diffInDays(Carbon::now());
                         $anylsys[$item->message_id]["device"] = $item->device;
                         $anylsys[$item->message_id]["source_id"] = $item->source_id;
-                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
-                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
+//                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+//                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
                     }
 
 
@@ -829,12 +794,11 @@ class LevelthreeController extends Controller
 
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                        ->whereIn('classification_type_id', [1, 3]);
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
                     $items = $raw->get();
 
-
+                    //todo
                     $anylsys = [];
 
                     foreach ($items as $item) {
@@ -881,12 +845,11 @@ class LevelthreeController extends Controller
 
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                        ->whereIn('classification_type_id', [1, 2]);
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
                     $items = $raw->get();
 
-
+                    //todo
                     $anylsys = [];
 
                     foreach ($items as $item) {
@@ -949,13 +912,11 @@ class LevelthreeController extends Controller
                 $raw = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->whereIn('classification_type_id', [2])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->whereIn('classification_type_id', [2]);
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
                 if ($Llabel === 'Hate Speech') {
                     $Llabel = 'HateSpeech';
@@ -1062,25 +1023,64 @@ class LevelthreeController extends Controller
 
         $items = $raw->get();
 
+
+        $parents = [];
+        foreach ($items as $item) {
+            if ($item->reference_message_id) {
+                $parents[] = $item->reference_message_id;
+            }
+        }
+
+
+
+
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
 
 
-            $data_push = [
-                "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
-                "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('h:i'),
-                "day" => Carbon::parse($item->date_m)->diffInDays(Carbon::now()),
-                "device" => $item->device,
-                "channel" => $item->source_id,
-                "bully_level" => $item->classification_name,
-                "bully_type" => $item->message_type,
-                "parent" => $item->reference_message_id ?? ''
-            ];
+            if (isset($data['message'][$item->message_id])) {
+                if ($item->classification_type_id === 1) {
+                    $data['message'][$item->message_id]['sentiment'] = $item->classification_name;
+                }
 
-            $data['message'][] = $data_push;
+                if ($item->classification_type_id === 2) {
+                    $data['message'][$item->message_id]['bully_type'] = $item->classification_name;
+                }
+
+                if ($item->classification_type_id === 3) {
+                    $data['message'][$item->message_id]['bully_level'] = $item->classification_name;
+                }
+            } else {
+
+                $data_push = [
+                    "message_id" => $item->message_id,
+                    "message_detail" => $item->full_message,
+                    "account_name" => $item->author,
+                    "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                    "post_time" => Carbon::parse($item->date_m)->format('h:i'),
+                    "day" => $date_d,
+                    "device" => $item->device,
+                    "channel" => $item->source_name,
+                    "link_message" => $item->link_message,
+                    "parent" => $item->reference_message_id ?? ''
+                ];
+
+                if ($item->classification_type_id === 1) {
+                    $data_push['sentiment'] = $item->classification_name;
+                }
+
+                if ($item->classification_type_id === 2) {
+                    $data_push['bully_type'] = $item->classification_name;
+                }
+
+                if ($item->classification_type_id === 3) {
+                    $data_push['bully_level'] = $item->classification_name;
+                }
+
+
+                $data['message'][$item->message_id] = $data_push;
+            }
+
         }
 
         $data['total'] = $total->get()->count();
