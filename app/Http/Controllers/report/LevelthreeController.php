@@ -141,7 +141,7 @@ class LevelthreeController extends Controller
 
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
                 } else {
 
                     $raw = DB::table('message_result_full_data')
