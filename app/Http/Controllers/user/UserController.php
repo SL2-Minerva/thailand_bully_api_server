@@ -54,7 +54,7 @@ class UserController extends Controller
     public function create(Request $request)
     {
         $data = $request->all();
-        $data['password'] = Hash::make('welcome');
+        $data['password'] = Hash::make($request->password);
         $data[BaseModel::CREATED_BY] =  auth('api')->id() ?? 1;
         $data[BaseModel::UPDATED_BY] =  auth('api')->id() ?? 1;
         $data['is_admin'] = 0;
