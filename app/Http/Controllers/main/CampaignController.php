@@ -358,7 +358,7 @@ class CampaignController extends Controller
             }
 
             $campaign->organization = Organization::find($campaign->organization_id)->name;
-            $data['list'] = $campaign;
+            $data['list'][] = $campaign;
             $data['keyword_limit'] = $this->organization_group->total_keyword;
 
 
