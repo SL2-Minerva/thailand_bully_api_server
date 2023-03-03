@@ -1077,10 +1077,12 @@ class LevelthreeController extends Controller
                     $data_push['bully_level'] = $item->classification_name;
                 }
 
-
                 $data['message'][$item->message_id] = $data_push;
             }
+        }
 
+        if (isset($data['message'])) {
+            $data['message'] = array_values($data['message']);
         }
 
         $data['total'] = $total->get()->count();
