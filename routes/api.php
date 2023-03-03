@@ -60,7 +60,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/list', [UserController::class, 'data']);
             Route::get('/list-active', [UserController::class, 'list_active']);
             Route::post('/create', [UserController::class, 'create']);
-            Route::put('/update/{user}', [UserController::class, 'update']);
+            Route::post('/update/{user}', [UserController::class, 'update']);
             Route::delete('/delete/{user}', [UserController::class, 'delete']);
             Route::get('/search', [UserController::class, 'search']);
         });
