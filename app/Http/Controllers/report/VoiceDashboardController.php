@@ -1108,6 +1108,7 @@ class VoiceDashboardController extends Controller
                 } else {
                     $data[$item->keyword_id] = [
                         "name" => $item->keyword_name,
+                        "keyword_id" => $item->keyword_id,
                     ];
 
                     if (isset($data[$item->keyword_id]['data'][$date_format])) {
