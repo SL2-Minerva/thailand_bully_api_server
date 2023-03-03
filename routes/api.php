@@ -37,17 +37,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::group(['middleware' => ['api']], function () {
 
-    Route::group(['prefix' => 'campaign'], function () {
-        Route::get('/', [CampaignController::class, 'show']);
-        Route::get('/list', [CampaignController::class, 'index']);
-        Route::post('/create', [CampaignController::class, 'store']);
-        Route::put('/update', [CampaignController::class, 'update']);
-        Route::put('/delete', [CampaignController::class, 'destroy']);
-        Route::get('/search', [CampaignController::class, 'search']);
-    });
+//    Route::group(['prefix' => 'campaign'], function () {
+//        Route::get('/', [CampaignController::class, 'show']);
+//        Route::get('/list', [CampaignController::class, 'index']);
+//        Route::post('/create', [CampaignController::class, 'store']);
+//        Route::put('/update', [CampaignController::class, 'update']);
+//        Route::put('/delete', [CampaignController::class, 'destroy']);
+//        Route::get('/search', [CampaignController::class, 'search']);
+//    });
 
     // group only auth
     Route::group(['prefix' => 'auth'], function () {
+
+
         Route::post('/login', [AuthController::class, 'login']);
         Route::post('/register', [AuthController::class, 'register']);
         Route::post('/logout', [AuthController::class, 'logout']);
@@ -55,6 +57,16 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::group(['middleware' => ['api', 'auth:api']], function () {
+
+        Route::group(['prefix' => 'campaign'], function () {
+            Route::get('/', [CampaignController::class, 'show']);
+            Route::get('/list', [CampaignController::class, 'index']);
+            Route::post('/create', [CampaignController::class, 'store']);
+            Route::put('/update', [CampaignController::class, 'update']);
+            Route::put('/delete', [CampaignController::class, 'destroy']);
+            Route::get('/search', [CampaignController::class, 'search']);
+        });
+
         Route::group(['prefix' => 'user'], function () {
             Route::get('/info', [UserController::class, 'info']);
             Route::get('/list', [UserController::class, 'data']);

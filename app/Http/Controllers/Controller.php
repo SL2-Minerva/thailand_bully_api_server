@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\BaseModel;
+use App\Models\Organization;
 use App\Models\Sources;
+use App\Models\UserOrganizationGroup;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
@@ -18,11 +20,17 @@ class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
-    protected $organization_id = 1;
+    protected $organization = null;
+    protected $organization_group = null;
+    protected $user_login;
 
     public function __construct(Request $request)
     {
-//        $this->request = $request;
+        $this->request = $request;
+
+        $this->user_login = auth('api')->user();
+        $this->organization = Organization::find($this->user_login->organization_id);
+        $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
     }
 
 
