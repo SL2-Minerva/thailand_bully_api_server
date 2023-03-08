@@ -187,20 +187,39 @@ class LevelthreeController extends Controller
                         $Llabel = 'Trolling';
                     }
 
-                    $raw = DB::table('message_result_full_data')
-                        ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-                        ->offset($start)->limit($limit);
+                    if ($request->report_number === '6.2.002') {
 
-
-                    $total = DB::table('message_result_full_data')
-                        ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
-
-                    if ($Llabel) {
-                        $raw->where('classification_name', $Llabel);
-                        $total->where('classification_name', $Llabel);
+                        $raw = DB::table('message_result_full_data')
+                            ->where('campaign_id', $this->campaign_id)
+                            ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                            ->whereIn('classification_type_id', [3])
+                            ->where('classification_name', $Llabel)
+                            ->offset($start)->limit($limit);
+    
+    
+                        $total = DB::table('message_result_full_data')
+                            ->where('campaign_id', $this->campaign_id)
+                            ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                            ->whereIn('classification_type_id', [3])
+                            ->where('classification_name', $Llabel);
                     }
+
+                    if ($request->report_number === '6.2.012') {
+                        $raw = DB::table('message_result_full_data')
+                            ->where('campaign_id', $this->campaign_id)
+                            ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                            ->whereIn('classification_type_id', [2])
+                            ->where('classification_name', $Llabel)
+                            ->offset($start)->limit($limit);
+    
+    
+                        $total = DB::table('message_result_full_data')
+                            ->where('campaign_id', $this->campaign_id)
+                            ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                            ->whereIn('classification_type_id', [2])
+                            ->where('classification_name', $Llabel);
+                    }
+
 
                 } else {
 
