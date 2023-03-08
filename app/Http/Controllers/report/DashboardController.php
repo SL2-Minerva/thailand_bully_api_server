@@ -1154,6 +1154,7 @@ class DashboardController extends Controller
 
         $raw = DB::table('word_clouds')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->raw('SUM(count_number) as count_')
             ->whereBetween('date_count', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
@@ -1183,13 +1184,13 @@ class DashboardController extends Controller
         foreach ($wordclouds as $wordcloud) {
 
             if (isset($data[$wordcloud->word])) {
-                $data[$wordcloud->word]['total'] += $wordcloud->count_number;
+                $data[$wordcloud->word]['total'] += $wordcloud->count_;
             } else {
                 $data[$wordcloud->word] = [
                     'keyword' => $wordcloud->word,
                     'keyword_id' => $wordcloud->keyword_id,
                     'keyword_name' => $list_keywords[$wordcloud->keyword_id],
-                    'total' => $wordcloud->count_number,
+                    'total' => $wordcloud->count_,
                     'percent' => round(($wordcloud->count_number / $total * 100), 2)
                 ];
             }
@@ -1213,8 +1214,11 @@ class DashboardController extends Controller
                 case "top50":
                     $data = array_slice($data, 0, 50);
                     break;
-                default:
+                case "top100":
                     $data = array_slice($data, 0, 100);
+                    break;
+                default:
+                    $data = array_slice($data, 0, 1000);
             }
         }
 
