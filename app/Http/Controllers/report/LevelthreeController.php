@@ -178,6 +178,15 @@ class LevelthreeController extends Controller
                     // $total->where('source_name', $request->label);
                 }
                 if ($request->report_number === '6.2.002' || $request->report_number === '6.2.012') {
+
+                    if ($Llabel === 'Hate Speech') {
+                        $Llabel = 'HateSpeech';
+                    } else if ($Llabel === 'No Bully') {
+                        $Llabel = 'NoBully';
+                    } else if ($Llabel === 'Trolling/Flaming') {
+                        $Llabel = 'Trolling';
+                    }
+
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
@@ -187,6 +196,12 @@ class LevelthreeController extends Controller
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
+
+                    if ($Llabel) {
+                        $raw->where('classification_name', $Llabel);
+                        $total->where('classification_name', $Llabel);
+                    }
+
                 } else {
 
                     $raw = DB::table('message_result_full_data')
