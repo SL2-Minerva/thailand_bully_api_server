@@ -861,11 +861,21 @@ class DashboardController extends Controller
         $dummy_data = [];
 
         foreach ($worlds as $world) {
-            $dummy_data[] = [
-                'text' => $world->word,
-                'value' => $world->count_number,
-                'total' => self::point_two_digits($worlds->count(), 0)
-            ];
+            if (isset($dummy_data[$world->word])) {
+                $dummy_data[$world->word]['value'] += $world->count_number;
+                $dummy_data[$world->word]['total'] = self::point_two_digits($worlds->count(), 0);
+            } else {
+                $dummy_data[$world->word] = [
+                    'text' => $world->word,
+                    'value' => $world->count_number,
+                    'total' => self::point_two_digits($worlds->count(), 0)
+                ];
+            }
+
+        }
+
+        if ($dummy_data) {
+            $dummy_data = array_values($dummy_data);
         }
 
         return $dummy_data;
@@ -1172,13 +1182,23 @@ class DashboardController extends Controller
         $list_keywords = $keywords->pluck('name', 'id')->toArray();
         foreach ($wordclouds as $wordcloud) {
 
-            $data[] = [
-                'keyword' => $wordcloud->word,
-                'keyword_id' => $wordcloud->keyword_id,
-                'keyword_name' => $list_keywords[$wordcloud->keyword_id],
-                'total' => $wordcloud->count_number,
-                'percent' => round(($wordcloud->count_number / $total * 100), 2)
-            ];
+            if (isset($data[$wordcloud->word])) {
+                $data[$wordcloud->word]['total'] += $wordcloud->count_number;
+            } else {
+                $data[$wordcloud->word] = [
+                    'keyword' => $wordcloud->word,
+                    'keyword_id' => $wordcloud->keyword_id,
+                    'keyword_name' => $list_keywords[$wordcloud->keyword_id],
+                    'total' => $wordcloud->count_number,
+                    'percent' => round(($wordcloud->count_number / $total * 100), 2)
+                ];
+            }
+
+        }
+
+
+        if ($data) {
+            $data = array_values($data);
         }
         $select = $request->select ?? null;
 
