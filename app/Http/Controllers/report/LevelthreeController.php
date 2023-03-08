@@ -51,6 +51,20 @@ class LevelthreeController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
+        if ($request->report_number === '1.2.009') {
+            $raw = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->whereIn('classification_type_id', [1])
+                    ->offset($start)->limit($limit);
+
+            $total = DB::table('message_result_full_data')
+                    ->where('campaign_id', $this->campaign_id)
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                    ->whereIn('classification_type_id', [1])
+                    ->where('keyword_id', $request->keyword_id);
+
+        }
 
         if ($request->report_number === '6.2.003' ||
             $request->report_number === '6.2.004' ||
