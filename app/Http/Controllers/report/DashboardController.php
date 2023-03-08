@@ -848,14 +848,15 @@ class DashboardController extends Controller
 
         $raw_total = DB::table('word_clouds')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
+            ->whereIn('classification_type_id', [1])
+            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
 
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
         }
 
 
-        $worlds = $raw_total->get();
+        $worlds = $raw_total->orderBy('count_number', 'desc')->get();
 
         $dummy_data = [];
 
@@ -1121,7 +1122,6 @@ class DashboardController extends Controller
         }
 
         $total = $raw_total->count();
-
         $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
         $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
         $data['total'] = $total;
@@ -1131,6 +1131,7 @@ class DashboardController extends Controller
 
     private function wordCloudsMessageTable($request)
     {
+
         $select = $request->select ?? null;
         $page = $request->page ?? null;
         $limit = $request->limit ?? 5;
@@ -1143,8 +1144,12 @@ class DashboardController extends Controller
 
         $raw = DB::table('word_clouds')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
+            ->whereBetween('date_count', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
+
+
+//        dd($raw->get());
+
 
         $raw_total = DB::table('message_result_full_data')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
@@ -1161,7 +1166,7 @@ class DashboardController extends Controller
         }
 
 
-        $wordclouds = $raw->get();
+        $wordclouds = $raw->orderBy('count_number', 'desc')->get();
         $total = $raw_total->count();
         $data = [];
         $list_keywords = $keywords->pluck('name', 'id')->toArray();
