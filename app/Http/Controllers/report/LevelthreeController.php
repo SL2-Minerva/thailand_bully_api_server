@@ -74,11 +74,25 @@ class LevelthreeController extends Controller
         ) {
             $total = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [3]);
 
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [3])
+                ->offset($start)->limit($limit);
+        } else {
+
+            $total = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1]);
+
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1])
                 ->offset($start)->limit($limit);
         }
 
@@ -145,7 +159,24 @@ class LevelthreeController extends Controller
 //                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
 //                }
 
-
+                // return $raw->get();
+                if ($request->report_number === '4.2.008') {
+                    if ($request->label === "Share") {
+                        $raw->where('number_of_shares', '>', 0);
+                        $total->where('number_of_shares', '>', 0);
+                    }
+    
+                    if ($request->Llabel === "Comment") {
+                        $raw->where('number_of_comments', '>', 0);
+                        $total->where('number_of_comments', '>', 0);
+                    }
+    
+                    if ($request->Llabel === "Reactions") {
+                        $raw->where('number_of_reactions', '>', 0);
+                        $total->where('number_of_reactions', '>', 0);
+                    }
+                    // $total->where('source_name', $request->label);
+                }
                 if ($request->report_number === '6.2.002' || $request->report_number === '6.2.012') {
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
@@ -161,14 +192,14 @@ class LevelthreeController extends Controller
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-//                        ->whereIn('classification_type_id', [1])
+                        ->whereIn('classification_type_id', [1])
                         ->offset($start)->limit($limit);
 
 
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
-//                        ->whereIn('classification_type_id', [1]);
+                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+                        ->whereIn('classification_type_id', [1]);
                 }
 
                 if ($request->report_number === '4.2.002') {
@@ -472,12 +503,12 @@ class LevelthreeController extends Controller
 
             // Reaction
             if ($request->report_number === '4.2.008') {
-                if ($request->Llabel === "Share") {
+                if ($request->label === "Share of Voice") {
                     $raw->where('number_of_shares', '>', 0);
                     $total->where('number_of_shares', '>', 0);
                 }
 
-                if ($request->Llabel === "Comment") {
+                if ($request->Llabel === "Comments") {
                     $raw->where('number_of_comments', '>', 0);
                     $total->where('number_of_comments', '>', 0);
                 }
@@ -655,6 +686,27 @@ class LevelthreeController extends Controller
                     ->whereBetween('date_m', [$this->start_date, $this->end_date])
                     ->where('classification_name', $label);
 
+                if ($request->report_number === '3.2.009') {
+                    $label = $request->label;
+                    if ($label === 'Hate Speech') {
+                        $label = 'HateSpeech';
+                    } else if ($label === 'No Bully') {
+                        $label = 'NoBully';
+                    } else if ($label === 'Trolling/Flaming') {
+                        $label = 'Trolling';
+                    }
+                    $raw = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->where('classification_name', $label)
+                        ->offset($start)->limit($limit);
+
+                    $total = DB::table('message_result_full_data')
+                        ->where('campaign_id', $this->campaign_id)
+                        ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                        ->where('classification_name', $label);
+                }
+
                 // if (parent::checkLabel($label) || parent::checkLabel($label) === 0) {
 
                 //     $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$label]);
@@ -681,7 +733,7 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$start_date, $end_date])
                     ->where('source_name', $request->label)
-//                    ->whereIn('classification_type_id', [1])
+                    ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
@@ -1026,6 +1078,10 @@ class LevelthreeController extends Controller
                 $request->report_number === '2.2.008' ||
                 $request->report_number === '2.2.009' ||
                 $request->report_number === '2.2.010' ||
+                $request->report_number === '4.2.004' ||
+                $request->report_number === '4.2.003' ||
+                $request->report_number === '4.2.007' ||    
+                $request->report_number === '4.2.008' ||    
                 $request->report_number === '2.2.013'
             ) {
                 $raw->where('keyword_id', $request->keyword_id);
