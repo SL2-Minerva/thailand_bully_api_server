@@ -74,7 +74,6 @@ class UserController extends Controller
         $permissions = null;
 
         if ($user->role_id) {
-
             $row_permissions = UserPermission::where('role_id', $user->is_admin ? 0 : $user->role_id)->get([
                 'authorized_create', 'authorized_view', 'authorized_edit', 'authorized_delete', 'authorized_export', 'menu', 'id'
             ]);
@@ -121,13 +120,13 @@ class UserController extends Controller
 
     }
 
-    public function search(Request $request) 
+    public function search(Request $request)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
-        
+
         $user = User::query()->offset($start)->limit($limit);
         $status = $request->status ?? 1;
 
