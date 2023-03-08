@@ -147,14 +147,14 @@ class LevelthreeController extends Controller
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-                        ->whereIn('classification_type_id', [1])
+//                        ->whereIn('classification_type_id', [1])
                         ->offset($start)->limit($limit);
 
 
                     $total = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
-                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-                        ->whereIn('classification_type_id', [1]);
+                        ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
+//                        ->whereIn('classification_type_id', [1]);
                 }
 
                 if ($request->report_number === '4.2.002') {
@@ -562,8 +562,8 @@ class LevelthreeController extends Controller
                 $total = DB::table('message_result_full_data')
                     ->where('campaign_id', $this->campaign_id)
                     ->where('author', $author_name)
-//                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1]);
+                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+//                    ->whereIn('classification_type_id', [1]);
 
             }
 
@@ -667,7 +667,7 @@ class LevelthreeController extends Controller
                     ->where('campaign_id', $this->campaign_id)
                     ->whereBetween('date_m', [$start_date, $end_date])
                     ->where('source_name', $request->label)
-                    ->whereIn('classification_type_id', [1])
+//                    ->whereIn('classification_type_id', [1])
                     ->offset($start)->limit($limit);
 
                 $total = DB::table('message_result_full_data')
@@ -1031,23 +1031,20 @@ class LevelthreeController extends Controller
             }
         }
 
-
-
-
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
 
-
             if (isset($data['message'][$item->message_id])) {
-                if ($item->classification_type_id === 1) {
+
+                if ($item->classification_type_id == 1) {
                     $data['message'][$item->message_id]['sentiment'] = $item->classification_name;
                 }
 
-                if ($item->classification_type_id === 2) {
+                if ($item->classification_type_id == 2) {
                     $data['message'][$item->message_id]['bully_type'] = $item->classification_name;
                 }
 
-                if ($item->classification_type_id === 3) {
+                if ($item->classification_type_id == 3) {
                     $data['message'][$item->message_id]['bully_level'] = $item->classification_name;
                 }
             } else {
