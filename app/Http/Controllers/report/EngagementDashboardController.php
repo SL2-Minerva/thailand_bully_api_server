@@ -1074,11 +1074,12 @@ class EngagementDashboardController extends Controller
             "Follower",
         ];
 
-        $table_root = 'sna_root_node';
-        $table_child = 'sna_child_node';
-
-        $infulencer_root = DB::table($table_root)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+        $infulencer_root = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1])
+            ->where('reference_message_id', null)
+            ->orWhere('reference_message_id', '');
 
         if ($this->source_id) {
             $infulencer_root->where('source_id', $this->source_id);
@@ -1123,8 +1124,12 @@ class EngagementDashboardController extends Controller
 
         }
 
-        $follower_raw = DB::table($table_child)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+        $follower_raw = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1])
+            ->where('reference_message_id', '!=', null)
+            ->orWhere('reference_message_id', '!=', '');
 
         if ($this->source_id) {
             $follower_raw->where('source_id', $this->source_id);
@@ -1953,11 +1958,17 @@ class EngagementDashboardController extends Controller
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start - 1;
 
-        $raw_current = DB::table('sna_root_node')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])->groupBy('author');
+        $raw_current = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereIn('classification_type_id', [1])
+            ->groupBy('author');
 
-        $raw_previous = DB::table('sna_root_node')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])->groupBy('author');
+        $raw_previous = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereIn('classification_type_id', [1])
+            ->groupBy('author');
 
         if ($request->enable_page) {
             $raw_current->offset($start)->limit($limit)->orderBy('created', 'desc');
