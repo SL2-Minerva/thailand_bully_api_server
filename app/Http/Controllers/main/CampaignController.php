@@ -152,14 +152,14 @@ class CampaignController extends Controller
                 $items = Keyword::where('parent_id', $parent_id)->get();
 
 
-                foreach ($items as $k_index => $item) {
-
-                   if ($k_index === $index) {
-                       $item->update($data_submit_keyword);
-                   } else {
-                       Keyword::create($data_submit_keyword);
-                   }
-                }
+//                foreach ($items as $k_index => $item) {
+//
+//                   if ($k_index === $index) {
+//                       $item->update($data_submit_keyword);
+//                   } else {
+//                       Keyword::create($data_submit_keyword);
+//                   }
+//                }
 
             } else {
                 Keyword::create($data_submit_keyword);
