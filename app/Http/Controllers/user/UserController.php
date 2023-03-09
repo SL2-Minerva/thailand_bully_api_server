@@ -25,6 +25,11 @@ class UserController extends Controller
     public function update(User $user, Request $request)
     {
         $data = $request->all();
+
+        if (isset($data['password'])) {
+            $data['password'] = Hash::make($request->password);
+        }
+
         $data[BaseModel::UPDATED_BY] =  auth('api')->id() ?? 1;
         $user->update($data);
         return parent::handleRespond($request->id);
