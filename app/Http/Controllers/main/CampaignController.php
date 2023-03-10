@@ -156,7 +156,23 @@ class CampaignController extends Controller
                     }
                 }
 
-                $items = Keyword::where('parent_id', $parent_id)->get();
+                $items = Keyword::where('parent_id', $parent_id)->pluck('keyword_or')->toArray();
+                $check_or = in_array($keyword_or, $items);
+                if (!$check_or) {
+                    Keyword::create([
+                        Keyword::CAMPAIGN_ID => $campaign_id,
+                        'name' => $name. "," . $keyword_or,
+                        Keyword::PARENT_ID => $parent_id,
+                        'keyword_or' => $keyword_or ,
+                        Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
+                        Keyword::KEYWORD_EXCLUDE => collect($keyword_exclude ?? [])->implode(','),
+                        BaseModel::STATUS => 1,
+                        BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+                        BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+                        "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
+                    ]);
+                }
+
 
 
 //                foreach ($items as $k_index => $item) {
