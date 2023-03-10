@@ -88,6 +88,12 @@ class CampaignController extends Controller
                     $name .= "," . $keyword_and;
                 }
 
+                if (!empty($keyword_and)) {
+                    $condition_color = $keyword["keyword_and_color"][$index] ?? "#000000";
+                } else {
+                    $condition_color = $keyword["colors"] ?? "#000000";
+                }
+
                 $data_submit_keyword = [
                     Keyword::CAMPAIGN_ID => $campaign->id,
                     BaseModel::NAME => $name,
@@ -97,7 +103,8 @@ class CampaignController extends Controller
                     BaseModel::STATUS => 1,
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
-                    "color" => $keyword["keyword_and_color"][$index] ?? "#000000",
+                    "color" => $condition_color,
+                    // "color" => $keyword["keyword_and_color"][$index] ?? "#000000",
                     "label" => $keyword["name"]
                 ];
 
