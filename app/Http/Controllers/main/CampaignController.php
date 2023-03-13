@@ -156,21 +156,41 @@ class CampaignController extends Controller
                     }
                 }
 
-                $items = Keyword::where('parent_id', $parent_id)->pluck('keyword_or')->toArray();
-                $check_or = in_array($keyword_or, $items);
-                if (!$check_or) {
-                    Keyword::create([
-                        Keyword::CAMPAIGN_ID => $campaign_id,
-                        'name' => $name. "," . $keyword_or,
-                        Keyword::PARENT_ID => $parent_id,
-                        'keyword_or' => $keyword_or ,
-                        Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
-                        Keyword::KEYWORD_EXCLUDE => collect($keyword_exclude ?? [])->implode(','),
-                        BaseModel::STATUS => 1,
-                        BaseModel::CREATED_BY => auth('api')->id() ?? 1,
-                        BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
-                        "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
-                    ]);
+                if ($keyword_or) {
+                    $items = Keyword::where('parent_id', $parent_id)->pluck('keyword_or')->toArray();
+                    $check_or = in_array($keyword_or, $items);
+
+                    if (!$check_or) {
+                        Keyword::create([
+                            Keyword::CAMPAIGN_ID => $campaign_id,
+                            'name' => $name. "," . $keyword_or,
+                            Keyword::PARENT_ID => $parent_id,
+                            Keyword::KEYWORD_OR => collect($keyword_or ?? [])->implode(','),
+                            Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
+                            Keyword::KEYWORD_EXCLUDE => collect($keyword_exclude ?? [])->implode(','),
+                            "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
+                            BaseModel::STATUS => 1,
+                            BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+                            BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+                        ]);
+                    }
+
+                    if ($check_or) {
+                        $items = Keyword::where('parent_id', $parent_id)
+                            ->where('keyword_or', $keyword_or)
+                            ->update([
+                                Keyword::CAMPAIGN_ID => $campaign_id,
+                                'name' => $name. "," . $keyword_or,
+                                Keyword::PARENT_ID => $parent_id,
+                                Keyword::KEYWORD_OR => collect($keyword_or ?? [])->implode(','),
+                                Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
+                                Keyword::KEYWORD_EXCLUDE => collect($keyword_exclude ?? [])->implode(','),
+                                "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
+                                BaseModel::STATUS => 1,
+                                BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+                                BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
+                            ]);
+                    }
                 }
 
 
@@ -269,8 +289,14 @@ class CampaignController extends Controller
                     $keyword_and = collect($keyword[Keyword::KEYWORD_AND] ?? [])->implode(',');
                     $name = $keyword[BaseModel::NAME];
 
-                    if ($keyword_and) {
-                        $name .= "," . $keyword_and;
+                    // if ($keyword_and) {
+                    //     $name .= "," . $keyword_and;
+                    // }
+
+                    if (!empty($keyword_and)) {
+                        $condition_color = $keyword['keyword_and_color'][0];
+                    } else {
+                        $condition_color = $keyword["colors"] ?? "#";
                     }
 
 
@@ -281,14 +307,15 @@ class CampaignController extends Controller
                         Keyword::KEYWORD_AND => $keyword_and,
                         Keyword::KEYWORD_EXCLUDE => collect($keyword[Keyword::KEYWORD_EXCLUDE] ?? [])->implode(','),
                         BaseModel::STATUS => 1,
+                        "color" => $condition_color ?? '#',
                         BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                         BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     ];
 
 
-                    if (isset($keyword['keyword_and_color'])) {
-                        $data_submit_keyword["color"] = $keyword['keyword_and_color'][0];
-                    }
+                    // if (isset($keyword['keyword_and_color'])) {
+                    //     $data_submit_keyword["color"] = $keyword['keyword_and_color'][0];
+                    // }
 
                     $updated = Keyword::updateOrCreate(['id' => $keyword['id'] ?? null], $data_submit_keyword);
 
