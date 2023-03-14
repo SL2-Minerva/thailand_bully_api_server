@@ -177,7 +177,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/', [DashboardController::class, 'overAll']);
         Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
         Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
-        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
+//        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
 //        Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
 //        Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
 //        Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);

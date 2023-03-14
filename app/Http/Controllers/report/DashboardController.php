@@ -77,7 +77,7 @@ class DashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->chunk(1000)->get();
+        $items = $raw->chunk(1000)->sharedLock()->get();
         $data = null;
 
         foreach ($items as $item) {
@@ -126,7 +126,6 @@ class DashboardController extends Controller
         if ($data) {
             $data = array_values($data);
         }
-
 
         return $data;
     }
