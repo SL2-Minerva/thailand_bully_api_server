@@ -8,6 +8,7 @@ use App\Models\Message;
 use App\Models\SNA;
 use App\Models\SNAChildNode;
 use App\Models\SNARootNode;
+use App\Models\Sources;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -738,6 +739,8 @@ class DashboardController extends Controller
             $total_keywords->where('source_id', $this->source_id);
         }
 
+        $source = Sources::where('status', 1)->get();
+
         foreach ($total_keywords->get() as $item) {
             $keyword_id = $item->keyword_id;
             $data[$keyword_id]['keyword_id'] = $item->keyword_id;
@@ -747,35 +750,42 @@ class DashboardController extends Controller
             $data[$keyword_id]['organization_id'] = 1;
             $data[$keyword_id]['organization_name'] = 'organizations_name 1';
             $keyword_id = $item->keyword_id;
-            $message = $this->shareOfVoiceByPlatform($this->campaign_id, $this->start_date, $this->end_date, $item->keyword_id, $item->source_id);
-            $total_message = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
-                ->where('keyword_id', $item->keyword_id)
-                ->whereIn('classification_type_id', [1])
-                ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
-            if ($this->keyword_id) {
-                $total_message->whereIn('keyword_id', $this->keyword_id);
+            foreach ($source as $key => $item_source) {
+
+                $message = $this->shareOfVoiceByPlatform($this->campaign_id, $this->start_date, $this->end_date, $item->keyword_id, $item_source->id);
+                $total_message = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
+                    ->where('keyword_id', $item->keyword_id)
+                    ->whereIn('classification_type_id', [1])
+                    ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+    
+                if ($this->keyword_id) {
+                    $total_message->whereIn('keyword_id', $this->keyword_id);
+                }
+    
+                if ($this->source_id) {
+                    $total_message->where('source_id', $this->source_id);
+                }
+    
+                $total_message = $total_message->get()->count();
+    
+    
+                $percentage = !$total_message ? 0 : ($message / $total_message) * 100;
+    
+                $push_data = [
+                    'channel' => $item_source->name,
+                    'percentage' => self::point_two_digits($percentage),
+                    'number_of_message' => $message,
+                    // 'highlight' =>
+                ];
+    
+                if (!isset($data[$keyword_id]['value'][$key])) {
+                    
+                    $data[$keyword_id]['value'][$key] = $push_data;
+                }
             }
-
-            if ($this->source_id) {
-                $total_message->where('source_id', $this->source_id);
-            }
-
-            $total_message = $total_message->get()->count();
-
-
-            $percentage = ($message / $total_message) * 100;
-
-            $push_data = [
-                'channel' => $item->source_name,
-                'percentage' => self::point_two_digits($percentage),
-                'number_of_message' => $message,
-                // 'highlight' =>
-            ];
-
-            $data[$keyword_id]['value'][] = $push_data;
         }
-//
+
         if ($data) {
             $data = array_values($data);
         }
