@@ -77,7 +77,7 @@ class DashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
         $data = null;
 
         foreach ($items as $item) {
@@ -758,29 +758,29 @@ class DashboardController extends Controller
                     ->where('keyword_id', $item->keyword_id)
                     ->whereIn('classification_type_id', [1])
                     ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-    
+
                 if ($this->keyword_id) {
                     $total_message->whereIn('keyword_id', $this->keyword_id);
                 }
-    
+
                 if ($this->source_id) {
                     $total_message->where('source_id', $this->source_id);
                 }
-    
+
                 $total_message = $total_message->get()->count();
-    
-    
+
+
                 $percentage = !$total_message ? 0 : ($message / $total_message) * 100;
-    
+
                 $push_data = [
                     'channel' => $item_source->name,
                     'percentage' => self::point_two_digits($percentage),
                     'number_of_message' => $message,
                     // 'highlight' =>
                 ];
-    
+
                 if (!isset($data[$keyword_id]['value'][$key])) {
-                    
+
                     $data[$keyword_id]['value'][$key] = $push_data;
                 }
             }
