@@ -270,9 +270,9 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::group(['prefix' => 'dashboard-engagement'], function () {
-//        Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
+       Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
 //
-//        Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
+       Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
 //
 //        Route::get('/engagement-day', [EngagementDashboardController::class, 'EngagementByDay']);
 //        Route::get('/engagement-time', [EngagementDashboardController::class, 'EngagementByTime']);
@@ -281,7 +281,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-channel', [EngagementDashboardController::class, 'EngagementChannel']);
 //        Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
 //
-//        Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
+       Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
 //
 //        Route::get('/engagement-type', [EngagementDashboardController::class, 'EngagementType']);
 //        Route::get('/engagement-type-by-day', [EngagementDashboardController::class, 'EngagementByDayKey']);
