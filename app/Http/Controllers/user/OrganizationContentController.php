@@ -10,17 +10,11 @@ use Illuminate\Http\Request;
 class OrganizationContentController extends Controller
 {
 
-    public function __construct(Request $request)
-    {
-//        $token = request()->bearerToken();
-
-//        dd($token);
-//        parent::__construct($request);
-    }
 
 
     public function index(Request $request)
     {
+
         $organization_content = OrganizationContent::where('organization_id', $this->organization->id)->get();
         if (!$organization_content) {
             return parent::handleNotFound('Organization content not found');
