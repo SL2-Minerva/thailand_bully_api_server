@@ -21,7 +21,7 @@ class OrganizationContentController extends Controller
 
     public function index(Request $request)
     {
-        $organization_content = OrganizationContent::where('organization_id', $this->organization_id)->get();
+        $organization_content = OrganizationContent::where('organization_id', $this->organization->id)->get();
         if (!$organization_content) {
             return parent::handleNotFound('Organization content not found');
         }
@@ -50,7 +50,7 @@ class OrganizationContentController extends Controller
             'content_text' => $request->content_text,
             'content_id' => $request->content_id ?? 3,
             'status' => $request->status ?? 1,
-            'organization_id' => $this->organization_id,
+            'organization_id' => $this->organization->id,
             'date' => $request->date ?? date('Y-m-d'),
             BaseModel::CREATED_BY => auth('api')->id() ?? 1, // todo check auth
             BaseModel::UPDATED_BY => auth('api')->id() ?? 1, // todo check auth
@@ -114,7 +114,7 @@ class OrganizationContentController extends Controller
         }
 
 
-        $organization_content = OrganizationContent::where('organization_id', $this->organization_id)->where('id' , $id)->first();
+        $organization_content = OrganizationContent::where('organization_id', $this->organization_->id)->where('id' , $id)->first();
         if ($organization_content) {
             $organization_content->update($data);
             return parent::handleRespond($organization_content);
