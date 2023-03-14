@@ -935,7 +935,7 @@ class BullyDashboardController extends Controller
         $anylsys = [];
         foreach ($items as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
         foreach ($anylsys as $anylsy) {
@@ -997,27 +997,27 @@ class BullyDashboardController extends Controller
         $anylsys = [];
         foreach ($items as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
         foreach ($anylsys as $anylsy) {
 
             $index_data = 10;
 
-            if ($anylsy['Bully Level'] === 'Level 1') {
+            if ($anylsy[3] === 'Level 1') {
                 $index_data = 11;
             }
 
-            if ($anylsy['Bully Level'] === 'Level 2') {
+            if ($anylsy[3] === 'Level 2') {
                 $index_data = 12;
             }
 
-            if ($anylsy['Bully Level'] === 'Level 3') {
+            if ($anylsy[3] === 'Level 3') {
                 $index_data = 13;
             }
 
 
-            $index_label = array_search($anylsy['Sentiment'], $data['labels']);
+            $index_label = array_search($anylsy[1], $data['labels']);
             $data['value'][$index_data]['data'][$index_label] += 1;
 
         }
@@ -1879,7 +1879,7 @@ class BullyDashboardController extends Controller
         $anylsys = [];
 
         foreach ($items as $item) {
-            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
         foreach ($anylsys as $anylsy) {
@@ -1935,14 +1935,14 @@ class BullyDashboardController extends Controller
         $anylsys = [];
 
         foreach ($items as $item) {
-            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
         foreach ($anylsys as $anylsy) {
             foreach ($bully_types as $bully_type) {
 
-                if ($anylsy['Bully Type'] === $bully_type->name) {
-                    $index_label = array_search($anylsy['Sentiment'], $data['labels']);
+                if ($anylsy[2] === $bully_type->name) {
+                    $index_label = array_search($anylsy[1], $data['labels']);
                     $data['value'][$bully_type->id]['data'][$index_label] += 1;
                 }
             }
