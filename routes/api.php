@@ -302,9 +302,9 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-sentiment'], function () {
 
-//        Route::get('/sentiment-daily', [SentimentDashboardController::class, 'DailySeniment']);
+       Route::get('/sentiment-daily', [SentimentDashboardController::class, 'DailySeniment']);
 //
-//        Route::get('/sentiment-by', [SentimentDashboardController::class, 'sentimentBy']);
+       Route::get('/sentiment-by', [SentimentDashboardController::class, 'sentimentBy']);
 //
 //        Route::get('/sentiment-day', [SentimentDashboardController::class, 'SentimentByDay']);
 //        Route::get('/sentiment-time', [SentimentDashboardController::class, 'SentimentByTime']);
@@ -316,14 +316,14 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/sentiment-score', [SentimentDashboardController::class, 'SentimentScore']);
 //        Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
 //
-//        Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
+       Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
 //
 //        Route::get('/period-over-period', [SentimentDashboardController::class, 'PeriodOverPeriod']);
 //        Route::get('/comparison-channel', [SentimentDashboardController::class, 'ComparisonByChannel']);
 //        Route::get('/comparison-engagement-type', [SentimentDashboardController::class, 'ComparisonByEngagementType']);
 //
 //
-//        Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
+       Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
 //
 //        Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
 //        Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);

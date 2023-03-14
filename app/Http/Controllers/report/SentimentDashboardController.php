@@ -608,21 +608,21 @@ class SentimentDashboardController extends Controller
 
         foreach ($items as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
 
         foreach ($anylsys as $anylsy) {
             $index_data = 0;
-            if ($anylsy['Sentiment'] === 'Positive') {
+            if ($anylsy[1] === 'Positive') {
                 $index_data = 2;
             }
 
-            if ($anylsy['Sentiment'] === 'Neutral') {
+            if ($anylsy[1] === 'Neutral') {
                 $index_data = 1;
             }
 
-            $index_label = array_search($anylsy['Bully Level'], $data['labels']);
+            $index_label = array_search($anylsy[3], $data['labels']);
             $data['value'][$index_data]['data'][$index_label] += 1;
 
         }
@@ -721,21 +721,21 @@ class SentimentDashboardController extends Controller
 
         foreach ($items as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
 //        dd($anylsys);
         foreach ($anylsys as $anylsy) {
             $index_data = 0;
-            if ($anylsy['Sentiment'] === 'Positive') {
+            if ($anylsy[1] === 'Positive') {
                 $index_data = 2;
             }
 
-            if ($anylsy['Sentiment'] === 'Neutral') {
+            if ($anylsy[1] === 'Neutral') {
                 $index_data = 1;
             }
 
-            $index_label = array_search($anylsy['Bully Type'], $data['labels']);
+            $index_label = array_search($anylsy[2], $data['labels']);
             $data['value'][$index_data]['data'][$index_label] += 1;
 
         }
