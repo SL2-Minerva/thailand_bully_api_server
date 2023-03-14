@@ -130,6 +130,12 @@ Route::group(['middleware' => ['api']], function () {
             Route::put('/delete', [RoleController::class, 'destroy']);
         });
 
+        Route::group(['prefix' => 'organization-content'], function () {
+            Route::get('/', [OrganizationContentController::class, 'index']);
+            Route::post('/', [OrganizationContentController::class, 'store']);
+            Route::post('/update', [OrganizationContentController::class, 'update']);
+        });
+
 //todo for check
 //        Route::group(['prefix' => 'campaign'], function () {
 //            Route::get('/', [CampaignController::class, 'show']);
@@ -368,11 +374,7 @@ Route::group(['middleware' => ['api']], function () {
     });
 
 
-    Route::group(['prefix' => 'organization-content'], function () {
-        Route::get('/', [OrganizationContentController::class, 'index']);
-        Route::post('/', [OrganizationContentController::class, 'store']);
-        Route::post('/update', [OrganizationContentController::class, 'update']);
-    });
+
     // error
     // lavel 4 http://202.44.231.31/api/dashboard-overall/daily-message/level-four/?campaign_id=1&start_date=2022-12-25&end_date=2023-01-23&message_id=1606546445712388107&keyword_id=3&report_number=2.2.002
 });
