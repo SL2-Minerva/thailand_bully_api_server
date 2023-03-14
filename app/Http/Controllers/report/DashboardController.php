@@ -1122,20 +1122,23 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
-        $raw_total = DB::table('message_result_full_data')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
+//        $raw_total = DB::table('message_result_full_data')
+//            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+//            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+//            ->whereIn('classification_type_id', [1]);
+//
+//        if ($this->source_id) {
+//            $raw_total->where('source_id', $this->source_id);
+//        }
+//
+//        $total = $raw_total->count();
+//        $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+//        $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
+//        $data['total'] = $total;
 
-        if ($this->source_id) {
-            $raw_total->where('source_id', $this->source_id);
-        }
 
-        $total = $raw_total->count();
-        $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
-        $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
-        $data['total'] = $total;
-
+        // $data = null
+        $data = null;
         return parent::handleRespond($data);
     }
 
@@ -1239,10 +1242,12 @@ class DashboardController extends Controller
             $this->source_id = $request->platform_id;
         }
 
-        $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
-        $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
-//        $data['total'] = $this->wordCloudByAccount($request, true);
+//        $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+//        $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
+////        $data['total'] = $this->wordCloudByAccount($request, true);
 
+        // debug world
+        $data = null;
         return parent::handleRespond($data);
     }
 
@@ -1331,9 +1336,11 @@ class DashboardController extends Controller
         $end_date = $request->end_date ?? null;
         $select = $request->select ?? null;
 
-        $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
-        $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($request);
-        $data['total'] = $this->wordCloudBySentimentType($request, true);
+//        $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+//        $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($request);
+//        $data['total'] = $this->wordCloudBySentimentType($request, true);
+
+        $data = null;
         return parent::handleRespond($data);
     }
 

@@ -153,12 +153,19 @@ class CampaignController extends Controller
 
 
 //                foreach ($items as $k_index => $item) {
+//                    $testss[] = $item->keyword_or;
+//                    if ($item->keyword_or === $keyword_or || $k_index === $index) {
+//                        $item->update($data_submit_keyword);
+//                    } else {
+//                        Keyword::create($data_submit_keyword);
+//                    }
 //
-//                   if ($k_index === $index) {
-//                       $item->update($data_submit_keyword);
-//                   } else {
-//                       Keyword::create($data_submit_keyword);
-//                   }
+////
+////                   if ($k_index === $index) {
+////                       $item->update($data_submit_keyword);
+////                   } else {
+////                       Keyword::create($data_submit_keyword);
+////                   }
 //                }
 
             } else {
