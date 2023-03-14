@@ -77,7 +77,7 @@ class DashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->chunk(1000)->sharedLock()->get();
+        $items = $raw->get();
         $data = null;
 
         foreach ($items as $item) {
@@ -1146,8 +1146,6 @@ class DashboardController extends Controller
 //        $data['total'] = $total;
 
 
-        // $data = null
-        $data = null;
         return parent::handleRespond($data);
     }
 
