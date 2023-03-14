@@ -191,10 +191,10 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::group(['prefix' => 'dashboard-voice'], function () {
-//        Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
-//        Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
+       Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
+       Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
 //
-//        Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
+       Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
 //
 //        Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDayold']);
 //        Route::get('/message-by-time', [VoiceDashboardController::class, 'MessageByTimeold']);
@@ -210,7 +210,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
 //
 //        //todo
-//        Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
+       Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
 //
 //        Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);
 //        Route::get('/day-time-sentiment', [VoiceDashboardController::class, 'DayTimeSentiment']);
@@ -218,14 +218,14 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/day-time-type', [VoiceDashboardController::class, 'DayTimeType']);
 //
 //        //todo
-//        Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
+       Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
 //
 //        Route::get('/channel-platform', [VoiceDashboardController::class, 'ChannelPlatform']);
 //        Route::get('/device', [VoiceDashboardController::class, 'Device']);
 //        Route::get('/channel-device', [VoiceDashboardController::class, 'ChannelDevice']);
 //
 //        //todo
-//        Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
+       Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
 //
 //        Route::get('/keyword-channel', [VoiceDashboardController::class, 'KeywordChannel']);
 //        Route::get('/keyword-sentiment', [VoiceDashboardController::class, 'KeywordSentiment']);
@@ -236,13 +236,13 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-channel'], function () {
 //        //todo
-//        Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
+       Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
 //
 //        Route::get('/percentage-of-channel', [ChannelDashboardController::class, 'PercentageOfChannel']);
 //        Route::get('/daily-channel', [ChannelDashboardController::class, 'DailyChannel']);
 //
 //        //todo
-//        Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
+       Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
 //
 //        Route::get('/channel-day', [ChannelDashboardController::class, 'ChannelByDay']);
 //        Route::get('/channel-time', [ChannelDashboardController::class, 'ChannelByTime']);
@@ -253,14 +253,14 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/channel-bully-type', [ChannelDashboardController::class, 'ChannelBullyType']);
 //
 //        //todo
-//        Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
+       Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
 //
 //        Route::get('/engagement-rate', [ChannelDashboardController::class, 'EngagementRate']);
 //        Route::get('/engagement-rate-previous', [ChannelDashboardController::class, 'EngagementRatePrevious']);
 //        Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']);
 //
 //        //todo
-//        Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
+       Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
 //
 //        Route::get('/sentiment-score', [ChannelDashboardController::class, 'SentimentScore']);
 //        Route::get('/sentiment-score-previous', [ChannelDashboardController::class, 'SentimentScorePrevious']);
