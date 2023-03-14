@@ -191,10 +191,10 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::group(['prefix' => 'dashboard-voice'], function () {
-//        Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
-//        Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
+       Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
+       Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
 //
-//        Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
+       Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
 //
 //        Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDayold']);
 //        Route::get('/message-by-time', [VoiceDashboardController::class, 'MessageByTimeold']);
@@ -210,7 +210,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
 //
 //        //todo
-//        Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
+       Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
 //
 //        Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);
 //        Route::get('/day-time-sentiment', [VoiceDashboardController::class, 'DayTimeSentiment']);
@@ -218,14 +218,14 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/day-time-type', [VoiceDashboardController::class, 'DayTimeType']);
 //
 //        //todo
-//        Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
+       Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
 //
 //        Route::get('/channel-platform', [VoiceDashboardController::class, 'ChannelPlatform']);
 //        Route::get('/device', [VoiceDashboardController::class, 'Device']);
 //        Route::get('/channel-device', [VoiceDashboardController::class, 'ChannelDevice']);
 //
 //        //todo
-//        Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
+       Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
 //
 //        Route::get('/keyword-channel', [VoiceDashboardController::class, 'KeywordChannel']);
 //        Route::get('/keyword-sentiment', [VoiceDashboardController::class, 'KeywordSentiment']);
@@ -269,9 +269,9 @@ Route::group(['middleware' => ['api']], function () {
     });
 
     Route::group(['prefix' => 'dashboard-engagement'], function () {
-    //    Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
+//        Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
 //
-    //    Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
+//        Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
 //
 //        Route::get('/engagement-day', [EngagementDashboardController::class, 'EngagementByDay']);
 //        Route::get('/engagement-time', [EngagementDashboardController::class, 'EngagementByTime']);
@@ -280,7 +280,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-channel', [EngagementDashboardController::class, 'EngagementChannel']);
 //        Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
 //
-    //    Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
+//        Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
 //
 //        Route::get('/engagement-type', [EngagementDashboardController::class, 'EngagementType']);
 //        Route::get('/engagement-type-by-day', [EngagementDashboardController::class, 'EngagementByDayKey']);
@@ -289,7 +289,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-type-by-account', [EngagementDashboardController::class, 'EngagementByAccountKey']);
 //        Route::get('/engagement-type-by-channel', [EngagementDashboardController::class, 'EngagementChannelKey']);
 //
-    //    Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
+//        Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
 //
 //        Route::get('/engagement-comparison', [EngagementDashboardController::class, 'EngagementComparison']);
 //        Route::get('/engagement-period-platform', [EngagementDashboardController::class, 'EngagementPeriodPlarform']);
