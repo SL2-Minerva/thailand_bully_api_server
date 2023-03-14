@@ -175,9 +175,9 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-overall'], function () {
         Route::get('/', [DashboardController::class, 'overAll']);
-//        Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
-//        Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
-//        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
+        Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
+        Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
+        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
 //        Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
 //        Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
 //        Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);
@@ -372,11 +372,6 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/bully-chart-type', [BullyDashboardController::class, 'BullyChartType']);
 //        Route::get('/bully-table-type', [BullyDashboardController::class, 'BullyTableType']);
     });
-
-
-
-    // error
-    // lavel 4 http://202.44.231.31/api/dashboard-overall/daily-message/level-four/?campaign_id=1&start_date=2022-12-25&end_date=2023-01-23&message_id=1606546445712388107&keyword_id=3&report_number=2.2.002
 });
 
 

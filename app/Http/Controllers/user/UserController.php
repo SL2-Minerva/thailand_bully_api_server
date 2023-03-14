@@ -12,15 +12,7 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    public function __construct()
-    {
-//        $this->middleware('auth:api', ['except' => ['login', 'register']]);
-    }
 
-    public function index()
-    {
-
-    }
 
     public function update(User $user, Request $request)
     {

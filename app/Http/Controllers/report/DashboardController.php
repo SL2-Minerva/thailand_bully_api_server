@@ -201,8 +201,8 @@ class DashboardController extends Controller
         $source_id = $request->source ?? null;
 
         $data['total_messages'] = $this->totalMessages($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
-        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
-        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+//        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+//        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -391,8 +391,8 @@ class DashboardController extends Controller
             $total_previous->where('source_id', $this->source_id);
         }
 
-        $total_current = $total_current->get()->count();
-        $total_previous = $total_previous->get()->count();
+        $total_current = $total_current->count();
+        $total_previous = $total_previous->count();
 
         $diff_date = $this->diff_date($start_date, $end_date);
 
