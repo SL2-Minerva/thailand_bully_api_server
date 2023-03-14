@@ -34,7 +34,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-
+Route::post('user/forget_password', [UserController::class, 'forget_password']);
 Route::group(['middleware' => ['api']], function () {
 
 //    Route::group(['prefix' => 'campaign'], function () {
