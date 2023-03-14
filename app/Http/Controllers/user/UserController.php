@@ -159,13 +159,36 @@ class UserController extends Controller
             'email' => $request->email, 
             'token' => $token, 
             'created_at' => Carbon::now()
-          ]);
+        ]);
 
-        Mail::send('auth.forget-password-email', ['token' => $token], function($message) use($request){
+        Mail::send('auth.forget-password-email', ['token' => $token, 'email' => $request->email], function($message) use($request){
             $message->to($request->email);
             $message->subject('Reset Password');
         });
 
-        // return parent::handleRespond($token);
+    }
+
+    public function reset_password(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|exists:users',
+            'password' => 'required|string|min:6',
+        ]);
+
+        $updatePassword = DB::table('password_resets')->where([
+            'email' => $request->email, 
+            'token' => $request->token
+        ])->first();
+
+        if(!$updatePassword){
+            return parent::handleRespond(null, null, 404, 'Invalid token!');
+        }
+
+        $user = User::where('email', $request->email)->update(['password' => Hash::make($request->password)]);
+
+        DB::table('password_resets')->where(['email'=> $request->email])->delete();
+
+        return parent::handleRespond($user);
+
     }
 }

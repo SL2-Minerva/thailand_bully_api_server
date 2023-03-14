@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::post('user/forget_password', [UserController::class, 'forget_password']);
+Route::post('user/reset_password', [UserController::class, 'reset_password']);
 Route::group(['middleware' => ['api']], function () {
 
 //    Route::group(['prefix' => 'campaign'], function () {
@@ -177,13 +178,13 @@ Route::group(['middleware' => ['api']], function () {
         Route::get('/', [DashboardController::class, 'overAll']);
         Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
         Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
-//        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
-//        Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
-//        Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
-//        Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);
-//        Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
-//        Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
-//        Route::get('/share-of-voice-number/', [DashboardController::class, 'shareOfVoiceNumber']);
+       Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
+       Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
+       Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
+       Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);
+       Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
+       Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
+       Route::get('/share-of-voice-number/', [DashboardController::class, 'shareOfVoiceNumber']);
 //        Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
 //        Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
 //        Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
