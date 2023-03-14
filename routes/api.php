@@ -332,13 +332,13 @@ Route::group(['middleware' => ['api']], function () {
 
     Route::group(['prefix' => 'dashboard-bully'], function () {
 //        //todo
-//        Route::get('daily-by', [BullyDashboardController::class, 'dailyBy']);
+       Route::get('daily-by', [BullyDashboardController::class, 'dailyBy']);
 //
 //        Route::get('/bully-daily', [BullyDashboardController::class, 'DailyBully']);
 //        Route::get('/bully-percentage', [BullyDashboardController::class, 'PercentageBully']);
 //
 //        //todo
-//        Route::get('bully-by', [BullyDashboardController::class, 'bullyBy']);
+       Route::get('bully-by', [BullyDashboardController::class, 'bullyBy']);
 //
 //        Route::get('/bully-daily', [BullyDashboardController::class, 'DailyBully']);
 //        Route::get('/bully-day', [BullyDashboardController::class, 'BullyByDay']);
@@ -349,13 +349,13 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/bully-sentiment', [BullyDashboardController::class, 'BullyBySentiment']);
 //
 //        //todo
-//        Route::get('daily-type-by', [BullyDashboardController::class, 'dailyTypeBy']);
+       Route::get('daily-type-by', [BullyDashboardController::class, 'dailyTypeBy']);
 //
 //        Route::get('/bully-type-daily', [BullyDashboardController::class, 'BullyTypeDaily']);
 //        Route::get('/bully-type-percentage-daily', [BullyDashboardController::class, 'BullyTypePercentageDaily']);
 //
 //        //todo
-//        Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
+       Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
 //
 //        Route::get('/bully-type-day', [BullyDashboardController::class, 'BullyTypeByDay']);
 //        Route::get('/bully-type-time', [BullyDashboardController::class, 'BullyTypeByTime']);
@@ -365,7 +365,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/bully-type-sentiment', [BullyDashboardController::class, 'BullyTypeBySentiment']);
 //
 //        //todo
-//        Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
+       Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
 //
 //        Route::get('/bully-chart-level', [BullyDashboardController::class, 'BullyChartLevel']);
 //        Route::get('/bully-table-level', [BullyDashboardController::class, 'BullyLevelLevel']);
