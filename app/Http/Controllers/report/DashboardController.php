@@ -605,6 +605,8 @@ class DashboardController extends Controller
 
         if ($data) {
             $data = array_values($data);
+            array_multisort( array_column($data, "no_of_message"), SORT_DESC, $data);
+            $data = array_slice($data, 0, 10);
         }
 
         return $data;
