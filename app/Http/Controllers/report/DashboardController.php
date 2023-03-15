@@ -200,8 +200,8 @@ class DashboardController extends Controller
         $source_id = $request->source ?? null;
 
         $data['total_messages'] = $this->totalMessages($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
-//        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
-//        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -561,13 +561,13 @@ class DashboardController extends Controller
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
-            $total_keywords->whereIn('keyword_id', $this->keyword_id);
+            $total_keywords->where('keyword_id', $this->keyword_id);
         }
 
 
-//        if ($this->source_id) {
-//            $total_keywords->where('source_id', $this->source_id);
-//        }
+    //    if ($this->source_id) {
+    //        $total_keywords->where('source_id', $this->source_id);
+    //    }
 
         $total_keywords = $total_keywords->get();
 
@@ -576,29 +576,30 @@ class DashboardController extends Controller
         foreach ($total_keywords as $object) {
             $item = (array)$object;
 
-            if (isset($message_keyword[$item['keyword_id']])) {
-                $message_keyword[$item['keyword_id']] += $item['number_of_comments'] + $item['number_of_shares'] + $item['number_of_reactions'];
+            if (isset($message_keyword[$item['link_message']])) {
+                $message_keyword[$item['link_message']] += 1;
             } else {
-                $message_keyword[$item['keyword_id']] = $item['number_of_comments'] + $item['number_of_shares'] + $item['number_of_reactions'];
+                $message_keyword[$item['link_message']] = 1;
             }
 
-            $message_total += $item['number_of_comments'] + $item['number_of_shares'] + $item['number_of_reactions'];
+            $message_total += 1;
         }
 
-        foreach ($message_keyword as $keyword_id => $value) {
+        foreach ($message_keyword as $link_message => $value) {
             $id + 1;
             $percentage = 0;
             if ($value && $message_total) {
                 $percentage = self::point_two_digits(($value / $message_total) * 100);
             }
 
-            $data[$keyword_id] = [
+            $data[$link_message] = [
                 'id' => $id++,
-                'keyword' => $this->find_keyword_name($keyword_id),
-                'keyword_id' => $keyword_id,
+                'site_domain' => $link_message,
+                // 'keyword' => $this->find_keyword_name($keyword_id),
+                // 'keyword_id' => $keyword_id,
                 'percentage' => $percentage,
-                "no_of_message" => $this->point_two_digits($message_total),
-                "type" => ($message_total >= 0 ? "plus" : "minus"),
+                "no_of_message" => $value ?? 0
+                // "type" => ($value >= 0 ? "plus" : "minus"),
             ];
         }
 
