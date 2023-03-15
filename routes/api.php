@@ -206,7 +206,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/message-by-level', [VoiceDashboardController::class, 'MessageByLevelold']);
 //        Route::get('/message-by-type', [VoiceDashboardController::class, 'MessageByTypeold']);
 //
-//        Route::get('/number-of-account-period-over-period', [VoiceDashboardController::class, 'NumberOfAccountPeriodOverPeriod']);
+       Route::get('/number-of-account-period-over-period', [VoiceDashboardController::class, 'NumberOfAccountPeriodOverPeriod']);
 //        Route::get('/number-of-account', [VoiceDashboardController::class, 'NumberOfAccount']);
 //        Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
 //
