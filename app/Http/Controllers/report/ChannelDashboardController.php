@@ -66,12 +66,12 @@ class ChannelDashboardController extends Controller
         $data = null;
         $percentage_of_channal = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('source_id');
         $channal_message_total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
             // ->get()
             // ->count();
@@ -124,7 +124,7 @@ class ChannelDashboardController extends Controller
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -190,7 +190,7 @@ class ChannelDashboardController extends Controller
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -281,7 +281,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -338,7 +338,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -392,7 +392,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -467,7 +467,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -541,7 +541,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -601,7 +601,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -660,14 +660,14 @@ class ChannelDashboardController extends Controller
 
         $raw_child = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '!=', null)
             ->whereIn('classification_type_id', [1]);
 
 
         $raw_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '')
             ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
@@ -725,14 +725,14 @@ class ChannelDashboardController extends Controller
 
         $raw_child = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '!=', null)
             ->whereIn('classification_type_id', [1]);
 
 
         $raw_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '')
             ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
@@ -792,7 +792,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -852,7 +852,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -912,7 +912,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [3]);
 
         if ($this->keyword_id) {
@@ -971,7 +971,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [3]);
 
         if ($this->keyword_id) {
@@ -1029,7 +1029,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [2]);
 
         if ($this->keyword_id) {
@@ -1087,7 +1087,7 @@ class ChannelDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [2]);
 
         if ($this->keyword_id) {
@@ -1145,7 +1145,7 @@ class ChannelDashboardController extends Controller
         if ($source_id_id === "all") {
             $channal_message_current = DB::table($table)
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$start_date, $end_date])
+                ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [1]);
 
 
@@ -1162,7 +1162,7 @@ class ChannelDashboardController extends Controller
 
         $channal_message_current = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->where('source_id', $source_id_id);
 
@@ -1363,7 +1363,7 @@ class ChannelDashboardController extends Controller
         $data = null;
         $percentage_of_channal = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('source_id');
 
@@ -1390,7 +1390,7 @@ class ChannelDashboardController extends Controller
 
             $sum = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [1])
                 ->where('source_id', $channal->source_id)->get();
             foreach ($sum as $item) {
@@ -1424,7 +1424,7 @@ class ChannelDashboardController extends Controller
         $data = null;
         $percentage_of_channal = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('source_id');
 
@@ -1451,7 +1451,7 @@ class ChannelDashboardController extends Controller
 
             $sum = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [1])
                 ->where('source_id', $channal->source_id)->get();
             foreach ($sum as $item) {
@@ -1484,7 +1484,7 @@ class ChannelDashboardController extends Controller
     {
         $count =  DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->where('source_id', $source_id_id)
             ->whereIn('classification_type_id', [1]);
             // ->get()
@@ -1509,7 +1509,7 @@ class ChannelDashboardController extends Controller
         $labels = parent::listSource();
         $engagement = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -1551,7 +1551,7 @@ class ChannelDashboardController extends Controller
     {
         $engagement_previous = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
