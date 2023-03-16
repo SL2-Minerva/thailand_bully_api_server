@@ -1074,9 +1074,10 @@ class VoiceDashboardController extends Controller
 
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->where('message_type', 'Post')
+                // ->where('message_type', 'Post')
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                ->whereIn('classification_type_id', [1]);
+                ->whereIn('classification_type_id', [1])
+                ->groupBy('author');
 
 
             if ($this->source_id) {
@@ -1090,7 +1091,7 @@ class VoiceDashboardController extends Controller
             }
 
             $items = $raw->get();
-            $date = [];
+
 
             foreach ($items as $item) {
 
@@ -1150,19 +1151,18 @@ class VoiceDashboardController extends Controller
                 ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
                 ->whereIn('classification_type_id', [1]);
 
+            $total_message_current = $raw_current->count();
+            $total_message_previous = $raw_previous->count();
 
-            $items_current = $raw_current->get();
-            $items_previous = $raw_previous->get();
-
-            $total_message_current = 0;
-            $total_message_previous = 0;
+            $items_current = $raw_current->groupBy('author')->get();
+            $items_previous = $raw_previous->groupBy('author')->get();
 
             $total_account_current = [];
             $total_account_previous = [];
 
 
             foreach ($items_current as $current) {
-                $total_message_current += 1;
+                // $total_message_current += 1;
                 if (isset($total_account_current[$current->author])) {
                     $total_account_current[$current->author] += 1;
                 } else {
@@ -1173,16 +1173,14 @@ class VoiceDashboardController extends Controller
 
 
             foreach ($items_previous as $previous) {
-                $total_message_previous += 1;
+                // $total_message_previous += 1;
                 if (isset($total_account_previous[$previous->author])) {
-                    $total_account_previous[$previous->author] = $previous->author;
+                    $total_account_previous[$previous->author] += 1;
                 } else {
-                    $total_account_previous[$previous->author] = $previous->author;
+                    $total_account_previous[$previous->author] = 1;
                 }
 
             }
-
-
 
             $total_account_current = count($total_account_current);
             $total_account_previous = count($total_account_previous);
@@ -1749,15 +1747,17 @@ class VoiceDashboardController extends Controller
 
                 if ($item->device === "android") {
                     $data['current_period']['data'][0] += 1;
+                    $data['current_period']['total'] += 1;
                 }
                 if ($item->device === "iphone") {
                     $data['current_period']['data'][1] += 1;
+                    $data['current_period']['total'] += 1;
                 }
                 if ($item->device === "webapp") {
                     $data['current_period']['data'][2] += 1;
+                    $data['current_period']['total'] += 1;
                 }
 
-                $data['current_period']['total'] += 1;
             }
         }
 
@@ -1766,15 +1766,17 @@ class VoiceDashboardController extends Controller
                 if ($item->device === "android") {
 
                     $data['previous_period']['data'][0] += 1;
+                    $data['previous_period']['total'] += 1;
                 }
                 if ($item->device === "iphone") {
                     $data['previous_period']['data'][1] += 1;
+                    $data['previous_period']['total'] += 1;
                 }
                 if ($item->device === "webapp") {
                     $data['previous_period']['data'][2] += 1;
+                    $data['previous_period']['total'] += 1;
                 }
 
-                $data['previous_period']['total'] += 1;
             }
         }
 
