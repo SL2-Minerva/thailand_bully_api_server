@@ -290,7 +290,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-type-by-account', [EngagementDashboardController::class, 'EngagementByAccountKey']);
 //        Route::get('/engagement-type-by-channel', [EngagementDashboardController::class, 'EngagementChannelKey']);
 //
-//        Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
+       Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
 //
 //        Route::get('/engagement-comparison', [EngagementDashboardController::class, 'EngagementComparison']);
 //        Route::get('/engagement-period-platform', [EngagementDashboardController::class, 'EngagementPeriodPlarform']);
