@@ -230,7 +230,7 @@ class ChannelDashboardController extends Controller
                 $data[$item->source_id]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
                     'keyword_name' => $item->keyword_name,
-                    'date_m' => $item->date_m,
+                    'date_m' => $date_format,
                     'total_at_date' => 1
                 ];
             }
