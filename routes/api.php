@@ -315,7 +315,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/sentiment-bully-level', [SentimentDashboardController::class, 'SentimentBullyLevel']);
 //        Route::get('/sentiment-bully-type', [SentimentDashboardController::class, 'SentimentBullyType']);
 //        Route::get('/sentiment-score', [SentimentDashboardController::class, 'SentimentScore']);
-//        Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
+       Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
 //
        Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
 //
