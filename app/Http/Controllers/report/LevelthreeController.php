@@ -53,16 +53,16 @@ class LevelthreeController extends Controller
 
         if ($request->report_number === '1.2.009') {
             $raw = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->whereIn('classification_type_id', [1])
-                    ->offset($start)->limit($limit);
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1])
+                ->offset($start)->limit($limit);
 
             $total = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date])
-                    ->whereIn('classification_type_id', [1])
-                    ->where('keyword_id', $request->keyword_id);
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->whereIn('classification_type_id', [1])
+                ->where('keyword_id', $request->keyword_id);
 
         }
 
@@ -1131,76 +1131,57 @@ class LevelthreeController extends Controller
             }
         }
 
-//        dd($raw->toSql());
-
         $items = $raw->get();
-
-
-
-
 
         $parents = [];
         foreach ($items as $item) {
             if ($item->reference_message_id) {
-                $parents[] = $item->reference_message_id;
+                if (array_search($item->reference_message_id, $parents) === false) {
+                    $parents[] = $item->reference_message_id;
+                }
             }
         }
 
 
         foreach ($items as $ke => $item) {
-
-
-
-
             $date_d = Carbon::parse($item->date_m)->format('D');
+            $types = $this->getClassificationName($item->message_id);
+            $parent = null;
 
-//            if (isset($data['message'][$item->message_id])) {
-//
-//                if ($item->classification_type_id == 1) {
-//                    $data['message'][$item->message_id]['sentiment'] = $item->classification_name;
-//                }
-//
-//                if ($item->classification_type_id == 2) {
-//                    $data['message'][$item->message_id]['bully_type'] = $item->classification_name;
-//                }
-//
-//                if ($item->classification_type_id == 3) {
-//                    $data['message'][$item->message_id]['bully_level'] = $item->classification_name;
-//                }
-//            } else {
+            if (array_search($item->message_id, $parents) !== false) {
+                $parent = $item->message_id;
+            }
 
-                $types =  $this->getClassificationName($item->message_id);
-                $data_push = [
-                    "message_id" => $item->message_id,
-                    "message_detail" => $item->full_message,
-                    "account_name" => $item->author,
-                    "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                    "post_time" => Carbon::parse($item->date_m)->format('h:i'),
-                    "day" => $date_d,
-                    "device" => $item->device,
-                    "channel" => $item->source_name,
-                    "link_message" => $item->link_message,
-                    "parent" => $item->reference_message_id ?? ''
-                ];
+            $data_push = [
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('h:i'),
+                "day" => $date_d,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $item->source_name,
+                "link_message" => $parent,
+                "parent" => $item->reference_message_id ?? ''
+            ];
 
-                foreach ( $types as $type) {
-                    if ($type->classification_type_id == 1) {
-                        $data_push['sentiment'] = $type->classification_name;
-                    }
-
-                    if ($type->classification_type_id == 2) {
-                        $data_push['bully_type'] = $type->classification_name;
-                    }
-
-                    if ($type->classification_type_id == 3) {
-                        $data_push['bully_level'] = $type->classification_name;
-                    }
+            foreach ($types as $type) {
+                if ($type->classification_type_id == 1) {
+                    $data_push['sentiment'] = $type->classification_name;
                 }
 
-                $data['message'][$item->message_id] = $data_push;
-//            }
-        }
+                if ($type->classification_type_id == 2) {
+                    $data_push['bully_type'] = $type->classification_name;
+                }
 
+                if ($type->classification_type_id == 3) {
+                    $data_push['bully_level'] = $type->classification_name;
+                }
+            }
+
+            $data['message'][$item->message_id] = $data_push;
+        }
 
 
         if (isset($data['message'])) {
