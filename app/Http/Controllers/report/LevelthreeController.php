@@ -951,16 +951,35 @@ class LevelthreeController extends Controller
 
                 if ($request->report_number === '6.2.018') {
 
+
                     $raw = DB::table('message_result_full_data')
                         ->where('campaign_id', $this->campaign_id)
                         ->whereBetween('date_m', [$this->start_date, $this->end_date]);
 
                     $items = $raw->get();
 
+                    $parents = [];
+                    foreach ($items as $item) {
+                        if ($item->reference_message_id) {
+                            if (array_search($item->reference_message_id, $parents) === false) {
+                                $parents[] = $item->reference_message_id;
+                            }
+                        }
+                    }
+
+
                     //todo
                     $anylsys = [];
 
                     foreach ($items as $item) {
+                        $date_d = Carbon::parse($item->date_m)->format('D');
+
+                        $types = $this->getClassificationName($item->message_id);
+                        $parent = null;
+
+                        if (array_search($item->message_id, $parents) !== false) {
+                            $parent = $item->message_id;
+                        }
 
                         $anylsys[$item->message_id][$item->classification_type_name] = $item->classification_name;
                         $anylsys[$item->message_id]["message_id"] = $item->message_id;
@@ -968,11 +987,32 @@ class LevelthreeController extends Controller
                         $anylsys[$item->message_id]["account_name"] = $item->author;
                         $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
                         $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('h:i');
-                        $anylsys[$item->message_id]["day"] = Carbon::parse($item->date_m)->diffInDays(Carbon::now());
+                        $anylsys[$item->message_id]["day"] = $date_d;
                         $anylsys[$item->message_id]["device"] = $item->device;
                         $anylsys[$item->message_id]["source_id"] = $item->source_id;
-                        $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
-                        $anylsys[$item->message_id]["bully_type"] = $item->classification_type_name;
+                        $anylsys[$item->message_id]["channel"] = $item->source_name;
+                        $anylsys[$item->message_id]["source_name"] = $item->source_name;
+                        $anylsys[$item->message_id]["parent"] = $parent;
+                        $anylsys[$item->message_id]["message_type"] = $item->message_type;
+                        $anylsys[$item->message_id]["link_message"] = $item->link_message;
+
+
+
+
+                        // loop for get classification name
+                        foreach ($types as $type) {
+                            if ($type->classification_type_id == 1) {
+                                $anylsys[$item->message_id]['sentiment'] = $type->classification_name;
+                            }
+
+                            if ($type->classification_type_id == 2) {
+                                $anylsys[$item->message_id]['bully_type'] = $type->classification_name;
+                            }
+
+                            if ($type->classification_type_id == 3) {
+                                $anylsys[$item->message_id]['bully_level'] = $type->classification_name;
+                            }
+                        }
                     }
 
 
@@ -1168,8 +1208,6 @@ class LevelthreeController extends Controller
                 "link_message" => $item->link_message,
                 "parent" => $parent
             ];
-
-
 
 
             // loop for get classification name
