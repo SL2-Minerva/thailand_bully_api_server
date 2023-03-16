@@ -155,6 +155,7 @@ class LevelthreeController extends Controller
 
                 $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
 
+
 //                if ($request->report_number === '3.2.002') {
 //                    $date_request = Carbon::parse($request->label)->format('Y-d-m');
 //                }
@@ -165,12 +166,12 @@ class LevelthreeController extends Controller
                         $raw->where('number_of_shares', '>', 0);
                         $total->where('number_of_shares', '>', 0);
                     }
-    
+
                     if ($request->Llabel === "Comment") {
                         $raw->where('number_of_comments', '>', 0);
                         $total->where('number_of_comments', '>', 0);
                     }
-    
+
                     if ($request->Llabel === "Reactions") {
                         $raw->where('number_of_reactions', '>', 0);
                         $total->where('number_of_reactions', '>', 0);
@@ -189,19 +190,26 @@ class LevelthreeController extends Controller
 
                     if ($request->report_number === '6.2.002') {
 
+//                        $raw = DB::table('message_result_full_data')
+//                            ->where('campaign_id', $this->campaign_id)
+//                            ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
+//                            ->whereIn('classification_type_id', [3])
+//                            ->where('classification_name', $Llabel)
+//                            ->offset($start)->limit($limit);
+
                         $raw = DB::table('message_result_full_data')
                             ->where('campaign_id', $this->campaign_id)
                             ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
                             ->whereIn('classification_type_id', [3])
                             ->where('classification_name', $Llabel)
                             ->offset($start)->limit($limit);
-    
-    
+
                         $total = DB::table('message_result_full_data')
                             ->where('campaign_id', $this->campaign_id)
                             ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
                             ->whereIn('classification_type_id', [3])
                             ->where('classification_name', $Llabel);
+
                     }
 
                     if ($request->report_number === '6.2.012') {
@@ -211,8 +219,8 @@ class LevelthreeController extends Controller
                             ->whereIn('classification_type_id', [2])
                             ->where('classification_name', $Llabel)
                             ->offset($start)->limit($limit);
-    
-    
+
+
                         $total = DB::table('message_result_full_data')
                             ->where('campaign_id', $this->campaign_id)
                             ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
@@ -1114,8 +1122,8 @@ class LevelthreeController extends Controller
                 $request->report_number === '2.2.010' ||
                 $request->report_number === '4.2.004' ||
                 $request->report_number === '4.2.003' ||
-                $request->report_number === '4.2.007' ||    
-                $request->report_number === '4.2.008' ||    
+                $request->report_number === '4.2.007' ||
+                $request->report_number === '4.2.008' ||
                 $request->report_number === '2.2.013'
             ) {
                 $raw->where('keyword_id', $request->keyword_id);
@@ -1128,6 +1136,9 @@ class LevelthreeController extends Controller
         $items = $raw->get();
 
 
+
+
+
         $parents = [];
         foreach ($items as $item) {
             if ($item->reference_message_id) {
@@ -1135,24 +1146,30 @@ class LevelthreeController extends Controller
             }
         }
 
-        foreach ($items as $item) {
+
+        foreach ($items as $ke => $item) {
+
+
+
+
             $date_d = Carbon::parse($item->date_m)->format('D');
 
-            if (isset($data['message'][$item->message_id])) {
+//            if (isset($data['message'][$item->message_id])) {
+//
+//                if ($item->classification_type_id == 1) {
+//                    $data['message'][$item->message_id]['sentiment'] = $item->classification_name;
+//                }
+//
+//                if ($item->classification_type_id == 2) {
+//                    $data['message'][$item->message_id]['bully_type'] = $item->classification_name;
+//                }
+//
+//                if ($item->classification_type_id == 3) {
+//                    $data['message'][$item->message_id]['bully_level'] = $item->classification_name;
+//                }
+//            } else {
 
-                if ($item->classification_type_id == 1) {
-                    $data['message'][$item->message_id]['sentiment'] = $item->classification_name;
-                }
-
-                if ($item->classification_type_id == 2) {
-                    $data['message'][$item->message_id]['bully_type'] = $item->classification_name;
-                }
-
-                if ($item->classification_type_id == 3) {
-                    $data['message'][$item->message_id]['bully_level'] = $item->classification_name;
-                }
-            } else {
-
+                $types =  $this->getClassificationName($item->message_id);
                 $data_push = [
                     "message_id" => $item->message_id,
                     "message_detail" => $item->full_message,
@@ -1166,21 +1183,25 @@ class LevelthreeController extends Controller
                     "parent" => $item->reference_message_id ?? ''
                 ];
 
-                if ($item->classification_type_id === 1) {
-                    $data_push['sentiment'] = $item->classification_name;
-                }
+                foreach ( $types as $type) {
+                    if ($type->classification_type_id == 1) {
+                        $data_push['sentiment'] = $type->classification_name;
+                    }
 
-                if ($item->classification_type_id === 2) {
-                    $data_push['bully_type'] = $item->classification_name;
-                }
+                    if ($type->classification_type_id == 2) {
+                        $data_push['bully_type'] = $type->classification_name;
+                    }
 
-                if ($item->classification_type_id === 3) {
-                    $data_push['bully_level'] = $item->classification_name;
+                    if ($type->classification_type_id == 3) {
+                        $data_push['bully_level'] = $type->classification_name;
+                    }
                 }
 
                 $data['message'][$item->message_id] = $data_push;
-            }
+//            }
         }
+
+
 
         if (isset($data['message'])) {
             $data['message'] = array_values($data['message']);
@@ -1190,4 +1211,13 @@ class LevelthreeController extends Controller
 
         return parent::handleRespond($data);
     }
+
+
+    private function getClassificationName($message_id)
+    {
+        return DB::table('message_result_full_data')->where('message_id', $message_id)
+            ->limit(3)->get(['classification_type_id', 'classification_name']);
+    }
 }
+
+
