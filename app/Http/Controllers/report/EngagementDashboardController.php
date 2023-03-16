@@ -507,7 +507,7 @@ class EngagementDashboardController extends Controller
             "EngagementByDayKey" => $this->EngagementByDayKey($request, true),
             "EngagementByTimeKey" => $this->EngagementByTimeKey($request, true),
             "EngagementByDeviceKey" => $this->EngagementByDeviceKey($request, true),
-            // "EngagementByAccountKey" => $this->EngagementByAccountKey($request, true),
+            "EngagementByAccountKey" => $this->EngagementByAccountKey($request, true),
             "EngagementChannelKey" => $this->EngagementChannelKey($request, true),
         ]);
     }
