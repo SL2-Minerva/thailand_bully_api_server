@@ -1152,6 +1152,8 @@ class LevelthreeController extends Controller
                 $parent = $item->message_id;
             }
 
+
+
             $data_push = [
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
@@ -1167,6 +1169,10 @@ class LevelthreeController extends Controller
                 "parent" => $parent
             ];
 
+
+
+
+            // loop for get classification name
             foreach ($types as $type) {
                 if ($type->classification_type_id == 1) {
                     $data_push['sentiment'] = $type->classification_name;
