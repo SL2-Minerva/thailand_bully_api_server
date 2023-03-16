@@ -1162,8 +1162,9 @@ class LevelthreeController extends Controller
                 "message_type" => $item->message_type,
                 "device" => $item->device,
                 "channel" => $item->source_name,
-                "link_message" => $parent,
-                "parent" => $item->reference_message_id ?? ''
+                "source_name" => $item->source_name,
+                "link_message" => $item->link_message,
+                "parent" => $parent
             ];
 
             foreach ($types as $type) {
