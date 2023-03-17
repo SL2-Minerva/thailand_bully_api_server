@@ -214,7 +214,7 @@ class DashboardController extends Controller
 
         return parent::handleRespond([
             "neutral_value" => (float)self::point_two_digits($current['results']),
-            "sentiment_percentage" => $current['sentiment_percentage'],
+            "sentiment_percentage" => $current['sentiment_percentage'] ?? 0,
             "pervious_sentiment" => (float)self::point_two_digits($pervious['results']),
             "text" => $current['text']
         ]);
@@ -255,7 +255,7 @@ class DashboardController extends Controller
                 }
             }
 
-            $sentiment_score = (((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
+            $sentiment_score = round((((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5);
         }
 
 
@@ -263,21 +263,37 @@ class DashboardController extends Controller
         $data['positive'] = $positive;
         $data['negative'] = $negative;
         $data['results'] = $sentiment_score;
-        $percentage = 20;
+        // $percentage = 20;
 
         if ($sentiment_score === 0) {
             $percentage = 0;
         }
 
-        if ($sentiment_score >= 2 && $sentiment_score <= 3) {
+        if ($sentiment_score <= -5) {
+            $percentage = 0;
+        } else if ($sentiment_score == -4) {
+            $percentage = 10;
+        } else if ($sentiment_score == -3) {
+            $percentage = 20;
+        } else if ($sentiment_score == -2) {
+            $percentage = 30;
+        } else if ($sentiment_score == -1) {
             $percentage = 40;
-        } else if ($sentiment_score >= 3 && $sentiment_score <= 3.0) {
+        } else if ($sentiment_score == 0) {
+            $percentage = 50;
+        } else if ($sentiment_score == 1) {
             $percentage = 60;
-        } else if ($sentiment_score >= 4) {
+        } else if ($sentiment_score == 2) {
+            $percentage = 70;
+        } else if ($sentiment_score == 3) {
             $percentage = 80;
+        } else if ($sentiment_score == 4) {
+            $percentage = 90;
+        } else if ($sentiment_score >= 5) {
+            $percentage = 100;
         }
 
-        $data['sentiment_percentage'] = ($sentiment_score * 1) + $percentage;
+        $data['sentiment_percentage'] = $percentage ?? 0;
         $data['text'] = $this->closest_sentiment_score($data['sentiment_percentage'] ?? 0);
 
         return $data;
