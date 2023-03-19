@@ -72,6 +72,9 @@ class LevelthreeController extends Controller
             $request->report_number === '6.2.006' ||
             $request->report_number === '6.2.007'
         ) {
+
+            return LevelThreeBullyDashboardController::report($request);
+
             $total = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])

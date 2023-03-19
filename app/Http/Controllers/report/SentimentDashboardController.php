@@ -92,7 +92,7 @@ class SentimentDashboardController extends Controller
     {
 
         $raw->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
 
         $data = null;
         if ($items->count() <= 0) return null;
@@ -158,7 +158,7 @@ class SentimentDashboardController extends Controller
         ];
 
         $raw->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
 
         $data = null;
         if ($items->count() <= 0) return null;
@@ -233,7 +233,7 @@ class SentimentDashboardController extends Controller
         }
 
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
         foreach ($items as $item) {
             $day_name = Carbon::parse($item->date_m)->format('D');
             $index_label = array_search($day_name, $data['labels']);
@@ -289,7 +289,7 @@ class SentimentDashboardController extends Controller
         }
 
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
         foreach ($items as $item) {
 
             $sixAM = Carbon::parse("06:00:00");
@@ -366,18 +366,18 @@ class SentimentDashboardController extends Controller
         ];
 
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
 
         $check = [];
-        
+
         foreach ($items as $item) {
-            
+
             $index_label = null;
 
             if (!in_array($item->device, $check)) {
                 $check[] = $item->device;
             }
-            
+
             if ($item->device === 'android') {
                 $index_label = 0;
             }
@@ -391,7 +391,7 @@ class SentimentDashboardController extends Controller
             }
 
             if ($index_label !== null) {
-                
+
                 if (isset($data['value'][$item->classification_id])) {
                     $data['value'][$item->classification_id]['data'][$index_label] += 1;
                 } else {
@@ -404,7 +404,7 @@ class SentimentDashboardController extends Controller
                         'source_name' => $item->source_name,
                         'data' => [0, 0, 0]
                     ];
-    
+
                     if ($index_label) {
                         $data['value'][$item->classification_id]['data'][$index_label] += 1;
                     }
@@ -412,11 +412,11 @@ class SentimentDashboardController extends Controller
             }
         }
 
-    
+
         if (isset($data['value']) && $data['value']) {
             $data['value'] = array_values($data['value']);
         }
-        
+
         if ($only_data) {
             return $data;
         }
@@ -449,7 +449,7 @@ class SentimentDashboardController extends Controller
             $infulencer_root->whereIn('keyword_id', $this->keyword_id);
         }
 
-        $infulencers = $infulencer_root->get();
+        $infulencers = $infulencer_root->chunk(1000)->get();
 
 
         foreach ($infulencers as $infulencer) {
@@ -479,7 +479,7 @@ class SentimentDashboardController extends Controller
             $follower_raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        $followers = $follower_raw->get();
+        $followers = $follower_raw->chunk(1000)->get();
 
 
         foreach ($followers as $follower) {
@@ -523,7 +523,7 @@ class SentimentDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
 
         foreach ($items as $item) {
             $index_label = array_search($item->source_name, $data['labels']);
@@ -601,7 +601,7 @@ class SentimentDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
 
 
         $anylsys = [];
@@ -670,7 +670,7 @@ class SentimentDashboardController extends Controller
     public function SentimentBullyType(Request $request, $only_data = false)
     {
 
-        $sentiment = Classification::where('classification_type_id', 2)->get();
+        $sentiment = Classification::where('classification_type_id', 2)->chunk(1000)->get();
         $data['labels'] = [];
 
         foreach ($sentiment as $item) {
@@ -714,7 +714,7 @@ class SentimentDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
 
 
         $anylsys = [];
@@ -781,8 +781,8 @@ class SentimentDashboardController extends Controller
         }
 
 
-        $current = $raw_current->get();
-        $previous = $raw_previous->get();
+        $current = $raw_current->chunk(1000)->get();
+        $previous = $raw_previous->chunk(1000)->get();
 
 
         $total_share_current = $raw_current->where('classification_name', 'Positive')->count();
@@ -902,7 +902,7 @@ class SentimentDashboardController extends Controller
             ->whereBetween('date_m', [$start_date, $end_data]);
 
         $raw_current->where('classification_type_id', 1);
-        $items = $raw_current->get();
+        $items = $raw_current->chunk(1000)->get();
 
 
         $analysis = [];
@@ -1098,7 +1098,7 @@ class SentimentDashboardController extends Controller
         if ($this->source_id) {
             $raw_current->where('source_id', $this->source_id);
         }
-        $items = $raw_current->get();
+        $items = $raw_current->chunk(1000)->get();
 
         $analysis = [
             "share" => 0,
@@ -1195,7 +1195,7 @@ class SentimentDashboardController extends Controller
             $raw_current->where('source_id', $this->source_id);
         }
 
-        $items = $raw_current->get();
+        $items = $raw_current->chunk(1000)->get();
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
@@ -1335,7 +1335,7 @@ class SentimentDashboardController extends Controller
         }
 
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
         $analysis = [];
 
         foreach ($items as $item) {
@@ -1443,7 +1443,7 @@ class SentimentDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
@@ -1521,7 +1521,7 @@ class SentimentDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->get();
+        $items = $raw->chunk(1000)->get();
         $message_total = 0;
         $analysis = [];
         foreach ($items as $item) {
