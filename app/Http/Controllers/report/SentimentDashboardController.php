@@ -64,10 +64,10 @@ class SentimentDashboardController extends Controller
         $table = 'message_result_full_data';
         $data = null;
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         $raw_pre = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous]);
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
 
         if ($this->source_id) {
             $raw_current->where('source_id', $this->source_id);
@@ -221,7 +221,7 @@ class SentimentDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -277,7 +277,7 @@ class SentimentDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -438,7 +438,7 @@ class SentimentDashboardController extends Controller
 
         $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->where('classification_type_id', 1)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
 
         if ($this->source_id) {
@@ -468,7 +468,7 @@ class SentimentDashboardController extends Controller
         $table = 'message_result_full_data';
         $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->where('classification_type_id', 1)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
 
         if ($this->source_id) {
@@ -512,7 +512,7 @@ class SentimentDashboardController extends Controller
         $data = parent::listSource();
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -590,7 +590,7 @@ class SentimentDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1, 3]);
 
         if ($this->keyword_id) {
@@ -703,7 +703,7 @@ class SentimentDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1, 2]);
 
         if ($this->keyword_id) {
@@ -763,10 +763,10 @@ class SentimentDashboardController extends Controller
         $data = null;
         $table = 'message_result_full_data';
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
         $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
 
 
@@ -899,7 +899,7 @@ class SentimentDashboardController extends Controller
 
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_data]);
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_data . " 23:59:59"]);
 
         $raw_current->where('classification_type_id', 1);
         $items = $raw_current->chunk(1000)->get();
@@ -1086,7 +1086,7 @@ class SentimentDashboardController extends Controller
 
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_data]);
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_data . " 23:59:59"]);
 
 
         $raw_current->whereIn('classification_type_id', [1, 3]);
@@ -1184,7 +1184,8 @@ class SentimentDashboardController extends Controller
     {
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_data])->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_data . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
 
 
         if ($this->keyword_id) {
@@ -1324,7 +1325,8 @@ class SentimentDashboardController extends Controller
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -1433,7 +1435,7 @@ class SentimentDashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->where('message_type', 'Post')
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -1511,7 +1513,7 @@ class SentimentDashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->where('message_type', 'Post')
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);

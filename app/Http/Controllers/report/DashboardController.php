@@ -66,7 +66,7 @@ class DashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -134,7 +134,7 @@ class DashboardController extends Controller
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -214,7 +214,7 @@ class DashboardController extends Controller
 
         return parent::handleRespond([
             "neutral_value" => (float)self::point_two_digits($current['results']),
-            "sentiment_percentage" => $current['sentiment_percentage'],
+            "sentiment_percentage" => $current['sentiment_percentage'] ?? 0,
             "pervious_sentiment" => (float)self::point_two_digits($pervious['results']),
             "text" => $current['text']
         ]);
@@ -229,7 +229,7 @@ class DashboardController extends Controller
         $table = 'message_result_full_data';
 
         $results = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->whereIn('classification_name', ["Positive", 'Negative', 'Neutral']);
 
@@ -255,7 +255,7 @@ class DashboardController extends Controller
                 }
             }
 
-            $sentiment_score = (((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
+            $sentiment_score = round((((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5);
         }
 
 
@@ -263,21 +263,37 @@ class DashboardController extends Controller
         $data['positive'] = $positive;
         $data['negative'] = $negative;
         $data['results'] = $sentiment_score;
-        $percentage = 20;
+        // $percentage = 20;
 
         if ($sentiment_score === 0) {
             $percentage = 0;
         }
 
-        if ($sentiment_score >= 2 && $sentiment_score <= 3) {
+        if ($sentiment_score <= -5) {
+            $percentage = 0;
+        } else if ($sentiment_score == -4) {
+            $percentage = 10;
+        } else if ($sentiment_score == -3) {
+            $percentage = 20;
+        } else if ($sentiment_score == -2) {
+            $percentage = 30;
+        } else if ($sentiment_score == -1) {
             $percentage = 40;
-        } else if ($sentiment_score >= 3 && $sentiment_score <= 3.0) {
+        } else if ($sentiment_score == 0) {
+            $percentage = 50;
+        } else if ($sentiment_score == 1) {
             $percentage = 60;
-        } else if ($sentiment_score >= 4) {
+        } else if ($sentiment_score == 2) {
+            $percentage = 70;
+        } else if ($sentiment_score == 3) {
             $percentage = 80;
+        } else if ($sentiment_score == 4) {
+            $percentage = 90;
+        } else if ($sentiment_score >= 5) {
+            $percentage = 100;
         }
 
-        $data['sentiment_percentage'] = ($sentiment_score * 1) + $percentage;
+        $data['sentiment_percentage'] = $percentage ?? 0;
         $data['text'] = $this->closest_sentiment_score($data['sentiment_percentage'] ?? 0);
 
         return $data;
@@ -318,7 +334,7 @@ class DashboardController extends Controller
         $data = null;
         $total_keywords = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->groupBy('keyword_id');
 
         if ($this->keyword_id) {
@@ -342,9 +358,9 @@ class DashboardController extends Controller
                 "id" => $id++,
                 "keyword" => $item->keyword_name,
                 "keyword_id" => $item->keyword_id,
-                "message" => $this->point_two_digits($message),
-                "engagement" => $this->point_two_digits($engagement),
-                "accounts" => $this->point_two_digits($accounts),
+                "message" => $this->point_two_digits($message, 0),
+                "engagement" => $this->point_two_digits($engagement, 0),
+                "accounts" => $this->point_two_digits($accounts, 0),
                 "average_message" => $this->point_two_digits($message / $diff_date),
                 "average_engagement" => $this->point_two_digits($engagement / $diff_date),
             ];
@@ -372,12 +388,12 @@ class DashboardController extends Controller
 
         $total_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         $total_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+            ->whereBetween('date_m', [$start_date_previous . " 00:00:00", $end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -416,12 +432,12 @@ class DashboardController extends Controller
     {
         $total_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         $total_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+            ->whereBetween('date_m', [$start_date_previous . " 00:00:00", $end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
 
@@ -460,13 +476,13 @@ class DashboardController extends Controller
     {
         $total_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('author');
 
         $total_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date_previous, $end_date_previous])
+            ->whereBetween('date_m', [$start_date_previous . " 00:00:00", $end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('author');
 
@@ -507,7 +523,7 @@ class DashboardController extends Controller
         $data = null;
         $total_keywords = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('keyword_id');
 
@@ -525,7 +541,7 @@ class DashboardController extends Controller
             $message = $this->messagesTable($start_date, $end_date, $item->keyword_id);
             $total_message = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$start_date, $end_date])
+                ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [1])
                 ->count();
 
@@ -549,14 +565,14 @@ class DashboardController extends Controller
 
     private function topSites($start_date, $end_date)
     {
-        $data = null;
+        $data = [];
 
         $message_keyword = [];
         $message_total = 0;
 
         $total_keywords = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->where('source_id', 5)
             ->whereIn('classification_type_id', [1]);
 
@@ -699,7 +715,7 @@ class DashboardController extends Controller
         $total_keywords = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereIn('classification_type_id', [1])
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->groupBy('keyword_id');
 
         if ($this->keyword_id) {
@@ -729,12 +745,11 @@ class DashboardController extends Controller
         $data = null;
 
         $total_keywords = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [1])
-            ->groupBy('keyword_name', 'source_id');
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
-            $total_keywords->whereIn('keyword_id', $this->keyword_id);
+            $total_keywords->where('keyword_id', $this->keyword_id);
         }
 
         if ($this->source_id) {
@@ -743,47 +758,51 @@ class DashboardController extends Controller
 
         $source = Sources::where('status', 1)->get();
 
+        foreach ($source as $source_id) {
+            $push['name'] = $source_id->name;
+            $push['id'] = $source_id->id;
+            $labels['labels'][] = $push;
+        }
+
         foreach ($total_keywords->get() as $item) {
             $keyword_id = $item->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $item->keyword_id;
-            $data[$keyword_id]['keyword_name'] = $item->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $item->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $item->campaign_name;
-            $data[$keyword_id]['organization_id'] = 1;
-            $data[$keyword_id]['organization_name'] = 'organizations_name 1';
-            $keyword_id = $item->keyword_id;
+            // $data[$keyword_id]['total'] += 1;
+            if (isset($data[$keyword_id]['value'])) {
 
-            foreach ($source as $key => $item_source) {
-
-                $message = $this->shareOfVoiceByPlatform($this->campaign_id, $this->start_date, $this->end_date, $item->keyword_id, $item_source->id);
-                $total_message = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
-                    ->where('keyword_id', $item->keyword_id)
-                    ->whereIn('classification_type_id', [1])
-                    ->whereBetween('date_m', [$this->start_date, $this->end_date]);
-
-                if ($this->keyword_id) {
-                    $total_message->whereIn('keyword_id', $this->keyword_id);
+                $data[$keyword_id]['value'][$item->source_id]['number_of_message'] += 1;
+                $data[$keyword_id]['total'] += 1;
+            } else {
+                
+                $data[$keyword_id]['keyword_id'] = $item->keyword_id;
+                $data[$keyword_id]['keyword_name'] = $item->keyword_name;
+                $data[$keyword_id]['campaign_id'] = $item->campaign_id;
+                $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+                $data[$keyword_id]['organization_id'] = 1;
+                $data[$keyword_id]['organization_name'] = 'organizations_name 1';
+                $data[$keyword_id]['total'] = 1;
+    
+                for ($i = 0; $i < count($labels['labels']); $i++) {
+                    $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['channel'] = $labels['labels'][$i]['name'];
+                    $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['id'] = $labels['labels'][$i]['id'];
+                    $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['number_of_message'] = 1;
+                    $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['keyword_id'] = $item->keyword_id;
+                    
                 }
 
-                if ($this->source_id) {
-                    $total_message->where('source_id', $this->source_id);
+            }
+        }
+        
+        if ($data) {
+            foreach ($data as $item_share) {
+                $keyword_id = $item_share['keyword_id'];
+                $total = $item_share['total'];
+                foreach ($item_share['value'] as $value) {
+                    $percentage = !$total ? 0 : ($value['number_of_message'] / $total) * 100;
+                    $data[$value['keyword_id']]['value'][$value['id']]['percentage'] = self::point_two_digits($percentage);
                 }
-
-                $total_message = $total_message->get()->count();
-
-
-                $percentage = !$total_message ? 0 : ($message / $total_message) * 100;
-
-                $push_data = [
-                    'channel' => $item_source->name,
-                    'percentage' => self::point_two_digits($percentage),
-                    'number_of_message' => $message,
-                    // 'highlight' =>
-                ];
-
-                if (!isset($data[$keyword_id]['value'][$key])) {
-
-                    $data[$keyword_id]['value'][$key] = $push_data;
+    
+                if (isset($data[$keyword_id]['value'])) {
+                    $data[$keyword_id]['value'] = array_values($data[$keyword_id]['value']);
                 }
             }
         }
@@ -800,7 +819,7 @@ class DashboardController extends Controller
         $data = null;
 
         $raw_query = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -897,7 +916,7 @@ class DashboardController extends Controller
     {
         $count = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->where('keyword_id', $keyword_id)
             ->whereIn('classification_type_id', [1]);
 
@@ -918,7 +937,7 @@ class DashboardController extends Controller
     {
         $count = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->where('keyword_id', $keyword_id)
             ->whereIn('classification_type_id', [1]);
 
@@ -939,7 +958,7 @@ class DashboardController extends Controller
     {
         $count = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->where('keyword_id', $keyword_id)
             ->groupBy('author');
@@ -961,7 +980,7 @@ class DashboardController extends Controller
     {
         $total_account = DB::table('message_result_full_data')
             ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->where('keyword_id', $keyword_id);
 
@@ -982,7 +1001,7 @@ class DashboardController extends Controller
     {
         $total_message = DB::table('message_result_full_data')
             ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->where('keyword_id', $keyword_id)
             ->where('source_id', $source_id_id)
             ->whereIn('classification_type_id', [1]);
@@ -1020,7 +1039,7 @@ class DashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->where('message_type', 'Post')
-            ->whereBetween('date_m', [$this->start_date, $this->end_date]);
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if (isset($condition['classification_type_id']) && $condition['classification_type_id']) {
             $raw = $raw->whereIn('classification_type_id', $condition['classification_type_id']);
@@ -1068,7 +1087,7 @@ class DashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->where('reference_message_id', $message_id)
-            ->whereBetween('date_m', [$start_date, $end_date]);
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -1176,7 +1195,7 @@ class DashboardController extends Controller
 
         $raw_total = DB::table('message_result_full_data')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->whereIn('classification_type_id', [1]);
 
 //        if ($select === 'all') {

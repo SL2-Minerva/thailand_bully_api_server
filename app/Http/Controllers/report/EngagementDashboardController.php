@@ -46,11 +46,10 @@ class EngagementDashboardController extends Controller
 
     public function EngagementTrans(Request $request)
     {
-
         $data = [
             "engagement" => $this->engagement($this->start_date, $this->end_date),
-            "prcentage_of_engagement_current" => $this->percentageOfEngagement($this->start_date, $this->end_date),
-            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($this->start_date_previous, $this->end_date_previous)
+            "prcentage_of_engagement_current" => $this->percentageOfEngagement($this->start_date , $this->end_date),
+            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($this->start_date_previous , $this->end_date_previous)
         ];
 
         return parent::handleRespond($data);
@@ -84,7 +83,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -142,7 +141,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+        ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -215,7 +214,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+        ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -393,7 +392,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+        ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -449,7 +448,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+        ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -523,13 +522,13 @@ class EngagementDashboardController extends Controller
 
         $raw = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
 
         $raw_previous = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date_previous. " 00:00:00", $this->end_date_previous. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -802,7 +801,7 @@ class EngagementDashboardController extends Controller
         $data = null;
         $raw = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -895,7 +894,7 @@ class EngagementDashboardController extends Controller
 
         $raw = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -993,7 +992,7 @@ class EngagementDashboardController extends Controller
 
         $raw = DB::table($table)
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -1076,7 +1075,7 @@ class EngagementDashboardController extends Controller
 
         $infulencer_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->where('reference_message_id', null)
             ->orWhere('reference_message_id', '');
@@ -1126,7 +1125,7 @@ class EngagementDashboardController extends Controller
 
         $follower_raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->where('reference_message_id', '!=', null)
             ->orWhere('reference_message_id', '!=', '');
@@ -1172,7 +1171,7 @@ class EngagementDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
@@ -1250,9 +1249,11 @@ class EngagementDashboardController extends Controller
         $data = null;
         $table = 'message_result_full_data';
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
         $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])->whereIn('classification_type_id', [1]);
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
 
 
         $totalEngagement_current = $raw_current->sum(DB::raw('number_of_shares + number_of_comments + number_of_reactions'));
@@ -1307,13 +1308,13 @@ class EngagementDashboardController extends Controller
 
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
 
         $raw_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -1489,13 +1490,13 @@ class EngagementDashboardController extends Controller
 
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
 
         $raw_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -1655,13 +1656,13 @@ class EngagementDashboardController extends Controller
 
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
 
         $raw_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -1885,7 +1886,7 @@ class EngagementDashboardController extends Controller
     {
         $engagement_action_raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
 
@@ -1960,13 +1961,13 @@ class EngagementDashboardController extends Controller
 
         $raw_current = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('author');
 
         $raw_previous = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date_previous, $this->end_date_previous])
+            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
             ->groupBy('author');
 
@@ -2073,7 +2074,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date, $end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
@@ -2129,7 +2130,7 @@ class EngagementDashboardController extends Controller
         $table = 'message_result_full_data';
 
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
