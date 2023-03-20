@@ -186,7 +186,7 @@ Route::group(['middleware' => ['api']], function () {
        Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
        Route::get('/share-of-voice-number/', [DashboardController::class, 'shareOfVoiceNumber']);
        Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
-//        Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
+        Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
 //        Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
 //        Route::get('/word-clouds-position/', [DashboardController::class, 'wordCloudsPosition']);
     });

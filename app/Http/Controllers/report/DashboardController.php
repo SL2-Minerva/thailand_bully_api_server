@@ -772,7 +772,7 @@ class DashboardController extends Controller
                 $data[$keyword_id]['value'][$item->source_id]['number_of_message'] += 1;
                 $data[$keyword_id]['total'] += 1;
             } else {
-                
+
                 $data[$keyword_id]['keyword_id'] = $item->keyword_id;
                 $data[$keyword_id]['keyword_name'] = $item->keyword_name;
                 $data[$keyword_id]['campaign_id'] = $item->campaign_id;
@@ -780,18 +780,18 @@ class DashboardController extends Controller
                 $data[$keyword_id]['organization_id'] = 1;
                 $data[$keyword_id]['organization_name'] = 'organizations_name 1';
                 $data[$keyword_id]['total'] = 1;
-    
+
                 for ($i = 0; $i < count($labels['labels']); $i++) {
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['channel'] = $labels['labels'][$i]['name'];
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['id'] = $labels['labels'][$i]['id'];
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['number_of_message'] = 1;
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['keyword_id'] = $item->keyword_id;
-                    
+
                 }
 
             }
         }
-        
+
         if ($data) {
             foreach ($data as $item_share) {
                 $keyword_id = $item_share['keyword_id'];
@@ -800,7 +800,7 @@ class DashboardController extends Controller
                     $percentage = !$total ? 0 : ($value['number_of_message'] / $total) * 100;
                     $data[$value['keyword_id']]['value'][$value['id']]['percentage'] = self::point_two_digits($percentage);
                 }
-    
+
                 if (isset($data[$keyword_id]['value'])) {
                     $data[$keyword_id]['value'] = array_values($data[$keyword_id]['value']);
                 }
@@ -1153,19 +1153,20 @@ class DashboardController extends Controller
         $select = $request->select ?? null;
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
-//        $raw_total = DB::table('message_result_full_data')
-//            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-//            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-//            ->whereIn('classification_type_id', [1]);
-//
-//        if ($this->source_id) {
-//            $raw_total->where('source_id', $this->source_id);
-//        }
-//
-//        $total = $raw_total->count();
-//        $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $raw_total = DB::table('message_result_full_data')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
+
+        if ($this->source_id) {
+            $raw_total->where('source_id', $this->source_id);
+        }
+
+        $total = $raw_total->count();
+        $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['word_clouds_table'] = null;
 //        $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
-//        $data['total'] = $total;
+        $data['total'] = $total;
 
 
         return parent::handleRespond($data);
