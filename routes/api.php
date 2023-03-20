@@ -19,7 +19,10 @@ use App\Http\Controllers\user\UserController;
 use App\Http\Controllers\report\VoiceDashboardController;
 use App\Http\Controllers\report\ChannelDashboardController;
 use App\Http\Controllers\report\EngagementDashboardController;
+use App\Http\Controllers\report\LeveltreeChannelDashboardController;
+use App\Http\Controllers\report\LeveltreeVoiceDashboardController;
 use App\Http\Controllers\report\SentimentDashboardController;
+use App\Http\Controllers\report\LevethreeOverAllDashboardController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -187,6 +190,7 @@ Route::group(['middleware' => ['api']], function () {
        Route::get('/share-of-voice-number/', [DashboardController::class, 'shareOfVoiceNumber']);
        Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
         Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
+        Route::get('/level-three/', [LevethreeOverAllDashboardController::class, 'dailyMessageLevelThree']);
 //        Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
 //        Route::get('/word-clouds-position/', [DashboardController::class, 'wordCloudsPosition']);
     });
@@ -227,6 +231,7 @@ Route::group(['middleware' => ['api']], function () {
 //
 //        //todo
        Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
+       Route::get('/level-three/', [LeveltreeVoiceDashboardController::class, 'dailyMessageLevelThree']);
 //
 //        Route::get('/keyword-channel', [VoiceDashboardController::class, 'KeywordChannel']);
 //        Route::get('/keyword-sentiment', [VoiceDashboardController::class, 'KeywordSentiment']);
@@ -262,6 +267,7 @@ Route::group(['middleware' => ['api']], function () {
 //
 //        //todo
        Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
+       Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
 //
 //        Route::get('/sentiment-score', [ChannelDashboardController::class, 'SentimentScore']);
 //        Route::get('/sentiment-score-previous', [ChannelDashboardController::class, 'SentimentScorePrevious']);
