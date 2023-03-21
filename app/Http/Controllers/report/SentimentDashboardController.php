@@ -902,7 +902,7 @@ class SentimentDashboardController extends Controller
             ->whereBetween('date_m', [$start_date . " 00:00:00", $end_data . " 23:59:59"]);
 
         $raw_current->where('classification_type_id', 1);
-        $items = $raw_current->chunk(1000)->get();
+        $items = $raw_current->get();
 
 
         $analysis = [];
@@ -1098,7 +1098,7 @@ class SentimentDashboardController extends Controller
         if ($this->source_id) {
             $raw_current->where('source_id', $this->source_id);
         }
-        $items = $raw_current->chunk(1000)->get();
+        $items = $raw_current->get();
 
         $analysis = [
             "share" => 0,
@@ -1196,7 +1196,7 @@ class SentimentDashboardController extends Controller
             $raw_current->where('source_id', $this->source_id);
         }
 
-        $items = $raw_current->chunk(1000)->get();
+        $items = $raw_current->get();
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
@@ -1337,7 +1337,7 @@ class SentimentDashboardController extends Controller
         }
 
 
-        $items = $raw->chunk(1000)->get();
+        $items = $raw->get();
         $analysis = [];
 
         foreach ($items as $item) {
@@ -1445,7 +1445,7 @@ class SentimentDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->chunk(1000)->get();
+        $items = $raw->get();
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
@@ -1523,7 +1523,7 @@ class SentimentDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $items = $raw->chunk(1000)->get();
+        $items = $raw->get();
         $message_total = 0;
         $analysis = [];
         foreach ($items as $item) {
