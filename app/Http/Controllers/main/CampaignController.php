@@ -324,7 +324,17 @@ class CampaignController extends Controller
                     //     $data_submit_keyword["color"] = $keyword['keyword_and_color'][0];
                     // }
 
-                    $updated = Keyword::updateOrCreate(['id' => $keyword['id'] ?? null], $data_submit_keyword);
+                    $updated = Keyword::find($keyword['id']);
+
+
+                    if ($updated) {
+                        $updated->update($data_submit_keyword);
+
+                    } else {
+                        $updated = Keyword::create($data_submit_keyword);
+                    }
+
+//                    $updated = Keyword::updateOrCreate(['id' => $keyword['id'] ?? null], $data_submit_keyword);
 
                     $this->extra_keyword(
                         $data->id,
