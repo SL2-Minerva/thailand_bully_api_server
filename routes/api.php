@@ -191,8 +191,8 @@ Route::group(['middleware' => ['api']], function () {
        Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
         Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
         Route::get('/level-three/', [LevethreeOverAllDashboardController::class, 'dailyMessageLevelThree']);
-//        Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
-//        Route::get('/word-clouds-position/', [DashboardController::class, 'wordCloudsPosition']);
+        Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
+        Route::get('/word-clouds-position/', [DashboardController::class, 'wordCloudsPosition']);
     });
 
     Route::group(['prefix' => 'dashboard-voice'], function () {

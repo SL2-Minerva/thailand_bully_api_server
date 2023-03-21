@@ -1177,12 +1177,10 @@ class DashboardController extends Controller
             $this->source_id = $request->platform_id;
         }
 
-//        $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
 //        $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
-////        $data['total'] = $this->wordCloudByAccount($request, true);
+//        $data['total'] = $this->wordCloudByAccount($request, true);
 
-        // debug world
-        $data = null;
         return parent::handleRespond($data);
     }
 
@@ -1271,11 +1269,10 @@ class DashboardController extends Controller
         $end_date = $request->end_date ?? null;
         $select = $request->select ?? null;
 
-//        $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        $data['word_clouds_position'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
 //        $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($request);
 //        $data['total'] = $this->wordCloudBySentimentType($request, true);
 
-        $data = null;
         return parent::handleRespond($data);
     }
 
