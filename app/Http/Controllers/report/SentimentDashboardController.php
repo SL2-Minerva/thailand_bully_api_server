@@ -1285,10 +1285,56 @@ class SentimentDashboardController extends Controller
                 $total_positive_negative_neutral = $p_positive + $p_negative + $p_neutral;
             }
 
+
+            $check_sentiment_score = (((1 * $positive) + (-1 * $negative)) / ($positive + $negative + $neutral)) * 5;
+
+            $sentimentScore = 0;
+            $sentimentScore_previous = 0;
+            $check_sentiment_score_previous = 0;
+
+
+            if ($check_sentiment_score > 5) {
+                $sentimentScore = 5;
+            } else if ($check_sentiment_score < -5) {
+                $sentimentScore = -5;
+            } else {
+                $sentimentScore = round($check_sentiment_score);
+            }
+
+
+            if ($sentimentScore == -0 ) {
+                $sentimentScore = 0;
+            }
+
+
+            if ($total_positive_negative_neutral) {
+                $check_sentiment_score_previous = (((1 * $p_positive) + (-1 * $p_negative / $total_positive_negative_neutral) * 5));
+
+                if ($check_sentiment_score_previous > 5) {
+                    $sentimentScore_previous = 5;
+                } else if ($check_sentiment_score_previous < -5) {
+                    $sentimentScore_previous = -5;
+                } else {
+                    $sentimentScore_previous = round($check_sentiment_score_previous);
+                }
+
+                if ($sentimentScore_previous == -0 ) {
+                    $sentimentScore_previous = 0;
+                }
+            }
+
+
+
             $data['senitment_score_data'][$keyword_id] = [
                 'keyword_name' => $item['keyword_name'],
-                "sentimentScore" => (((1 * $positive) + (-1 * $negative)) / ($positive + $negative + $neutral)) * 5,
-                "previous_period" => $total_positive_negative_neutral ? (((1 * $p_positive) + (-1 * $p_negative / $total_positive_negative_neutral) * 5)) : 0,
+                "sentimentScore" => $sentimentScore,
+                "previous_period" => $sentimentScore_previous,
+                "positive" => $positive,
+                "neutral" => $neutral,
+                "negative" => $negative,
+                "p_positive" => $p_positive,
+                "p_neutral" => $p_neutral,
+                "p_negative" => $p_negative,
                 "hightlightColor" => $item['hightlightColor']
             ];
 
@@ -1301,6 +1347,8 @@ class SentimentDashboardController extends Controller
 
             ];
         }
+
+
 
 
         if ($data['senitment_score_data']) {
