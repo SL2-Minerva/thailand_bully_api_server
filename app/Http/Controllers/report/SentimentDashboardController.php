@@ -1530,7 +1530,7 @@ class SentimentDashboardController extends Controller
                 "positive" => $item['positive'],
                 "neutral" => $item['neutral'],
                 "negative" => $item['negative'],
-                "sentiment_score" => self::point_two_digits((((1 * $item['positive']) + (-1 * $item['negative'])) / ($item['positive'] + $item['negative'] + $item['neutral'])) * 5),
+                "sentiment_score" => round((((1 * $item['positive']) + (-1 * $item['negative'])) / ($item['positive'] + $item['negative'] + $item['neutral'])) * 5),
 
             ];
 
@@ -1611,7 +1611,7 @@ class SentimentDashboardController extends Controller
                     "positive" => $analysis[$source->id]['positive'],
                     "neutral" => $analysis[$source->id]['neutral'],
                     "negative" => $analysis[$source->id]['negative'],
-                    "sentiment_score" => self::point_two_digits((((1 * $analysis[$source->id]['positive']) + (-1 * $analysis[$source->id]['negative'])) / ($analysis[$source->id]['positive'] + $analysis[$source->id]['negative'] + $analysis[$source->id]['neutral'])) * 5),
+                    "sentiment_score" => round((((1 * $analysis[$source->id]['positive']) + (-1 * $analysis[$source->id]['negative'])) / ($analysis[$source->id]['positive'] + $analysis[$source->id]['negative'] + $analysis[$source->id]['neutral'])) * 5),
                 ];
             } else {
                 $data[] = [
