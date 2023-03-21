@@ -376,7 +376,11 @@ class VoiceDashboardController extends Controller
 
         if ($items) {
             foreach ($items as $item) {
-                $index_label = 0;
+                $index_label = null;
+
+                if ($item->device == 'android') {
+                    $index_label = 0;
+                }
 
                 if ($item->device == 'iphone') {
                     $index_label = 1;
@@ -386,21 +390,25 @@ class VoiceDashboardController extends Controller
                     $index_label = 2;
                 }
 
-                if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                } else {
-                    $data['value'][$item->keyword_id] = [
-                        'id' => $item->keyword_id,
-                        'keyword_name' => $item->keyword_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                        'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,
-                        'data' => [0, 0, 0]
-                    ];
+                if ($index_label !== null) {
 
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    if (isset($data['value'][$item->keyword_id])) {
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    } else {
+                        $data['value'][$item->keyword_id] = [
+                            'id' => $item->keyword_id,
+                            'keyword_name' => $item->keyword_name,
+                            'campaign_id' => $item->campaign_id,
+                            'campaign_name' => $item->campaign_name,
+                            'source_id' => $item->source_id,
+                            'source_name' => $item->source_name,
+                            'data' => [0, 0, 0]
+                        ];
+    
+                        $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    }
                 }
+
 
 
             }
@@ -453,7 +461,7 @@ class VoiceDashboardController extends Controller
             foreach ($items as $item) {
 
                 if (isset($data['value'][$item->keyword_id])) {
-                    if (!$item->reference_message_id && ($item->message_type === 'Post')) {
+                    if (!$item->reference_message_id) {
                         $data['value'][$item->keyword_id]['data'][0] += 1;
                     } else {
                         $data['value'][$item->keyword_id]['data'][1] += 1;
@@ -468,7 +476,7 @@ class VoiceDashboardController extends Controller
                         'data' => [0, 0]
                     ];
 
-                    if (!$item->reference_message_id && ($item->message_type === 'Post')) {
+                    if (!$item->reference_message_id) {
                         $data['value'][$item->keyword_id]['data'][0] += 1;
                     } else {
                         $data['value'][$item->keyword_id]['data'][1] += 1;

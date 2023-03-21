@@ -615,7 +615,11 @@ class ChannelDashboardController extends Controller
         $data['value'] = null;
 
         foreach ($raw->get() as $item) {
-            $index_label = 0;
+            $index_label = null;
+
+            if ($item->device == 'android') {
+                $index_label = 0;
+            }
 
             if ($item->device == 'iphone') {
                 $index_label = 1;
@@ -625,21 +629,25 @@ class ChannelDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if (isset($data['value'][$item->source_id])) {
-                $data['value'][$item->source_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->source_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
-                    'source_id' => $item->source_id,
-                    'source_name' => $item->source_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][$item->source_id]['data'][$index_label] += 1;
+            if ($index_label !== null) {
+                
+                if (isset($data['value'][$item->source_id])) {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->source_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_name' => $item->keyword_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'data' => [0, 0, 0]
+                    ];
+    
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
             }
+
         }
 
 
@@ -726,7 +734,8 @@ class ChannelDashboardController extends Controller
         $raw_child = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->where('reference_message_id', '!=', null)
+            ->where('reference_message_id', '!=', '')
+            // ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
 
@@ -734,7 +743,7 @@ class ChannelDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('reference_message_id', '')
-            ->orWhere('reference_message_id', null)
+            // ->orWhere('reference_message_id', null)
             ->whereIn('classification_type_id', [1]);
 
         $soures = parent::listSource();
