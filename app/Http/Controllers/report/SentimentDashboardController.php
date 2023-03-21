@@ -1323,8 +1323,6 @@ class SentimentDashboardController extends Controller
                 }
             }
 
-
-
             $data['senitment_score_data'][$keyword_id] = [
                 'keyword_name' => $item['keyword_name'],
                 "sentimentScore" => $sentimentScore,
@@ -1360,8 +1358,6 @@ class SentimentDashboardController extends Controller
 
 
 //
-
-
         if ($only_data) {
             return $data;
         }

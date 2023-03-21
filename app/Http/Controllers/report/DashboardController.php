@@ -877,7 +877,10 @@ class DashboardController extends Controller
 
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
 
+
+
         $raw_total = DB::table('word_clouds')
+            ->where('message_id','!=', '')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereIn('classification_type_id', [1])
             ->whereBetween('date_count', [$this->start_date, $this->end_date]);
@@ -886,8 +889,24 @@ class DashboardController extends Controller
             $raw_total->where('source_id', $this->source_id);
         }
 
+        $worlds = $raw_total->get();
 
-        $worlds = $raw_total->orderBy('count_number', 'desc')->get();
+
+
+
+//        $data = [];
+//        $data = $raw_total->chunk(100, function ($words){
+//            foreach ($words as $word){
+//              dd($word);
+//            }
+//
+//            return $words;
+//
+//        });
+//
+//        dd($data);
+
+//        dd($worlds);
 
         $dummy_data = [];
 
@@ -899,7 +918,7 @@ class DashboardController extends Controller
                 $dummy_data[$world->word] = [
                     'text' => $world->word,
                     'value' => $world->count_number,
-                    'total' => self::point_two_digits($worlds->count(), 0)
+//                    'total' => self::point_two_digits($worlds->count(), 0)
                 ];
             }
 
@@ -997,124 +1016,10 @@ class DashboardController extends Controller
         return $total_account;
     }
 
-    private function shareOfVoiceByPlatform($campaign_id, $start_date, $end_date, $keyword_id, $source_id_id)
-    {
-        $total_message = DB::table('message_result_full_data')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->where('keyword_id', $keyword_id)
-            ->where('source_id', $source_id_id)
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $total_message->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $total_message->where('source_id', $this->source_id);
-        }
-
-        $total_message = $total_message->get()->count();
-
-        return $total_message;
-    }
-
-    private function find_keyword_name($keyword_id)
-    {
-        $keyword_name = Keyword::where('id', $keyword_id)->first();
-        return $keyword_name->name;
-    }
 
 
 
 
-    private function fillterBy($option)
-    {
-
-    }
-
-
-    private function factoryDataLevelFour($start_date, $end_date, $condition = null)
-    {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->where('message_type', 'Post')
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-
-        if (isset($condition['classification_type_id']) && $condition['classification_type_id']) {
-            $raw = $raw->whereIn('classification_type_id', $condition['classification_type_id']);
-        }
-
-        if (isset($condition['source_id']) && $condition['source_id']) {
-            $raw = $raw->whereIn('source_id', $condition['source_id']);
-        }
-
-        if (isset($condition['keyword_id']) && $condition['keyword_id']) {
-            $raw = $raw->whereIn('keyword_id', $condition['keyword_id']);
-        }
-
-        $items = $raw->get();
-
-    }
-
-    public function dailyMessageLevelFour(Request $request)
-    {
-
-        //todo something
-        $report_number = $request->report_number ?? null;
-        $type = 1;
-
-        if ($report_number === 'sna' || $report_number === '4.2.007') {
-
-            $data = [
-                "sentiment" => $this->getSNAbyType($request, 1),
-                "bullyLevel" => $this->getSNAbyType($request, 2),
-                "bullyType" => $this->getSNAbyType($request, 3),
-            ];
-
-            return parent::handleRespond($data);
-        } else {
-            return parent::handleRespond($this->getSNAbyType($request, $type));
-        }
-
-
-    }
-
-
-
-    private function getChildNode($message_id, $start_date, $end_date)
-    {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->where('reference_message_id', $message_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        $items = $raw->get();
-
-        foreach ($items as $sna) {
-//            $size = (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagement / 10;
-//            $length = (int)$sna->engagement <= 0 ? 10 : (int)$sna->engagemen + 10;
-
-            $data[] = [
-                "id" => $sna->message_id,
-                "label" => $sna->author,
-                "title" => $sna->author,
-                "parent_id" => $sna->reference_message_id,
-                "color" => $sna->classification_color,
-                "shape" => "dot"
-            ];
-        }
-
-        return $data;
-    }
 
 //    private function getReferSna($data_node = [])
 //    {
