@@ -1034,7 +1034,7 @@ class DashboardController extends Controller
 
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
         $wordclouds = $raw->orderBy('count_number', 'desc')->get();
-        $total = $raw->count();
+        $total = $raw->sum('count_number');
 
         $list_keywords = $keywords->pluck('name', 'id')->toArray();
         foreach ($wordclouds as $wordcloud) {
