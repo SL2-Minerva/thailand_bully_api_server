@@ -5,13 +5,26 @@ namespace App\Http\Controllers\main;
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\Domain;
+use App\Models\UserPermission;
 use Illuminate\Http\Request;
 use PHPUnit\Util\Exception;
 
 class DomainController extends Controller
 {
     public function index (Request $request) {
-        $domains = Domain::all();
+
+        $domains = null;
+
+        if (isset($this->organization_group->domains)) {
+            $domains = Domain::whereIn('name', $this->organization_group->domains)
+                ->where('status', 1)
+                ->get();
+        }
+
+        if ($this->user_login->is_admin) {
+            $domains = Domain::all();
+        }
+
         return parent::handleRespond($domains);
     }
 

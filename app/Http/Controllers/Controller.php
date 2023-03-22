@@ -36,6 +36,8 @@ class Controller extends BaseController
             $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
         }
 
+
+
     }
 
 

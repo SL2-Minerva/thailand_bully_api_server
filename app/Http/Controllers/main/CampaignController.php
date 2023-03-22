@@ -386,6 +386,7 @@ class CampaignController extends Controller
 
         $campaigns = Campaign::query()->offset($start)->limit($limit);
 
+
         if ($request->name) {
             $campaigns = $campaigns->where('name', 'like', "%$request->name%");
         }
@@ -406,6 +407,12 @@ class CampaignController extends Controller
         if ($request->end_at) {
             $campaigns = $campaigns->where('end_at', '>=', $request->end_at);
         }
+
+        // check organization
+        if (!$this->user_login->is_admin) {
+            $campaigns->where('organization_id', $this->user_login->organization_id);
+        }
+
 
         $data = [];
 
