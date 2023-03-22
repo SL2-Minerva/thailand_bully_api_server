@@ -10,6 +10,7 @@ use App\Http\Controllers\permission\RoleController;
 use App\Http\Controllers\report\BullyDashboardController;
 use App\Http\Controllers\report\DashboardController;
 use App\Http\Controllers\report\LevelfourController;
+use App\Http\Controllers\report\LevelThreeBullyDashboardController;
 use App\Http\Controllers\report\LevelthreeController;
 use App\Http\Controllers\user\OrganizationContentController;
 use App\Http\Controllers\user\OrganizationController;
@@ -304,6 +305,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-type-comparison', [EngagementDashboardController::class, 'EngagementTypeComparison']);
 //        Route::get('/engagement-action-comparison', [EngagementDashboardController::class, 'EngagementActionComparison']);
 //        Route::get('/engagement-infulencer', [EngagementDashboardController::class, 'EngagementByInfulencer']);
+        Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
 
     });
 
@@ -331,6 +333,7 @@ Route::group(['middleware' => ['api']], function () {
 //
 //
        Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
+        Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
 //
 //        Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
 //        Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);
@@ -346,14 +349,7 @@ Route::group(['middleware' => ['api']], function () {
 //
 //        //todo
        Route::get('bully-by', [BullyDashboardController::class, 'bullyBy']);
-//
-//        Route::get('/bully-daily', [BullyDashboardController::class, 'DailyBully']);
-//        Route::get('/bully-day', [BullyDashboardController::class, 'BullyByDay']);
-//        Route::get('/bully-time', [BullyDashboardController::class, 'BullyByTime']);
-//        Route::get('/bully-device', [BullyDashboardController::class, 'BullyByDevice']);
-//        Route::get('/bully-account', [BullyDashboardController::class, 'BullyByAccount']);
-//        Route::get('/bully-channel', [BullyDashboardController::class, 'BullyByChannel']);
-//        Route::get('/bully-sentiment', [BullyDashboardController::class, 'BullyBySentiment']);
+
 //
 //        //todo
        Route::get('daily-type-by', [BullyDashboardController::class, 'dailyTypeBy']);
@@ -378,6 +374,8 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/bully-table-level', [BullyDashboardController::class, 'BullyLevelLevel']);
 //        Route::get('/bully-chart-type', [BullyDashboardController::class, 'BullyChartType']);
 //        Route::get('/bully-table-type', [BullyDashboardController::class, 'BullyTableType']);
+
+        Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
     });
 });
 
