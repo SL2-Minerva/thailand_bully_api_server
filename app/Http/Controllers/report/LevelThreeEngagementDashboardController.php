@@ -38,7 +38,7 @@ class LevelThreeEngagementDashboardController extends Controller
     }
 
 
-    public function report(Request $reuest) {
+    public function report(Request $request) {
 
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
