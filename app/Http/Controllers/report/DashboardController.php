@@ -896,6 +896,10 @@ class DashboardController extends Controller
 
         if ($dummy_data) {
             $dummy_data = array_values($dummy_data);
+
+            usort($dummy_data, function($a, $b) {
+                return $b['value'] - $a['value'];
+            });
         }
 
         return $dummy_data;
@@ -1153,6 +1157,7 @@ class DashboardController extends Controller
                 'source_id' => $wordcloud->source_id,
                 'source_name' => $wordcloud->source_name,
                 'total_message' => $wordcloud->count_number,
+                'message_id' => $wordcloud->message_id,
                 'engagements' => $this->get_engagements($wordcloud->message_id)
             ];
         }
