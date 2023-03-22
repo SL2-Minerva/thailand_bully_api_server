@@ -138,4 +138,10 @@ class LevelThreeEngagementDashboardController extends Controller
 
         return parent::handleRespond($data);
     }
+
+    private function getClassificationName($message_id)
+    {
+        return DB::table('message_result_full_data')->where('message_id', $message_id)
+            ->limit(3)->get(['classification_type_id', 'classification_name']);
+    }
 }
