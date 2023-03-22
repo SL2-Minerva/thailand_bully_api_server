@@ -872,41 +872,11 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsData()
+    private function wordCloudsData($raw_total)
     {
 
-        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get('id');
-
-
-
-        $raw_total = DB::table('word_clouds')
-            ->where('message_id','!=', '')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereIn('classification_type_id', [1])
-            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
-
-        if ($this->source_id) {
-            $raw_total->where('source_id', $this->source_id);
-        }
 
         $worlds = $raw_total->get();
-
-
-
-
-//        $data = [];
-//        $data = $raw_total->chunk(100, function ($words){
-//            foreach ($words as $word){
-//              dd($word);
-//            }
-//
-//            return $words;
-//
-//        });
-//
-//        dd($data);
-
-//        dd($worlds);
 
         $dummy_data = [];
 
@@ -1017,67 +987,41 @@ class DashboardController extends Controller
     }
 
 
-
-
-
-
-//    private function getReferSna($data_node = [])
-//    {
-//        $data = $data_node;
-////        $snas = SNA::where(SNA::CAMPAIGN_ID, $campaign_id)->where(SNA::REFERENCE_MESSAGE_ID, $message_id)->get();
-//
-//
-//        foreach ($snas as $sna) {
-//            $data['nodes'][] = [
-//                "id" => $sna->message_id,
-//                "label" => $sna->author,
-//                "title" => $sna->author,
-//                "color" => $sna->classification_color,
-//                "shape" => "dot",
-//                "size" => $sna->engagement,
-//            ];
-//
-//
-//            //            $data_node = $this->getReferSna($campaign_id, $sna->message_id, $data_node);
-//        }
-//
-//        return $data;
-//    }
-
     public function wordClouds(Request $request)
     {
         $data = null;
-
-
         $campaign_id = $request->campaign_id ?? "";
+
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
-        $start_date = $request->start_date ?? null;
-        $end_date = $request->end_date ?? null;
+
         $select = $request->select ?? null;
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
-        $raw_total = DB::table('message_result_full_data')
+        $raw_total = DB::table('word_clouds')
+            ->where('message_id','!=', '')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
+            ->whereIn('classification_type_id', [1])
+            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
 
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
         }
 
-        $total = $raw_total->count();
-        $data['word_clouds'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
-        $data['word_clouds_table'] = null;
-//        $data['word_clouds_table'] = $this->wordCloudsMessageTable($request);
-        $data['total'] = $total;
+//        $worlds = $raw_total->get();
+
+
+        $data['word_clouds'] = $this->wordCloudsMessage($raw_total, $select);
+        $data['word_clouds_table'] = $this->wordCloudsMessageTable($raw_total, $request);
+        $data['total'] = $raw_total->count();
+        $data['word_total'] = (int)$raw_total->sum('count_number');
 
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsMessageTable($request)
+    private function wordCloudsMessageTable($raw, $request)
     {
 
         $select = $request->select ?? null;
@@ -1089,34 +1033,9 @@ class DashboardController extends Controller
         $data = null;
 
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
-
-        $raw = DB::table('word_clouds')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_count', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [1]);
-
-
-//        dd($raw->get());
-
-
-        $raw_total = DB::table('message_result_full_data')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [1]);
-
-//        if ($select === 'all') {
-//            $raw->offset($start)->limit($limit);
-//        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-            $raw_total->where('source_id', $this->source_id);
-        }
-
-
         $wordclouds = $raw->orderBy('count_number', 'desc')->get();
-        $total = $raw_total->count();
-        $data = [];
+        $total = $raw->count();
+
         $list_keywords = $keywords->pluck('name', 'id')->toArray();
         foreach ($wordclouds as $wordcloud) {
 
@@ -1134,28 +1053,34 @@ class DashboardController extends Controller
 
         }
 
-
         if ($data) {
             $data = array_values($data);
+
+            usort($data, function($a, $b) {
+                return $b['total'] - $a['total'];
+            });
         }
+
+
         $select = $request->select ?? null;
 
+        //todo: sort by total
         if (count($data) > 0) {
             switch ($select) {
                 case "top10":
-                    $data = array_slice($data, 0, 10);
+                    $data = array_slice($data, $start, 10);
                     break;
                 case "top20":
-                    $data = array_slice($data, 0, 20);
+                    $data = array_slice($data, $start, 20);
                     break;
                 case "top50":
-                    $data = array_slice($data, 0, 50);
+                    $data = array_slice($data, $start, 50);
                     break;
                 case "top100":
-                    $data = array_slice($data, 0, 100);
+                    $data = array_slice($data, $start, 100);
                     break;
                 default:
-                    $data = array_slice($data, 0, 1000);
+                    $data = array_slice($data, $start, 1000);
             }
         }
 
@@ -1361,9 +1286,9 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function wordCloudsMessage($campaign_id, $start_date, $end_date, $select, $type = null)
+    private function wordCloudsMessage($raw, $select, $type = null)
     {
-        $dummy_data = $this->wordCloudsData();
+        $dummy_data = $this->wordCloudsData($raw);
         switch ($select) {
             case "top10":
                 $data = array_slice($dummy_data, 0, 10);
