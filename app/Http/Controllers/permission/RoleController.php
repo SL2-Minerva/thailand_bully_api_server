@@ -4,6 +4,7 @@ namespace App\Http\Controllers\permission;
 
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
+use App\Models\User;
 use App\Models\UserPermission;
 use App\Models\UserRole;
 use Illuminate\Http\Request;
@@ -17,6 +18,14 @@ class RoleController extends Controller
     public function index(Request $request)
     {
         $data = UserRole::where(BaseModel::ID, '!=', 0)->get();
+
+
+        if (!$this->user_login->is_admin) {
+            $roles = null;
+            $roles = User::where('organization_id', $this->organization->id)->pluck('role_id')->toArray();
+            $data = UserRole::whereIn('id', $roles)->get();
+        }
+
         foreach ($data as $item) {
 
             $row_permissions = UserPermission::where('role_id', $item->id)->get([
