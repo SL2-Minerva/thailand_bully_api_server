@@ -613,7 +613,11 @@ class BullyDashboardController extends Controller
         $data['value'] = null;
 
         foreach ($items as $item) {
-            $index_label = 0;
+            $index_label = null;
+
+            if ($item->device == 'android') {
+                $index_label = 0;
+            }
 
             if ($item->device == 'iphone') {
                 $index_label = 1;
@@ -623,17 +627,19 @@ class BullyDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if (isset($data['value'][$item->classification_id])) {
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->classification_id] = [
-                    'id' => $item->classification_id,
-                    'classification_id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
+            if ($index_label != null) {
+                if (isset($data['value'][$item->classification_id])) {
+                    $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->classification_id] = [
+                        'id' => $item->classification_id,
+                        'classification_id' => $item->classification_id,
+                        'keyword_name' => $item->classification_name,
+                        'data' => [0, 0, 0]
+                    ];
+    
+                    $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                }
             }
 
         }
@@ -747,7 +753,7 @@ class BullyDashboardController extends Controller
         foreach ($infulencers as $infulencer) {
 
             if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
-                if ($infulencer->reference_message_id === '' || $infulencer->reference_message_id === null) {
+                if ($infulencer->reference_message_id == null) {
 
                     $data['value'][$infulencer->classification_id]['data'][0] += 1;
                 }
@@ -781,7 +787,7 @@ class BullyDashboardController extends Controller
         foreach ($followers as $follower) {
 
             if (isset($data['value'][$follower->classification_id]['data'][1])) {
-                if ($follower->reference_message_id !== '' || $follower->reference_message_id !== null) {
+                if ($follower->reference_message_id != null) {
                     $data['value'][$follower->classification_id]['data'][1] += 1;
                 }
             } else {
@@ -1551,8 +1557,12 @@ class BullyDashboardController extends Controller
         $data['value'] = null;
 
         foreach ($items as $item) {
-            $index_label = 0;
+            $index_label = null;
 
+            if ($item->device == 'android') {
+                $index_label = 1;
+            }
+            
             if ($item->device == 'iphone') {
                 $index_label = 1;
             }
@@ -1561,17 +1571,19 @@ class BullyDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if (isset($data['value'][$item->classification_id])) {
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$item->classification_id] = [
-                    'id' => $item->classification_id,
-                    'classification_id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
+            if ($index_label != null) {
+                if (isset($data['value'][$item->classification_id])) {
+                    $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->classification_id] = [
+                        'id' => $item->classification_id,
+                        'classification_id' => $item->classification_id,
+                        'keyword_name' => $item->classification_name,
+                        'data' => [0, 0, 0]
+                    ];
+    
+                    $data['value'][$item->classification_id]['data'][$index_label] += 1;
+                }
             }
 
         }
