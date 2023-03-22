@@ -59,6 +59,7 @@ class LevelThreeSentimentDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date, $this->end_date])
             ->offset($start)->limit($limit);
 
+
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
             $total->where('source_id', $this->source_id);
@@ -72,6 +73,14 @@ class LevelThreeSentimentDashboardController extends Controller
         if (isset($request->keyword_id)) {
             $raw->where('keyword_id', $request->keyword_id);
             $total->where('keyword_id', $request->keyword_id);
+        }
+
+
+        if (isset($Llabel)) {
+            if ($request->report_number === '5.2.002') {
+                $raw->where('classification_name', $Llabel);
+                $total->where('classification_name', $Llabel);
+            }
         }
 
         $items = $raw->get();
