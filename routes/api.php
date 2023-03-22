@@ -12,6 +12,8 @@ use App\Http\Controllers\report\DashboardController;
 use App\Http\Controllers\report\LevelfourController;
 use App\Http\Controllers\report\LevelThreeBullyDashboardController;
 use App\Http\Controllers\report\LevelthreeController;
+use App\Http\Controllers\report\LevelThreeEngagementDashboardController;
+use App\Http\Controllers\report\LevelThreeSentimentDashboardController;
 use App\Http\Controllers\user\OrganizationContentController;
 use App\Http\Controllers\user\OrganizationController;
 use App\Http\Controllers\user\OrganizationGroupController;
@@ -305,7 +307,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-type-comparison', [EngagementDashboardController::class, 'EngagementTypeComparison']);
 //        Route::get('/engagement-action-comparison', [EngagementDashboardController::class, 'EngagementActionComparison']);
 //        Route::get('/engagement-infulencer', [EngagementDashboardController::class, 'EngagementByInfulencer']);
-        Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
+        Route::get('/level-three/', [LevelThreeEngagementDashboardController::class, 'report']);
 
     });
 
@@ -333,7 +335,7 @@ Route::group(['middleware' => ['api']], function () {
 //
 //
        Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
-        Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
+        Route::get('/level-three/', [LevelThreeSentimentDashboardController::class, 'report']);
 //
 //        Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
 //        Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);

@@ -75,8 +75,8 @@ class LevelThreeSentimentDashboardController extends Controller
             $total->where('keyword_id', $request->keyword_id);
         }
 
-
         if (isset($Llabel)) {
+
             if ($request->report_number === '5.2.002') {
                 $raw->where('classification_name', $Llabel);
                 $total->where('classification_name', $Llabel);
