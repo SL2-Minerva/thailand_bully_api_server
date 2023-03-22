@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\organization\OrganizationGroupRequest;
 use App\Models\BaseModel;
 use App\Models\UserOrganizationGroup;
+use App\Models\UserOrganizationType;
 use Illuminate\Http\Request;
 use PHPUnit\Exception;
 
@@ -14,7 +15,13 @@ class OrganizationGroupController extends Controller
     public function data(Request $request)
     {
         try {
-            $organizationGroup = UserOrganizationGroup::all();
+
+            $organizationGroup = UserOrganizationGroup::where('id', $this->organization->organization_group_id)->get();
+
+            if ($this->user_login->is_admin) {
+                $organizationGroup = UserOrganizationGroup::all();
+            }
+
             return parent::handleRespond($organizationGroup);
         } catch (Exception $exception) {
             return parent::handleErrorRespond($exception, $exception->getCode());

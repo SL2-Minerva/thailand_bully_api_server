@@ -14,7 +14,14 @@ class OrganizationTypeController extends Controller
     public function data(Request $request)
     {
         try {
-            $organizationType = UserOrganizationType::all();
+
+            $organizationType = UserOrganizationType::where('id', $this->organization->organization_type_id)->get();
+
+            if ($this->user_login->is_admin) {
+                $organizationType = UserOrganizationType::all();
+            }
+
+
             return parent::handleRespond($organizationType);
         } catch (Exception $exception) {
             return parent::handleErrorRespond($exception, $exception->getCode());

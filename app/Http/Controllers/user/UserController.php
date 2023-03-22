@@ -34,7 +34,12 @@ class UserController extends Controller
 
     public function data(Request $request)
     {
-        $users = User::where(BaseModel::STATUS, 2)->get();
+        $users = User::where(BaseModel::STATUS, 2)->where('organization_id', $this->user_login->organization_id)->get();
+
+        if ($this->user_login->is_admin) {
+            $users = User::where(BaseModel::STATUS, 2)->get();
+        }
+
         return parent::handleRespond($users);
     }
 
@@ -156,8 +161,8 @@ class UserController extends Controller
         $token = Str::random(64);
 
         DB::table('password_resets')->insert([
-            'email' => $request->email, 
-            'token' => $token, 
+            'email' => $request->email,
+            'token' => $token,
             'created_at' => Carbon::now()
         ]);
 
@@ -176,7 +181,7 @@ class UserController extends Controller
         ]);
 
         $updatePassword = DB::table('password_resets')->where([
-            'email' => $request->email, 
+            'email' => $request->email,
             'token' => $request->token
         ])->first();
 
