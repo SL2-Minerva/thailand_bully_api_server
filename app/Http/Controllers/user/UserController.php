@@ -149,6 +149,10 @@ class UserController extends Controller
             $user = $user->where('organization_id', $request->organization_id);
         }
 
+        if (!$this->user_login->is_admin) {
+            $user->where('organization_id', $this->user_login->organization_id);
+        }
+
         return parent::handleRespond($user->get());
     }
 
