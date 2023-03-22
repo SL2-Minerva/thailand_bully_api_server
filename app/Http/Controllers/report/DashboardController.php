@@ -1092,18 +1092,31 @@ class DashboardController extends Controller
     {
         $data = null;
         $campaign_id = $request->campaign_id ?? "";
+
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
-        $start_date = $request->start_date ?? null;
-        $end_date = $request->end_date ?? null;
+
         $select = $request->select ?? null;
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
+
+        $raw_total = DB::table('word_clouds')
+            ->where('message_id','!=', '')
+            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->whereIn('classification_type_id', [1])
+            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
 
         if ( $request->platform_id) {
             $this->source_id = $request->platform_id;
         }
 
-        $data['word_clouds_platform'] = $this->wordCloudsMessage($campaign_id, $start_date, $end_date, $select);
+        if ($this->source_id) {
+            $raw_total->where('source_id', $this->source_id);
+        }
+
+
+
+        $data['word_clouds_platform'] = $this->wordCloudsMessage($raw_total, $select);
 //        $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
 //        $data['total'] = $this->wordCloudByAccount($request, true);
 
