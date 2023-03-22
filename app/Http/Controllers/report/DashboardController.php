@@ -1064,23 +1064,24 @@ class DashboardController extends Controller
 
         $select = $request->select ?? null;
 
+
         //todo: sort by total
         if (count($data) > 0) {
             switch ($select) {
                 case "top10":
-                    $data = array_slice($data, $start, 10);
+                    $data = array_slice($data, 0, 10);
                     break;
                 case "top20":
-                    $data = array_slice($data, $start, 20);
+                    $data = array_slice($data, 0, 20);
                     break;
                 case "top50":
-                    $data = array_slice($data, $start, 50);
+                    $data = array_slice($data, 0, 50);
                     break;
                 case "top100":
-                    $data = array_slice($data, $start, 100);
+                    $data = array_slice($data, 0, 100);
                     break;
                 default:
-                    $data = array_slice($data, $start, 1000);
+                    $data = array_slice($data, 0, 1000);
             }
         }
 
