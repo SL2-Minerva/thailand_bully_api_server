@@ -95,7 +95,7 @@ class OrganizationController extends Controller
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
-        
+
         $data = Organization::join('user_organization_types', 'user_organization_types.id', '=', 'organizations.organization_type_id')
             ->join('user_organization_groups', 'user_organization_groups.id', '=', 'organizations.organization_group_id')
             ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group')
@@ -117,8 +117,12 @@ class OrganizationController extends Controller
             $data->where('organizations.organization_type_id', $request->type);
         }
 
+        if (!$this->user_login->is_admin) {
+            $data->where('organization_id', $this->user_login->organization_id);
+        }
+
         return parent::handleRespond($data->get());
-        
+
     }
 
 }

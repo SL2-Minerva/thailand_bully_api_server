@@ -16,7 +16,7 @@ class OrganizationContentController extends Controller
     {
 
         $organization_content = OrganizationContent::where('organization_id', $this->organization->id)->get();
-        if (!$organization_content) {
+        if (!$organization_content || $organization_content->count() == 0) {
             return parent::handleNotFound('Organization content not found');
         }
 
