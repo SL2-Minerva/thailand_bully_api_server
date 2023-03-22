@@ -37,9 +37,8 @@ class LevelThreeSentimentDashboardController extends Controller
 
     }
 
-
-    public function report(Request $request) {
-
+    public function report(Request $request) 
+    {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -49,39 +48,293 @@ class LevelThreeSentimentDashboardController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
-        $total = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
-            ->whereIn('classification_type_id', [1]);
-
+        
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date, $this->end_date])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1])
+            ->orderBy('date_m', 'ASC')
             ->offset($start)->limit($limit);
 
+        $total = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
 
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-            $total->where('source_id', $this->source_id);
+
+        if ($request->report_number === '5.2.002'){
+
+            $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
+
+            $raw->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
+            $total->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
+
         }
 
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-            $total->whereIn('keyword_id', $this->keyword_id);
+        if ($request->report_number === '5.2.003') {
+
+            $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+            $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+
         }
 
-        if (isset($request->keyword_id)) {
-            $raw->where('keyword_id', $request->keyword_id);
-            $total->where('keyword_id', $request->keyword_id);
-        }
+        if ($request->report_number === '5.2.004') {
 
-        if (isset($Llabel)) {
+            if ($label === 'Before 6 AM') {
 
-            if ($request->report_number === '5.2.002') {
-                $raw->where('classification_name', $Llabel);
-                $total->where('classification_name', $Llabel);
+                $raw->whereRaw('HOUR(date_m) < ?', [6]);
+                $total->whereRaw('HOUR(date_m) < ?', [6]);
+
             }
+
+            if ($label === '6 AM-12 PM') {
+                $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
+                $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [6, 12]);
+            }
+
+            if ($label === '12 PM-6 PM') {
+                $raw->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
+                $total->whereRaw('HOUR(date_m) >= ? AND HOUR(date_m) < ?', [12, 18]);
+            }
+
+            if ($label === 'After 6 PM') {
+                $raw->whereRaw('HOUR(date_m) >= ?', [18]);
+                $total->whereRaw('HOUR(date_m) >= ?', [18]);
+            }
+
         }
+
+        if ($request->report_number === '5.2.005') {
+
+            $target = 'dddddd';
+
+            if ($label === 'Andriod' || $label === 'Android') {
+                $target = 'android';
+            }
+
+            if ($label === 'Iphone') {
+                $target = 'iphone';
+            }
+
+            if ($label === 'Web App') {
+                $target = 'webapp';
+            }
+
+            $raw->where('device', $target);
+            $total->where('device', $target);
+
+        }
+
+        if ($request->report_number === '5.2.006') {
+
+            if ($request->label === 'Influencer') {
+                $raw->where('reference_message_id', '');
+                $total->where('reference_message_id', '');
+            } else {
+                $raw->where('reference_message_id', '!=', null);
+                $total->where('reference_message_id', '!=', null);
+            }
+
+        }
+
+        if ($request->report_number === '5.2.007') {
+            $raw->where('source_name', $label);
+            $total->where('source_name', $label);
+        }
+
+        // position
+        if ($request->report_number === '2.2.008' ||
+            $request->report_number === '2.2.009' ||
+            $request->report_number === '2.2.010'
+        ) {
+            if ($label === 'Hate Speech') {
+                $label = 'HateSpeech';
+            } else if ($label === 'No Bully') {
+                $label = 'NoBully';
+            } else if ($label === 'Trolling/Flaming') {
+                $label = 'Trolling';
+            }
+
+            $total->where('classification_name', '=', $label);
+            $raw->where('classification_name', '=', $label);
+        }
+
+        if ($request->report_number === '5.2.008') {
+            
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->orderBy('date_m', 'ASC')
+                ->whereIn('classification_type_id', [1, 2, 3]);
+
+            $items = $raw->get();
+
+            $parents = [];
+            foreach ($items as $item) {
+                if ($item->reference_message_id) {
+                    if (array_search($item->reference_message_id, $parents) === false) {
+                        $parents[] = $item->reference_message_id;
+                    }
+                }
+            }
+            //todo
+            $anylsys = [];
+
+            foreach ($items as $item) {
+                
+                $date_d = Carbon::parse($item->date_m)->format('D');
+                $parent = null;
+                if (array_search($item->message_id, $parents) !== false) {
+                    $parent = $item->message_id;
+                }
+
+                $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+                $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                $anylsys[$item->message_id]["message_type"] = $item->message_type;
+                $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+                $anylsys[$item->message_id]["account_name"] = $item->author;
+                $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
+                $anylsys[$item->message_id]["day"] = $date_d;
+                $anylsys[$item->message_id]["device"] = $item->device;
+                $anylsys[$item->message_id]["source_id"] = $item->source_id;
+                $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+                $anylsys[$item->message_id]["bully_type"] = $item->classification_id;
+                $anylsys[$item->message_id]["channel"] = $item->source_name;
+                $anylsys[$item->message_id]["link_message"] = $item->link_message;
+
+
+            }
+
+            foreach ($anylsys as $anylsy) {
+
+                $anylsy["bully_level"] = $anylsy[3];
+                $anylsy["bully_type"] = $anylsy[2];
+                $anylsy["sentiment"] = $anylsy[1];
+
+                if ($anylsy[1] == $Llabel) {
+                    if ($anylsy[3] == $label) {
+                        $data['message'][] = $anylsy;
+                    }
+                }
+                
+            }
+
+
+            if ($data) {
+                $data['total'] = count($data['message']);
+
+                $page = $page < 1 ? 1 : $page;
+                $start = ($page - 1) * (9 + 1);
+                $offset = 9 + 1;
+
+                $data['message'] = array_slice($data['message'], $start, $offset);
+                return parent::handleRespond($data);
+            }
+
+
+            return $data;
+
+        }
+
+        if ($request->report_number === '5.2.009') {
+            
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$this->start_date, $this->end_date])
+                ->orderBy('date_m', 'ASC')
+                ->whereIn('classification_type_id', [1, 2, 3]);
+
+            $items = $raw->get();
+
+            $parents = [];
+            foreach ($items as $item) {
+                if ($item->reference_message_id) {
+                    if (array_search($item->reference_message_id, $parents) === false) {
+                        $parents[] = $item->reference_message_id;
+                    }
+                }
+            }
+            //todo
+            $anylsys = [];
+
+            foreach ($items as $item) {
+                $date_d = Carbon::parse($item->date_m)->format('D');
+                $parent = null;
+                if (array_search($item->message_id, $parents) !== false) {
+                    $parent = $item->message_id;
+                }
+
+                $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+                $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                $anylsys[$item->message_id]["message_type"] = $item->message_type;
+                $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+                $anylsys[$item->message_id]["account_name"] = $item->author;
+                $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
+                $anylsys[$item->message_id]["day"] = $date_d;
+                $anylsys[$item->message_id]["device"] = $item->device;
+                $anylsys[$item->message_id]["source_id"] = $item->source_id;
+                $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
+                $anylsys[$item->message_id]["bully_type"] = $item->classification_id;
+                $anylsys[$item->message_id]["channel"] = $item->source_name;
+                $anylsys[$item->message_id]["link_message"] = $item->link_message;
+            }
+
+            foreach ($anylsys as $anylsy) {
+                
+                if ($label === 'Hate Speech') {
+                    $label = 'HateSpeech';
+                } else if ($label === 'No Bully') {
+                    $label = 'NoBully';
+                } else if ($label === 'Trolling/Flaming') {
+                    $label = 'Trolling';
+                }
+
+                $anylsy["bully_level"] = $anylsy[3];
+                $anylsy["bully_type"] = $anylsy[2];
+                $anylsy["sentiment"] = $anylsy[1];
+                
+                if ($anylsy[1] == $Llabel) {
+                    if ($anylsy[2] == $label) {
+                        $data['message'][] = $anylsy;
+                    }
+                }
+                
+            }
+
+
+            if ($data) {
+                $data['total'] = count($data['message']);
+
+                $page = $page < 1 ? 1 : $page;
+                $start = ($page - 1) * (9 + 1);
+                $offset = 9 + 1;
+
+                $data['message'] = array_slice($data['message'], $start, $offset);
+                return parent::handleRespond($data);
+            }
+
+
+            return $data;
+
+        }
+
+        if ($request->report_number === '5.2.002' || 
+            $request->report_number === '5.2.003' ||
+            $request->report_number === '5.2.004' ||
+            $request->report_number === '5.2.005' ||
+            $request->report_number === '5.2.006' ||
+            $request->report_number === '5.2.007'
+        ) {
+            $total->where('classification_name', '=', $Llabel);
+            $raw->where('classification_name', '=', $Llabel);
+        }
+
+        // if (isset($request->keyword_id)) {
+        //     $raw->where('keyword_id', $request->keyword_id);
+        //     $total->where('keyword_id', $request->keyword_id);
+        // }
 
         $items = $raw->get();
 
@@ -95,7 +348,7 @@ class LevelThreeSentimentDashboardController extends Controller
         }
 
 
-        foreach ($items as  $item) {
+        foreach ($items as $ke => $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
@@ -109,7 +362,7 @@ class LevelThreeSentimentDashboardController extends Controller
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
                 "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('h:i'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
@@ -143,6 +396,7 @@ class LevelThreeSentimentDashboardController extends Controller
             $data['message'] = array_values($data['message']);
         }
 
+        // $data['count'] = count($data['message']);
         $data['total'] = $total->get()->count();
 
         return parent::handleRespond($data);
