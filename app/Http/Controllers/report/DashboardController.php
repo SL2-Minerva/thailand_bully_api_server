@@ -1101,8 +1101,9 @@ class DashboardController extends Controller
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
         $raw_total = DB::table('word_clouds')
-            ->where('message_id','!=', '')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
+            ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
+            ->where('word_clouds.message_id','!=', '')
+            ->whereIn('word_clouds.keyword_id', $keywords->pluck('id')->toArray())
             ->whereIn('classification_type_id', [1])
             ->whereBetween('date_count', [$this->start_date, $this->end_date]);
 
@@ -1114,87 +1115,95 @@ class DashboardController extends Controller
             $raw_total->where('source_id', $this->source_id);
         }
 
+        if ($this->keyword_id) {
+            $raw_total->whereIn('keyword_id', $this->keyword_id);
+        }
+
 
 
         $data['word_clouds_platform'] = $this->wordCloudsMessage($raw_total, $select);
-//        $data['wordCloudByAccount'] = $this->wordCloudByAccount($request);
+        $data['wordCloudByAccount'] = $this->wordCloudByAccount($raw_total, $request, $data['word_clouds_platform'] );
 //        $data['total'] = $this->wordCloudByAccount($request, true);
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudByAccount($request, $only_total = false) {
+    private function wordCloudByAccount($raw, $request, $lists = null) {
 
-        $page = $request->page ?? null;
-        $limit = $request->limit ?? 5;
-        $start = $page === null || $page === 1 ? null : $page * $limit;
-        $start = $start === 1 ? null : $start - 1;
-
-        $data = [];
-
-        $raw = DB::table('word_clouds')
-            ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
-            ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
-            ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
-            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
-            ->offset($start)->limit($limit);
-
-        if ($only_total) {
-            $raw = DB::table('word_clouds')
-                ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
-                ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
-                ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
-                ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
+        $top = null;
+        $data = null;
+        if ($lists) {
+            $top = $lists[0]['text'];
         }
 
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($only_total) {
-            return $raw->count();
+        if ($top) {
+            $raw->where('word', $top);
         }
 
         $wordclouds = $raw->select(
             'word_clouds.*',
-            'sources.name as source_name',
-            'classifications.name as classification_name',
-            'classification_types.name as classification_type_name')
+            'sources.name as source_name')
             ->get();
 
 
 
-        $total_message = 0;
-
         foreach ($wordclouds as $wordcloud) {
-
-            if (isset($data[$wordcloud->author])) {
-                $data[$wordcloud->author]["total_message"] += 1;
-                $data[$wordcloud->author]["engagements"] += 1;
-            } else {
-                $data[$wordcloud->author] = [
-                    "author" => $wordcloud->author,
-                    "source_id" => $wordcloud->source_id,
-                    "source_name" => $wordcloud->source_name,
-                    "total_message" => 1,
-                    "engagements" => 1
-                ];
-
-            }
-            $total_message += 1;
+            $data[] = [
+                'author' => $wordcloud->author,
+                'source_id' => $wordcloud->source_id,
+                'source_name' => $wordcloud->source_name,
+                'total_message' => $wordcloud->count_number,
+                'engagements' => $this->get_engagements($wordcloud->message_id)
+            ];
         }
-
-
-        if ($data) {
-            $data = array_values($data);
-        }
-
 
         return $data;
+
+
+//
+//
+//
+//        $total_message = 0;
+
+//        foreach ($wordclouds as $wordcloud) {
+//
+////            if (isset($data[$wordcloud->author])) {
+////                $data[$wordcloud->author]["total_message"] += 1;
+////                $data[$wordcloud->author]["engagements"] += 1;
+////            } else {
+////                $data[$wordcloud->author] = [
+////                    "author" => $wordcloud->author,
+////                    "source_id" => $wordcloud->source_id,
+////                    "source_name" => $wordcloud->source_name,
+////                    "total_message" => 1,
+////                    "engagements" => 1
+////                ];
+////
+////            }
+////            $total_message += 1;
+//        }
+
+
+//        if ($data) {
+//            $data = array_values($data);
+//        }
+//
+//        dd($data);
+//
+//
+//        return $data;
+    }
+
+    private function get_engagements($message_id) {
+        $message =  DB::table('messages')
+            ->where('message_id', $message_id)
+            ->select(DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
+            ->first()
+            ->total;
+
+        if ($message) {
+            return (int)$message;
+        }
     }
 
     public function wordCloudsPosition(Request $request)
