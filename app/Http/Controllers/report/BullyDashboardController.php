@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\report;
 
+use App\Models\Organization;
+use App\Models\UserOrganizationGroup;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
@@ -37,6 +39,14 @@ class BullyDashboardController extends Controller
             $this->keyword_id = explode(',' , $fillter_keywords);
         }
 
+        if (auth('api')->user()) {
+            $this->user_login = auth('api')->user();
+
+
+            $this->organization = Organization::find($this->user_login->organization_id);
+            $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
+        }
+
     }
 
     public function dailyBy()
@@ -44,7 +54,7 @@ class BullyDashboardController extends Controller
         $data = null;
         $data['percentage_bully'] = $this->PercentageBullyGroup();
         $data['daily_bully'] = $this->DailyBullyGroup();
-        
+
         return parent::handleRespond($data);
     }
 
@@ -58,7 +68,7 @@ class BullyDashboardController extends Controller
         $data['bully_by_account'] = $this->BullyByAccountGroup();
         $data['bully_by_channel'] = $this->BullyByChannelGroup();
         $data['bully_by_sentiment'] = $this->BullyBySentimentGroup();
-        
+
         return parent::handleRespond($data);
     }
 
@@ -637,7 +647,7 @@ class BullyDashboardController extends Controller
                         'keyword_name' => $item->classification_name,
                         'data' => [0, 0, 0]
                     ];
-    
+
                     $data['value'][$item->classification_id]['data'][$index_label] += 1;
                 }
             }
@@ -878,6 +888,11 @@ class BullyDashboardController extends Controller
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
         }
 
         $items = $raw->get();
@@ -1562,7 +1577,7 @@ class BullyDashboardController extends Controller
             if ($item->device == 'android') {
                 $index_label = 1;
             }
-            
+
             if ($item->device == 'iphone') {
                 $index_label = 1;
             }
@@ -1581,7 +1596,7 @@ class BullyDashboardController extends Controller
                         'keyword_name' => $item->classification_name,
                         'data' => [0, 0, 0]
                     ];
-    
+
                     $data['value'][$item->classification_id]['data'][$index_label] += 1;
                 }
             }
@@ -1974,7 +1989,7 @@ class BullyDashboardController extends Controller
         $data['bully_chart_type'] = $this->BullyChartTypeGroup();
         $data['bully_chart_level'] = $this->BullyLevelLevelGroup();
         $data['bully_table_type'] = $this->BullyTableTypeGroup();
-        
+
         return parent::handleRespond($data);
     }
 
