@@ -1232,6 +1232,11 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->whereIn('keyword_id', $this->keyword_id);
             }
 
+            if (!$this->user_login->is_admin) {
+                $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+                $channal_message_current->whereIn('source_id', $source_ids);
+            }
+
             if ($this->source_id) {
                 $channal_message_current->where('source_id', $this->source_id);
             }
