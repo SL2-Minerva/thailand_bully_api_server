@@ -212,37 +212,36 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/channel-by-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment2']);
 //        Route::get('/sentiment-level', [ChannelDashboardController::class, 'SentimentLevel']);
         });
-    });
 
-    Route::get('/keywords', [KeywordController::class, 'keywords']);
+        Route::get('/keywords', [KeywordController::class, 'keywords']);
 
-    Route::group(['prefix' => 'dashboard-overall'], function () {
-        Route::get('/', [DashboardController::class, 'overAll']);
-        Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
-        Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
-        Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
-        Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
-        Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
-        Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);
-        Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
-        Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
-        Route::get('/share-of-voice-number/', [DashboardController::class, 'shareOfVoiceNumber']);
-        Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
+        Route::group(['prefix' => 'dashboard-overall'], function () {
+            Route::get('/', [DashboardController::class, 'overAll']);
+            Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
+            Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
+            Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
+            Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
+            Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
+            Route::get('/sentiment-score/', [DashboardController::class, 'sentimentScore']);
+            Route::get('/sentiment-type/', [DashboardController::class, 'sentimentType']);
+            Route::get('/share-of-voice/', [DashboardController::class, 'shareOfVoice']);
+            Route::get('/share-of-voice-number/', [DashboardController::class, 'shareOfVoiceNumber']);
+            Route::get('/sentiment-level/', [DashboardController::class, 'sentimentLevel']);
 
-        // word cloud
-        Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
-        Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
-        Route::get('/word-clouds-position/', [DashboardController::class, 'wordCloudsPosition']);
+            // word cloud
+            Route::get('/word-clouds/', [DashboardController::class, 'wordClouds']);
+            Route::get('/word-clouds-platform/', [DashboardController::class, 'wordCloudsPlateform']);
+            Route::get('/word-clouds-position/', [DashboardController::class, 'wordCloudsPosition']);
 
-        // level-three
-        Route::get('/level-three/', [LevethreeOverAllDashboardController::class, 'dailyMessageLevelThree']);
-    });
+            // level-three
+            Route::get('/level-three/', [LevethreeOverAllDashboardController::class, 'dailyMessageLevelThree']);
+        });
 
-    Route::group(['prefix' => 'dashboard-voice'], function () {
-        Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
-        Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
+        Route::group(['prefix' => 'dashboard-voice'], function () {
+            Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
+            Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
 //
-        Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
+            Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
 //
 //        Route::get('/message-by-day', [VoiceDashboardController::class, 'MessageByDayold']);
 //        Route::get('/message-by-time', [VoiceDashboardController::class, 'MessageByTimeold']);
@@ -253,12 +252,12 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/message-by-level', [VoiceDashboardController::class, 'MessageByLevelold']);
 //        Route::get('/message-by-type', [VoiceDashboardController::class, 'MessageByTypeold']);
 //
-        Route::get('/number-of-account-period-over-period', [VoiceDashboardController::class, 'NumberOfAccountPeriodOverPeriod']);
+            Route::get('/number-of-account-period-over-period', [VoiceDashboardController::class, 'NumberOfAccountPeriodOverPeriod']);
 //        Route::get('/number-of-account', [VoiceDashboardController::class, 'NumberOfAccount']);
 //        Route::get('/period-over-period', [VoiceDashboardController::class, 'PeriodOverPeriod']);
 //
 //        //todo
-        Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
+            Route::get('daytime-by', [VoiceDashboardController::class, 'DayTimeBy']);
 //
 //        Route::get('/day-time-comparison', [VoiceDashboardController::class, 'DayTimeComparison']);
 //        Route::get('/day-time-sentiment', [VoiceDashboardController::class, 'DayTimeSentiment']);
@@ -266,29 +265,29 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/day-time-type', [VoiceDashboardController::class, 'DayTimeType']);
 //
 //        //todo
-        Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
+            Route::get('channel-platform-channel-device', [VoiceDashboardController::class, 'channelPlatformChannelDevice']);
 //
 //        Route::get('/channel-platform', [VoiceDashboardController::class, 'ChannelPlatform']);
 //        Route::get('/device', [VoiceDashboardController::class, 'Device']);
 //        Route::get('/channel-device', [VoiceDashboardController::class, 'ChannelDevice']);
 //
 //        //todo
-        Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
-        Route::get('/level-three/', [LeveltreeVoiceDashboardController::class, 'dailyMessageLevelThree']);
+            Route::get('keyword-by', [VoiceDashboardController::class, 'keywordBy']);
+            Route::get('/level-three/', [LeveltreeVoiceDashboardController::class, 'dailyMessageLevelThree']);
 //
 //        Route::get('/keyword-channel', [VoiceDashboardController::class, 'KeywordChannel']);
 //        Route::get('/keyword-sentiment', [VoiceDashboardController::class, 'KeywordSentiment']);
 //        Route::get('/keyword-bully-level', [VoiceDashboardController::class, 'KeywordBullyLevel']);
 //        Route::get('/keyword-bully-type', [VoiceDashboardController::class, 'KeywordBullyType']);
 
-    });
+        });
 
 
 
-    Route::group(['prefix' => 'dashboard-engagement'], function () {
-        Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
+        Route::group(['prefix' => 'dashboard-engagement'], function () {
+            Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
 //
-        Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
+            Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
 //
 //        Route::get('/engagement-day', [EngagementDashboardController::class, 'EngagementByDay']);
 //        Route::get('/engagement-time', [EngagementDashboardController::class, 'EngagementByTime']);
@@ -297,7 +296,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-channel', [EngagementDashboardController::class, 'EngagementChannel']);
 //        Route::get('/keyword-by-engagement-type', [EngagementDashboardController::class, 'keywordByEngagementType']);
 //
-        Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
+            Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
 //
 //        Route::get('/engagement-type', [EngagementDashboardController::class, 'EngagementType']);
 //        Route::get('/engagement-type-by-day', [EngagementDashboardController::class, 'EngagementByDayKey']);
@@ -306,7 +305,7 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-type-by-account', [EngagementDashboardController::class, 'EngagementByAccountKey']);
 //        Route::get('/engagement-type-by-channel', [EngagementDashboardController::class, 'EngagementChannelKey']);
 //
-        Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
+            Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
 //
 //        Route::get('/engagement-comparison', [EngagementDashboardController::class, 'EngagementComparison']);
 //        Route::get('/engagement-period-platform', [EngagementDashboardController::class, 'EngagementPeriodPlarform']);
@@ -314,15 +313,15 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/engagement-type-comparison', [EngagementDashboardController::class, 'EngagementTypeComparison']);
 //        Route::get('/engagement-action-comparison', [EngagementDashboardController::class, 'EngagementActionComparison']);
 //        Route::get('/engagement-infulencer', [EngagementDashboardController::class, 'EngagementByInfulencer']);
-        Route::get('/level-three/', [LevelThreeEngagementDashboardController::class, 'report']);
+            Route::get('/level-three/', [LevelThreeEngagementDashboardController::class, 'report']);
 
-    });
+        });
 
-    Route::group(['prefix' => 'dashboard-sentiment'], function () {
+        Route::group(['prefix' => 'dashboard-sentiment'], function () {
 
-        Route::get('/sentiment-daily', [SentimentDashboardController::class, 'DailySeniment']);
+            Route::get('/sentiment-daily', [SentimentDashboardController::class, 'DailySeniment']);
 //
-        Route::get('/sentiment-by', [SentimentDashboardController::class, 'sentimentBy']);
+            Route::get('/sentiment-by', [SentimentDashboardController::class, 'sentimentBy']);
 //
 //        Route::get('/sentiment-day', [SentimentDashboardController::class, 'SentimentByDay']);
 //        Route::get('/sentiment-time', [SentimentDashboardController::class, 'SentimentByTime']);
@@ -332,42 +331,42 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/sentiment-bully-level', [SentimentDashboardController::class, 'SentimentBullyLevel']);
 //        Route::get('/sentiment-bully-type', [SentimentDashboardController::class, 'SentimentBullyType']);
 //        Route::get('/sentiment-score', [SentimentDashboardController::class, 'SentimentScore']);
-        Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
+            Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
 //
-        Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
+            Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
 //
 //        Route::get('/period-over-period', [SentimentDashboardController::class, 'PeriodOverPeriod']);
 //        Route::get('/comparison-channel', [SentimentDashboardController::class, 'ComparisonByChannel']);
 //        Route::get('/comparison-engagement-type', [SentimentDashboardController::class, 'ComparisonByEngagementType']);
 //
 //
-        Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
-        Route::get('/level-three/', [LevelThreeSentimentDashboardController::class, 'report']);
+            Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
+            Route::get('/level-three/', [LevelThreeSentimentDashboardController::class, 'report']);
 //
 //        Route::get('/summary-score-account', [SentimentDashboardController::class, 'SummaryScoreAccount']);
 //        Route::get('/summary-score-channel', [SentimentDashboardController::class, 'SummaryScoreChannel']);
 //        Route::get('/summary-keyword', [SentimentDashboardController::class, 'SummaryKeyword']);
-    });
+        });
 
-    Route::group(['prefix' => 'dashboard-bully'], function () {
+        Route::group(['prefix' => 'dashboard-bully'], function () {
 //        //todo
-        Route::get('daily-by', [BullyDashboardController::class, 'dailyBy']);
+            Route::get('daily-by', [BullyDashboardController::class, 'dailyBy']);
 //
 //        Route::get('/bully-daily', [BullyDashboardController::class, 'DailyBully']);
 //        Route::get('/bully-percentage', [BullyDashboardController::class, 'PercentageBully']);
 //
 //        //todo
-        Route::get('bully-by', [BullyDashboardController::class, 'bullyBy']);
+            Route::get('bully-by', [BullyDashboardController::class, 'bullyBy']);
 
 //
 //        //todo
-        Route::get('daily-type-by', [BullyDashboardController::class, 'dailyTypeBy']);
+            Route::get('daily-type-by', [BullyDashboardController::class, 'dailyTypeBy']);
 //
 //        Route::get('/bully-type-daily', [BullyDashboardController::class, 'BullyTypeDaily']);
 //        Route::get('/bully-type-percentage-daily', [BullyDashboardController::class, 'BullyTypePercentageDaily']);
 //
 //        //todo
-        Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
+            Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
 //
 //        Route::get('/bully-type-day', [BullyDashboardController::class, 'BullyTypeByDay']);
 //        Route::get('/bully-type-time', [BullyDashboardController::class, 'BullyTypeByTime']);
@@ -377,15 +376,18 @@ Route::group(['middleware' => ['api']], function () {
 //        Route::get('/bully-type-sentiment', [BullyDashboardController::class, 'BullyTypeBySentiment']);
 //
 //        //todo
-        Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
+            Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
 //
 //        Route::get('/bully-chart-level', [BullyDashboardController::class, 'BullyChartLevel']);
 //        Route::get('/bully-table-level', [BullyDashboardController::class, 'BullyLevelLevel']);
 //        Route::get('/bully-chart-type', [BullyDashboardController::class, 'BullyChartType']);
 //        Route::get('/bully-table-type', [BullyDashboardController::class, 'BullyTableType']);
 
-        Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
+            Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
+        });
     });
+
+
 });
 
 
