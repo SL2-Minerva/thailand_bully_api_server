@@ -1612,6 +1612,10 @@ class ChannelDashboardController extends Controller
 
         $source_id = Sources::where('status', 1)->get();
 
+        if (!$this->user_login->is_admin) {
+            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
+        }
+
         foreach ($source_id as $source_id) {
             $data['labels'][] = $source_id->name;
         }
