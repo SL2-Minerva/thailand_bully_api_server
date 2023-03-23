@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\report;
 
 use App\Models\Classification;
+use App\Models\Organization;
+use App\Models\UserOrganizationGroup;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Carbon;
@@ -41,6 +43,14 @@ class SentimentDashboardController extends Controller
 
         if ($request->secure !== 'all') {
             $this->source_id = $request->source_id;
+        }
+
+        if (auth('api')->user()) {
+            $this->user_login = auth('api')->user();
+
+
+            $this->organization = Organization::find($this->user_login->organization_id);
+            $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
         }
     }
 
