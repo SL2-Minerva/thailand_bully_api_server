@@ -376,6 +376,13 @@ class ChannelDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+        }
+
+
         $data['value'] = null;
 
         foreach ($raw->get() as $item) {
