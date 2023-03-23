@@ -1161,6 +1161,11 @@ class DashboardController extends Controller
         }
 
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_total->whereIn('source_id', $source_ids);
+        }
+
 
         $data['word_clouds_platform'] = $this->wordCloudsMessage($raw_total, $select);
         $data['wordCloudByAccount'] = $this->wordCloudByAccount($raw_total, $request, $data['word_clouds_platform'] );
@@ -1288,6 +1293,13 @@ class DashboardController extends Controller
 //        if ($this->keyword_id) {
 //            $raw_total->whereIn('keyword_id', $this->keyword_id);
 //        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_total->whereIn('source_id', $source_ids);
+        }
+
+
 
 
         $data['word_clouds_position'] = $this->wordCloudsMessage($raw_total, $select);
