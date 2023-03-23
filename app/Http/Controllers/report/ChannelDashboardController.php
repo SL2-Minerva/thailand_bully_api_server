@@ -98,6 +98,14 @@ class ChannelDashboardController extends Controller
             $channal_message_total->where('source_id', $this->source_id);
         }
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+
+            $percentage_of_channal->whereIn('source_id', $source_ids);
+            $channal_message_total->whereIn('source_id', $source_ids);
+
+        }
+
         $channal_message_total = $channal_message_total->get()->count();
 
         foreach ($percentage_of_channal->get() as $channal) {
@@ -209,9 +217,16 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+        }
+
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
         }
+
+
 
         $items = $raw->get();
         $data = null;
@@ -1107,8 +1122,6 @@ class ChannelDashboardController extends Controller
         }
 
 
-
-
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
@@ -1116,7 +1129,7 @@ class ChannelDashboardController extends Controller
 
 
         if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->user_login->organization_group->sources)->pluck('id')->toArray();
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $raw->whereIn('source_id', $source_ids);
         }
 
