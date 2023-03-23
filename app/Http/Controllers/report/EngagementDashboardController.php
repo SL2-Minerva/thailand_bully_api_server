@@ -72,7 +72,7 @@ class EngagementDashboardController extends Controller
     public function EngagementBy(Request $request)
     {
 
-        dd($this->user_login);
+        // dd($this->user_login);
         return parent::handleRespond([
             "EngagementByDay" => $this->EngagementByDay($request, true),
             "EngagementByTime" => $this->EngagementByTime($request, true),
@@ -234,7 +234,6 @@ class EngagementDashboardController extends Controller
 
         if ($this->source_id) {
             $raw_current->where('source_id', $this->source_id);
-
         }
 
         if ($this->keyword_id) {
@@ -244,7 +243,11 @@ class EngagementDashboardController extends Controller
         $items = $raw_current->get();
 
         foreach ($items as $item) {
-            $index_label = 0;
+            $index_label = null;
+
+            if ($item->device == 'android') {
+                $index_label = 0;
+            }
 
             if ($item->device == 'iphone') {
                 $index_label = 1;
@@ -254,21 +257,25 @@ class EngagementDashboardController extends Controller
                 $index_label = 2;
             }
 
+            if ($index_label !== null) {
 
-            if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                if (isset($data['value'][$item->keyword_id])) {
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->keyword_id] = [
+                        'id' => $item->keyword_id,
+                        'keyword_name' => $item->keyword_name,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        'data' => [0, 0, 0]
+                    ];
 
-            } else {
-                $data['value'][$item->keyword_id] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
-                    'data' => [0, 0, 0]
-                ];
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-
+                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                }
             }
+
         }
 
         if (isset($data['value'])) {
@@ -1023,8 +1030,12 @@ class EngagementDashboardController extends Controller
 
 
         foreach ($items as $item) {
-            $index_label = 0;
+            $index_label = null;
 
+            if ($item->device == 'android') {
+                $index_label = 0;
+            }
+            
             if ($item->device == 'iphone') {
                 $index_label = 1;
             }
@@ -1033,39 +1044,43 @@ class EngagementDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if (isset($data['value'][1])) {
+            if ($index_label != null) {
 
-                $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                $data['value'][2]['data'][$index_label] += $item->number_of_shares;
-                $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
-
-
-            } else {
-
-                $data['value'][1] = [
-                    "id" => 1,
-                    "keyword_name" => 'Share',
-                    "campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][2] = [
-                    "id" => 2,
-                    "keyword_name" => 'Comment',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
-                    'data' => [0, 0, 0]
-                ];
-
-                $data['value'][3] = [
-                    "id" => 3,
-                    "keyword_name" => 'Reactions',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
-                    'data' => [0, 0, 0]
-                ];
+                if (isset($data['value'][1])) {
+    
+                    $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+                    $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+                    $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+    
+    
+                } else {
+    
+                    $data['value'][1] = [
+                        "id" => 1,
+                        "keyword_name" => 'Share',
+                        "campaign_id" => $item->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        'data' => [0, 0, 0]
+                    ];
+    
+                    $data['value'][2] = [
+                        "id" => 2,
+                        "keyword_name" => 'Comment',
+                        "campaign_id" => $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        'data' => [0, 0, 0]
+                    ];
+    
+                    $data['value'][3] = [
+                        "id" => 3,
+                        "keyword_name" => 'Reactions',
+                        "campaign_id" => $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        'data' => [0, 0, 0]
+                    ];
+                }
             }
+
         }
 
 
@@ -1109,7 +1124,7 @@ class EngagementDashboardController extends Controller
         foreach ($infulencers as $infulencer) {
 
             if ($infulencer) {
-
+                
                 if (isset($data['value'][1]['data'][0])) {
                     $data['value'][1]['data'][0] += $infulencer->number_of_shares;
                     $data['value'][2]['data'][0] += $infulencer->number_of_comments;
