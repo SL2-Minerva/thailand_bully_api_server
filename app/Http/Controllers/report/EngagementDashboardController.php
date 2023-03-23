@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\report;
 
+use App\Models\Organization;
+use App\Models\UserOrganizationGroup;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
@@ -42,6 +44,17 @@ class EngagementDashboardController extends Controller
             $this->source_id = $request->source_id;
         }
 
+
+        $this->request = $request;
+
+        if (auth('api')->user()) {
+            $this->user_login = auth('api')->user();
+
+
+            $this->organization = Organization::find($this->user_login->organization_id);
+            $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
+        }
+
     }
 
     public function EngagementTrans(Request $request)
@@ -58,6 +71,8 @@ class EngagementDashboardController extends Controller
 
     public function EngagementBy(Request $request)
     {
+
+        dd($this->user_login);
         return parent::handleRespond([
             "EngagementByDay" => $this->EngagementByDay($request, true),
             "EngagementByTime" => $this->EngagementByTime($request, true),
@@ -647,7 +662,7 @@ class EngagementDashboardController extends Controller
                     }
 
                 }
-                
+
                 // $data['engagement'][2]['value'][$date_m][] = $comment;
                 // $data['engagement'][3]['value'][$date_m][] = $reactions;
             } else {
@@ -776,7 +791,7 @@ class EngagementDashboardController extends Controller
         if (isset($data['engagement'])) {
             foreach($data['engagement'] as $index => $engagement) {
                 $data['engagement'][$index]['value'] = array_values($data['engagement'][$index]['value']);
-                
+
             }
 
             $data['engagement'] = array_values($data['engagement'] );
@@ -1283,7 +1298,7 @@ class EngagementDashboardController extends Controller
 
         $data['comment'] = [
             "totalValue" => $this->custom_number_format((int)$total_comment_current),
-            "comparison" => $total_comment_previous !== 0 ? (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0, 
+            "comparison" => $total_comment_previous !== 0 ? (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0,
             "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
         ];
 
