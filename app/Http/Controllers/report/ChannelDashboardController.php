@@ -630,7 +630,7 @@ class ChannelDashboardController extends Controller
             }
 
             if ($index_label !== null) {
-                
+
                 if (isset($data['value'][$item->source_id])) {
                     $data['value'][$item->source_id]['data'][$index_label] += 1;
                 } else {
@@ -643,7 +643,7 @@ class ChannelDashboardController extends Controller
                         'source_name' => $item->source_name,
                         'data' => [0, 0, 0]
                     ];
-    
+
                     $data['value'][$item->source_id]['data'][$index_label] += 1;
                 }
             }
@@ -1094,10 +1094,19 @@ class ChannelDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
+
+
+
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [2]);
+
+
+        if (!$this->user_login->organization_group->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->user_login->organization_group->sources)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+        }
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -1220,7 +1229,16 @@ class ChannelDashboardController extends Controller
 
     public function PeriodOverPeriodGroup()
     {
-        $source_id = Sources::where('status', 1)->get();
+        $soure_group = $this->user_login->organization_group->platform;
+        $source_id = Sources::where('status', 1)
+            ->whereIn('name', $soure_group)
+            ->get();
+
+        if ($this->user_login->is_admin) {
+            $source_id = Sources::where('status', 1)->get();
+        }
+
+
         foreach ($source_id as $item) {
 
             $channal_message_current = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
