@@ -38,7 +38,7 @@ class LevethreeOverAllDashboardController extends Controller
 
     }
 
-    public function dailyMessageLevelThree(Request $request) 
+    public function dailyMessageLevelThree(Request $request)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -69,6 +69,11 @@ class LevethreeOverAllDashboardController extends Controller
         if (isset($request->keyword_id)) {
             $raw->where('keyword_id', $request->keyword_id);
             $total->where('keyword_id', $request->keyword_id);
+        }
+
+        if (isset($request->meesage_id)) {
+            $raw->where('message_id', $request->meesage_id);
+            $total->where('message_id', $request->meesage_id);
         }
 
         $items = $raw->get();

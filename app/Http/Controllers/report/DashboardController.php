@@ -5,10 +5,12 @@ namespace App\Http\Controllers\report;
 use App\Http\Controllers\Controller;
 use App\Models\Keyword;
 use App\Models\Message;
+use App\Models\Organization;
 use App\Models\SNA;
 use App\Models\SNAChildNode;
 use App\Models\SNARootNode;
 use App\Models\Sources;
+use App\Models\UserOrganizationGroup;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -41,6 +43,15 @@ class DashboardController extends Controller
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
             $this->keyword_id = explode(',', $fillter_keywords);
+        }
+
+        $this->request = $request;
+
+        if (auth('api')->user()) {
+            $this->user_login = auth('api')->user();
+
+            $this->organization = Organization::find($this->user_login->organization_id);
+            $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
         }
 
     }
@@ -757,6 +768,13 @@ class DashboardController extends Controller
         }
 
         $source = Sources::where('status', 1)->get();
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $total_keywords->whereIn('source_id', $source_ids);
+
+            $source = Sources::whereIn('id', $source_ids)->get();
+        }
 
         foreach ($source as $source_id) {
             $push['name'] = $source_id->name;
