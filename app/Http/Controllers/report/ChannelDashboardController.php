@@ -1562,6 +1562,7 @@ class ChannelDashboardController extends Controller
         }
 
         $source_id = Sources::where('status', 1)->get();
+
         foreach ($source_id as $source_id) {
             $data['labels'][] = $source_id->name;
         }
