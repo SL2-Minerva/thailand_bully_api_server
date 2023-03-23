@@ -1820,10 +1820,14 @@ class BullyDashboardController extends Controller
 
     private function BullyTypeByChannelGroup()
     {
-        $source_ids = Sources::all();
+        $sources = Sources::all();
         $data['labels'] = [];
 
-        foreach ($source_ids as $source_id) {
+        if (!$this->user_login->is_admin) {
+            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+        }
+
+        foreach ($sources as $source_id) {
             $data['labels'][] = $source_id->name;
         }
 
@@ -1835,6 +1839,11 @@ class BullyDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+        }
+
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
