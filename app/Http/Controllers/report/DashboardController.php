@@ -387,8 +387,8 @@ class DashboardController extends Controller
     {
         $data = null;
 
-        $data['main_keyword'] = $this->mainKeyWords($this->start_date, $this->end_date);
-        $data['top_sites'] = $this->topSites($this->start_date, $this->end_date);
+//        $data['main_keyword'] = $this->mainKeyWords($this->start_date, $this->end_date);
+//        $data['top_sites'] = $this->topSites($this->start_date, $this->end_date);
         $data['top_hastag'] = $this->topHashtag($this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
@@ -653,9 +653,14 @@ class DashboardController extends Controller
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereBetween('date_count', [$start_date, $end_date])->orderBy('count_number', 'desc');
 
-
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+            $raw_total->whereIn('source_id', $source_ids);
         }
 
         $total_keywords = $raw_total->sum('count_number');
