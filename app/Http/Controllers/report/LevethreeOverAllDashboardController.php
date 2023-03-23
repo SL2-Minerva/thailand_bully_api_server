@@ -57,6 +57,11 @@ class LevethreeOverAllDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
+        if ($request->message_id) {
+            $raw->where('message_id', $request->message_id);
+            $total->where('message_id', $request->message_id);
+        }
+
         if ($request->report_number === '1.2.002'
         ) {
 

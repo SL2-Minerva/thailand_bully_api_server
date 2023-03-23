@@ -1301,7 +1301,6 @@ class DashboardController extends Controller
 
 
 
-
         $data['word_clouds_position'] = $this->wordCloudsMessage($raw_total, $select);
         $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($raw_total, $request, $data['word_clouds_position']);
 //        $data['total'] = $this->wordCloudBySentimentType($request, true);
