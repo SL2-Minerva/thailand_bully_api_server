@@ -176,6 +176,42 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/list', [SourceController::class, 'index']);
 
         });
+
+
+        Route::group(['prefix' => 'dashboard-channel'], function () {
+//        //todo
+            Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
+//
+//        Route::get('/percentage-of-channel', [ChannelDashboardController::class, 'PercentageOfChannel']);
+//        Route::get('/daily-channel', [ChannelDashboardController::class, 'DailyChannel']);
+//
+//        //todo
+            Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
+//
+//        Route::get('/channel-day', [ChannelDashboardController::class, 'ChannelByDay']);
+//        Route::get('/channel-time', [ChannelDashboardController::class, 'ChannelByTime']);
+//        Route::get('/channel-device', [ChannelDashboardController::class, 'ChannelByDevice']);
+//        Route::get('/channel-account', [ChannelDashboardController::class, 'ChannelByAccount']);
+//        Route::get('/channel-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment']);
+//        Route::get('/channel-bully-level', [ChannelDashboardController::class, 'ChannelBullyLevel']);
+//        Route::get('/channel-bully-type', [ChannelDashboardController::class, 'ChannelBullyType']);
+//
+//        //todo
+            Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
+//
+//        Route::get('/engagement-rate', [ChannelDashboardController::class, 'EngagementRate']);
+//        Route::get('/engagement-rate-previous', [ChannelDashboardController::class, 'EngagementRatePrevious']);
+//        Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']);
+//
+//        //todo
+            Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
+            Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
+//
+//        Route::get('/sentiment-score', [ChannelDashboardController::class, 'SentimentScore']);
+//        Route::get('/sentiment-score-previous', [ChannelDashboardController::class, 'SentimentScorePrevious']);
+//        Route::get('/channel-by-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment2']);
+//        Route::get('/sentiment-level', [ChannelDashboardController::class, 'SentimentLevel']);
+        });
     });
 
     Route::get('/keywords', [KeywordController::class, 'keywords']);
@@ -247,40 +283,7 @@ Route::group(['middleware' => ['api']], function () {
 
     });
 
-    Route::group(['prefix' => 'dashboard-channel'], function () {
-//        //todo
-        Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
-//
-//        Route::get('/percentage-of-channel', [ChannelDashboardController::class, 'PercentageOfChannel']);
-//        Route::get('/daily-channel', [ChannelDashboardController::class, 'DailyChannel']);
-//
-//        //todo
-        Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
-//
-//        Route::get('/channel-day', [ChannelDashboardController::class, 'ChannelByDay']);
-//        Route::get('/channel-time', [ChannelDashboardController::class, 'ChannelByTime']);
-//        Route::get('/channel-device', [ChannelDashboardController::class, 'ChannelByDevice']);
-//        Route::get('/channel-account', [ChannelDashboardController::class, 'ChannelByAccount']);
-//        Route::get('/channel-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment']);
-//        Route::get('/channel-bully-level', [ChannelDashboardController::class, 'ChannelBullyLevel']);
-//        Route::get('/channel-bully-type', [ChannelDashboardController::class, 'ChannelBullyType']);
-//
-//        //todo
-        Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
-//
-//        Route::get('/engagement-rate', [ChannelDashboardController::class, 'EngagementRate']);
-//        Route::get('/engagement-rate-previous', [ChannelDashboardController::class, 'EngagementRatePrevious']);
-//        Route::get('/period-over-period', [ChannelDashboardController::class, 'PeriodOverPeriod']);
-//
-//        //todo
-        Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
-        Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
-//
-//        Route::get('/sentiment-score', [ChannelDashboardController::class, 'SentimentScore']);
-//        Route::get('/sentiment-score-previous', [ChannelDashboardController::class, 'SentimentScorePrevious']);
-//        Route::get('/channel-by-sentiment', [ChannelDashboardController::class, 'ChannelBySentiment2']);
-//        Route::get('/sentiment-level', [ChannelDashboardController::class, 'SentimentLevel']);
-    });
+
 
     Route::group(['prefix' => 'dashboard-engagement'], function () {
         Route::get('/engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
