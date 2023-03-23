@@ -1236,6 +1236,7 @@ class ChannelDashboardController extends Controller
                 $channal_message_current->where('source_id', $this->source_id);
             }
 
+
             return $channal_message_current->get()->count();
         }
 
@@ -1267,30 +1268,9 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function PeriodOverPeriod(Request $request)
-    {
-        $source_id = Sources::where('status', 1)->get();
-        foreach ($source_id as $item) {
-
-            $channal_message_current = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
-            $channal_message_previous = $this->total_message_by_source_id('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $item->id);
-
-            $comparison = $channal_message_current - $channal_message_previous;
-            $percentage = ($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous) * 100;
-
-            $data[$item->name] = [
-                "comparison_value" => $this->point_two_digits($comparison),
-                "percentage" => $this->point_two_digits($percentage),
-                "type" => ($comparison >= 0 ? "plus" : "minus"),
-            ];
-        }
-
-        return parent::handleRespond($data);
-    }
 
     public function PeriodOverPeriodGroup()
     {
-
 
         $soure_group = $this->organization_group->platform;
         $source_id = Sources::where('status', 1)
@@ -1400,6 +1380,10 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
         $source_id = Sources::where('status', 1)->get();
+        if (!$this->user_login->is_admin) {
+            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
+        }
+
         $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
 
         $data["all"] = [
@@ -1426,6 +1410,11 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
         $source_id = Sources::where('status', 1)->get();
+
+        if (!$this->user_login->is_admin) {
+            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
+        }
+
         $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
 
         $data["all"] = [
@@ -1520,6 +1509,11 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $percentage_of_channal->whereIn('source_id', $source_ids);
         }
 
         if ($this->source_id) {
@@ -1658,6 +1652,11 @@ class ChannelDashboardController extends Controller
         }
 
         $source_id = Sources::where('status', 1)->get();
+
+        if (!$this->user_login->is_admin) {
+            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
+        }
+
         foreach ($source_id as $source_id) {
             $data['labels'][] = $source_id->name;
         }
