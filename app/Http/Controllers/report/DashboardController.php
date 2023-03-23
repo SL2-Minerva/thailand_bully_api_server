@@ -995,6 +995,9 @@ class DashboardController extends Controller
     public function wordClouds(Request $request)
     {
         $data = null;
+
+
+
         $campaign_id = $request->campaign_id ?? "";
 
         if (!$campaign_id) {
@@ -1012,6 +1015,12 @@ class DashboardController extends Controller
 
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
+        }
+
+
+        if ($request->word) {
+            $raw_total->where('word', $request->word);
+//            $raw_total->where('word', 'like', '%' . $request->word . '%');
         }
 
 //        $worlds = $raw_total->get();
