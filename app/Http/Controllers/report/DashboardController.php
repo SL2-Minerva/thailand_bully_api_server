@@ -1036,14 +1036,16 @@ class DashboardController extends Controller
             ->whereIn('classification_type_id', [1])
             ->whereBetween('date_count', [$this->start_date, $this->end_date]);
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_total->whereIn('source_id', $source_ids);
+        }
+
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
         }
 
-
-
-//        $worlds = $raw_total->get();
-
+//      $worlds = $raw_total->get();
 
         $data['word_clouds'] = $this->wordCloudsMessage($raw_total, $select);
         $data['word_clouds_table'] = $this->wordCloudsMessageTable($raw_total, $request);
@@ -1176,7 +1178,7 @@ class DashboardController extends Controller
         }
 
         if ($request->word) {
-            $raw->where('word', $request->word);
+            $top = $request->word;
         }
 
         if ($top) {
@@ -1386,7 +1388,7 @@ class DashboardController extends Controller
         }
 
         if ($request->word) {
-            $raw->where('word', $request->word);
+            $top = $request->word;
         }
 
         if ($top) {
