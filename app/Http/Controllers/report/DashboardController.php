@@ -1018,10 +1018,6 @@ class DashboardController extends Controller
         }
 
 
-        if ($request->word) {
-            $raw_total->where('word', $request->word);
-//            $raw_total->where('word', 'like', '%' . $request->word . '%');
-        }
 
 //        $worlds = $raw_total->get();
 
@@ -1047,6 +1043,12 @@ class DashboardController extends Controller
         $data = null;
 
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
+
+
+        if ($request->word) {
+            $raw->where('word', 'like', '%' . $request->word . '%');
+        }
+
         $wordclouds = $raw->orderBy('count_number', 'desc')->get();
         $total = $raw->sum('count_number');
 
