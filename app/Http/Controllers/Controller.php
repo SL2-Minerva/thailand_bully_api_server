@@ -213,6 +213,18 @@ class Controller extends BaseController
     public static function listSource()
     {
         $sources = Sources::where('status', 1)->get();
+
+        if (auth('api')->user()) {
+            $user_login = auth('api')->user();
+            $organization = Organization::find($user_login->organization_id);
+            $organization_group = UserOrganizationGroup::find($organization->organization_group_id);
+
+            if (!$user_login->is_admin) {
+                $sources = Sources::where('status', 1)->whereIn('name', $organization_group->platform)->get();
+            }
+        }
+
+
         $data['labels'] = [];
 
         foreach ($sources as $source) {
