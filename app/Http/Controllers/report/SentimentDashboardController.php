@@ -1574,6 +1574,8 @@ class SentimentDashboardController extends Controller
     public function SummaryScoreChannel(Request $request, $only_data = false)
     {
         $sources = Sources::all();
+
+
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->where('message_type', 'Post')
@@ -1586,6 +1588,9 @@ class SentimentDashboardController extends Controller
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $raw->whereIn('source_id', $source_ids);
+
+
+            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
         }
 
         if ($this->source_id) {
