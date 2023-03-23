@@ -1115,7 +1115,7 @@ class ChannelDashboardController extends Controller
             ->whereIn('classification_type_id', [2]);
 
 
-        if (!$this->user_login->organization_group->is_admin) {
+        if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->user_login->organization_group->sources)->pluck('id')->toArray();
             $raw->whereIn('source_id', $source_ids);
         }
