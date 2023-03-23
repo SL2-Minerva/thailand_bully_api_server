@@ -1045,9 +1045,9 @@ class DashboardController extends Controller
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
 
-        if ($request->word) {
-            $raw->where('word', 'like', '%' . $request->word . '%');
-        }
+//        if ($request->word) {
+//            $raw->where('word', 'like', '%' . $request->word . '%');
+//        }
 
         $wordclouds = $raw->orderBy('count_number', 'desc')->get();
         $total = $raw->sum('count_number');
@@ -1150,6 +1150,10 @@ class DashboardController extends Controller
         $data = null;
         if ($lists) {
             $top = $lists[0]['text'];
+        }
+
+        if ($request->word) {
+            $raw->where('word', $request->word);
         }
 
         if ($top) {
@@ -1356,6 +1360,10 @@ class DashboardController extends Controller
         $data = null;
         if ($lists) {
             $top = $lists[0]['text'];
+        }
+
+        if ($request->word) {
+            $raw->where('word', $request->word);
         }
 
         if ($top) {
