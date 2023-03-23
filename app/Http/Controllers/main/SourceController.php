@@ -11,11 +11,20 @@ class SourceController extends Controller
 {
     public function index() {
        $sources = Sources::all();
+
+        if (!$this->user_login->is_admin) {
+            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+        }
        return parent::handleRespond($sources);
     }
 
     public function data(Request $request) {
         $sources = Sources::all();
+
+        if (!$this->user_login->is_admin) {
+            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+        }
+
         return parent::handleRespond($sources);
     }
 
