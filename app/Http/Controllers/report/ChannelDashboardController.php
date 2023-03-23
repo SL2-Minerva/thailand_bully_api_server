@@ -508,6 +508,11 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+        }
+
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
         }
@@ -640,6 +645,11 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
         }
 
         if ($this->source_id) {
@@ -792,6 +802,12 @@ class ChannelDashboardController extends Controller
             $raw_root->where('source_id', $this->source_id);
         }
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_child->whereIn('source_id', $source_ids);
+            $raw_root->whereIn('source_id', $source_ids);
+        }
+
 
         for ($i = 0; $i < count($soures['labels']); $i++) {
             $data['value'][$soures['labels'][$i]] = [
@@ -902,9 +918,17 @@ class ChannelDashboardController extends Controller
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+        }
+
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
         }
+
+
 
         $data['value'] = null;
 
@@ -1019,6 +1043,11 @@ class ChannelDashboardController extends Controller
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
         }
 
         if ($this->source_id) {
