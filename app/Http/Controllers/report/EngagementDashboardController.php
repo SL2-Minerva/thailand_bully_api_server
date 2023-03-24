@@ -1018,8 +1018,8 @@ class EngagementDashboardController extends Controller
 
                 if (isset($data['value'][1])) {
 
-                    $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                    $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+                    $data['value'][1]['data'][$index_label] += $item->number_of_shares;
+                    $data['value'][2]['data'][$index_label] += $item->number_of_comments;
                     $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
 
 
