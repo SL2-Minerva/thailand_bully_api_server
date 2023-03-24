@@ -103,20 +103,9 @@ class LeveltreeVoiceDashboardController extends Controller
 
             if ($request->report_number === '2.2.013') {
 
-                $raw = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1])
-                    ->orderBy('date_m', 'ASC')
-                    ->groupBy('author')
-                    ->offset($start)->limit($limit);
+                $raw->whereNotNull('author')->groupBy('author');
+                $total->whereNotNull('author')->groupBy('author');
 
-                $total = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1])
-                    ->orderBy('date_m', 'ASC')
-                    ->groupBy('author');
             }
 
         }
