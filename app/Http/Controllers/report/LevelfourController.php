@@ -159,7 +159,8 @@ class LevelfourController extends Controller
 //                    'to' => $node['id'],
                         'from' => $node['id'],
                         'to' => $node['parent_id'],
-                        "width" => (int)$node['length'] >= 30 ? (int)$node['length'] / 10 : (int)$node['length'],
+                        "width" => 10,
+//                        "width" => (int)$node['length'] >= 30 ? (int)$node['length'] / 10 : (int)$node['length'],
                         "length" => (int)$node['length'] ? (int)$node['length'] * 10 : 150,
                         "color" => $node['color']
                     ];
