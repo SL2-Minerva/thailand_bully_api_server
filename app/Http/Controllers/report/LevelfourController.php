@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\report;
 
 use App\Http\Controllers\Controller;
+use App\Models\Organization;
+use App\Models\Sources;
+use App\Models\UserOrganizationGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -32,6 +35,16 @@ class LevelfourController extends Controller
 
         if ($fillter_keywords && $fillter_keywords !== 'all') {
             $this->keyword_id = explode(',', $fillter_keywords);
+        }
+
+        $this->request = $request;
+
+        if (auth('api')->user()) {
+            $this->user_login = auth('api')->user();
+
+
+            $this->organization = Organization::find($this->user_login->organization_id);
+            $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
         }
 
     }
@@ -167,18 +180,23 @@ class LevelfourController extends Controller
     private function getNode($request, $message_id, $start_date, $end_date, $is_child = false, $type = 1)
     {
 
+        $limit = 1000;
+
+        if ($request->limit) {
+            $limit = $request->limit;
+        }
 
         if ($message_id) {
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit(1000);
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit($limit);
         } else {
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
 //                ->where('message_type', 'Post')
                 ->Where('reference_message_id', '')
                 ->where('classification_type_id', [$type])
-                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit(1000);
+                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit($limit);
         }
 
 
@@ -206,6 +224,12 @@ class LevelfourController extends Controller
 
         if ($message_id && $is_child) {
             $raw = $raw->where('reference_message_id', $message_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->whereIn('source_id', $source_ids);
+
         }
 
         if ($type) {
