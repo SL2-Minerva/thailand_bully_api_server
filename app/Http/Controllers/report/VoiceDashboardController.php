@@ -882,44 +882,50 @@ class VoiceDashboardController extends Controller
 
 
             foreach ($items as $item) {
+                $keyword_id = $item->keyword_id;
+                $date_m = Carbon::parse($item->date_m)->format('Y-m-d');
 
-                $date_format = Carbon::parse($item->date_m)->format('m/d/Y');
-
-                if (isset($data[$item->keyword_id])) {
-
-                    if (isset($data[$item->keyword_id]['data'][$date_format])) {
-                        $data[$item->keyword_id]['data'][$date_format] += 1;
+                if (isset($data[$keyword_id])) {
+                    if (isset($data[$keyword_id]['value'][$date_m])) {
+                        $data[$keyword_id]['value'][$date_m]['total_at_date'] += 1;
                     } else {
-                        $data[$item->keyword_id]['data'][$date_format] = 1;
+                        $data[$keyword_id]['value'][$date_m] = [
+                            "keyword_id" => $item->keyword_id,
+                            "keyword_name" => $item->keyword_name,
+                            "date" => $date_m,
+                            'total_at_date' => 1
+                        ];
                     }
-
-                    $data[$item->keyword_id]['date'][$date_format] = $date_format;
                 } else {
-                    $data[$item->keyword_id] = [
-                        "name" => $item->keyword_name,
+
+                    $data[$keyword_id] = [
+                        'source_id' => $item->source_id,
+                        'source_name' => $item->source_name,
+                        // 'date' => $date_m,
+                        "campaign_id" => $item->campaign_id,
+                        "campaign_name" => $item->campaign_name,
+                        "source_id" => $item->source_id,
+                        "source_name" => $item->source_name,
+
+                    ];
+                    $data[$keyword_id]['value'][$date_m] = [
                         "keyword_id" => $item->keyword_id,
+                        "keyword_name" => $item->keyword_name,
+                        'date' => $date_m,
+                        'total_at_date' => 1
                     ];
 
-                    if (isset($data[$item->keyword_id]['data'][$date_format])) {
-                        $data[$item->keyword_id]['data'][$date_format] += 1;
-                    } else {
-                        $data[$item->keyword_id]['data'][$date_format] = 1;
-                    }
-
-
-                    if (!isset($data[$item->keyword_id]['date'][$date_format])) {
-                        $data[$item->keyword_id]['date'][$date_format] = $date_format;
-                    }
                 }
+
             }
 
 
             if ($data) {
 
-                foreach ($data as $keyword_id => $item) {
-
-                    $data[$keyword_id]['date'] = array_values($item['date']);
-                    $data[$keyword_id]['data'] = array_values($item['data']);
+                foreach ($data as $k => $value) {
+                    if ($value['value']) {
+                        $data[$k]['value'] = array_values($value['value']);
+                    }
                 }
 
                 $data = array_values($data);
