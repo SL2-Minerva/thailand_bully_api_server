@@ -288,7 +288,7 @@ class LevelfourController extends Controller
     private function factorNodeSize($influent_rate = 0)
     {
         if (!$influent_rate || $influent_rate <= 0) {
-            return 20;
+            return 40;
         }
 
         return round($influent_rate) * 10;
