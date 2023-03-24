@@ -288,6 +288,6 @@ class LevelfourController extends Controller
             return 20;
         }
 
-        return $influent_rate + 20;
+        return $influent_rate * 5;
     }
 }
