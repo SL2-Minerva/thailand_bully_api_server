@@ -765,7 +765,13 @@ class DashboardController extends Controller
             ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
-            $total_keywords->where('keyword_id', $this->keyword_id);
+
+            if ($request->fillter_keywords) {
+                $total_keywords->whereIn('keyword_id', $this->keyword_id);
+            } else {
+                $total_keywords->where('keyword_id', $this->keyword_id);
+            }
+
         }
 
         if ($this->source_id) {
