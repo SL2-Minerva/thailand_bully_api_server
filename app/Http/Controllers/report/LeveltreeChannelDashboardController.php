@@ -52,6 +52,7 @@ class LeveltreeChannelDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1])
+            ->orderBy('date_m', 'ASC')
             ->offset($start)->limit($limit);
 
         $total = DB::table('message_result_full_data')
@@ -151,6 +152,7 @@ class LeveltreeChannelDashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->where('classification_name', $label)
+                ->orderBy('date_m', 'ASC')
                 ->offset($start)->limit($limit);
 
             $total = DB::table('message_result_full_data')
@@ -161,34 +163,33 @@ class LeveltreeChannelDashboardController extends Controller
 
         }
 
-        if ($request->report_number === '3.2.013') {
-            if ($request->select_period === 'current') {
-                $raw = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1])
-                    ->offset($start)->limit($limit);
+        if ($request->report_number === '3.2.013' ||
+            $request->report_number === '3.2.014'
+        ) {
 
-                $total = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1]);
+            if ($request->select_period === 'previous') {
+                $start_date = $this->start_date_previous;
+                $end_date = $this->end_date_previous;
             } else {
-
-                $raw = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1])
-                    ->offset($start)->limit($limit);
-
-                $total = DB::table('message_result_full_data')
-                    ->where('campaign_id', $this->campaign_id)
-                    ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
-                    ->whereIn('classification_type_id', [1]);
+                $start_date = $this->start_date;
+                $end_date = $this->end_date;
             }
+
+            $raw = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$start_date, $end_date])
+                ->whereIn('classification_type_id', [1])
+                ->orderBy('date_m', 'ASC')
+                ->offset($start)->limit($limit);
+
+            $total = DB::table('message_result_full_data')
+                ->where('campaign_id', $this->campaign_id)
+                ->whereBetween('date_m', [$start_date, $end_date])
+                ->whereIn('classification_type_id', [1]);
 
             $raw->where('source_name', $label);
             $total->where('source_name', $label);
+
         }
 
         // if ($this->source_id) {
@@ -202,8 +203,7 @@ class LeveltreeChannelDashboardController extends Controller
             $request->report_number === '3.2.006' ||
             $request->report_number === '3.2.007' || 
             $request->report_number === '3.2.008' ||
-            $request->report_number === '3.2.009' ||
-            $request->report_number === '3.2.013'
+            $request->report_number === '3.2.009'
         ) {
             $raw->where('source_name', $Llabel);
             $total->where('source_name', $Llabel);
