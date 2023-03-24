@@ -269,7 +269,7 @@ class LevelfourController extends Controller
 
 
 //            if ($is_child) {
-            $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 10;
+            $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 5;
             $data_push["parent_id"] = $item->reference_message_id;
 //            }
 
