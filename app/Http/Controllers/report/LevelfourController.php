@@ -229,10 +229,6 @@ class LevelfourController extends Controller
 
         $items = $raw->get();
 
-
-//        if ($is_child) {
-//            dd($items);
-//        }
         $data = [];
         $checkparent = [];
         foreach ($items as $item) {
@@ -254,24 +250,6 @@ class LevelfourController extends Controller
 //            }
 
 
-//            if ($message_id && $item->reference_message_id !== '') {
-//                $parent = DB::table('message_result_full_data')
-//                    ->where('message_id', $item->reference_message_id)
-//                    ->first();
-//                $checkparent[] = $parent->message_id;
-//                $parent_data = [
-//                    "id" => $parent->message_id,
-//                    "label" => $parent->author,
-//                    "title" => $parent->author,
-//                    "color" => $parent->classification_color,
-//                    "shape" => "dot",
-//                    "size" => $this->factorNodeSize($influent_rate),
-//                ];
-//
-//                $data['nodes'][] = $parent_data;
-//
-//            }
-
             $data['nodes'][] = $data_push;
         }
 
@@ -285,11 +263,7 @@ class LevelfourController extends Controller
         if (!$influent_rate || $influent_rate <= 0) {
             return 20;
         }
-        if ($influent_rate > 10) {
-            return $influent_rate * 20;
-        } else {
-            return $influent_rate * 100;
-        }
 
+        return $influent_rate + 20;
     }
 }

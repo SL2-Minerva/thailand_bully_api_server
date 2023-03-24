@@ -1437,42 +1437,6 @@ class EngagementDashboardController extends Controller
 
         }
 
-//        $data['labels'] = [
-//            "Facebook",
-//            "Twitter",
-//            "Instagram",
-//            "Youtube",
-//            "Pantip",
-//        ];
-
-//        $data['value'][] = [
-//            "id" => 1,
-//            "keyword_name" => "Previous",
-//            "data" => [
-//                19, 38, 47, 16, 30
-//            ],
-//        ];
-//
-//        $data['value'][] = [
-//            "id" => 2,
-//            "keyword_name" => "Current",
-//            "data" => [
-//                15, 45, 65, 23, 53,
-//            ],
-//        ];
-
-//        $data['share'] = [
-//            "-30%", "-30%", "-30%", "-30%", "-30%",
-//        ];
-//
-//        $data['comment'] = [
-//            "-23%", "-23%", "-23%", "-23%", "-23%",
-//        ];
-//
-//        $data['reaction'] = [
-//            "-56%", "-56%", "-56%", "-56%", "-56%",
-//        ];
-
         if ($only_data) {
             return $data;
         }
