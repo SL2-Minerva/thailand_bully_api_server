@@ -236,7 +236,7 @@ class LevelfourController extends Controller
             $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100 : 0;
             $data_push = [
                 "id" => $item->message_id,
-                "label" => $item->author,
+                "label_name" => $item->author,
                 "title" => $item->author,
                 "color" => $item->classification_color,
                 "shape" => "dot",
