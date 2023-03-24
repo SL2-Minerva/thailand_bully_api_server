@@ -364,38 +364,6 @@ class EngagementDashboardController extends Controller
             }
         }
 
-
-//        foreach ($analysis as $item) {
-//            foreach ($item as $key => $value) {
-//
-//                if ($key !== 'follows') {
-//                    $index_label = array_search($key, $data['labels']);
-//
-//                    if ($index_label !== -1) {
-//                        if (isset($data['value'][$item['keyword_id']])) {
-//
-//
-//                            if ($key === 'Infulencer' || $key === 'Follower') {
-//                                $data['value'][$item['keyword_id']]['data'][$index_label] += 1;
-//                            }
-//
-////                            $data[$item['keyword_id']]['data'][$index_label] += $value;
-//                        } else {
-//                            $data['value'][$item['keyword_id']] = [
-//                                'id' => $item['keyword_id'],
-//                                'keyword_name' => $item['keyword_name'],
-//                                'campaign_id' => $item['campaign_id'],
-//                                'campaign_name' => $item['campaign_name'],
-//                                'data' => [0, 0]
-//                            ];
-//                            $data['value'][$item['keyword_id']]['data'][$index_label] = 1;
-//                        }
-//
-//                    }
-//                }
-//            }
-//        }
-
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
@@ -417,9 +385,13 @@ class EngagementDashboardController extends Controller
         ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_current->whereIn('source_id', $source_ids);
+        }
+
         if ($this->source_id) {
             $raw_current->where('source_id', $this->source_id);
-
         }
 
         if ($this->keyword_id) {
@@ -753,9 +725,7 @@ class EngagementDashboardController extends Controller
                     "campaign_name" => $item->campaign_name,
                     "value" => []
                 ];
-
             }
-
         }
 
 
@@ -1035,7 +1005,7 @@ class EngagementDashboardController extends Controller
             if ($item->device == 'android') {
                 $index_label = 0;
             }
-            
+
             if ($item->device == 'iphone') {
                 $index_label = 1;
             }
@@ -1047,14 +1017,14 @@ class EngagementDashboardController extends Controller
             if ($index_label != null) {
 
                 if (isset($data['value'][1])) {
-    
+
                     $data['value'][1]['data'][$index_label] += $item->number_of_comments;
                     $data['value'][2]['data'][$index_label] += $item->number_of_shares;
                     $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
-    
-    
+
+
                 } else {
-    
+
                     $data['value'][1] = [
                         "id" => 1,
                         "keyword_name" => 'Share',
@@ -1062,7 +1032,7 @@ class EngagementDashboardController extends Controller
                         "campaign_name" => $item->campaign_name,
                         'data' => [0, 0, 0]
                     ];
-    
+
                     $data['value'][2] = [
                         "id" => 2,
                         "keyword_name" => 'Comment',
@@ -1070,7 +1040,7 @@ class EngagementDashboardController extends Controller
                         "campaign_name" => $item->campaign_name,
                         'data' => [0, 0, 0]
                     ];
-    
+
                     $data['value'][3] = [
                         "id" => 3,
                         "keyword_name" => 'Reactions',
@@ -1124,7 +1094,7 @@ class EngagementDashboardController extends Controller
         foreach ($infulencers as $infulencer) {
 
             if ($infulencer) {
-                
+
                 if (isset($data['value'][1]['data'][0])) {
                     $data['value'][1]['data'][0] += $infulencer->number_of_shares;
                     $data['value'][2]['data'][0] += $infulencer->number_of_comments;
@@ -1207,6 +1177,7 @@ class EngagementDashboardController extends Controller
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
         }
+
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
