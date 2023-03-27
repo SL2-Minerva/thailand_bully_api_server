@@ -673,57 +673,30 @@ class DashboardController extends Controller
         $data = [];
 
         foreach ($hashtags as $hashtag) {
-            $data[] = [
-                "id" => $hashtag->id,
-                "hashtag" => $hashtag->hashtag,
-                "keyword_id" => $hashtag->keyword_id,
-                "no_of_message" => $hashtag->count_number,
-                "total_keyword" => $total_keywords,
-                "percentage" => $total_keywords > 0 ? $hashtag->count_number / $total_keywords * 100 : 0,
-                "type" => $hashtag->count_number >= 0 ? 'plus' : 'minus',
-            ];
+
+            if (isset($data['$hashtag->hashtag'])) {
+                $data[$hashtag->hashtag]['no_of_message'] += $hashtag->count_number;
+                $data[$hashtag->hashtag]["percentage"] = $total_keywords > 0 ? $data[$hashtag->hashtag]['no_of_message'] / $total_keywords * 100 : 0;
+                $data[$hashtag->hashtag]["type"] = $data[$hashtag->hashtag]['no_of_message'] >= 0 ? 'plus' : 'minus';
+            }
+            else {
+                $data[$hashtag->hashtag] = [
+                    "id" => $hashtag->id,
+                    "hashtag" => $hashtag->hashtag,
+                    "keyword_id" => $hashtag->keyword_id,
+                    "no_of_message" => $hashtag->count_number,
+                    "total_keyword" => $total_keywords,
+                    "percentage" => $total_keywords > 0 ? $hashtag->count_number / $total_keywords * 100 : 0,
+                    "type" => $hashtag->count_number >= 0 ? 'plus' : 'minus',
+                ];
+            }
+        }
+
+        if ($data) {
+            $data = array_values($data);
         }
 
 
-        $dummy_data[] = [
-
-        ];
-
-        $dummy_data[] = [
-            "id" => 2,
-            "hashtag" => '#hashtag2',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-
-        $dummy_data[] = [
-            "id" => 3,
-            "hashtag" => '#hashtag3',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-
-        $dummy_data[] = [
-            "id" => 4,
-            "hashtag" => '#hashtag4',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
-
-        $dummy_data[] = [
-            "id" => 5,
-            "hashtag" => '#hashtag5',
-            "keyword_id" => 1,
-            "no_of_message" => 1000,
-            "percentage" => 1000,
-            "type" => 'plus'
-        ];
 
         return $data;
     }
