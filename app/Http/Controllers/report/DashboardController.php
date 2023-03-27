@@ -228,9 +228,9 @@ class DashboardController extends Controller
         $pervious = $this->findSentiment('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $this->source_id);
 
         return parent::handleRespond([
-            "neutral_value" => (float)self::point_two_digits((int)$current['results']),
+            "neutral_value" => self::point_two_digits((int)$current['results']),
             "sentiment_percentage" => $current['sentiment_percentage'] ?? 0,
-            "pervious_sentiment" => (float)self::point_two_digits((int)$pervious['results']),
+            "pervious_sentiment" => self::point_two_digits((int)$pervious['results']),
             "text" => $current['text']
         ]);
     }
