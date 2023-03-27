@@ -36,8 +36,8 @@ class LevelThreeSentimentDashboardController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
         }
 
     }

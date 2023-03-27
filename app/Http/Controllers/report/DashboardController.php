@@ -55,9 +55,11 @@ class DashboardController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
         }
+
+
 
     }
 
@@ -68,8 +70,8 @@ class DashboardController extends Controller
         $data['daily_message'] = $this->dailyMessage($this->start_date, $this->end_date);
         $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
         $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');;
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $this->source_id ?? null);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $this->source_id ?? null);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
@@ -143,7 +145,7 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function percentageOfMessages($start_date, $end_date, $source_id_id = null)
+    private function percentageOfMessages($start_date, $end_date)
     {
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
