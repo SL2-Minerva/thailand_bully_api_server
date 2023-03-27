@@ -60,6 +60,7 @@ class LeveltreeVoiceDashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [3])
+                ->orderBy('date_m', 'ASC')
                 ->offset($start)->limit($limit);
 
             $total = DB::table('message_result_full_data')
@@ -73,6 +74,7 @@ class LeveltreeVoiceDashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [2])
+                ->orderBy('date_m', 'ASC')
                 ->offset($start)->limit($limit);
 
             $total = DB::table('message_result_full_data')
@@ -85,6 +87,7 @@ class LeveltreeVoiceDashboardController extends Controller
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [1])
+                ->orderBy('date_m', 'ASC')
                 ->offset($start)->limit($limit);
 
             $total = DB::table('message_result_full_data')
@@ -104,8 +107,10 @@ class LeveltreeVoiceDashboardController extends Controller
             $total->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
 
             if ($request->report_number === '2.2.013') {
-                $raw->whereNotNull('author')->where('author', '!=', '')->groupBy('author');
-                $total->whereNotNull('author')->where('author', '!=', '')->groupBy('author');
+
+                $raw->whereNotNull('author')->groupBy('author');
+                $total->whereNotNull('author')->groupBy('author');
+
             }
 
         }
@@ -194,8 +199,8 @@ class LeveltreeVoiceDashboardController extends Controller
                 $label = 'Trolling';
             }
 
-            $total->where('classification_name', $label);
-            $raw->where('classification_name', $label);
+            $total->where('classification_name', '=', $label);
+            $raw->where('classification_name', '=', $label);
         }
 
         if (isset($request->keyword_id)) {
@@ -229,7 +234,7 @@ class LeveltreeVoiceDashboardController extends Controller
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
                 "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('h:i'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
