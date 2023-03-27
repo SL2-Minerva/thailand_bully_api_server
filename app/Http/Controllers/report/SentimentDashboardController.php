@@ -800,9 +800,11 @@ class SentimentDashboardController extends Controller
             $raw_previous->where('source_id', $this->source_id);
         }
 
-
-        $current = $raw_current->get();
-        $previous = $raw_previous->get();
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_current->whereIn('source_id', $source_ids);
+            $raw_previous->whereIn('source_id', $source_ids);
+        }
 
 
         $total_share_current = $raw_current->where('classification_name', 'Positive')->count();
@@ -818,11 +820,18 @@ class SentimentDashboardController extends Controller
         $totalEngagement_previous = $total_share_previous + $total_comment_previous + $total_reactions_previous;
 
 
+
+
+//        $current = $raw_current->get();
+//        $previous = $raw_previous->get();
+
+
         $data['totalSentiment'] = [
             "totalValue" => $this->custom_number_format((int)$totalEngagement_current),
             "comparison" => (float)parent::point_two_digits($totalEngagement_current - $totalEngagement_previous !== 0 ? $this->overPeriodComparison($totalEngagement_current, $totalEngagement_previous) : 0),
             "type" => $totalEngagement_current - $totalEngagement_previous > 0 ? "plus" : "minus",
         ];
+
 
         $data['positive'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
@@ -1412,12 +1421,39 @@ class SentimentDashboardController extends Controller
         foreach ($items as $item) {
             if (isset($analysis[$item->keyword_id])) {
                 $analysis[$item->keyword_id]['total'] += 1;
+
+                if ($item->classification_name === 'Positive') {
+                    $analysis[$item->keyword_id]['positive'] += 1;
+                }
+
+                if ($item->classification_name === 'Negative') {
+                    $analysis[$item->keyword_id]['negative'] += 1;
+                }
+
+                if ($item->classification_name === 'Neutral') {
+                    $analysis[$item->keyword_id]['neutral'] += 1;
+                }
             } else {
                 $analysis[$item->keyword_id] = [
                     "keyword_id" => $item->keyword_id,
                     "keyword_name" => $item->keyword_name,
                     "total" => 1,
+                    "positive" => 0,
+                    "negative" => 0,
+                    "neutral" => 0,
                 ];
+
+                if ($item->classification_name === 'Positive') {
+                    $analysis[$item->keyword_id]['positive'] += 1;
+                }
+
+                if ($item->classification_name === 'Negative') {
+                    $analysis[$item->keyword_id]['negative'] += 1;
+                }
+
+                if ($item->classification_name === 'Neutral') {
+                    $analysis[$item->keyword_id]['neutral'] += 1;
+                }
             }
         }
 
@@ -1435,9 +1471,15 @@ class SentimentDashboardController extends Controller
         foreach ($analysis_current as $key => $item) {
 
             $analysis_previous_key = 0;
+            $analysis_previous_positive = 0;
+            $analysis_previous_neutral = 0;
+            $analysis_previous_negative = 0;
 
             if (isset($analysis_previous[$key])) {
                 $analysis_previous_key = $analysis_previous[$key]['total'];
+                $analysis_previous_positive = $analysis_previous[$key]['positive'];
+                $analysis_previous_neutral = $analysis_previous[$key]['neutral'];
+                $analysis_previous_negative = $analysis_previous[$key]['negative'];
             }
 
             $data[$key] = [
@@ -1449,35 +1491,26 @@ class SentimentDashboardController extends Controller
                     "percentage" => $analysis_previous_key ? self::point_two_digits((($item['total'] - $analysis_previous_key) / $analysis_previous_key) * 100) : 0,
                     "type" => $item['total'] - $analysis_previous_key > 0 ? "plus" : "minus"
                 ],
+                "positive" => [
+                    "value" => $item['positive'] - $analysis_previous_positive,
+                    "percentage" => $analysis_previous_positive ? self::point_two_digits((($item['positive'] - $analysis_previous_positive) / $analysis_previous_positive) * 100) : 0,
+                    "type" => $item['positive'] - $analysis_previous_positive > 0 ? "plus" : "minus"
+                ],
+                "neutral" => [
+                    "value" => $item['neutral'] - $analysis_previous_negative,
+                    "percentage" => $analysis_previous_negative ? self::point_two_digits((($item['neutral'] - $analysis_previous_negative) / $analysis_previous_negative) * 100) : 0,
+                    "type" => $item['neutral'] - $analysis_previous_negative > 0 ? "plus" : "minus"
+                ],
+
+                "negative" => [
+                    "value" => $item['neutral'] - $analysis_previous_neutral,
+                    "percentage" => $analysis_previous_neutral ? self::point_two_digits((($item['neutral'] - $analysis_previous_neutral) / $analysis_previous_neutral) * 100) : 0,
+                    "type" => $item['neutral'] - $analysis_previous_neutral > 0 ? "plus" : "minus"
+                ],
+
             ];
         }
 
-//        $data = [
-//            [
-//                "keyword_name" => "keyword 1",
-//                "total" => 500,
-//                "comparison" => [
-//                    "value" => "-500",
-//                    "percentage" => "-20",
-//                    "type" => "minus"
-//                ],
-//                "share" => [
-//                    "value" => "80",
-//                    "percentage" => "5",
-//                    "type" => "plus"
-//                ],
-//                "comment" => [
-//                    "value" => "-200",
-//                    "percentage" => "-10",
-//                    "type" => "minus"
-//                ],
-//                "reaction" => [
-//                    "value" => "-380",
-//                    "percentage" => "-2",
-//                    "type" => "minus"
-//                ]
-//            ],
-//        ];
         if ($data) {
             $data = array_values($data);
         }
