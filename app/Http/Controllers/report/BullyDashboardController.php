@@ -124,7 +124,7 @@ class BullyDashboardController extends Controller
                 $data[$item->classification_id]['campaign_id'] = $item->campaign_id;
                 $data[$item->classification_id]['campaign_name'] = $item->campaign_name;
                 $data[$item->classification_id]['value']['total'] = 1;
-                $data[$item->classification_id]['value']['date'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
+                $data[$item->classification_id]['value']['date'] = Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y');
             }
         }
 
