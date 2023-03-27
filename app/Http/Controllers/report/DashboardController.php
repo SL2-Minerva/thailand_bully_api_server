@@ -696,6 +696,10 @@ class DashboardController extends Controller
 
         if ($data) {
             $data = array_values($data);
+
+            usort($data, function($a, $b) {
+                return $b['no_of_message'] - $a['no_of_message'];
+            });
         }
 
 
