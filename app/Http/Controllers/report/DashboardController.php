@@ -392,8 +392,8 @@ class DashboardController extends Controller
     {
         $data = null;
 
-//        $data['main_keyword'] = $this->mainKeyWords($this->start_date, $this->end_date);
-//        $data['top_sites'] = $this->topSites($this->start_date, $this->end_date);
+        $data['main_keyword'] = $this->mainKeyWords($this->start_date, $this->end_date);
+        $data['top_sites'] = $this->topSites($this->start_date, $this->end_date);
         $data['top_hastag'] = $this->topHashtag($this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
