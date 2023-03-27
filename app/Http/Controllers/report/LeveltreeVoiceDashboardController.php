@@ -35,9 +35,14 @@ class LeveltreeVoiceDashboardController extends Controller
             $this->keyword_id = explode(',', $fillter_keywords);
         }
 
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+        }
+
     }
 
-    public function dailyMessageLevelThree(Request $request) 
+    public function dailyMessageLevelThree(Request $request)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -90,7 +95,7 @@ class LeveltreeVoiceDashboardController extends Controller
 
 
         if ($request->report_number === '2.2.002' ||
-            $request->report_number === '2.2.013' 
+            $request->report_number === '2.2.013'
         ) {
 
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');

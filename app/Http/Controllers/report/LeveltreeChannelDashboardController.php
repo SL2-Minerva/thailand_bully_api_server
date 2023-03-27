@@ -35,9 +35,14 @@ class LeveltreeChannelDashboardController extends Controller
             $this->keyword_id = explode(',', $fillter_keywords);
         }
 
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+        }
+
     }
 
-    public function dailyMessageLevelThree(Request $request) 
+    public function dailyMessageLevelThree(Request $request)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -201,7 +206,7 @@ class LeveltreeChannelDashboardController extends Controller
             $request->report_number === '3.2.004' ||
             $request->report_number === '3.2.005' ||
             $request->report_number === '3.2.006' ||
-            $request->report_number === '3.2.007' || 
+            $request->report_number === '3.2.007' ||
             $request->report_number === '3.2.008' ||
             $request->report_number === '3.2.009'
         ) {

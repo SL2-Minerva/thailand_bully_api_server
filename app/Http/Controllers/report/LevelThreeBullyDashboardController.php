@@ -35,6 +35,11 @@ class LevelThreeBullyDashboardController extends Controller
             $this->keyword_id = explode(',', $fillter_keywords);
         }
 
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+        }
+
     }
 
 
@@ -112,7 +117,7 @@ class LevelThreeBullyDashboardController extends Controller
                 $total->whereRaw('HOUR(date_m) >= ?', [18]);
             }
 
-            
+
             if ($request->report_number === '6.2.004') {
                 $raw->where('classification_name', $Llabel);
                 $total->where('classification_name', $Llabel);
@@ -175,7 +180,7 @@ class LevelThreeBullyDashboardController extends Controller
 
         // sentiment
         if ($request->report_number === '6.2.008') {
-            
+
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -228,7 +233,7 @@ class LevelThreeBullyDashboardController extends Controller
                         $data['message'][] = $anylsy;
                     }
                 }
-                
+
             }
 
 
@@ -310,7 +315,7 @@ class LevelThreeBullyDashboardController extends Controller
                         $data['message'][] = $anylsy;
                     }
                 }
-                
+
             }
 
 
@@ -343,9 +348,9 @@ class LevelThreeBullyDashboardController extends Controller
                 ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('classification_type_id', [2]);
 
-                
+
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
-            
+
             $raw->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
             $total->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
 
@@ -451,7 +456,7 @@ class LevelThreeBullyDashboardController extends Controller
             $total->where('classification_name', $Llabel);
 
         }
-        
+
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);

@@ -54,6 +54,11 @@ class DashboardController extends Controller
             $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
         }
 
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+        }
+
     }
 
     public function dailyBy()

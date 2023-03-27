@@ -44,7 +44,6 @@ class EngagementDashboardController extends Controller
             $this->source_id = $request->source_id;
         }
 
-
         $this->request = $request;
 
         if (auth('api')->user()) {
@@ -53,6 +52,11 @@ class EngagementDashboardController extends Controller
 
             $this->organization = Organization::find($this->user_login->organization_id);
             $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
+        }
+
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
         }
 
     }

@@ -35,6 +35,11 @@ class LevelThreeEngagementDashboardController extends Controller
             $this->keyword_id = explode(',', $fillter_keywords);
         }
 
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+        }
+
     }
 
 
@@ -253,7 +258,7 @@ class LevelThreeEngagementDashboardController extends Controller
 
             }
 
-            
+
         }
 
         if ($request->report_number === '4.2.007' ||

@@ -35,9 +35,14 @@ class LevelThreeSentimentDashboardController extends Controller
             $this->keyword_id = explode(',', $fillter_keywords);
         }
 
+        if ($request->period === 'customrange') {
+            $this->start_date_previous =  $this->date_carbon($request->start_date_previous);
+            $this->end_date_previous =  $this->date_carbon($request->end_date_previous);
+        }
+
     }
 
-    public function report(Request $request) 
+    public function report(Request $request)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -48,7 +53,7 @@ class LevelThreeSentimentDashboardController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
-        
+
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
@@ -160,7 +165,7 @@ class LevelThreeSentimentDashboardController extends Controller
         }
 
         if ($request->report_number === '5.2.008') {
-            
+
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -181,7 +186,7 @@ class LevelThreeSentimentDashboardController extends Controller
             $anylsys = [];
 
             foreach ($items as $item) {
-                
+
                 $date_d = Carbon::parse($item->date_m)->format('D');
                 $parent = null;
                 if (array_search($item->message_id, $parents) !== false) {
@@ -217,7 +222,7 @@ class LevelThreeSentimentDashboardController extends Controller
                         $data['message'][] = $anylsy;
                     }
                 }
-                
+
             }
 
 
@@ -238,7 +243,7 @@ class LevelThreeSentimentDashboardController extends Controller
         }
 
         if ($request->report_number === '5.2.009') {
-            
+
             $raw = DB::table('message_result_full_data')
                 ->where('campaign_id', $this->campaign_id)
                 ->whereBetween('date_m', [$this->start_date, $this->end_date])
@@ -282,7 +287,7 @@ class LevelThreeSentimentDashboardController extends Controller
             }
 
             foreach ($anylsys as $anylsy) {
-                
+
                 if ($label === 'Hate Speech') {
                     $label = 'HateSpeech';
                 } else if ($label === 'No Bully') {
@@ -294,13 +299,13 @@ class LevelThreeSentimentDashboardController extends Controller
                 $anylsy["bully_level"] = $anylsy[3];
                 $anylsy["bully_type"] = $anylsy[2];
                 $anylsy["sentiment"] = $anylsy[1];
-                
+
                 if ($anylsy[1] == $Llabel) {
                     if ($anylsy[2] == $label) {
                         $data['message'][] = $anylsy;
                     }
                 }
-                
+
             }
 
 
@@ -320,7 +325,7 @@ class LevelThreeSentimentDashboardController extends Controller
 
         }
 
-        if ($request->report_number === '5.2.002' || 
+        if ($request->report_number === '5.2.002' ||
             $request->report_number === '5.2.003' ||
             $request->report_number === '5.2.004' ||
             $request->report_number === '5.2.005' ||
