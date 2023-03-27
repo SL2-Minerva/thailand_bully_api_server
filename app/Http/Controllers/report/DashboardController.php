@@ -674,10 +674,12 @@ class DashboardController extends Controller
 
         foreach ($hashtags as $hashtag) {
 
-            if (isset($data['$hashtag->hashtag'])) {
+            if (isset($data[$hashtag->hashtag])) {
                 $data[$hashtag->hashtag]['no_of_message'] += $hashtag->count_number;
                 $data[$hashtag->hashtag]["percentage"] = $total_keywords > 0 ? $data[$hashtag->hashtag]['no_of_message'] / $total_keywords * 100 : 0;
                 $data[$hashtag->hashtag]["type"] = $data[$hashtag->hashtag]['no_of_message'] >= 0 ? 'plus' : 'minus';
+
+
             }
             else {
                 $data[$hashtag->hashtag] = [
