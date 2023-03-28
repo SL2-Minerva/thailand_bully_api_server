@@ -177,7 +177,7 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'dashboard-overall'], function () {
             Route::get('/', [DashboardController::class, 'overAll']);
-            Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
+//            Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
             Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
             Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
             Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
@@ -232,6 +232,12 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
             Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
             Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
+        });
+
+
+        Route::group(['prefix' => 'export'], function () {
+            Route::get('export-overall', [LevelthreeController::class, 'exportOverAll']);
+
         });
     });
 });
