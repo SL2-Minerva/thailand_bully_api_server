@@ -10,6 +10,8 @@ use App\Models\UserOrganizationGroup;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exports\OverAllExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LevelthreeController extends Controller
 {
@@ -53,11 +55,22 @@ class LevelthreeController extends Controller
 
     }
 
-    public function exportOverAll(Request $request)
+    private function messageFullData($classification_type_id, $start_date, $end_date, $campaign_id)
     {
-       $source = parent::listSource();
+        $data = DB::table('message_result_full_data')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
+            ->whereIn('classification_type_id', [$classification_type_id])
+            ->limit(500);
 
+        return $data;
+    }
 
+    public function exportOverAll()
+    {
+        $source = parent::listSource();
+        $report = $this->messageFullData(1 ,$this->start_date, $this->end_date, $this->campaign_id);
+        return Excel::download(new OverAllExport($report), 'users.xlsx');
 
     }
 
