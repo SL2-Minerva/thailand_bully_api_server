@@ -67,7 +67,7 @@ class LevelthreeController extends Controller
         return $data;
     }
 
-    public function exportOverAll()
+    public function exportOverAll(Request $request)
     {
         $source = parent::listSource();
         $report = $this->messageFullData(1 ,$this->start_date, $this->end_date, $this->campaign_id);
