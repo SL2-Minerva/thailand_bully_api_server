@@ -283,7 +283,9 @@ class DashboardController extends Controller
         $data['sentiment_score'] = $sentiment_score;
         // $percentage = 20;
 
-        $sentiment_score = round($sentiment_score);
+        $sentiment_score = (int)round($sentiment_score);
+
+
 
         if ($sentiment_score === 0) {
             $percentage = 0;
