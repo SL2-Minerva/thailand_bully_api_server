@@ -55,14 +55,13 @@ class LevelthreeController extends Controller
 
     }
 
-    private function messageFullData($classification_type_id, $start_date, $end_date, $campaign_id)
+    private function messageFullData($start_date, $end_date, $campaign_id)
     {
         $data = DB::table('message_result_full_data')
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
-            ->whereIn('classification_type_id', [$classification_type_id])
-            ->orderBy('date_m', 'ASC')
-            ->limit(2000);
+            ->whereIn('classification_type_id', [1, 2, 3])
+            ->orderBy('date_m', 'ASC');
 
         return $data;
     }
@@ -70,7 +69,7 @@ class LevelthreeController extends Controller
     public function exportOverAll(Request $request)
     {
         $source = parent::listSource();
-        $report = $this->messageFullData(1 ,$this->start_date, $this->end_date, $this->campaign_id);
+        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id);
         return Excel::download(new OverAllExport($report), 'Overall-'. Carbon::now() .'.xlsx');
 
     }
