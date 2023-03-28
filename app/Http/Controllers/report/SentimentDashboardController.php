@@ -1327,30 +1327,34 @@ class SentimentDashboardController extends Controller
             $check_sentiment_score_previous = 0;
 
 
-            if ($check_sentiment_score > 5) {
-                $sentimentScore = 5;
-            } else if ($check_sentiment_score < -5) {
-                $sentimentScore = -5;
-            } else {
-                $sentimentScore = round($check_sentiment_score, 2);
-            }
-
+//            if ($check_sentiment_score > 5) {
+//                $sentimentScore = 5;
+//            } else if ($check_sentiment_score < -5) {
+//                $sentimentScore = -5;
+//            } else {
+//                $sentimentScore = round($check_sentiment_score, 2);
+//            }
+            $sentimentScore = round($check_sentiment_score, 2);
 
             if ($sentimentScore == -0 ) {
                 $sentimentScore = 0;
             }
 
 
+
+
             if ($total_positive_negative_neutral) {
                 $check_sentiment_score_previous = (((1 * $p_positive) + (-1 * $p_negative / $total_positive_negative_neutral) * 5));
 
-                if ($check_sentiment_score_previous > 5) {
-                    $sentimentScore_previous = 5;
-                } else if ($check_sentiment_score_previous < -5) {
-                    $sentimentScore_previous = -5;
-                } else {
-                    $sentimentScore_previous = round($check_sentiment_score_previous, 2);
-                }
+//                if ($check_sentiment_score_previous > 5) {
+//                    $sentimentScore_previous = 5;
+//                } else if ($check_sentiment_score_previous < -5) {
+//                    $sentimentScore_previous = -5;
+//                } else {
+//
+//                }
+
+                $sentimentScore_previous = round($check_sentiment_score_previous, 2);
 
                 if ($sentimentScore_previous == -0 ) {
                     $sentimentScore_previous = 0;
