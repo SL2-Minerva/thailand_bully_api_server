@@ -272,15 +272,18 @@ class DashboardController extends Controller
                 }
             }
 
-            $sentiment_score = self::point_two_digits(round((((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5, 2), 2);
+            $sentiment_score = (((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
         }
 
 
         $data['neutral'] = $neutral;
         $data['positive'] = $positive;
         $data['negative'] = $negative;
-        $data['results'] = $sentiment_score;
+        $data['results'] = round($sentiment_score, 2);
+        $data['sentiment_score'] = $sentiment_score;
         // $percentage = 20;
+
+        $sentiment_score = round($sentiment_score);
 
         if ($sentiment_score === 0) {
             $percentage = 0;
