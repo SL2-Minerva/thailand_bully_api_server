@@ -1332,7 +1332,7 @@ class SentimentDashboardController extends Controller
             } else if ($check_sentiment_score < -5) {
                 $sentimentScore = -5;
             } else {
-                $sentimentScore = round($check_sentiment_score);
+                $sentimentScore = round($check_sentiment_score, 2);
             }
 
 
@@ -1349,7 +1349,7 @@ class SentimentDashboardController extends Controller
                 } else if ($check_sentiment_score_previous < -5) {
                     $sentimentScore_previous = -5;
                 } else {
-                    $sentimentScore_previous = round($check_sentiment_score_previous);
+                    $sentimentScore_previous = round($check_sentiment_score_previous, 2);
                 }
 
                 if ($sentimentScore_previous == -0 ) {
@@ -1380,16 +1380,13 @@ class SentimentDashboardController extends Controller
             ];
         }
 
-
-
-
         if ($data['senitment_score_data']) {
             $data['senitment_score_data'] = array_values($data['senitment_score_data']);
         }
+
         if ($data['senitment_score_percentage']) {
             $data['senitment_score_percentage'] = array_values($data['senitment_score_percentage']);
         }
-
 
 //
         if ($only_data) {
