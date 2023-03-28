@@ -1344,7 +1344,7 @@ class SentimentDashboardController extends Controller
 
 
             if ($total_positive_negative_neutral) {
-                $check_sentiment_score_previous = (((1 * $p_positive) + (-1 * $p_negative / $total_positive_negative_neutral) * 5));
+                $check_sentiment_score_previous = (((1 * $p_positive) + (-1 * $p_negative)) / ($p_positive + $p_negative + $p_neutral)) * 5;
 
 //                if ($check_sentiment_score_previous > 5) {
 //                    $sentimentScore_previous = 5;
