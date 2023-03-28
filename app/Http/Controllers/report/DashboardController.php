@@ -229,6 +229,8 @@ class DashboardController extends Controller
 
         return parent::handleRespond([
             "neutral_value" => self::point_two_digits((int)$current['results']),
+            "current" => $current,
+            "pervious" => $pervious,
             "sentiment_percentage" => $current['sentiment_percentage'] ?? 0,
             "pervious_sentiment" => self::point_two_digits((int)$pervious['results']),
             "text" => $current['text']
