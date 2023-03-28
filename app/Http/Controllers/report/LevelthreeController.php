@@ -72,7 +72,6 @@ class LevelthreeController extends Controller
         $source = parent::listSource();
         $report = $this->messageFullData(1 ,$this->start_date, $this->end_date, $this->campaign_id);
         return Excel::download(new OverAllExport($report), 'Overall-'. Carbon::now() .'.xlsx');
-
     }
 
 

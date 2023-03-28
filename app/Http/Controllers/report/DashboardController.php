@@ -272,7 +272,7 @@ class DashboardController extends Controller
                 }
             }
 
-            $sentiment_score = self::point_two_digits(round((((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5), 2);
+            $sentiment_score = self::point_two_digits(round((((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5, 2), 2);
         }
 
 
