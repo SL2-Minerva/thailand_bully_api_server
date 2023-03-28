@@ -61,7 +61,8 @@ class LevelthreeController extends Controller
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [$classification_type_id])
-            ->limit(500);
+            ->orderBy('date_m', 'ASC')
+            ->limit(2000);
 
         return $data;
     }
@@ -70,7 +71,7 @@ class LevelthreeController extends Controller
     {
         $source = parent::listSource();
         $report = $this->messageFullData(1 ,$this->start_date, $this->end_date, $this->campaign_id);
-        return Excel::download(new OverAllExport($report), 'users.xlsx');
+        return Excel::download(new OverAllExport($report), 'Overall-'. Carbon::now() .'.xlsx');
 
     }
 

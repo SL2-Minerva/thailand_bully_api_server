@@ -13,6 +13,8 @@ class OverAllExport implements FromCollection, WithHeadings
     * @return \Illuminate\Support\Collection
     */
 
+    private $report;
+
     public function __construct($report)
     {
         $this->report = $report;
@@ -61,11 +63,8 @@ class OverAllExport implements FromCollection, WithHeadings
             if (array_search($item->message_id, $parents) !== false) {
                 $parent = $item->message_id;
             }
-            
-            // $i = 0;
 
             $data_push = [
-                // 'no' => $i++,
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
