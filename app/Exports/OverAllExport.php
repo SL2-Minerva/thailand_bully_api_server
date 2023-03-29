@@ -34,7 +34,6 @@ class OverAllExport implements FromCollection, WithHeadings
             "Channel",
             "Source Name",
             "Link Message",
-            "Parent",
             "Sentiment",
             "Bully Type",
             "Bully Level",
@@ -44,24 +43,11 @@ class OverAllExport implements FromCollection, WithHeadings
     public function collection()
     {
         $items = $this->report->get();
-
-        $parents = [];
-        foreach ($items as $item) {
-            if ($item->reference_message_id) {
-                if (array_search($item->reference_message_id, $parents) === false) {
-                    $parents[] = $item->reference_message_id;
-                }
-            }
-        }
         
         $anylsys = [];
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            $parent = null;
-            if (array_search($item->message_id, $parents) !== false) {
-                $parent = $item->message_id;
-            }
 
             $anylsys[$item->message_id]["message_id"] = $item->message_id;
             $anylsys[$item->message_id]["message_detail"] = $item->full_message;
@@ -74,20 +60,14 @@ class OverAllExport implements FromCollection, WithHeadings
             $anylsys[$item->message_id]["channel"] = $item->source_name;
             $anylsys[$item->message_id]["source_name"] = $item->source_name;
             $anylsys[$item->message_id]["link_message"] = $item->link_message;
-            $anylsys[$item->message_id]["parent"] = $parent;
             $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
-        foreach ($anylsys as $anylsy) {
-            $data[] = $anylsy;
-        }
+        // foreach ($anylsys as $anylsy) {
+        //     $data[] = $anylsy;
+        // }
 
-        return collect($data);
+        return collect($anylsys);
     }
 
-    private function getClassificationName($message_id)
-    {
-        return MessageResultFullData::where('message_id', $message_id)
-            ->limit(3)->get(['classification_type_id', 'classification_name']);
-    }
 }
