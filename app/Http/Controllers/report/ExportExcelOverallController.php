@@ -92,24 +92,11 @@ class ExportExcelOverallController extends Controller
         $sheet->setCellValue('O1', 'Bully Level');
 
         $rowcount = 2;
-
-        $parents = [];
-        foreach ($items as $item) {
-            if ($item->reference_message_id) {
-                if (array_search($item->reference_message_id, $parents) === false) {
-                    $parents[] = $item->reference_message_id;
-                }
-            }
-        }
         
         $anylsys = [];
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            $parent = null;
-            if (array_search($item->message_id, $parents) !== false) {
-                $parent = $item->message_id;
-            }
 
             $anylsys[$item->message_id]["message_id"] = $item->message_id;
             $anylsys[$item->message_id]["message_detail"] = $item->full_message;
@@ -122,7 +109,6 @@ class ExportExcelOverallController extends Controller
             $anylsys[$item->message_id]["channel"] = $item->source_name;
             $anylsys[$item->message_id]["source_name"] = $item->source_name;
             $anylsys[$item->message_id]["link_message"] = $item->link_message;
-            $anylsys[$item->message_id]["parent"] = $parent;
             $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
         }
 
@@ -161,6 +147,18 @@ class ExportExcelOverallController extends Controller
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1, 2, 3])
+            ->select(
+                'message_id',
+                'date_m',
+                'author',
+                'source_name',
+                'full_message',
+                'link_message',
+                'message_type',
+                'device',
+                'classification_name',
+                'classification_type_id',
+            )
             ->orderBy('date_m', 'ASC');
 
         return $data;

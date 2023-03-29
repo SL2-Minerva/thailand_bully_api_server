@@ -61,6 +61,18 @@ class LevelthreeController extends Controller
             ->where('campaign_id', $campaign_id)
             ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1, 2, 3])
+            ->select(
+                'message_id',
+                'date_m',
+                'author',
+                'source_name',
+                'full_message',
+                'link_message',
+                'message_type',
+                'device',
+                'classification_name',
+                'classification_type_id',
+            )
             ->orderBy('date_m', 'ASC');
 
         return $data;
