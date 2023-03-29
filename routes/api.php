@@ -22,6 +22,7 @@ use App\Http\Controllers\user\UserController;
 use App\Http\Controllers\report\VoiceDashboardController;
 use App\Http\Controllers\report\ChannelDashboardController;
 use App\Http\Controllers\report\EngagementDashboardController;
+use App\Http\Controllers\report\ExportExcelOverallController;
 use App\Http\Controllers\report\LeveltreeChannelDashboardController;
 use App\Http\Controllers\report\LeveltreeVoiceDashboardController;
 use App\Http\Controllers\report\SentimentDashboardController;
@@ -237,6 +238,7 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'export'], function () {
             Route::get('export-overall', [LevelthreeController::class, 'exportOverAll']);
+            Route::get('export-excel-overall', [ExportExcelOverallController::class, 'exportOverAll']);
 
         });
     });
