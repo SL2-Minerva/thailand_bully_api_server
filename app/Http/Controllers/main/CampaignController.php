@@ -104,7 +104,7 @@ class CampaignController extends Controller
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     "color" => $keyword["colors"] ?? "",
-                    "color_and" => $keyword["keyword_and_color"][$index] ?? "#",
+                    "color_and" => $keyword["color_and"] ?? "#",
                     "label" => $keyword["name"]
                 ];
 
@@ -150,7 +150,7 @@ class CampaignController extends Controller
                 BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                 BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                 "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
-                "color_and" => $keyword["keyword_and_color"][$index] ?? "#000000",
+                "color_and" => $keyword["color_and"] ?? "#000000",
             ];
 
 
@@ -303,14 +303,15 @@ class CampaignController extends Controller
                         BaseModel::STATUS => 1,
                         // "color" => $condition_color ?? '#',
                         "color" => $keyword["colors"] ?? "",
+                        "color_and" => $keyword["color_and"] ?? "",
                         BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                         BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     ];
 
 
-                    if (isset($keyword['keyword_and_color'][0])) {
-                        $data_submit_keyword["color_and"] = $keyword['keyword_and_color'][0];
-                    }
+                    // if (isset($keyword['keyword_and_color'][0])) {
+                    //     $data_submit_keyword["color_and"] = $keyword['keyword_and_color'][0];
+                    // }
 
                     $updated = Keyword::find($keyword['id']);
 
