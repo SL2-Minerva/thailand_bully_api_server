@@ -88,11 +88,11 @@ class CampaignController extends Controller
                     $name .= "," . $keyword_and;
                 }
 
-                if (!empty($keyword_and)) {
-                    $condition_color = $keyword["keyword_and_color"][$index] ?? "#000000";
-                } else {
-                    $condition_color = $keyword["colors"] ?? "#000000";
-                }
+                // if (!empty($keyword_and)) {
+                //     $condition_color = $keyword["keyword_and_color"][$index] ?? "#000000";
+                // } else {
+                //     $condition_color = $keyword["colors"] ?? "#000000";
+                // }
 
                 $data_submit_keyword = [
                     Keyword::CAMPAIGN_ID => $campaign->id,
@@ -103,10 +103,14 @@ class CampaignController extends Controller
                     BaseModel::STATUS => 1,
                     BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                     BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
-                    "color" => $condition_color,
-                    // "color" => $keyword["keyword_and_color"][$index] ?? "#000000",
+                    "color" => $keyword["colors"] ?? "",
+                    "color_and" => $keyword["keyword_and_color"][$index] ?? "#",
                     "label" => $keyword["name"]
                 ];
+
+                // if (isset($keyword['keyword_and_color'])) {
+                //     $data_submit_keyword["color"] = $keyword['keyword_and_color'][0];
+                // }
 
                 $parent_keyword = Keyword::create($data_submit_keyword);
 
@@ -131,6 +135,7 @@ class CampaignController extends Controller
         if ($keyword_and) {
             $name = $name . "," . $keyword_and;
         }
+
         // loop for keyword or
         foreach ($keyword_ors as $index => $keyword_or) {
 
@@ -145,6 +150,7 @@ class CampaignController extends Controller
                 BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                 BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                 "color" => $keyword["keyword_or_color"][$index] ?? "#000000",
+                "color_and" => $keyword["keyword_and_color"][$index] ?? "#000000",
             ];
 
 
@@ -192,24 +198,6 @@ class CampaignController extends Controller
                             ]);
                     }
                 }
-
-
-
-//                foreach ($items as $k_index => $item) {
-//                    $testss[] = $item->keyword_or;
-//                    if ($item->keyword_or === $keyword_or || $k_index === $index) {
-//                        $item->update($data_submit_keyword);
-//                    } else {
-//                        Keyword::create($data_submit_keyword);
-//                    }
-//
-////
-////                   if ($k_index === $index) {
-////                       $item->update($data_submit_keyword);
-////                   } else {
-////                       Keyword::create($data_submit_keyword);
-////                   }
-//                }
 
             } else {
                 Keyword::create($data_submit_keyword);
@@ -291,7 +279,7 @@ class CampaignController extends Controller
             $data->update($data_submit);
 
             if ($request->keywords) {
-                foreach ($request->keywords as $keyword) {
+                foreach ($request->keywords as $index => $keyword) {
 
                     $keyword_and = collect($keyword[Keyword::KEYWORD_AND] ?? [])->implode(',');
                     $name = $keyword[BaseModel::NAME];
@@ -300,13 +288,12 @@ class CampaignController extends Controller
                     //     $name .= "," . $keyword_and;
                     // }
 
-                    if (!empty($keyword_and)) {
-                        $condition_color = $keyword['keyword_and_color'][0];
-                    } else {
-                        $condition_color = $keyword["colors"] ?? "#";
-                    }
-
-
+                    // if (!empty($keyword_and)) {
+                    //     $condition_color = $keyword['keyword_and_color'][0];
+                    // } else {
+                    //     $condition_color = $keyword["colors"] ?? "#";
+                    // }
+                    
                     $data_submit_keyword = [
                         Keyword::CAMPAIGN_ID => $data->id,
                         BaseModel::NAME => $name,
@@ -314,15 +301,16 @@ class CampaignController extends Controller
                         Keyword::KEYWORD_AND => $keyword_and,
                         Keyword::KEYWORD_EXCLUDE => collect($keyword[Keyword::KEYWORD_EXCLUDE] ?? [])->implode(','),
                         BaseModel::STATUS => 1,
-                        "color" => $condition_color ?? '#',
+                        // "color" => $condition_color ?? '#',
+                        "color" => $keyword["colors"] ?? "",
                         BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                         BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     ];
 
 
-                    // if (isset($keyword['keyword_and_color'])) {
-                    //     $data_submit_keyword["color"] = $keyword['keyword_and_color'][0];
-                    // }
+                    if (isset($keyword['keyword_and_color'][0])) {
+                        $data_submit_keyword["color_and"] = $keyword['keyword_and_color'][0];
+                    }
 
                     $updated = Keyword::find($keyword['id']);
 
