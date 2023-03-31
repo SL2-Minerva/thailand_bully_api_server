@@ -118,7 +118,7 @@ class OrganizationController extends Controller
         }
 
         if (!$this->user_login->is_admin) {
-            $data->where('organization_id', $this->user_login->organization_id);
+            $data->where('organizations.id', $this->user_login->organization_id);
         }
 
         return parent::handleRespond($data->get());
