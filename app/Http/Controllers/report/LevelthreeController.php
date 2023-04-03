@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Exports\OverAllExport;
+use App\Exports\VoiceExport;
 use Maatwebsite\Excel\Facades\Excel;
 
 class LevelthreeController extends Controller
@@ -55,25 +56,47 @@ class LevelthreeController extends Controller
 
     }
 
-    private function messageFullData($start_date, $end_date, $campaign_id)
+    private function messageFullData($start_date, $end_date, $campaign_id, $report_number = null)
     {
-        $data = DB::table('message_result_full_data')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
-            ->whereIn('classification_type_id', [1, 2, 3])
-            ->select(
-                'message_id',
-                'date_m',
-                'author',
-                'source_name',
-                'full_message',
-                'link_message',
-                'message_type',
-                'device',
-                'classification_name',
-                'classification_type_id',
-            )
-            ->orderBy('date_m', 'ASC');
+        if ($report_number === '2.2.013') {
+            $data = DB::table('message_result_full_data')
+                ->where('campaign_id', $campaign_id)
+                ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
+                ->whereIn('classification_type_id', [1, 2, 3])
+                ->whereNotNull('author')->groupBy('author')
+                ->select(
+                    'message_id',
+                    'date_m',
+                    'author',
+                    'source_name',
+                    'full_message',
+                    'link_message',
+                    'message_type',
+                    'device',
+                    'classification_name',
+                    'classification_type_id',
+                )
+                ->orderBy('date_m', 'ASC');
+        } else {
+
+            $data = DB::table('message_result_full_data')
+                ->where('campaign_id', $campaign_id)
+                ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
+                ->whereIn('classification_type_id', [1, 2, 3])
+                ->select(
+                    'message_id',
+                    'date_m',
+                    'author',
+                    'source_name',
+                    'full_message',
+                    'link_message',
+                    'message_type',
+                    'device',
+                    'classification_name',
+                    'classification_type_id',
+                )
+                ->orderBy('date_m', 'ASC');
+        }
 
         return $data;
     }
@@ -81,8 +104,15 @@ class LevelthreeController extends Controller
     public function exportOverAll(Request $request)
     {
         $source = parent::listSource();
-        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id);
+        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
         return Excel::download(new OverAllExport($report), 'Overall-'. Carbon::now() .'.xlsx');
+    }
+
+    public function exportVoice(Request $request)
+    {
+        $source = parent::listSource();
+        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
+        return Excel::download(new VoiceExport($report, $request->report_number), 'Overall-'. Carbon::now() .'.xlsx');
     }
 
 
