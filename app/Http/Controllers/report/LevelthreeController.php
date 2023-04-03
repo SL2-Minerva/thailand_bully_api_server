@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\report;
 
+use App\Exports\ChannelExport;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\MessageResult;
@@ -112,7 +113,14 @@ class LevelthreeController extends Controller
     {
         $source = parent::listSource();
         $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
-        return Excel::download(new VoiceExport($report, $request->report_number), 'Overall-'. Carbon::now() .'.xlsx');
+        return Excel::download(new VoiceExport($report, $request->report_number), 'Voice-'. Carbon::now() .'.xlsx');
+    }
+
+    public function exportChannel(Request $request)
+    {
+        $source = parent::listSource();
+        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
+        return Excel::download(new ChannelExport($report, $request->report_number), 'Channel-'. Carbon::now() .'.xlsx');
     }
 
 

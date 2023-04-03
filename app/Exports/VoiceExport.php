@@ -52,6 +52,9 @@ class VoiceExport implements FromCollection, WithHeadings
             $this->report_number === '2.2.003' ||
             $this->report_number === '2.2.004' ||
             $this->report_number === '2.2.006' ||
+            $this->report_number === '2.2.008' ||
+            $this->report_number === '2.2.009' ||
+            $this->report_number === '2.2.010' ||
             $this->report_number === '2.2.013'
         ) {
             foreach ($items as $item) {
