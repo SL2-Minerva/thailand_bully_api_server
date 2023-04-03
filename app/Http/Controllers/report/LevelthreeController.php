@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\report;
 
+use App\Exports\BullyExport;
 use App\Exports\ChannelExport;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
@@ -128,7 +129,14 @@ class LevelthreeController extends Controller
     {
         $source = parent::listSource();
         $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
-        return Excel::download(new SentimentExport($report, $request->report_number), 'Channel-'. Carbon::now() .'.xlsx');
+        return Excel::download(new SentimentExport($report, $request->report_number), 'Sentiment-'. Carbon::now() .'.xlsx');
+    }
+
+    public function exportBully(Request $request)
+    {
+        $source = parent::listSource();
+        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
+        return Excel::download(new BullyExport($report, $request->report_number), 'Bully-'. Carbon::now() .'.xlsx');
     }
 
 
