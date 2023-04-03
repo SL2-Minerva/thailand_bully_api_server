@@ -117,68 +117,68 @@ class VoiceExport implements FromCollection, WithHeadings
             }
         }
 
-        if ($this->report_number === '2.2.008') {
-            foreach ($items as $item) {
-                if ($item->classification_type_id === 1) {
-                    $date_d = Carbon::parse($item->date_m)->format('D');
+        // if ($this->report_number === '2.2.008') {
+        //     foreach ($items as $item) {
+        //         if ($item->classification_type_id === 1) {
+        //             $date_d = Carbon::parse($item->date_m)->format('D');
         
-                    $anylsys[$item->message_id]["message_id"] = $item->message_id;
-                    $anylsys[$item->message_id]["message_detail"] = $item->full_message;
-                    $anylsys[$item->message_id]["account_name"] = $item->author;
-                    $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
-                    $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
-                    $anylsys[$item->message_id]["day"] = $date_d;
-                    $anylsys[$item->message_id]["message_type"] = $item->message_type;
-                    $anylsys[$item->message_id]["device"] = $item->device;
-                    $anylsys[$item->message_id]["channel"] = $item->source_name;
-                    $anylsys[$item->message_id]["source_name"] = $item->source_name;
-                    $anylsys[$item->message_id]["link_message"] = $item->link_message;
-                    $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
-                }
-            }
-        }
+        //             $anylsys[$item->message_id]["message_id"] = $item->message_id;
+        //             $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+        //             $anylsys[$item->message_id]["account_name"] = $item->author;
+        //             $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+        //             $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
+        //             $anylsys[$item->message_id]["day"] = $date_d;
+        //             $anylsys[$item->message_id]["message_type"] = $item->message_type;
+        //             $anylsys[$item->message_id]["device"] = $item->device;
+        //             $anylsys[$item->message_id]["channel"] = $item->source_name;
+        //             $anylsys[$item->message_id]["source_name"] = $item->source_name;
+        //             $anylsys[$item->message_id]["link_message"] = $item->link_message;
+        //             $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+        //         }
+        //     }
+        // }
 
-        if ($this->report_number === '2.2.009') {
-            foreach ($items as $item) {
-                if ($item->classification_type_id === 3) {
-                    $date_d = Carbon::parse($item->date_m)->format('D');
+        // if ($this->report_number === '2.2.009') {
+        //     foreach ($items as $item) {
+        //         if ($item->classification_type_id === 3) {
+        //             $date_d = Carbon::parse($item->date_m)->format('D');
         
-                    $anylsys[$item->message_id]["message_id"] = $item->message_id;
-                    $anylsys[$item->message_id]["message_detail"] = $item->full_message;
-                    $anylsys[$item->message_id]["account_name"] = $item->author;
-                    $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
-                    $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
-                    $anylsys[$item->message_id]["day"] = $date_d;
-                    $anylsys[$item->message_id]["message_type"] = $item->message_type;
-                    $anylsys[$item->message_id]["device"] = $item->device;
-                    $anylsys[$item->message_id]["channel"] = $item->source_name;
-                    $anylsys[$item->message_id]["source_name"] = $item->source_name;
-                    $anylsys[$item->message_id]["link_message"] = $item->link_message;
-                    $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
-                }
-            }
-        }
+        //             $anylsys[$item->message_id]["message_id"] = $item->message_id;
+        //             $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+        //             $anylsys[$item->message_id]["account_name"] = $item->author;
+        //             $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+        //             $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
+        //             $anylsys[$item->message_id]["day"] = $date_d;
+        //             $anylsys[$item->message_id]["message_type"] = $item->message_type;
+        //             $anylsys[$item->message_id]["device"] = $item->device;
+        //             $anylsys[$item->message_id]["channel"] = $item->source_name;
+        //             $anylsys[$item->message_id]["source_name"] = $item->source_name;
+        //             $anylsys[$item->message_id]["link_message"] = $item->link_message;
+        //             $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+        //         }
+        //     }
+        // }
 
-        if ($this->report_number === '2.2.010') {
-            foreach ($items as $item) {
-                if ($item->classification_type_id === 2) {
-                    $date_d = Carbon::parse($item->date_m)->format('D');
+        // if ($this->report_number === '2.2.010') {
+        //     foreach ($items as $item) {
+        //         if ($item->classification_type_id === 2) {
+        //             $date_d = Carbon::parse($item->date_m)->format('D');
         
-                    $anylsys[$item->message_id]["message_id"] = $item->message_id;
-                    $anylsys[$item->message_id]["message_detail"] = $item->full_message;
-                    $anylsys[$item->message_id]["account_name"] = $item->author;
-                    $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
-                    $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
-                    $anylsys[$item->message_id]["day"] = $date_d;
-                    $anylsys[$item->message_id]["message_type"] = $item->message_type;
-                    $anylsys[$item->message_id]["device"] = $item->device;
-                    $anylsys[$item->message_id]["channel"] = $item->source_name;
-                    $anylsys[$item->message_id]["source_name"] = $item->source_name;
-                    $anylsys[$item->message_id]["link_message"] = $item->link_message;
-                    $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
-                }
-            }
-        }
+        //             $anylsys[$item->message_id]["message_id"] = $item->message_id;
+        //             $anylsys[$item->message_id]["message_detail"] = $item->full_message;
+        //             $anylsys[$item->message_id]["account_name"] = $item->author;
+        //             $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+        //             $anylsys[$item->message_id]["post_time"] = Carbon::parse($item->date_m)->format('H:i');
+        //             $anylsys[$item->message_id]["day"] = $date_d;
+        //             $anylsys[$item->message_id]["message_type"] = $item->message_type;
+        //             $anylsys[$item->message_id]["device"] = $item->device;
+        //             $anylsys[$item->message_id]["channel"] = $item->source_name;
+        //             $anylsys[$item->message_id]["source_name"] = $item->source_name;
+        //             $anylsys[$item->message_id]["link_message"] = $item->link_message;
+        //             $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+        //         }
+        //     }
+        // }
 
         // foreach ($anylsys as $anylsy) {
         //     $data[] = $anylsy;
