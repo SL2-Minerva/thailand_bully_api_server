@@ -2143,7 +2143,7 @@ class EngagementDashboardController extends Controller
                 }
             } else {
                 $nestData = [
-                    'date_m' => $date_m,
+                    'date' => $date_m,
                     'total_at_date' => $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions
                 ];
                 $data[$keyword_id] = [
