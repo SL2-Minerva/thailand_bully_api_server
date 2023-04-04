@@ -950,6 +950,16 @@ class VoiceDashboardController extends Controller
                 ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
                 ->whereIn('classification_type_id', [1]);
 
+            if ($this->source_id) {
+                $raw_current->where('source_id', $this->source_id);
+                $raw_previous->where('source_id', $this->source_id);
+            }
+
+            if ($this->keyword_id) {
+                $raw_current->whereIn('keyword_id', $this->keyword_id);
+                $raw_previous->whereIn('keyword_id', $this->keyword_id);
+            }
+
             $total_message_current = $raw_current->count();
             $total_message_previous = $raw_previous->count();
 
