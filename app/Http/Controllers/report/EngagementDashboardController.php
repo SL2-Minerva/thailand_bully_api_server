@@ -121,7 +121,7 @@ class EngagementDashboardController extends Controller
             $index_label = array_search($day_name, $data['labels']);
 
             if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             } else {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
@@ -130,7 +130,7 @@ class EngagementDashboardController extends Controller
                     'campaign_name' => $item->campaign_name,
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
 
             }
         }
@@ -196,7 +196,7 @@ class EngagementDashboardController extends Controller
             }
 
             if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             } else {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
@@ -205,7 +205,7 @@ class EngagementDashboardController extends Controller
                     'campaign_name' => $item->campaign_name,
                     'data' => [0, 0, 0, 0]
                 ];
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
 
             }
         }
@@ -261,10 +261,12 @@ class EngagementDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if ($index_label !== null) {
+            if ($index_label != null || $index_label != '') {
+
+                $count_all = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
 
                 if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    $data['value'][$item->keyword_id]['data'][$index_label] += $count_all;
                 } else {
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,
@@ -276,7 +278,7 @@ class EngagementDashboardController extends Controller
                         'data' => [0, 0, 0]
                     ];
 
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    $data['value'][$item->keyword_id]['data'][$index_label] += $count_all;
                 }
             }
 
@@ -300,82 +302,90 @@ class EngagementDashboardController extends Controller
             "Follower",
         ];
 
-        $raw = DB::table('message_result_full_data')
+        $infulencer_root = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->where('reference_message_id', '')
             ->whereIn('classification_type_id', [1]);
 
-        $raw_child = DB::table('message_result_full_data')
+        if ($this->source_id) {
+            $infulencer_root->where('source_id', $this->source_id);
+        }
+
+        if ($this->keyword_id) {
+            $infulencer_root->whereIn('keyword_id', $this->keyword_id);
+        }
+
+        $infulencers = $infulencer_root->get();
+
+
+        foreach ($infulencers as $infulencer) {
+
+            if ($infulencer) {
+
+                if (isset($data['value'][$infulencer->keyword_id])) {
+                    $data['value'][$infulencer->keyword_id]['data'][0] += $infulencer->number_of_comments + $infulencer->number_of_shares + $infulencer->number_of_reactions;
+                } else {
+                    $data['value'][$infulencer->keyword_id] = [
+                        'id' => $infulencer->keyword_id,
+                        'keyword_name' => $infulencer->keyword_name,
+                        'campaign_id' => $infulencer->campaign_id,
+                        'campaign_name' => $infulencer->campaign_name,
+                        'data' => [0, 0]
+                    ];
+
+                    $data['value'][$infulencer->keyword_id]['data'][0] += $infulencer->number_of_comments + $infulencer->number_of_shares + $infulencer->number_of_reactions;
+
+                }
+            }
+
+        }
+
+        $follower_raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->where('reference_message_id', '!=', '')
             ->whereIn('classification_type_id', [1]);
 
         if ($this->source_id) {
-            $raw->whereIn('source_id', $this->source_id);
-            $raw_child->whereIn('source_id', $this->source_id);
+            $follower_raw->where('source_id', $this->source_id);
         }
 
         if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-            $raw_child->whereIn('keyword_id', $this->keyword_id);
+            $follower_raw->whereIn('keyword_id', $this->keyword_id);
         }
 
 
-        $items = $raw->get();
-        $items_child = $raw_child->get();
-        $message_total = 0;
-        $analysis = [];
+        $followers = $follower_raw->get();
 
-        foreach ($items as $item) {
-            if (isset($analysis[$item->message_id])) {
-                $analysis[$item->message_id]['Infulencer'] += 1;
+
+        foreach ($followers as $follower) {
+
+            if (isset($data['value'][$follower->keyword_id])) {
+                $data['value'][$follower->keyword_id]['data'][1] += $follower->number_of_comments + $follower->number_of_shares + $follower->number_of_reactions;
             } else {
-                $analysis[$item->message_id]['Follower'] = 0;
-                $analysis[$item->message_id]['Infulencer'] = 0;
-                $analysis[$item->message_id]['keyword_id'] = $item->keyword_id;
-                $analysis[$item->message_id]['keyword_name'] = $item->keyword_name;
-                $analysis[$item->message_id]['campaign_id'] = $item->campaign_id;
-                $analysis[$item->message_id]['campaign_name'] = $item->campaign_name;
-            }
-
-
-            $message_total += 1;
-        }
-
-        foreach ($items_child as $child) {
-            if (isset($analysis[$child->reference_message_id])) {
-                $analysis[$child->reference_message_id]['Follower'] += 1;
-            }
-        }
-
-
-        foreach ($analysis as $message_id => $item) {
-            if (isset($data['value'][$item['keyword_id']])) {
-                $data['value'][$item['keyword_id']]['data'][0] += 1;
-                $data['value'][$item['keyword_id']]['data'][1] += $item['Follower'];
-            } else {
-                $data['value'][$item['keyword_id']] = [
-                    'id' => $item['keyword_id'],
-                    'keyword_name' => $item['keyword_name'],
-                    'campaign_id' => $item['campaign_id'],
-                    'campaign_name' => $item['campaign_name'],
+                $data['value'][$follower->keyword_id] = [
+                    'id' => $follower->keyword_id,
+                    'keyword_name' => $follower->keyword_name,
+                    'campaign_id' => $follower->campaign_id,
+                    'campaign_name' => $follower->campaign_name,
                     'data' => [0, 0]
                 ];
-                $data['value'][$item['keyword_id']]['data'][0] = $item['Infulencer'];
-                $data['value'][$item['keyword_id']]['data'][1] = $item['Follower'];
+
+                $data['value'][$follower->keyword_id]['data'][1] += $follower->number_of_comments + $follower->number_of_shares + $follower->number_of_reactions;
+
             }
+
         }
 
-        if (isset($data['value'])) {
+        if (isset($data['value']) && $data['value']) {
             $data['value'] = array_values($data['value']);
         }
+
 
         if ($only_data) {
             return $data;
         }
-
 
         return parent::handleRespond($data);
     }
@@ -409,7 +419,7 @@ class EngagementDashboardController extends Controller
             $index_label = array_search($item->source_name, $data['labels']);
 
             if (isset($data['value'][$item->keyword_id])) {
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             } else {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
@@ -423,7 +433,7 @@ class EngagementDashboardController extends Controller
                     $data['value'][$item->keyword_id]['data'][$i] = 0;
                 }
 
-                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             }
         }
 
@@ -878,7 +888,6 @@ class EngagementDashboardController extends Controller
     public function EngagementByTimeKey(Request $request, $only_data = false)
     {
 
-
         $data['labels'] = [
             "Before 6 AM",
             "6 AM-12 PM",
@@ -928,8 +937,8 @@ class EngagementDashboardController extends Controller
 
             if (isset($data['value'][1])) {
 
-                $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                $data['value'][2]['data'][$index_label] += $item->number_of_shares;
+                $data['value'][1]['data'][$index_label] += $item->number_of_shares;
+                $data['value'][2]['data'][$index_label] += $item->number_of_comments;
                 $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
 
 
@@ -1018,9 +1027,9 @@ class EngagementDashboardController extends Controller
                 $index_label = 2;
             }
 
-            if ($index_label != null) {
+            if ($index_label != null || $index_label != '') {
 
-                if (isset($data['value'][1])) {
+                if (isset($data['value'])) {
 
                     $data['value'][1]['data'][$index_label] += $item->number_of_shares;
                     $data['value'][2]['data'][$index_label] += $item->number_of_comments;
@@ -1052,6 +1061,11 @@ class EngagementDashboardController extends Controller
                         "campaign_name" => $item->campaign_name,
                         'data' => [0, 0, 0]
                     ];
+
+                    $data['value'][1]['data'][$index_label] += $item->number_of_shares;
+                    $data['value'][2]['data'][$index_label] += $item->number_of_comments;
+                    $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+
                 }
             }
 
@@ -1081,8 +1095,8 @@ class EngagementDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1])
-            ->where('reference_message_id', null)
-            ->orWhere('reference_message_id', '');
+            // ->where('reference_message_id', null)
+            ->where('reference_message_id', '');
 
         if ($this->source_id) {
             $infulencer_root->where('source_id', $this->source_id);
@@ -1131,8 +1145,8 @@ class EngagementDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date. " 00:00:00", $this->end_date. " 23:59:59"])
             ->whereIn('classification_type_id', [1])
-            ->where('reference_message_id', '!=', null)
-            ->orWhere('reference_message_id', '!=', '');
+            // ->where('reference_message_id', '!=', null)
+            ->where('reference_message_id', '!=', '');
 
         if ($this->source_id) {
             $follower_raw->where('source_id', $this->source_id);
@@ -2061,13 +2075,13 @@ class EngagementDashboardController extends Controller
             $item = (array)$object;
 
             if (isset($message_keyword[$item['keyword_id']])) {
-                $message_keyword[$item['keyword_id']]['total'] += 1;
+                $message_keyword[$item['keyword_id']]['total'] += $item['number_of_comments'] + $item['number_of_shares'] + $item['number_of_reactions'];
             } else {
-                $message_keyword[$item['keyword_id']]['total'] = 1;
+                $message_keyword[$item['keyword_id']]['total'] = $item['number_of_comments'] + $item['number_of_shares'] + $item['number_of_reactions'];
                 $message_keyword[$item['keyword_id']]['keyword_name'] = $item['keyword_name'];
             }
 
-            $message_total += 1;
+            $message_total += $item['number_of_comments'] + $item['number_of_shares'] + $item['number_of_reactions'];
         }
 
         foreach ($message_keyword as $keyword_id => $value) {
@@ -2119,18 +2133,18 @@ class EngagementDashboardController extends Controller
 
             if (isset($data[$keyword_id])) {
                 if (isset($data[$keyword_id]['value'][$date_m])) {
-                    $data[$keyword_id]['value'][$date_m]['total_at_date'] += 1;
+                    $data[$keyword_id]['value'][$date_m]['total_at_date'] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
 
                 } else {
                     $data[$keyword_id]['value'][$date_m] = [
                         'date' => $date_m,
-                        'total_at_date' => 1
+                        'total_at_date' => $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions
                     ];
                 }
             } else {
                 $nestData = [
                     'date_m' => $date_m,
-                    'total_at_date' => 1
+                    'total_at_date' => $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions
                 ];
                 $data[$keyword_id] = [
                     "keyword_id" => $item->keyword_id,
