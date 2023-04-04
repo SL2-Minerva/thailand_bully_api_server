@@ -4,6 +4,7 @@ namespace App\Http\Controllers\report;
 
 use App\Exports\BullyExport;
 use App\Exports\ChannelExport;
+use App\Exports\EngagementExport;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\MessageResult;
@@ -123,6 +124,13 @@ class LevelthreeController extends Controller
         $source = parent::listSource();
         $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
         return Excel::download(new ChannelExport($report, $request->report_number), 'Channel-'. Carbon::now() .'.xlsx');
+    }
+
+    public function exportEngagement(Request $request) 
+    {
+        $source = parent::listSource();
+        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
+        return Excel::download(new EngagementExport($report, $request->report_number), 'Engagement-'. Carbon::now() .'.xlsx');
     }
 
     public function exportSentiment(Request $request)

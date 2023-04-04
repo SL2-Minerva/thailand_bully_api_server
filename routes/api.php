@@ -240,6 +240,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('export-overall', [LevelthreeController::class, 'exportOverAll']);
             Route::get('export-voice', [LevelthreeController::class, 'exportVoice']);
             Route::get('export-channel', [LevelthreeController::class, 'exportChannel']);
+            Route::get('export-engagement', [LevelthreeController::class, 'exportEngagement']);
             Route::get('export-sentiment', [LevelthreeController::class, 'exportSentiment']);
             Route::get('export-bully', [LevelthreeController::class, 'exportBully']);
             Route::get('export-excel-overall', [ExportExcelOverallController::class, 'exportOverAll']);
