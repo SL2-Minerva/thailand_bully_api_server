@@ -116,7 +116,7 @@ class UserController extends Controller
 
         if ($user->is_admin) {
             $permissions = null;
-            for ($i = 1; $i <= 109; $i++) {
+            for ($i = 1; $i <= 110; $i++) {
                 $permissions[] = strval($i);
             }
             return $permissions;

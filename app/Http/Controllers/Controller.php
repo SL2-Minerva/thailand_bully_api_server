@@ -197,8 +197,8 @@ class Controller extends BaseController
     public static function diff_date($start_date, $end_date)
     {
         $start_date = Carbon::createFromFormat('Y-m-d H:s:i', $start_date . ' 00:00:00');
-        $end_date = Carbon::createFromFormat('Y-m-d H:s:i', $end_date . ' 23:59:59');
-        $length = $start_date->diffInDays($end_date);
+        $end_date = Carbon::createFromFormat('Y-m-d H:s:i', $end_date . ' 00:00:00');
+        $length = $start_date->diffInDays($end_date->addDays(1));
         return $length != 0 ? $length : 1;
     }
 

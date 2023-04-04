@@ -406,7 +406,7 @@ class VoiceDashboardController extends Controller
                     $index_label = 2;
                 }
 
-                if ($index_label !== null) {
+                if ($index_label != null || $index_label != '') {
 
                     if (isset($data['value'][$item->keyword_id])) {
                         $data['value'][$item->keyword_id]['data'][$index_label] += 1;
@@ -1083,8 +1083,6 @@ class VoiceDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
-        $items = $raw_current->get();
-
         if ($this->keyword_id) {
             $raw_current->whereIn('keyword_id', $this->keyword_id);
         }
@@ -1092,6 +1090,8 @@ class VoiceDashboardController extends Controller
         if ($this->source_id) {
             $raw_current->where('source_id', $this->source_id);
         }
+
+        $items = $raw_current->get();
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
