@@ -402,7 +402,7 @@ class VoiceDashboardController extends Controller
                     $index_label = 1;
                 }
 
-                if ($item->device == 'webapp') {
+                if ($item->device == 'webapp' || $item->device == 'website') {
                     $index_label = 2;
                 }
 
@@ -1567,7 +1567,7 @@ class VoiceDashboardController extends Controller
                     $data['current_period']['data'][1] += 1;
                     $data['current_period']['total'] += 1;
                 }
-                if ($item->device === "webapp") {
+                if ($item->device === "webapp" || $item->device == 'website') {
                     $data['current_period']['data'][2] += 1;
                     $data['current_period']['total'] += 1;
                 }
@@ -1586,7 +1586,7 @@ class VoiceDashboardController extends Controller
                     $data['previous_period']['data'][1] += 1;
                     $data['previous_period']['total'] += 1;
                 }
-                if ($item->device === "webapp") {
+                if ($item->device === "webapp" || $item->device == 'website') {
                     $data['previous_period']['data'][2] += 1;
                     $data['previous_period']['total'] += 1;
                 }
@@ -1695,7 +1695,7 @@ class VoiceDashboardController extends Controller
                 $device = 'Android';
             } else if ($item->device === 'iphone') {
                 $device = 'Iphone';
-            } else if ($item->device === 'webapp') {
+            } else if ($item->device === 'webapp' || $item->device === 'website') {
                 $device = 'Web app';
             }
 
