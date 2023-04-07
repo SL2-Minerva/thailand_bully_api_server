@@ -1683,6 +1683,8 @@ class ChannelDashboardController extends Controller
                     'keyword_name' => $keyword_name,
                     'data' => [0, 0, 0, 0, 0, 0]
                 ];
+
+                $data['value'][$value_name]['data'][$index_label] += 1;
             }
         }
 
