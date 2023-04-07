@@ -674,11 +674,11 @@ class ChannelDashboardController extends Controller
                 $index_label = 1;
             }
 
-            if ($item->device == 'webapp') {
+            if ($item->device == 'webapp' || $item->device == 'website') {
                 $index_label = 2;
             }
 
-            if ($index_label !== null) {
+            if ($index_label != null || $index_label != '') {
 
                 if (isset($data['value'][$item->source_id])) {
                     $data['value'][$item->source_id]['data'][$index_label] += 1;

@@ -257,7 +257,7 @@ class EngagementDashboardController extends Controller
                 $index_label = 1;
             }
 
-            if ($item->device == 'webapp') {
+            if ($item->device == 'webapp' || $item->device == 'website') {
                 $index_label = 2;
             }
 
@@ -1023,7 +1023,7 @@ class EngagementDashboardController extends Controller
                 $index_label = 1;
             }
 
-            if ($item->device == 'webapp') {
+            if ($item->device == 'webapp' || $item->device == 'website') {
                 $index_label = 2;
             }
 
