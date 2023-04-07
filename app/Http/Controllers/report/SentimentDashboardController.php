@@ -393,7 +393,7 @@ class SentimentDashboardController extends Controller
                 $check[] = $item->device;
             }
 
-            if ($item->device === 'android') {
+            if ($item->device == 'android') {
                 $index_label = 0;
             }
 
@@ -420,9 +420,7 @@ class SentimentDashboardController extends Controller
                         'data' => [0, 0, 0]
                     ];
 
-                    if ($index_label) {
-                        $data['value'][$item->classification_id]['data'][$index_label] += 1;
-                    }
+                    $data['value'][$item->classification_id]['data'][$index_label] += 1;
                 }
             }
         }

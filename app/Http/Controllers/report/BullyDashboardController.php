@@ -1580,7 +1580,7 @@ class BullyDashboardController extends Controller
             $index_label = null;
 
             if ($item->device == 'android') {
-                $index_label = 1;
+                $index_label = 0;
             }
 
             if ($item->device == 'iphone') {
