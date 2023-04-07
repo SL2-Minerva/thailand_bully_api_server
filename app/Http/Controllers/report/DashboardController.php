@@ -870,6 +870,10 @@ class DashboardController extends Controller
                     'Positive' => 0,
                     'total' => 0,
                 ];
+                
+                $data[$result->keyword_id][$result->classification_name] += 1;
+                $data[$result->keyword_id]['total'] += 1;
+                
             }
 
         }
