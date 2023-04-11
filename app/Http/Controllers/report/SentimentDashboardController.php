@@ -370,7 +370,7 @@ class SentimentDashboardController extends Controller
         }
 
         if ($this->keyword_id) {
-            $raw->where('keyword_id', $this->keyword_id);
+            $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
 

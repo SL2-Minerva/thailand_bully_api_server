@@ -1274,6 +1274,16 @@ class EngagementDashboardController extends Controller
             ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_type_id', [1]);
 
+        if ($this->source_id) {
+            $raw_current->where('source_id', $this->source_id);
+            $raw_previous->where('source_id', $this->source_id);
+        }
+
+        if ($this->keyword_id) {
+            $raw_current->whereIn('keyword_id', $this->keyword_id);
+            $raw_previous->whereIn('keyword_id', $this->keyword_id);
+        }
+
 
         $totalEngagement_current = $raw_current->sum(DB::raw('number_of_shares + number_of_comments + number_of_reactions'));
         $totalEngagement_previous = $raw_previous->sum(DB::raw('number_of_shares + number_of_comments + number_of_reactions'));
@@ -1535,7 +1545,7 @@ class EngagementDashboardController extends Controller
             $index_label = array_search($item->classification_name, $data['labels']);
 
             if (isset($data['value'][2])) {
-                $data['value'][2]['data'][$index_label] += 1;
+                $data['value'][2]['data'][$index_label] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions; 
                 $current_share[$index_label] += $item->number_of_shares;
                 $current_comment[$index_label] += $item->number_of_comments;
                 $current_reaction[$index_label] += $item->number_of_reactions;
