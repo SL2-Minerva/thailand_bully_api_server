@@ -768,8 +768,7 @@ class BullyDashboardController extends Controller
         foreach ($infulencers as $infulencer) {
 
             if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
-                if ($infulencer->reference_message_id == null) {
-
+                if (!$infulencer->reference_message_id) {
                     $data['value'][$infulencer->classification_id]['data'][0] += 1;
                 }
             } else {
@@ -777,6 +776,11 @@ class BullyDashboardController extends Controller
                 $data['value'][$infulencer->classification_id]['classification_id'] = $infulencer->classification_id;
                 $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->classification_name;
                 $data['value'][$infulencer->classification_id]['data'][0] = 0;
+
+                if (!$infulencer->reference_message_id) {
+                    $data['value'][$infulencer->classification_id]['data'][0] += 1;
+                }
+
 
             }
 
@@ -802,13 +806,17 @@ class BullyDashboardController extends Controller
         foreach ($followers as $follower) {
 
             if (isset($data['value'][$follower->classification_id]['data'][1])) {
-                if ($follower->reference_message_id != null) {
+                if ($follower->reference_message_id) {
                     $data['value'][$follower->classification_id]['data'][1] += 1;
                 }
             } else {
                 $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
                 $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
                 $data['value'][$follower->classification_id]['data'][1] = 0;
+
+                if ($follower->reference_message_id) {
+                    $data['value'][$follower->classification_id]['data'][0] += 1;
+                }
             }
 
         }
@@ -1718,7 +1726,7 @@ class BullyDashboardController extends Controller
         foreach ($infulencers as $infulencer) {
 
             if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
-                if ($infulencer->reference_message_id === '' || $infulencer->reference_message_id === null) {
+                if (!$infulencer->reference_message_id) {
                     $data['value'][$infulencer->classification_id]['data'][0] += 1;
                 }
             } else {
@@ -1726,6 +1734,10 @@ class BullyDashboardController extends Controller
                 $data['value'][$infulencer->classification_id]['classification_id'] = $infulencer->classification_id;
                 $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->classification_name;
                 $data['value'][$infulencer->classification_id]['data'][0] = 0;
+
+                if (!$infulencer->reference_message_id) {
+                    $data['value'][$infulencer->classification_id]['data'][0] += 1;
+                }
 
             }
 
@@ -1752,13 +1764,17 @@ class BullyDashboardController extends Controller
         foreach ($followers as $follower) {
 
             if (isset($data['value'][$follower->classification_id]['data'][1])) {
-                if ($follower->reference_message_id !== '' || $follower->reference_message_id !== null) {
+                if ($follower->reference_message_id) {
                     $data['value'][$follower->classification_id]['data'][1] += 1;
                 }
             } else {
                 $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
                 $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
                 $data['value'][$follower->classification_id]['data'][1] = 0;
+
+                if ($follower->reference_message_id) {
+                    $data['value'][$follower->classification_id]['data'][1] += 1;
+                }
             }
 
         }
@@ -2352,7 +2368,7 @@ class BullyDashboardController extends Controller
                     "keyword_name" => $item->classification_name,
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
-                    "total" => 1,
+                    "total" => 0,
                 ];
 
                 for ($i = 0; $i < count($soures['labels']); $i++) {
@@ -2363,6 +2379,7 @@ class BullyDashboardController extends Controller
                 }
 
                 $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
+                $anylsys[$item->classification_name]['total'] += 1;
             }
         }
 
@@ -2547,7 +2564,7 @@ class BullyDashboardController extends Controller
                     "keyword_name" => $item->classification_name,
                     "campaign_id" => $item->campaign_id,
                     "campaign_name" => $item->campaign_name,
-                    "total" => 1,
+                    "total" => 0,
                 ];
 
                 for ($i = 0; $i < count($soures['labels']); $i++) {
@@ -2558,6 +2575,7 @@ class BullyDashboardController extends Controller
                 }
 
                 $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
+                $anylsys[$item->classification_name]['total'] += 1;
             }
         }
 

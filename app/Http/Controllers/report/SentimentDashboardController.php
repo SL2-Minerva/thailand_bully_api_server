@@ -466,15 +466,19 @@ class SentimentDashboardController extends Controller
 
 
         foreach ($infulencers as $infulencer) {
-            if ($infulencer->reference_message_id === null || $infulencer->reference_message_id === '') {
-                if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
+            if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
+                if (!$infulencer->reference_message_id) {
                     $data['value'][$infulencer->classification_id]['data'][0] += 1;
-                } else {
-                    $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
-                    $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->keyword_name;
-                    $data['value'][$infulencer->classification_id]['data'][0] = 1;
-
                 }
+            } else {
+                $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
+                $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->keyword_name;
+                $data['value'][$infulencer->classification_id]['data'][0] = 0;
+
+                if (!$infulencer->reference_message_id) {
+                    $data['value'][$infulencer->classification_id]['data'][0] += 1;
+                }
+
             }
         }
 
@@ -496,13 +500,17 @@ class SentimentDashboardController extends Controller
 
 
         foreach ($followers as $follower) {
-            if ($infulencer->reference_message_id !== null || $infulencer->reference_message_id !== '') {
-                if (isset($data['value'][$follower->classification_id]['data'][1])) {
+            if (isset($data['value'][$follower->classification_id]['data'][1])) {
+                if ($follower->reference_message_id) {
                     $data['value'][$follower->classification_id]['data'][1] += 1;
-                } else {
-                    $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
-                    $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
-                    $data['value'][$follower->classification_id]['data'][1] = 1;
+                }
+            } else {
+                $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
+                $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
+                $data['value'][$follower->classification_id]['data'][1] = 0;
+
+                if ($follower->reference_message_id) {
+                    $data['value'][$follower->classification_id]['data'][1] += 1;
                 }
             }
 
