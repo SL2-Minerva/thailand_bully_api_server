@@ -1727,22 +1727,26 @@ class EngagementDashboardController extends Controller
                     'keyword_name' => $item['keyword_name'],
                     'total' => [
                         "value" => $item['total'] - $p_total,
-                        "percentage" => $this->overPeriodComparison($item['total'], $p_total),
+                        // "percentage" => $this->overPeriodComparison($item['total'], $p_total),
+                        "percentage" => self::point_two_digits((($item['total'] - $p_total) / $p_total) * 100),
                         "type" => $item['total'] - $p_total > 0 ? "plus" : "minus",
                     ],
                     'share' => [
                         "value" => $item['share'] - $s_total,
-                        "percentage" => $this->overPeriodComparison($item['share'], $s_total),
+                        // "percentage" => $this->overPeriodComparison($item['share'], $s_total),
+                        "percentage" => self::point_two_digits((($item['share'] - $s_total) / $s_total) * 100),
                         "type" => $item['share'] - $s_total > 0 ? "plus" : "minus" ,
                     ],
                     'comment' => [
                         "value" => $item['comment'] - $c_total,
-                        "percentage" => $this->overPeriodComparison($item['comment'], $c_total),
+                        // "percentage" => $this->overPeriodComparison($item['comment'], $c_total),
+                        "percentage" => self::point_two_digits((($item['comment'] - $c_total) / $c_total) * 100),
                         "type" => $item['comment'] - $c_total > 0 ? "plus" : "minus",
                     ],
                     'reaction' => [
                         "value" => $item['reaction'] - $r_total,
-                        "percentage" => $this->overPeriodComparison($item['reaction'], $r_total),
+                        // "percentage" => $this->overPeriodComparison($item['reaction'], $r_total),
+                        "percentage" => self::point_two_digits((($item['reaction'] - $r_total) / $r_total) * 100),
                         "type" => $item['reaction'] - $r_total > 0 ? "plus" : "minus" ,
                     ],
                 ];

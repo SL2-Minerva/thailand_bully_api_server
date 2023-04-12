@@ -791,6 +791,7 @@ class SentimentDashboardController extends Controller
         $raw_current = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
+
         $raw_previous = DB::table($table)->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('classification_name', ['Positive', 'Negative', 'Neutral']);
@@ -812,25 +813,44 @@ class SentimentDashboardController extends Controller
             $raw_previous->whereIn('source_id', $source_ids);
         }
 
+        $total_share_current = 0;
+        $total_comment_current = 0;
+        $total_reactions_current = 0;
 
-        $total_share_current = $raw_current->where('classification_name', 'Positive')->count();
-        $total_share_previous = $raw_previous->where('classification_name', 'Positive')->count();
+        foreach ($raw_current->get() as $item) {
+            if ($item->classification_name === 'Positive') {
+                $total_share_current += 1;
+            }
 
-        $total_comment_current = $raw_current->where('classification_name', 'Neutral')->count();
-        $total_comment_previous = $raw_previous->where('classification_name', 'Neutral')->count();
+            if ($item->classification_name === 'Neutral') {
+                $total_comment_current += 1;
+            }
 
-        $total_reactions_current = $raw_current->where('classification_name', 'Negative')->count();
-        $total_reactions_previous = $raw_previous->where('classification_name', 'Negative')->count();
+            if ($item->classification_name === 'Negative') {
+                $total_reactions_current += 1;
+            }
+        }
+
+        $total_share_previous = 0;
+        $total_comment_previous = 0;
+        $total_reactions_previous = 0;
+
+        foreach ($raw_previous->get() as $item) {
+            if ($item->classification_name === 'Positive') {
+                $total_share_previous += 1;
+            }
+
+            if ($item->classification_name === 'Neutral') {
+                $total_comment_previous += 1;
+            }
+
+            if ($item->classification_name === 'Negative') {
+                $total_reactions_previous += 1;
+            }
+        }
 
         $totalEngagement_current = $total_share_current + $total_comment_current + $total_reactions_current;
         $totalEngagement_previous = $total_share_previous + $total_comment_previous + $total_reactions_previous;
-
-
-
-
-//        $current = $raw_current->get();
-//        $previous = $raw_previous->get();
-
 
         $data['totalSentiment'] = [
             "totalValue" => $this->custom_number_format((int)$totalEngagement_current),
@@ -838,17 +858,16 @@ class SentimentDashboardController extends Controller
             "type" => $totalEngagement_current - $totalEngagement_previous > 0 ? "plus" : "minus",
         ];
 
+        $data['neutral'] = [
+            "totalValue" => $this->custom_number_format((int)$total_comment_current),
+            "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
+            "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
+        ];
 
         $data['positive'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
             "comparison" => $total_share_previous ? (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0) : 0,
             "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
-        ];
-
-        $data['neutral'] = [
-            "totalValue" => $this->custom_number_format((int)$total_comment_current),
-            "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
-            "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
         ];
 
         $data['negative'] = [
@@ -1128,8 +1147,7 @@ class SentimentDashboardController extends Controller
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$start_date . " 00:00:00", $end_data . " 23:59:59"]);
 
-
-        $raw_current->whereIn('classification_type_id', [1, 3]);
+        $raw_current->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $raw_current->whereIn('keyword_id', $this->keyword_id);
@@ -1168,52 +1186,53 @@ class SentimentDashboardController extends Controller
 
         foreach ($items as $item) {
 
+
             if ($item->classification_id === 1) {
-                $analysis['positive'] += 1;
+                $analysis['positive'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
             } else if ($item->classification_id === 2) {
-                $analysis['negative'] += 1;
+                $analysis['negative'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
             } else if ($item->classification_id === 3) {
-                $analysis['neutral'] += 1;
+                $analysis['neutral'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
             }
 
             if ($item->number_of_shares) {
 
                 if ($item->classification_id === 1) {
-                    $analysis['share_data']['positive'] += 1;
+                    $analysis['share_data']['positive'] += $item->number_of_shares;
                 } else if ($item->classification_id === 2) {
-                    $analysis['share_data']['negative'] += 1;
+                    $analysis['share_data']['negative'] += $item->number_of_shares;
                 } else if ($item->classification_id === 3) {
-                    $analysis['share_data']['neutral'] += 1;
+                    $analysis['share_data']['neutral'] += $item->number_of_shares;
                 }
             }
 
 
             if ($item->number_of_comments) {
-                if ($item->classification_id === 2) {
-                    $analysis['comment_data']['positive'] += 1;
+                if ($item->classification_id === 1) {
+                    $analysis['comment_data']['positive'] += $item->number_of_comments;
                 } else if ($item->classification_id === 2) {
-                    $analysis['comment_data']['negative'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis['comment_data']['neutral'] += 1;
+                    $analysis['comment_data']['negative'] += $item->number_of_comments;
+                } else if ($item->classification_id === 3) {
+                    $analysis['comment_data']['neutral'] += $item->number_of_comments;
                 }
             }
 
 
             if ($item->number_of_reactions) {
-                if ($item->classification_id === 3) {
-                    $analysis['reaction_data']['positive'] += 1;
+                if ($item->classification_id === 1) {
+                    $analysis['reaction_data']['positive'] += $item->number_of_reactions;
                 } else if ($item->classification_id === 2) {
-                    $analysis['reaction_data']['negative'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis['reaction_data']['neutral'] += 1;
+                    $analysis['reaction_data']['negative'] += $item->number_of_reactions;
+                } else if ($item->classification_id === 3) {
+                    $analysis['reaction_data']['neutral'] += $item->number_of_reactions;
                 }
             }
 
 
-            $analysis['share'] += $item->number_of_shares ? 1 : 0;
-            $analysis['comment'] += $item->number_of_comments ? 1 : 0;
-            $analysis['reaction'] += $item->number_of_reactions ? 1 : 0;
-            $analysis['total'] += ($item->number_of_shares || $item->number_of_comments || $item->number_of_reactions) ? 1 : 0;
+            $analysis['share'] += $item->number_of_shares;
+            $analysis['comment'] += $item->number_of_comments;
+            $analysis['reaction'] += $item->number_of_reactions;
+            $analysis['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
         }
 
         return $analysis;
@@ -1498,18 +1517,20 @@ class SentimentDashboardController extends Controller
                     "percentage" => $analysis_previous_key ? self::point_two_digits((($item['total'] - $analysis_previous_key) / $analysis_previous_key) * 100) : 0,
                     "type" => $item['total'] - $analysis_previous_key > 0 ? "plus" : "minus"
                 ],
+                
                 "positive" => [
                     "value" => $item['positive'] - $analysis_previous_positive,
                     "percentage" => $analysis_previous_positive ? self::point_two_digits((($item['positive'] - $analysis_previous_positive) / $analysis_previous_positive) * 100) : 0,
                     "type" => $item['positive'] - $analysis_previous_positive > 0 ? "plus" : "minus"
                 ],
-                "neutral" => [
-                    "value" => $item['neutral'] - $analysis_previous_negative,
-                    "percentage" => $analysis_previous_negative ? self::point_two_digits((($item['neutral'] - $analysis_previous_negative) / $analysis_previous_negative) * 100) : 0,
-                    "type" => $item['neutral'] - $analysis_previous_negative > 0 ? "plus" : "minus"
-                ],
 
                 "negative" => [
+                    "value" => $item['negative'] - $analysis_previous_negative,
+                    "percentage" => $analysis_previous_negative ? self::point_two_digits((($item['negative'] - $analysis_previous_negative) / $analysis_previous_negative) * 100) : 0,
+                    "type" => $item['negative'] - $analysis_previous_negative > 0 ? "plus" : "minus"
+                ],
+
+                "neutral" => [
                     "value" => $item['neutral'] - $analysis_previous_neutral,
                     "percentage" => $analysis_previous_neutral ? self::point_two_digits((($item['neutral'] - $analysis_previous_neutral) / $analysis_previous_neutral) * 100) : 0,
                     "type" => $item['neutral'] - $analysis_previous_neutral > 0 ? "plus" : "minus"
