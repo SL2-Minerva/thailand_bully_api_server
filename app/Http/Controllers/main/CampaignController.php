@@ -18,9 +18,15 @@ class CampaignController extends Controller
         $campaigns = Campaign::all();
 
 
-        if ($request->organization_id) {
-            $campaigns = $campaigns->where('organization_id', $request->organization_id);
+        if ($request->organization_id || !$this->user_login->is_admin) {
+
+            if ($request->organization_id) {
+                $campaigns = $campaigns->where('organization_id', $request->organization_id);
+            } else {
+                $campaigns = $campaigns->where('organization_id', $this->user_login->organization_id);
+            }
         }
+
 
         if ($request->status) {
             $campaigns = $campaigns->where('status', $request->status);
@@ -29,6 +35,7 @@ class CampaignController extends Controller
         if ($request->name) {
             $campaigns = $campaigns->where('name', $request->name);
         }
+
 
 
         $data = [];
