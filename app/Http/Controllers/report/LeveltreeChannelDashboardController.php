@@ -149,8 +149,8 @@ class LeveltreeChannelDashboardController extends Controller
                 $label = 'HateSpeech';
             } else if ($label === 'No Bully') {
                 $label = 'NoBully';
-            } else if ($label === 'Trolling/Flaming') {
-                $label = 'Trolling';
+            } else if ($label === 'Violence') {
+                $label = 'Violence';
             }
 
             $raw = DB::table('message_result_full_data')

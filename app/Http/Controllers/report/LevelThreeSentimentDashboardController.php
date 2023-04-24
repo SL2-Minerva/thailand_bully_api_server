@@ -156,8 +156,8 @@ class LevelThreeSentimentDashboardController extends Controller
                 $label = 'HateSpeech';
             } else if ($label === 'No Bully') {
                 $label = 'NoBully';
-            } else if ($label === 'Trolling/Flaming') {
-                $label = 'Trolling';
+            } else if ($label === 'Violence') {
+                $label = 'Violence';
             }
 
             $total->where('classification_name', '=', $label);
@@ -292,8 +292,8 @@ class LevelThreeSentimentDashboardController extends Controller
                     $label = 'HateSpeech';
                 } else if ($label === 'No Bully') {
                     $label = 'NoBully';
-                } else if ($label === 'Trolling/Flaming') {
-                    $label = 'Trolling';
+                } else if ($label === 'Violence') {
+                    $label = 'Violence';
                 }
 
                 $anylsy["bully_level"] = $anylsy[3];

@@ -306,8 +306,8 @@ class LevelThreeBullyDashboardController extends Controller
                     $Llabel = 'HateSpeech';
                 } else if ($Llabel === 'No Bully') {
                     $Llabel = 'NoBully';
-                } else if ($Llabel === 'Trolling/Flaming') {
-                    $Llabel = 'Trolling';
+                } else if ($Llabel === 'Violence') {
+                    $Llabel = 'Violence';
                 }
 
                 if ($anylsy[2] === $Llabel) {
@@ -360,8 +360,8 @@ class LevelThreeBullyDashboardController extends Controller
                     $Llabel = 'HateSpeech';
                 } else if ($Llabel === 'No Bully') {
                     $Llabel = 'NoBully';
-                } else if ($Llabel === 'Trolling/Flaming') {
-                    $Llabel = 'Trolling';
+                } else if ($Llabel === 'Violence') {
+                    $Llabel = 'Violence';
                 }
 
                 $raw->where('classification_name', $Llabel);
@@ -390,8 +390,8 @@ class LevelThreeBullyDashboardController extends Controller
                 $Llabel = 'HateSpeech';
             } else if ($Llabel === 'No Bully') {
                 $Llabel = 'NoBully';
-            } else if ($Llabel === 'Trolling/Flaming') {
-                $Llabel = 'Trolling';
+            } else if ($Llabel === 'Violence') {
+                $Llabel = 'Violence';
             }
 
             if ($request->report_number === '6.2.013') {

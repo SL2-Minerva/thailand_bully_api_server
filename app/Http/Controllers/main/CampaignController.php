@@ -17,6 +17,7 @@ class CampaignController extends Controller
 
         $campaigns = Campaign::all();
 
+
         if ($request->organization_id) {
             $campaigns = $campaigns->where('organization_id', $request->organization_id);
         }
@@ -293,7 +294,7 @@ class CampaignController extends Controller
                     // } else {
                     //     $condition_color = $keyword["colors"] ?? "#";
                     // }
-                    
+
                     $data_submit_keyword = [
                         Keyword::CAMPAIGN_ID => $data->id,
                         BaseModel::NAME => $name,
@@ -405,6 +406,8 @@ class CampaignController extends Controller
 
         $data = [];
 
+
+
         foreach ($campaigns->get() as $campaign) {
             $campaign->keyword = Keyword::where('campaign_id', $campaign->id)->whereNull('parent_id')->get();
 
@@ -429,14 +432,28 @@ class CampaignController extends Controller
                 }
             }
 
-            $campaign->organization = Organization::find($campaign->organization_id)->name;
+
+            $organization_id = null;
+            if ($request->organization_id) {
+                $organization_id = $request->organization_id;
+            } else {
+                $organization_id = $campaign->organization_id;
+            }
+
+            $campaign->organization = Organization::find($organization_id)->name;
             $data['list'][] = $campaign;
             $data['keyword_limit'] = $this->organization_group->total_keyword;
             $data['frequency_default'] = $this->organization_group->frequency ?? 0;
 
-
-
         }
+
+        $organization_id = null;
+        if ($request->organization_id) {
+            $organization_id = $request->organization_id;
+        }
+
+        $data['keyword_limit'] = $this->organization_group->total_keyword;
+        $data['frequency_default'] = $this->organization_group->frequency ?? 0;
 
         return parent::handleRespond($data);
     }

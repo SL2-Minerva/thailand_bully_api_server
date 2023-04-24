@@ -195,8 +195,8 @@ class LeveltreeVoiceDashboardController extends Controller
                 $label = 'HateSpeech';
             } else if ($label === 'No Bully') {
                 $label = 'NoBully';
-            } else if ($label === 'Trolling/Flaming') {
-                $label = 'Trolling';
+            } else if ($label === 'Violence') {
+                $label = 'Violence';
             }
 
             $total->where('classification_name', '=', $label);
