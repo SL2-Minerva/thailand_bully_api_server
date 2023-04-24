@@ -447,10 +447,6 @@ class CampaignController extends Controller
 
         }
 
-        $organization_id = null;
-        if ($request->organization_id) {
-            $organization_id = $request->organization_id;
-        }
 
         $data['keyword_limit'] = $this->organization_group->total_keyword;
         $data['frequency_default'] = $this->organization_group->frequency ?? 0;
