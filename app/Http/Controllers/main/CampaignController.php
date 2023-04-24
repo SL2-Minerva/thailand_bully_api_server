@@ -27,7 +27,6 @@ class CampaignController extends Controller
             }
         }
 
-
         if ($request->status) {
             $campaigns = $campaigns->where('status', $request->status);
         }
@@ -35,8 +34,6 @@ class CampaignController extends Controller
         if ($request->name) {
             $campaigns = $campaigns->where('name', $request->name);
         }
-
-
 
         $data = [];
         foreach ($campaigns as $campaign) {
