@@ -1209,7 +1209,7 @@ class DashboardController extends Controller
                 'source_name' => $wordcloud->source_name,
                 'total_message' => $wordcloud->count_number,
                 'message_id' => $wordcloud->message_id,
-                'engagements' => self::point_two_digits($this->get_engagements($wordcloud->message_id), 0),
+                'engagements' => $this->get_engagements($wordcloud->message_id),
                 'date_count' => $wordcloud->date_count
             ];
         }
@@ -1220,6 +1220,10 @@ class DashboardController extends Controller
             $date_count= array_column($data, 'date_count');
 
             array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
+
+            foreach ($data as $key => $datas) {
+                $data[$key]['engagements'] = self::point_two_digits($data[$key]['engagements'], 0);
+            }
         }
 
         return $data;
@@ -1435,7 +1439,7 @@ class DashboardController extends Controller
                 'total_message' => self::point_two_digits($wordcloud->count_number, 0),
                 'message_id' => $wordcloud->message_id,
                 'date_count' => $wordcloud->date_count,
-                'engagements' => self::point_two_digits($this->get_engagements($wordcloud->message_id), 0)
+                'engagements' => $this->get_engagements($wordcloud->message_id)
             ];
         }
 
@@ -1445,6 +1449,10 @@ class DashboardController extends Controller
             $date_count= array_column($data, 'date_count');
 
             array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
+
+            foreach ($data as $key => $datas) {
+                $data[$key]['engagements'] = self::point_two_digits($data[$key]['engagements'], 0);
+            }
         }
 
         return $data;
