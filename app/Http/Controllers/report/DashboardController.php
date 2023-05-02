@@ -897,20 +897,18 @@ class DashboardController extends Controller
 
     private function wordCloudsData($raw_total)
     {
-
-
         $worlds = $raw_total->get();
 
         $dummy_data = [];
 
         foreach ($worlds as $world) {
             if (isset($dummy_data[$world->word])) {
-                $dummy_data[$world->word]['value'] += $world->count_number;
-                $dummy_data[$world->word]['total'] = self::point_two_digits($worlds->count(), 0);
+                $dummy_data[$world->word]['value'] += self::point_two_digits($world->count_number, 0);
+                // $dummy_data[$world->word]['total'] = self::point_two_digits($worlds->count(), 0);
             } else {
                 $dummy_data[$world->word] = [
                     'text' => $world->word,
-                    'value' => $world->count_number,
+                    'value' => self::point_two_digits($world->count_number, 0),
 //                    'total' => self::point_two_digits($worlds->count(), 0)
                 ];
             }
@@ -1018,9 +1016,6 @@ class DashboardController extends Controller
     public function wordClouds(Request $request)
     {
         $data = null;
-
-
-
         $campaign_id = $request->campaign_id ?? "";
 
         if (!$campaign_id) {
@@ -1041,6 +1036,10 @@ class DashboardController extends Controller
             $raw_total->whereIn('source_id', $source_ids);
         }
 
+        if ($this->keyword_id) {
+            $raw_total->whereIn('keyword_id', $this->keyword_id);
+        }
+
         if ($this->source_id) {
             $raw_total->where('source_id', $this->source_id);
         }
@@ -1050,7 +1049,7 @@ class DashboardController extends Controller
         $data['word_clouds'] = $this->wordCloudsMessage($raw_total, $select);
         $data['word_clouds_table'] = $this->wordCloudsMessageTable($raw_total, $request);
         $data['total'] = $raw_total->count();
-        $data['word_total'] = (int)$raw_total->sum('count_number');
+        $data['word_total'] = self::point_two_digits((int)$raw_total->sum('count_number'), 0);
 
 
         return parent::handleRespond($data);
@@ -1095,11 +1094,16 @@ class DashboardController extends Controller
         }
 
         if ($data) {
+
             $data = array_values($data);
 
             usort($data, function($a, $b) {
                 return $b['total'] - $a['total'];
             });
+
+            foreach ($data as $key => $value) {
+                $data[$key]['total'] = self::point_two_digits($data[$key]['total'], 0);
+            }
         }
 
 
@@ -1204,8 +1208,17 @@ class DashboardController extends Controller
                 'source_name' => $wordcloud->source_name,
                 'total_message' => $wordcloud->count_number,
                 'message_id' => $wordcloud->message_id,
-                'engagements' => $this->get_engagements($wordcloud->message_id)
+                'engagements' => self::point_two_digits($this->get_engagements($wordcloud->message_id), 0),
+                'date_count' => $wordcloud->date_count
             ];
+        }
+
+        if ($data) {
+            $total_message= array_column($data, 'total_message');
+            $engagements= array_column($data, 'engagements');
+            $date_count= array_column($data, 'date_count');
+
+            array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
         }
 
         return $data;
@@ -1418,10 +1431,19 @@ class DashboardController extends Controller
                 'author' => $wordcloud->author,
                 'source_id' => $wordcloud->source_id,
                 'source_name' => $wordcloud->source_name,
-                'total_message' => $wordcloud->count_number,
+                'total_message' => self::point_two_digits($wordcloud->count_number, 0),
                 'message_id' => $wordcloud->message_id,
-                'engagements' => $this->get_engagements($wordcloud->message_id)
+                'date_count' => $wordcloud->date_count,
+                'engagements' => self::point_two_digits($this->get_engagements($wordcloud->message_id), 0)
             ];
+        }
+
+        if ($data) {
+            $total_message= array_column($data, 'total_message');
+            $engagements= array_column($data, 'engagements');
+            $date_count= array_column($data, 'date_count');
+
+            array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
         }
 
         return $data;
