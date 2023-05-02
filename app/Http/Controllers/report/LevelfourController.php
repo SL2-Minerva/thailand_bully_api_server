@@ -166,8 +166,9 @@ class LevelfourController extends Controller
                         'to' => $node['parent_id'],
                         "width" => 10,
 //                        "width" => (int)$node['length'] >= 30 ? (int)$node['length'] / 10 : (int)$node['length'],
-                        "length" => (int)$node['length'] ? (int)$node['length'] * 10 : 150,
-                        "color" => $node['color']
+                        "length" => (int)$node['length'] ? (int)$node['length'] * 10 : 250,
+                        "color" => $node['color'],
+                        "link_message" => $node['link_message']
                     ];
                 }
 
@@ -256,6 +257,9 @@ class LevelfourController extends Controller
 
         }
 
+        if ($this->keyword_id) {
+            $raw->whereIn('keyword_id', $this->keyword_id);
+        }
 
         $items = $raw->get();
 
@@ -270,7 +274,8 @@ class LevelfourController extends Controller
                 "title" => $item->author,
                 "color" => $item->classification_color,
                 "shape" => "dot",
-                "size" => $this->factorNodeSize($influent_rate),
+                "size" => $this->factorNodeSize($influent_rate, $is_child),
+                'link_message' => $item->link_message ?? ""
             ];
 
 
@@ -290,12 +295,16 @@ class LevelfourController extends Controller
     }
 
 
-    private function factorNodeSize($influent_rate = 0)
+    private function factorNodeSize($influent_rate = 0, $is_child = false)
     {
-        if (!$influent_rate || $influent_rate <= 0) {
-            return 40;
+        if ($is_child) {
+            if (!$influent_rate || $influent_rate <= 0) {
+                return 40;
+            }
+
+            return round($influent_rate) != 0 ? round($influent_rate) * 10 : 40;
         }
 
-        return round($influent_rate) * 10;
+        return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
     }
 }
