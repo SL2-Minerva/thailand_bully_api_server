@@ -345,9 +345,9 @@ class DashboardController extends Controller
         $message_total = $current['positive'] + $current['negative'] + $current['neutral'];
 
         return parent::handleRespond([
-            "positive_percentage" => $message_total ? (float)self::point_two_digits(($current['positive'] / $message_total) * 100) : 0,
-            "neutral_percentage" => $message_total ? (float)self::point_two_digits(($current['neutral'] / $message_total) * 100) : 0,
-            "negative_percentage" => $message_total ? (float)self::point_two_digits(($current['negative'] / $message_total) * 100) : 0,
+            "positive_percentage" => $message_total ? self::point_two_digits(($current['positive'] / $message_total) * 100) : 0,
+            "neutral_percentage" => $message_total ? self::point_two_digits(($current['neutral'] / $message_total) * 100) : 0,
+            "negative_percentage" => $message_total ? self::point_two_digits(($current['negative'] / $message_total) * 100) : 0,
         ]);
     }
 
@@ -1078,7 +1078,6 @@ class DashboardController extends Controller
 
         $list_keywords = $keywords->pluck('name', 'id')->toArray();
         foreach ($wordclouds as $wordcloud) {
-
             if (isset($data[$wordcloud->word])) {
                 $data[$wordcloud->word]['total'] += $wordcloud->count_number;
             } else {
@@ -1087,7 +1086,8 @@ class DashboardController extends Controller
                     'keyword_id' => $wordcloud->keyword_id,
                     'keyword_name' => $list_keywords[$wordcloud->keyword_id],
                     'total' => $wordcloud->count_number,
-                    'percent' => round(($wordcloud->count_number / $total * 100), 2)
+                    // 'percent' => self::point_two_digits((($wordcloud->count_number / $total) * 100), 2)
+                    'percent' => 0
                 ];
             }
 
@@ -1102,6 +1102,7 @@ class DashboardController extends Controller
             });
 
             foreach ($data as $key => $value) {
+                $data[$key]['percent'] = (float)self::point_two_digits((($data[$key]['total'] / $total) * 100), 2);
                 $data[$key]['total'] = self::point_two_digits($data[$key]['total'], 0);
             }
         }
@@ -1299,13 +1300,13 @@ class DashboardController extends Controller
 
         }
 
-//        if ($this->source_id) {
-//            $raw_total->where('source_id', $this->source_id);
-//        }
+       if ($this->source_id) {
+           $raw_total->where('source_id', $this->source_id);
+       }
 //
-//        if ($this->keyword_id) {
-//            $raw_total->whereIn('keyword_id', $this->keyword_id);
-//        }
+       if ($this->keyword_id) {
+           $raw_total->whereIn('keyword_id', $this->keyword_id);
+       }
 
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
