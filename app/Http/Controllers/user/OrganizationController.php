@@ -14,9 +14,13 @@ class OrganizationController extends Controller
     public function data(Request $request) {
         $organizations = Organization::join('user_organization_types', 'user_organization_types.id', '=', 'organizations.organization_type_id')
             ->join('user_organization_groups', 'user_organization_groups.id', '=', 'organizations.organization_group_id')
-            ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group')
-            ->get();
-        return parent::handleRespond($organizations);
+            ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group');
+        
+        if (!$this->user_login->is_admin) {
+            $organizations->where('organizations.id', $this->user_login['organization_id']);
+        }
+
+        return parent::handleRespond($organizations->get());
     }
 
     public function show()
