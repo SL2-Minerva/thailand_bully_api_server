@@ -1644,8 +1644,9 @@ class SentimentDashboardController extends Controller
 
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
-            ->where('message_type', 'Post')
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->whereIn('classification_type_id', [1]);
+            ->whereIn('message_type', ['Post', 'Video'])
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1]);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
