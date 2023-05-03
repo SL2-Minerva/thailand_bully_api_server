@@ -27,6 +27,7 @@ use App\Http\Controllers\report\LeveltreeChannelDashboardController;
 use App\Http\Controllers\report\LeveltreeVoiceDashboardController;
 use App\Http\Controllers\report\SentimentDashboardController;
 use App\Http\Controllers\report\LevethreeOverAllDashboardController;
+use App\Http\Controllers\HeathCheckController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -43,7 +44,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('user/forget_password', [UserController::class, 'forget_password']);
 Route::post('user/reset_password', [UserController::class, 'reset_password']);
+
 Route::group(['middleware' => ['api']], function () {
+    Route::get('health-check', [HeathCheckController::class, 'index']);
 
     // group only auth
     Route::group(['prefix' => 'auth'], function () {
