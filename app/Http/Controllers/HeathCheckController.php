@@ -10,9 +10,12 @@ class HeathCheckController extends Controller
     public function index(Request $request)
     {
         try {
-            return parent::handleRespond(DB::connection()->getPdo());
+            if (DB::connection()->getPdo())
+            {
+                return parent::handleRespond();
+            }
         } catch (\Exception $e) {
-            return parent::handleRespond(null, null, 500, $e);
+            return parent::handleRespond(null, null, 500, $e->getMessage());
         }
     }
 }

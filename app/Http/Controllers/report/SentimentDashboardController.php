@@ -1639,7 +1639,7 @@ class SentimentDashboardController extends Controller
 
     public function SummaryScoreChannel(Request $request, $only_data = false)
     {
-        $sources = Sources::all();
+        $sources = Sources::where('status', 1)->get();
 
 
         $raw = DB::table('message_result_full_data')
