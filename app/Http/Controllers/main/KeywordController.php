@@ -72,11 +72,22 @@ class KeywordController extends Controller
     public function keywords(Request $request) {
         $campaing_id = $request->campaing_id;
 
-
         if (!$campaing_id) return parent::handleNotFound($request->campaing_id);
 
         $campaings = DB::table('keywords')
             ->where('campaign_id', $campaing_id)->get();
+
+        foreach ($campaings as $key => $item) {
+            if ($item->parent_id !== null) {
+                if ($item->keyword_or) {
+                    $campaings[$key]->color = $item->keyword_or ? $item->color : null;
+                }
+            } else {
+                if ($item->keyword_and) {
+                    $campaings[$key]->color = $item->color_and ?? null;
+                }
+            }
+        }
 
 
         return parent::handleRespond($campaings);

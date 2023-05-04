@@ -71,7 +71,7 @@ class CampaignController extends Controller
         $data_submit = [
             BaseModel::NAME => $request->name ?? '',
             Campaign::DESCRIPTION => $request->description,
-            BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
+            BaseModel::ORGANIZATION_ID => !$this->user_login->is_admin ? $this->user_login->organization_id : 1,
             Campaign::DOMAIN_ID => $request->domain_id ?? 1,
             BaseModel::STATUS => $request->status ?? 1,
             Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
@@ -174,7 +174,7 @@ class CampaignController extends Controller
                     if (!$check_or) {
                         Keyword::create([
                             Keyword::CAMPAIGN_ID => $campaign_id,
-                            'name' => $name. "," . $keyword_or,
+                            BaseModel::NAME => $name. "," . $keyword_or,
                             Keyword::PARENT_ID => $parent_id,
                             Keyword::KEYWORD_OR => collect($keyword_or ?? [])->implode(','),
                             Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
@@ -191,7 +191,7 @@ class CampaignController extends Controller
                             ->where('keyword_or', $keyword_or)
                             ->update([
                                 Keyword::CAMPAIGN_ID => $campaign_id,
-                                'name' => $name. "," . $keyword_or,
+                                BaseModel::NAME => $name. "," . $keyword_or,
                                 Keyword::PARENT_ID => $parent_id,
                                 Keyword::KEYWORD_OR => collect($keyword_or ?? [])->implode(','),
                                 Keyword::KEYWORD_AND => collect($keyword_and ?? [])->implode(','),
@@ -205,7 +205,11 @@ class CampaignController extends Controller
                 }
 
             } else {
-                Keyword::create($data_submit_keyword);
+
+                if ($keyword_or) {
+                    Keyword::create($data_submit_keyword);
+                }
+
             }
         }
 
@@ -253,8 +257,8 @@ class CampaignController extends Controller
                 $data_submit[Campaign::DESCRIPTION] = $request->description;
             }
 
-            if ($request->organization_id) {
-                $data_submit[BaseModel::ORGANIZATION_ID] = $request->organization_id;
+            if (!$this->user_login->is_admin) {
+                $data_submit[BaseModel::ORGANIZATION_ID] = $this->user_login->organization_id;
             }
 
             if ($request->domain_id) {
@@ -288,6 +292,9 @@ class CampaignController extends Controller
 
                     $keyword_and = collect($keyword[Keyword::KEYWORD_AND] ?? [])->implode(',');
                     $name = $keyword[BaseModel::NAME];
+                    if ($keyword_and) {
+                        $name = $name . "," .$keyword_and;
+                    }
 
                     // if ($keyword_and) {
                     //     $name .= "," . $keyword_and;
@@ -421,9 +428,13 @@ class CampaignController extends Controller
 
                     $item->name = $item->label ?? $item->name;
                     $keyword_colors = Keyword::where('campaign_id', $campaign->id)->where('parent_id', $item->id)->get('color');
+                    $keyword_colors_or = Keyword::where('campaign_id', $campaign->id)
+                        ->where('parent_id', $item->id)
+                        ->orderBy('id')
+                        ->get('color');
 
                     if ($keyword_colors) {
-                        $item->keyword_or_color = explode(',', $keyword_colors->implode('color', ','));
+                        $item->keyword_or_color = explode(',', $keyword_colors_or->implode('color', ','));
                         $item->keyword_and_color = $item->color;
 
                     } else {
