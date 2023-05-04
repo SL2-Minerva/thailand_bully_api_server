@@ -1841,7 +1841,7 @@ class BullyDashboardController extends Controller
 
     private function BullyTypeByChannelGroup()
     {
-        $sources = Sources::all();
+        $sources = Sources::where('status', 1)->get();
         $data['labels'] = [];
 
         if (!$this->user_login->is_admin) {
