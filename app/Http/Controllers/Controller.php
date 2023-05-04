@@ -32,6 +32,8 @@ class Controller extends BaseController
             $this->user_login = auth('api')->user();
             $this->organization = Organization::find($this->user_login->organization_id);
             $this->organization_group = UserOrganizationGroup::find($this->organization->organization_group_id);
+        } else {
+            return $this->handleRespond(null, [], 404, 'Unauthorized');
         }
     }
 
