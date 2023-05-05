@@ -8,6 +8,7 @@ use App\Models\Campaign;
 use App\Models\Domain;
 use App\Models\Keyword;
 use App\Models\Organization;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
@@ -456,6 +457,10 @@ class CampaignController extends Controller
             }
 
             $campaign->organization = Organization::find($organization_id)->name;
+            if (isset($campaign->keyword[0]->created_by)) {
+                $campaign->created_by = $this->find_created_by($campaign->keyword[0]->created_by);
+            }
+
             $data['list'][] = $campaign;
             $data['keyword_limit'] = $this->organization_group->total_keyword;
             $data['frequency_default'] = $this->organization_group->frequency ?? 0;
@@ -467,5 +472,12 @@ class CampaignController extends Controller
         $data['frequency_default'] = $this->organization_group->frequency ?? 0;
 
         return parent::handleRespond($data);
+    }
+
+    private function find_created_by($created_by) 
+    {
+        $created_by = User::where('id', $created_by)->first();
+        return $created_by->name ?? null;
+
     }
 }
