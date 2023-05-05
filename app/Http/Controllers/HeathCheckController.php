@@ -15,7 +15,7 @@ class HeathCheckController extends Controller
                 return parent::handleRespond();
             }
         } catch (\Exception $e) {
-            return parent::handleRespond(null, null, 500, $e->getMessage());
+            return parent::handleRespond(null, null, 500, "connect_database_fail");
         }
     }
 }
