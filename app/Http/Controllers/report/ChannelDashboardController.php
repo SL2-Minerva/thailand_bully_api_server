@@ -1563,9 +1563,9 @@ class ChannelDashboardController extends Controller
 
         }
 
-        $data[-1]['negative'] = $this->point_two_digits(($data[-1]['negative'] / $data[-1]['total']) * 100);
-        $data[-1]['positive'] = $this->point_two_digits(($data[-1]['positive'] / $data[-1]['total']) * 100);
-        $data[-1]['neutral'] = $this->point_two_digits(($data[-1]['neutral'] / $data[-1]['total']) * 100);
+        $data[-1]['negative'] = $this->point_two_digits($data[-1]['total'] ? ($data[-1]['negative'] / $data[-1]['total']) * 100 : 0);
+        $data[-1]['positive'] = $this->point_two_digits($data[-1]['total'] ? ($data[-1]['positive'] / $data[-1]['total']) * 100 : 0);
+        $data[-1]['neutral'] = $this->point_two_digits( $data[-1]['total'] ? ($data[-1]['neutral'] / $data[-1]['total']) * 100 : 0);
 
         // By source Id
         foreach ($percentage_of_channal->get() as $channal) {
