@@ -1511,6 +1511,7 @@ class ChannelDashboardController extends Controller
     public function SentimentLevelGroup()
     {
         $data = null;
+
         $percentage_of_channal = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
@@ -1530,6 +1531,43 @@ class ChannelDashboardController extends Controller
             $percentage_of_channal->where('source_id', $this->source_id);
         }
 
+        // All
+        $data[-1] = [
+            'keyword_id' => 0,
+            'keyword_name' => 'All',
+            'campaign_id' => '0',
+            'campaign_name' => 'All',
+            'source_id' => 0,
+            'source_name' => 'All',
+            'negative' => 0,
+            'neutral' => 0,
+            'positive' => 0,
+            'total' => 0
+        ];
+
+        $sum = DB::table('message_result_full_data')
+            ->where('campaign_id', $this->campaign_id)
+            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('classification_type_id', [1])->get();
+        foreach ($sum as $item) {
+            if (isset($item->classification_name) && $item->classification_name === "Negative") {
+                $data[-1]['negative'] = $data[-1]['negative'] + 1;
+                $data[-1]['total'] = $data[-1]['total'] + 1;
+            } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
+                $data[-1]['positive'] = $data[-1]['positive'] + 1;
+                $data[-1]['total'] = $data[-1]['total'] + 1;
+            } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
+                $data[-1]['neutral'] = $data[-1]['neutral'] + 1;
+                $data[-1]['total'] = $data[-1]['total'] + 1;
+            }
+
+        }
+
+        $data[-1]['negative'] = $this->point_two_digits(($data[-1]['negative'] / $data[-1]['total']) * 100);
+        $data[-1]['positive'] = $this->point_two_digits(($data[-1]['positive'] / $data[-1]['total']) * 100);
+        $data[-1]['neutral'] = $this->point_two_digits(($data[-1]['neutral'] / $data[-1]['total']) * 100);
+
+        // By source Id
         foreach ($percentage_of_channal->get() as $channal) {
             $source_id_id = $channal->source_id;
             $data[$source_id_id]['keyword_id'] = $channal->keyword_id;
