@@ -351,6 +351,13 @@ class CampaignController extends Controller
                 }
             }
 
+            if (isset($request->delete_keyword)) {
+                foreach ($request->delete_keyword as $delete_keyword) {
+                    Keyword::where('id', $delete_keyword)->delete();
+                    Keyword::where('parent_id', $delete_keyword)->delete();
+                }
+            }
+
 
             return parent::handleRespond($this->find($id));
 
