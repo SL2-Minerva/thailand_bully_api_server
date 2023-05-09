@@ -20,24 +20,15 @@ class ActivityLogController extends Controller
             ->offset($start)->limit($limit)
             ->orderBy('activity_log.id', 'DESC');
 
+        if ($request->search) {
+            $raw->where('end_point', 'LIKE', "%$request->search%")
+                ->orWhere('method', 'LIKE', "%$request->search%")
+                ->orWhere('feature', 'LIKE', "%$request->search%")
+                ->orWhere('users.name', 'LIKE', "%$request->search%");
+        }
+
         if ($request->status_code) {
             $raw->where('status_code', $request->status_code);
-        }
-
-        if ($request->end_point) {
-            $raw->where('end_point', 'LIKE', "%$request->end_point%");
-        }
-
-        if ($request->method) {
-            $raw->where('method', 'LIKE', "%$request->method%");
-        }
-
-        if ($request->feature) {
-            $raw->where('feature', 'LIKE', "%$request->feature%");
-        }
-
-        if ($request->request_by) {
-            $raw->where('users.name', 'LIKE', "%$request->method%");
         }
 
         $raw_total = $raw->count();
