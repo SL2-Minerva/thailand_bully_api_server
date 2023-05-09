@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\auth\AuthController;
 use App\Http\Controllers\main\CampaignController;
 use App\Http\Controllers\main\DomainController;
@@ -248,6 +249,10 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('export-bully', [LevelthreeController::class, 'exportBully']);
             Route::get('export-excel-overall', [ExportExcelOverallController::class, 'exportOverAll']);
 
+        });
+
+        Route::group(['prefix' => 'activity-log'], function () {
+            Route::get('/', [ActivityLogController::class, 'index']);
         });
     });
 });
