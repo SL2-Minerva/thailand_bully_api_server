@@ -20,20 +20,49 @@ class ActivityLogController extends Controller
             ->offset($start)->limit($limit)
             ->orderBy('activity_log.id', 'DESC');
 
-        $raw_total = ActivityLog::get()->count();
+        $raw_total = ActivityLog::join('users', 'users.id', 'activity_log.request_by')
+            ->select('activity_log.*', 'users.name as request_by_name')
+            ->orderBy('activity_log.id', 'DESC');
 
         if ($request->search) {
-            $raw->where('end_point', 'LIKE', "%$request->search%")
-                ->orWhere('method', 'LIKE', "%$request->search%")
-                ->orWhere('feature', 'LIKE', "%$request->search%")
-                ->orWhere('users.name', 'LIKE', "%$request->search%");
+            $search = $request->search;
+            $raw->where(function($q) use ($search, $request) {
+                if ($request) {
+                    $q->orWhere('end_point', 'LIKE', '%' . $search . '%');
+                    $q->orWhere('method', 'LIKE', '%' . $search . '%');
+                    $q->orWhere('feature', 'LIKE', '%' . $search . '%');
+                    $q->orWhere('users.name', 'LIKE', '%' . $search . '%');
+                }
+            });
+
+            $raw_total->where(function($q) use ($search, $request) {
+                if ($request) {
+                    $q->orWhere('end_point', 'LIKE', '%' . $search . '%');
+                    $q->orWhere('method', 'LIKE', '%' . $search . '%');
+                    $q->orWhere('feature', 'LIKE', '%' . $search . '%');
+                    $q->orWhere('users.name', 'LIKE', '%' . $search . '%');
+                }
+            });
+
         }
 
         if ($request->status_code) {
-            $raw->where('status_code', $request->status_code);
+            $status_code = $request->status_code;
+
+            $raw->where(function($q) use ($status_code, $request) {
+                if ($request) {
+                    $q->where('status_code', $status_code);
+                }
+            });
+
+            $raw_total->where(function($q) use ($status_code, $request) {
+                if ($request) {
+                    $q->where('status_code', $status_code);
+                }
+            });
         }
         
-        $data['total'] = $raw_total;
+        $data['total'] = $raw_total->get()->count();
         $data['activity_log'] = $raw->get();
 
         return parent::handleRespond($data);
