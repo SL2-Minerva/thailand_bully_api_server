@@ -13,7 +13,7 @@ class ActivityLogController extends Controller
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
-        $raw = null;
+        $data = [];
 
         $raw = ActivityLog::join('users', 'users.id', 'activity_log.request_by')
             ->select('activity_log.*', 'users.name as request_by_name')
@@ -40,7 +40,12 @@ class ActivityLogController extends Controller
             $raw->where('users.name', 'LIKE', "%$request->method%");
         }
 
-        return parent::handleRespond($raw->get());
+        $raw_total = $raw->count();
+        
+        $data['total'] = $raw_total;
+        $data['activity_log'] = $raw->get();
+
+        return parent::handleRespond($data);
         
     }
 }

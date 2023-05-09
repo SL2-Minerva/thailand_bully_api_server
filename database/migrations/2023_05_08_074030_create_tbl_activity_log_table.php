@@ -18,6 +18,7 @@ class CreateTblActivityLogTable extends Migration
             $table->string('method');
             $table->string('ip');
             $table->text('end_point');
+            $table->text('request')->nullable();
             $table->string('feature');
             $table->integer('status_code');
             $table->integer('request_by');

@@ -97,7 +97,8 @@ class RequestLoggerMiddleware extends Controller
         ActivityLog::create([
             'method' => $request->method(),
             'ip' => $request->ip(),
-            'end_point' =>  $request->getRequestUri(),
+            'end_point' =>  $request->getPathInfo(),
+            'request' =>  $request->getQueryString() ?? null,
             'status_code' => $response->getStatusCode(),
             'feature' => $feature ?? "",
             'request_by' => $this->user_login->id ?? 0
