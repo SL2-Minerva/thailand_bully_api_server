@@ -19,7 +19,7 @@ class CreateTblActivityLogTable extends Migration
             $table->string('ip');
             $table->text('end_point');
             $table->text('request')->nullable();
-            $table->string('feature');
+            $table->string('feature')->nullable();
             $table->integer('status_code');
             $table->integer('request_by');
             $table->timestamps();

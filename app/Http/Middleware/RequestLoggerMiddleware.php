@@ -112,7 +112,7 @@ class RequestLoggerMiddleware extends Controller
             'end_point' =>  $request->getPathInfo(),
             'request' =>  $request->getQueryString() ?? null,
             'status_code' => $response->getStatusCode(),
-            'feature' => $feature ?? "",
+            'feature' => $feature ?? null,
             'request_by' => $this->user_login->id ?? 0
         ]);
     }
