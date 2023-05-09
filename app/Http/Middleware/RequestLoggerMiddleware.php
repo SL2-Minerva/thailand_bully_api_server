@@ -89,6 +89,18 @@ class RequestLoggerMiddleware extends Controller
                 case strstr($sub_endpoint, "/export"):
                     $feature = "Export";
                     break;
+                case strstr($sub_endpoint, "/activity-log"):
+                    $feature = "Activity Log";
+                    break;
+                case strstr($sub_endpoint, "/health-check"):
+                    $feature = "Health Check";
+                    break;
+                case strstr($sub_endpoint, "/forget_password"):
+                    $feature = "Forget Password";
+                    break;
+                case strstr($sub_endpoint, "/reset_password"):
+                    $feature = "Reset Password";
+                    break;
                 default :
                     $feature = null;
             }
