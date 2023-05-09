@@ -20,6 +20,8 @@ class ActivityLogController extends Controller
             ->offset($start)->limit($limit)
             ->orderBy('activity_log.id', 'DESC');
 
+        $raw_total = ActivityLog::get()->count();
+
         if ($request->search) {
             $raw->where('end_point', 'LIKE', "%$request->search%")
                 ->orWhere('method', 'LIKE', "%$request->search%")
@@ -30,8 +32,6 @@ class ActivityLogController extends Controller
         if ($request->status_code) {
             $raw->where('status_code', $request->status_code);
         }
-
-        $raw_total = $raw->count();
         
         $data['total'] = $raw_total;
         $data['activity_log'] = $raw->get();
