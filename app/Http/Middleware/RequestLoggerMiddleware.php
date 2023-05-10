@@ -106,14 +106,17 @@ class RequestLoggerMiddleware extends Controller
             }
         }
 
-        ActivityLog::create([
-            'method' => $request->method(),
-            'ip' => $request->ip(),
-            'end_point' =>  $request->getPathInfo(),
-            'request' =>  $request->getQueryString() ?? null,
-            'status_code' => $response->getStatusCode(),
-            'feature' => $feature ?? null,
-            'request_by' => $this->user_login->id ?? 0
-        ]);
+        if (!strstr($request->getPathInfo(), "/activity-log")) {
+            ActivityLog::create([
+                'method' => $request->method(),
+                'ip' => $request->ip(),
+                'end_point' =>  $request->getPathInfo(),
+                'request' =>  $request->getQueryString() ?? null,
+                'status_code' => $response->getStatusCode(),
+                'feature' => $feature ?? null,
+                'request_by' => $this->user_login->id ?? 0
+            ]);
+        }
+
     }
 }
