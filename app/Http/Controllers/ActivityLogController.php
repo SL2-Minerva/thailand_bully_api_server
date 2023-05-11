@@ -61,9 +61,25 @@ class ActivityLogController extends Controller
                 }
             });
         }
+
+        $raw_data = $raw->get();
+
+        foreach ($raw_data as $key => $item) {
+            if ($item->status_code == '200') {
+                $raw_data[$key]['status'] = 'สถานะปกติ';
+            } else if ($item->status_code == '401') {
+                $raw_data[$key]['status'] = 'ไม่สามารถเข้าถึง (Unauthorized)';
+            } else if ($item->status_code == '403') {
+                $raw_data[$key]['status'] = 'ไม่สามารถเข้าหน้าเว็บได้';
+            } else if ($item->status_code == '404') {
+                $raw_data[$key]['status'] = 'ไม่พบหน้าเว็บ';
+            } else if ($item->status_code == '500') {
+                $raw_data[$key]['status'] = 'เซิร์ฟเวอร์มีปัญหา';
+            }
+        }
         
         $data['total'] = $raw_total->get()->count();
-        $data['activity_log'] = $raw->get();
+        $data['activity_log'] = $raw_data;
 
         return parent::handleRespond($data);
         
