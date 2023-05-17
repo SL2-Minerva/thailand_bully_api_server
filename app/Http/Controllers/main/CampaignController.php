@@ -51,7 +51,16 @@ class CampaignController extends Controller
 //                $item->keyword_exclude = json_decode($item->keyword_exclude);
             }
             $campaign->organization = Organization::find($campaign->organization_id)->name;
-            $data[] = $campaign;
+            // $data[] = $campaign;
+            $privacy_campaign = $campaign->privacy_campaign ?? null;
+            $data[] = $this->privacy($campaign, $privacy_campaign);
+            $data = $data === [null] ? [] : $data;
+            
+            foreach ($data as $key => $item) {
+                if (empty($item)) {
+                    unset($data[$key]);
+                }
+            }
 
         }
         return parent::handleRespond($data);
@@ -79,6 +88,7 @@ class CampaignController extends Controller
             Campaign::START_AT => $request->start_at,
             Campaign::END_AT => $request->end_at,
             Campaign::FREQUENCY => (int)$request->frequency ?? 120,
+            Campaign::PRIVACY_CAMPAIGN => $request->privacy_campaign
         ];
 
         $campaign = Campaign::create($data_submit);
@@ -286,6 +296,10 @@ class CampaignController extends Controller
                 $data_submit[Campaign::FREQUENCY] = $request->frequency;
             }
 
+            if ($request->privacy_campaign) {
+                $data_submit[Campaign::PRIVACY_CAMPAIGN] = $request->privacy_campaign;
+            }
+
             $data->update($data_submit);
 
             if ($request->keywords) {
@@ -317,7 +331,7 @@ class CampaignController extends Controller
                         // "color" => $condition_color ?? '#',
                         "color" => $keyword["colors"] ?? "",
                         "color_and" => $keyword["color_and"] ?? "",
-                        BaseModel::CREATED_BY => auth('api')->id() ?? 1,
+                        // BaseModel::CREATED_BY => auth('api')->id() ?? 1,
                         BaseModel::UPDATED_BY => auth('api')->id() ?? 1,
                     ];
 
@@ -468,7 +482,16 @@ class CampaignController extends Controller
                 $campaign->created_by = $this->find_created_by($campaign->keyword[0]->created_by);
             }
 
-            $data['list'][] = $campaign;
+            $privacy_campaign = $campaign->privacy_campaign ?? null;
+            $data['list'][] = $this->privacy($campaign, $privacy_campaign);
+            $data['list'] = $data['list'] === [null] ? [] : $data['list'];
+            
+            foreach ($data['list'] as $key => $item) {
+                if (empty($item)) {
+                    unset($data['list'][$key]);
+                }
+            }
+            
             $data['keyword_limit'] = $this->organization_group->total_keyword;
             $data['frequency_default'] = $this->organization_group->frequency ?? 0;
 
@@ -487,4 +510,29 @@ class CampaignController extends Controller
         return $created_by->name ?? null;
 
     }
+
+    private function privacy($campaign, $privacy_campaign) {
+
+        if ($this->user_login->is_admin) {
+            return $campaign;
+        }
+
+        if (!$privacy_campaign || $privacy_campaign === 'share_organize' || $privacy_campaign === 'share_all') {
+            if ($privacy_campaign === 'share_organize') {
+                if ($this->user_login->organization_id === $campaign->organization_id) {
+                    return $campaign;
+                }
+            } else {
+                return $campaign;
+            }
+
+        } else if ($privacy_campaign === 'private') {
+            if ($campaign->keyword[0]['created_by']) {
+                if ($this->user_login->id === $campaign->keyword[0]['created_by']) {
+                    return $campaign ;
+                }
+            }
+        }
+    }
+    
 }
