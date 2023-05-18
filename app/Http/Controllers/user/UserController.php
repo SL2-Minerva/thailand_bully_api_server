@@ -222,6 +222,7 @@ class UserController extends Controller
                     $count_campaign = Campaign::Join('organizations', 'campaigns.organization_id', 'organizations.id')
                         ->Join('keywords', 'campaigns.id', 'keywords.campaign_id')
                         ->where('organizations.id', $organization_id)
+                        ->where('keywords.created_by', $this->user_login->id)
                         ->select('keywords.*')
                         ->groupBy('campaign_id')
                         ->get()
