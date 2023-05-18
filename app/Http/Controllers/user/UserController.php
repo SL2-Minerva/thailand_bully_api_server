@@ -5,6 +5,7 @@ namespace App\Http\Controllers\user;
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\Campaign;
+use App\Models\Keyword;
 use App\Models\Organization;
 use App\Models\User;
 use App\Models\UserOrganizationGroup;
@@ -218,8 +219,11 @@ class UserController extends Controller
             $campaign_per_user = $organization_group->campaign_per_user;
 
             if ($campaign_per_user) {
-                    $count_user = User::where('id', $this->user_login->id)->where('organization_id', $organization_id)->count();
-                    return $campaign_per_user - $count_user;
+                    $count_campaign = Campaign::Join('organizations', 'campaigns.organization_id', 'organizations.id')
+                        ->Join('keywords', 'campaigns.id', 'keywords.campaign_id')
+                        ->where('organizations.id', $organization_id)->groupBy('keywords.campaign_id')->count();
+                        
+                    return $campaign_per_user - $count_campaign;
             }
 
             return null;
