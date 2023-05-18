@@ -18,6 +18,10 @@ class UserOrganizationGroup extends BaseModel
     public const MSG_TRANSACTION = 'msg_transaction';
     public const TOTAL_USER = 'total_user';
     public const CUSTOMER_SERVICE = 'customer_service';
+    public const CAMPAIGN_PER_ORGANIZE = 'campaign_per_organize';
+    public const CAMPAIGN_PER_USER = 'campaign_per_user';
+    
+    
 
     protected $casts = [
         'domains' => 'array',

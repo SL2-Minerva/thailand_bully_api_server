@@ -4,7 +4,9 @@ namespace App\Http\Controllers\user;
 
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
+use App\Models\Campaign;
 use App\Models\User;
+use App\Models\UserOrganizationGroup;
 use App\Models\UserPermission;
 use App\Models\UserRole;
 use Carbon\Carbon;
@@ -99,6 +101,8 @@ class UserController extends Controller
 
         if ($user) {
             $data['info'] = $user;
+            $data['info']['campaign_per_user'] = $this->campaign_per_user($user->organization_id);
+            $data['info']['campaign_per_organize'] = $this->campaign_per_organize($user->organization_id);
             $data['role_description'] = 'ssss';
             $data['role_name'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
@@ -202,4 +206,35 @@ class UserController extends Controller
         return parent::handleRespond($user);
 
     }
+
+    private function campaign_per_user($organization_id)
+    {
+        if ($organization_id) {
+            $organization_group = UserOrganizationGroup::where('id', $organization_id)->first();
+            $campaign_per_user = $organization_group->campaign_per_user;
+
+            if ($campaign_per_user) {
+                    $count_user = User::where('organization_id', $organization_id)->count();
+                    return $campaign_per_user - $count_user;
+            }
+
+            return null;
+        }
+    }
+
+    private function campaign_per_organize($organization_id)
+    {
+        if ($organization_id) {
+            $organization_group = UserOrganizationGroup::where('id', $organization_id)->first();
+            $campaign_per_organize = $organization_group->campaign_per_organize;
+
+            if ($campaign_per_organize) {
+                $count_campaign = Campaign::where('organization_id', $organization_id)->count();
+                return $campaign_per_organize - $count_campaign;
+            }
+
+            return null;
+        }
+    }
+
 }
