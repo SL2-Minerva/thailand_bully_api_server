@@ -81,7 +81,7 @@ class CampaignController extends Controller
         $data_submit = [
             BaseModel::NAME => $request->name ?? '',
             Campaign::DESCRIPTION => $request->description,
-            BaseModel::ORGANIZATION_ID => !$this->user_login->is_admin ? $this->user_login->organization_id : 1,
+            BaseModel::ORGANIZATION_ID => $request->organization_id ?? 1,
             Campaign::DOMAIN_ID => $request->domain_id ?? 1,
             BaseModel::STATUS => $request->status ?? 1,
             Campaign::EXCLUDE_CAMPAIGN => collect($request->exclude_campaign)->implode(','),
@@ -89,6 +89,7 @@ class CampaignController extends Controller
             Campaign::END_AT => $request->end_at,
             Campaign::FREQUENCY => (int)$request->frequency ?? 120,
             Campaign::PRIVACY_CAMPAIGN => $request->privacy_campaign
+            // Campaign::MSG_TRANSACTION => $request->msg_transaction
         ];
 
         $campaign = Campaign::create($data_submit);
@@ -269,7 +270,7 @@ class CampaignController extends Controller
             }
 
             if (!$this->user_login->is_admin) {
-                $data_submit[BaseModel::ORGANIZATION_ID] = $this->user_login->organization_id;
+                $data_submit[BaseModel::ORGANIZATION_ID] = $request->organization_id ?? 1;
             }
 
             if ($request->domain_id) {
@@ -299,6 +300,10 @@ class CampaignController extends Controller
             if ($request->privacy_campaign) {
                 $data_submit[Campaign::PRIVACY_CAMPAIGN] = $request->privacy_campaign;
             }
+
+            // if ($request->msg_transaction) {
+            //     $data_submit[Campaign::MSG_TRANSACTION] = $request->msg_transaction;
+            // }
 
             $data->update($data_submit);
 
