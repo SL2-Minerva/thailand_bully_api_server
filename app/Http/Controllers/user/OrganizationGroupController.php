@@ -38,6 +38,8 @@ class OrganizationGroupController extends Controller
             $data[BaseModel::CREATED_BY] = $user->id ?? 1;
             $data[BaseModel::UPDATED_BY] = $user->id ?? 1;
             $data[UserOrganizationGroup::CUSTOMER_SERVICE] = $request->customer_service === 'true';
+            $data[UserOrganizationGroup::CAMPAIGN_PER_ORGANIZE] = $request->campaign_per_organize ?? 0;
+            $data[UserOrganizationGroup::CAMPAIGN_PER_USER] = $request->campaign_per_user ?? 0;
             $data[BaseModel::STATUS] = (boolean)$request->status;
             $organization_group = UserOrganizationGroup::create($data);
 
@@ -64,6 +66,8 @@ class OrganizationGroupController extends Controller
             $data = $request->all();
             $data[UserOrganizationGroup::CUSTOMER_SERVICE] = $request->customer_service === 'true';
             $data[BaseModel::UPDATED_BY]= auth('api')->user()->id ?? 1;
+            $data[UserOrganizationGroup::CAMPAIGN_PER_ORGANIZE] = $request->campaign_per_organize ?? 0;
+            $data[UserOrganizationGroup::CAMPAIGN_PER_USER] = $request->campaign_per_user ?? 0;
             $organizationGroup->update($data);
 
             return parent::handleRespond($res);

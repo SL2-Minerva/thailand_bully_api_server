@@ -4,7 +4,11 @@ namespace App\Http\Controllers\user;
 
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
+use App\Models\Campaign;
+use App\Models\Keyword;
+use App\Models\Organization;
 use App\Models\User;
+use App\Models\UserOrganizationGroup;
 use App\Models\UserPermission;
 use App\Models\UserRole;
 use Carbon\Carbon;
@@ -64,7 +68,7 @@ class UserController extends Controller
         $data['password'] = Hash::make($request->password);
         $data[BaseModel::CREATED_BY] =  auth('api')->id() ?? 1;
         $data[BaseModel::UPDATED_BY] =  auth('api')->id() ?? 1;
-        $data['is_admin'] = 0;
+        $data['is_admin'] = $request->is_admin ?? 0;
         $user = User::create($data);
         return parent::handleRespond($user);
     }
@@ -99,6 +103,9 @@ class UserController extends Controller
 
         if ($user) {
             $data['info'] = $user;
+            $data['info']['campaign_per_user'] = $this->campaign_per_user($user->organization_id);
+            $data['info']['campaign_per_organize'] = $this->campaign_per_organize($user->organization_id);
+            $data['organization_group'] = $this->organization_group($user->organization_id);
             $data['role_description'] = 'ssss';
             $data['role_name'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
@@ -202,4 +209,59 @@ class UserController extends Controller
         return parent::handleRespond($user);
 
     }
+
+    private function campaign_per_user($organization_id)
+    {
+        if ($organization_id) {
+            $organization = Organization::where('id', $organization_id)->first();
+            $organization_group = UserOrganizationGroup::where('id', $organization->organization_group_id)->first();
+
+            $campaign_per_user = $organization_group->campaign_per_user;
+
+            if ($campaign_per_user) {
+                    $count_campaign = Campaign::Join('organizations', 'campaigns.organization_id', 'organizations.id')
+                        ->Join('keywords', 'campaigns.id', 'keywords.campaign_id')
+                        ->where('organizations.id', $organization_id)
+                        ->where('keywords.created_by', $this->user_login->id)
+                        ->select('keywords.*')
+                        ->groupBy('campaign_id')
+                        ->get()
+                        ->count();
+                        
+                    return $campaign_per_user - $count_campaign;
+            }
+
+            return null;
+        }
+    }
+
+    private function campaign_per_organize($organization_id)
+    {
+        if ($organization_id) {
+            $organization = Organization::where('id', $organization_id)->first();
+            $organization_group = UserOrganizationGroup::where('id', $organization->organization_group_id)->first();
+            $campaign_per_organize = $organization_group->campaign_per_organize;
+
+            if ($campaign_per_organize) {
+                $count_campaign = Campaign::where('organization_id', $organization_id)->count();
+                return $campaign_per_organize - $count_campaign;
+            }
+
+            return null;
+        }
+    }
+
+    private function organization_group($organization_id)
+    {
+        if ($organization_id) {
+            $organization = Organization::where('id', $organization_id)->first();
+            $organization_group = UserOrganizationGroup::where('id', $organization->organization_group_id)->first();
+
+            if ($organization_group) {
+                return $organization_group;
+            }
+
+        }
+    }
+
 }
