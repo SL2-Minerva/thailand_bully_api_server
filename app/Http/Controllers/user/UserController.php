@@ -221,7 +221,11 @@ class UserController extends Controller
             if ($campaign_per_user) {
                     $count_campaign = Campaign::Join('organizations', 'campaigns.organization_id', 'organizations.id')
                         ->Join('keywords', 'campaigns.id', 'keywords.campaign_id')
-                        ->where('organizations.id', $organization_id)->groupBy('keywords.campaign_id')->count();
+                        ->where('organizations.id', $organization_id)
+                        ->select('keywords.*')
+                        ->groupBy('campaign_id')
+                        ->get()
+                        ->count();
                         
                     return $campaign_per_user - $count_campaign;
             }
