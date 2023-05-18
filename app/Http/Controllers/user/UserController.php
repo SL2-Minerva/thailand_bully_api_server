@@ -218,7 +218,7 @@ class UserController extends Controller
             $campaign_per_user = $organization_group->campaign_per_user;
 
             if ($campaign_per_user) {
-                    $count_user = User::where('organization_id', $organization_id)->count();
+                    $count_user = User::where('id', $this->user_login->id)->where('organization_id', $organization_id)->count();
                     return $campaign_per_user - $count_user;
             }
 
