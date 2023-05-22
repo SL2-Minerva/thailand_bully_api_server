@@ -70,6 +70,7 @@ class LevelthreeController extends Controller
                 ->whereNotNull('author')->groupBy('author')
                 ->select(
                     'message_id',
+                    'keyword_name',
                     'date_m',
                     'author',
                     'source_name',
@@ -89,6 +90,7 @@ class LevelthreeController extends Controller
                 ->whereIn('classification_type_id', [1, 2, 3])
                 ->select(
                     'message_id',
+                    'keyword_name',
                     'date_m',
                     'author',
                     'source_name',

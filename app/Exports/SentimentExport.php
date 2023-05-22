@@ -25,6 +25,7 @@ class SentimentExport implements FromCollection, WithHeadings
     {
         return [
             "Message ID", 
+            "Keyword Name",
             "Message Detail", 
             "Account Name",
             "Post Date",
@@ -60,6 +61,7 @@ class SentimentExport implements FromCollection, WithHeadings
                 $date_d = Carbon::parse($item->date_m)->format('D');
     
                 $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                $anylsys[$item->message_id]["keyword_name"] = $item->keyword_name;
                 $anylsys[$item->message_id]["message_detail"] = $item->full_message;
                 $anylsys[$item->message_id]["account_name"] = $item->author;
                 $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
@@ -80,6 +82,7 @@ class SentimentExport implements FromCollection, WithHeadings
                     $date_d = Carbon::parse($item->date_m)->format('D');
         
                     $anylsys[$item->message_id]["message_id"] = $item->message_id;
+                    $anylsys[$item->message_id]["keyword_name"] = $item->keyword_name;
                     $anylsys[$item->message_id]["message_detail"] = $item->full_message;
                     $anylsys[$item->message_id]["account_name"] = $item->author;
                     $anylsys[$item->message_id]["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
