@@ -519,8 +519,8 @@ class CampaignController extends Controller
             } else if ($privacy_campaign === 'share_all') {
                 return $campaign;
             } else {
-                if ($this->user_login->id === $campaign->keyword[0]['created_by']) {
-                    return $campaign ;
+                if ($this->user_login->organization_id === $campaign->organization_id) {
+                    return $campaign;
                 }
             }
 
