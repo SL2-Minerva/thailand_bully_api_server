@@ -9,6 +9,7 @@ use App\Models\Domain;
 use App\Models\Keyword;
 use App\Models\Organization;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class CampaignController extends Controller
@@ -382,7 +383,15 @@ class CampaignController extends Controller
 
     public function destroy(Request $request)
     {
-        return $this->update($request, BaseModel::DELETE_TEXT);
+        if ($request->id) {
+            $res = Campaign::where('id', $request->id)->first();
+            $res->update([
+                'status' => 0,
+                'deleted_at' => Carbon::now()
+            ]);
+        }
+
+        return parent::handleRespond($res);
     }
 
     private function find($id)
@@ -507,30 +516,33 @@ class CampaignController extends Controller
 
     private function privacy($campaign, $privacy_campaign) {
 
-        if ($this->user_login->is_admin) {
-            return $campaign;
-        }
-
-        if (!$privacy_campaign || $privacy_campaign === 'share_organize' || $privacy_campaign === 'share_all') {
-            if ($privacy_campaign === 'share_organize') {
-                if ($this->user_login->organization_id === $campaign->organization_id) {
-                    return $campaign;
-                }
-            } else if ($privacy_campaign === 'share_all') {
+        if ($campaign->deleted_at === null) {
+            if ($this->user_login->is_admin) {
                 return $campaign;
-            } else {
-                if ($this->user_login->organization_id === $campaign->organization_id) {
+            }
+    
+            if (!$privacy_campaign || $privacy_campaign === 'share_organize' || $privacy_campaign === 'share_all') {
+                if ($privacy_campaign === 'share_organize') {
+                    if ($this->user_login->organization_id === $campaign->organization_id) {
+                        return $campaign;
+                    }
+                } else if ($privacy_campaign === 'share_all') {
                     return $campaign;
+                } else {
+                    if ($this->user_login->organization_id === $campaign->organization_id) {
+                        return $campaign;
+                    }
                 }
-            }
-
-        } else if ($privacy_campaign === 'private') {
-            if ($campaign->keyword[0]['created_by']) {
-                if ($this->user_login->id === $campaign->keyword[0]['created_by']) {
-                    return $campaign ;
+    
+            } else if ($privacy_campaign === 'private') {
+                if ($campaign->keyword[0]['created_by']) {
+                    if ($this->user_login->id === $campaign->keyword[0]['created_by']) {
+                        return $campaign ;
+                    }
                 }
-            }
+            }            
         }
+
     }
     
 }
