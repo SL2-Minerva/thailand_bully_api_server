@@ -19,14 +19,14 @@ class CampaignController extends Controller
         $campaigns = Campaign::all();
 
 
-        if ($request->organization_id || !$this->user_login->is_admin) {
+        // if ($request->organization_id || !$this->user_login->is_admin) {
 
-            if ($request->organization_id) {
-                $campaigns = $campaigns->where('organization_id', $request->organization_id);
-            } else {
-                $campaigns = $campaigns->where('organization_id', $this->user_login->organization_id);
-            }
-        }
+        //     if ($request->organization_id) {
+        //         $campaigns = $campaigns->where('organization_id', $request->organization_id);
+        //     } else {
+        //         $campaigns = $campaigns->where('organization_id', $this->user_login->organization_id);
+        //     }
+        // }
 
         if ($request->status) {
             $campaigns = $campaigns->where('status', $request->status);
@@ -54,13 +54,8 @@ class CampaignController extends Controller
             // $data[] = $campaign;
             $privacy_campaign = $campaign->privacy_campaign ?? null;
             $data[] = $this->privacy($campaign, $privacy_campaign);
-            $data = $data === [null] ? [] : $data;
             
-            foreach ($data as $key => $item) {
-                if (empty($item)) {
-                    unset($data[$key]);
-                }
-            }
+            $data = array_filter($data, fn ($value) => !is_null($value));
 
         }
         return parent::handleRespond($data);
@@ -486,16 +481,10 @@ class CampaignController extends Controller
             if (isset($campaign->keyword[0]->created_by)) {
                 $campaign->created_by = $this->find_created_by($campaign->keyword[0]->created_by);
             }
-
+            // $data['list'][] = $campaign;
             $privacy_campaign = $campaign->privacy_campaign ?? null;
             $data['list'][] = $this->privacy($campaign, $privacy_campaign);
-            $data['list'] = $data['list'] === [null] ? [] : $data['list'];
-            
-            foreach ($data['list'] as $key => $item) {
-                if (empty($item)) {
-                    unset($data['list'][$key]);
-                }
-            }
+            $data['list'] = array_filter($data['list'], fn ($value) => !is_null($value));
             
             $data['keyword_limit'] = $this->organization_group->total_keyword;
             $data['frequency_default'] = $this->organization_group->frequency ?? 0;
@@ -527,8 +516,12 @@ class CampaignController extends Controller
                 if ($this->user_login->organization_id === $campaign->organization_id) {
                     return $campaign;
                 }
-            } else {
+            } else if ($privacy_campaign === 'share_all') {
                 return $campaign;
+            } else {
+                if ($this->user_login->id === $campaign->keyword[0]['created_by']) {
+                    return $campaign ;
+                }
             }
 
         } else if ($privacy_campaign === 'private') {
