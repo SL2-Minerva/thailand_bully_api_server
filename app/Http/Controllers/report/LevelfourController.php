@@ -195,15 +195,19 @@ class LevelfourController extends Controller
 
         if ($message_id) {
             $raw = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit($limit);
+                ->join('keywords', 'message_result_full_data.keyword_id', '=', 'keywords.id')
+                ->where('message_result_full_data.campaign_id', $this->campaign_id)
+                ->whereBetween('message_result_full_data.date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit($limit)
+                ->select('message_result_full_data.*', 'keywords.color', 'keywords.id', 'keywords.parent_id', 'keywords.keyword_or', 'keywords.keyword_and', 'keywords.color_and');
         } else {
             $raw = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
+                ->join('keywords', 'message_result_full_data.keyword_id', '=', 'keywords.id')
+                ->where('message_result_full_data.campaign_id', $this->campaign_id)
 //                ->where('message_type', 'Post')
-                ->Where('reference_message_id', '')
-                ->where('classification_type_id', [$type])
-                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit($limit);
+                ->Where('message_result_full_data.reference_message_id', '')
+                ->where('message_result_full_data.classification_type_id', [$type])
+                ->whereBetween('message_result_full_data.date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit($limit)
+                ->select('message_result_full_data.*', 'keywords.color', 'keywords.id', 'keywords.parent_id', 'keywords.keyword_or', 'keywords.keyword_and', 'keywords.color_and');
         }
 
 
@@ -218,10 +222,12 @@ class LevelfourController extends Controller
 
         if ($is_child) {
             $raw = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->where('reference_message_id', '!=', '')
-                ->where('classification_type_id', [$type])
-                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit(2000);
+                ->join('keywords', 'message_result_full_data.keyword_id', '=', 'keywords.id')
+                ->where('message_result_full_data.campaign_id', $this->campaign_id)
+                ->where('message_result_full_data.reference_message_id', '!=', '')
+                ->where('message_result_full_data.classification_type_id', [$type])
+                ->whereBetween('message_result_full_data.date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->limit(2000)
+                ->select('message_result_full_data.*', 'keywords.color', 'keywords.id', 'keywords.parent_id', 'keywords.keyword_or', 'keywords.keyword_and', 'keywords.color_and');
         }
 
 
@@ -245,9 +251,9 @@ class LevelfourController extends Controller
         }
 
         $raw_total = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->where('classification_type_id', $type)
-            ->whereBetween('date_m', [$start_date, $end_date]);
+            ->where('message_result_full_data.campaign_id', $this->campaign_id)
+            ->where('message_result_full_data.classification_type_id', $type)
+            ->whereBetween('message_result_full_data.date_m', [$start_date, $end_date]);
 
         $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
 
@@ -272,7 +278,14 @@ class LevelfourController extends Controller
                 "id" => $item->message_id,
                 "label_name" => $item->author,
                 "title" => $item->author,
-                "color" => $item->classification_color,
+                // "color" => $item->classification_color,
+                "color" => $this->color_keyword(
+                    $item->color ?? null, 
+                    $item->parent_id ?? null, 
+                    $item->keyword_or ?? null, 
+                    $item->keyword_and ?? null, 
+                    $item->color_and ?? null
+                ),
                 "shape" => "dot",
                 "size" => $this->factorNodeSize($influent_rate, $is_child),
                 'link_message' => $item->link_message ?? ""
@@ -286,11 +299,9 @@ class LevelfourController extends Controller
             $data_push["parent_id"] = $item->reference_message_id;
 //            }
 
-
             $data['nodes'][] = $data_push;
         }
 
-//        dd($data);
         return $data;
     }
 
@@ -306,5 +317,20 @@ class LevelfourController extends Controller
         }
 
         return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
+    }
+
+    private function color_keyword($color, $parent_id, $keyword_or, $keyword_and, $color_and)
+    {
+        if ($parent_id !== null) {
+            if ($keyword_or) {
+                $color_keyword = $keyword_or ? $color : null;
+            }
+        } else {
+            if ($keyword_and) {
+                $color_keyword = $color_and ?? null;
+            }
+        }
+        
+        return $color_keyword ?? $color;
     }
 }
