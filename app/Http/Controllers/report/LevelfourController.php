@@ -272,8 +272,7 @@ class LevelfourController extends Controller
                 "id" => $item->message_id,
                 "label_name" => $item->author,
                 "title" => $item->author,
-                // "color" => $item->classification_color,
-                "color" => $this->color_classification($item->classification_id),
+                "color" => $item->classification_color,
                 "shape" => "dot",
                 "size" => $this->factorNodeSize($influent_rate, $is_child),
                 'link_message' => $item->link_message ?? ""
@@ -307,66 +306,4 @@ class LevelfourController extends Controller
         return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
     }
 
-    private function color_classification($classification_id)
-    {
-        switch ($classification_id) {
-
-            case 1:
-                $color = "#C73E1D";
-                break;
-
-            case 2:
-                $color = "#63A375";
-                break;
-
-            case 3:
-                $color = "#FEB95F";
-                break;
-
-            case 4:
-                $color = "#F0F0F0";
-                break;
-
-            case 5:
-                $color = "#EFD4DC";
-            break;
-
-            case 6:
-                $color = "#89023E";
-            break;
-
-            case 7:
-                $color = "#EA638C";
-            break;
-
-            case 8:
-                $color = "#521130";
-            break;
-
-            case 9:
-                $color = "#F10707";
-            break;
-
-            case 10:
-                $color = "#EDF2F4";
-            break;
-
-            case 11:
-                $color = "#8D99AE";
-            break;
-
-            case 12:
-                $color = "#4C4B63";
-            break;
-
-            case 13:
-                $color = "#7A0010";
-            break;
-                
-            default:
-                $color = "#F0F0F0";
-        }
-        
-        return $color;
-    }
 }
