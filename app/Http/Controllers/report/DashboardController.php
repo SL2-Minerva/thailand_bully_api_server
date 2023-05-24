@@ -541,109 +541,104 @@ class DashboardController extends Controller
 
     public function mainKeyWords($start_date, $end_date)
     {
-
-        $data = null;
-        $total_keywords = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->groupBy('keyword_id');
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $total_keywords->whereIn('keyword_id', $this->keyword_id);
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $totalKeyword = DB::table('messages')
+            ->select('keyword_id', DB::raw('COUNT(*) as row_count'))
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
+            $totalKeyword->where('source_id', $this->source_id);
         }
 
-        $id = 1;
+        $totalKeyword = $totalKeyword->groupBy('keyword_id')->get();
 
-        foreach ($total_keywords->get() as $item) {
-            $message = $this->messagesTable($start_date, $end_date, $item->keyword_id);
-            $total_message = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-                ->whereIn('classification_type_id', [1])
-                ->count();
+        $messageAll = $totalKeyword->sum('row_count');
+        $mainKeyword = [];
 
-            $percentage = ($message / $total_message) * 100;
-            $id + 1;
+        foreach ($keywordIds as $keywordId) {
+            $keyword = Keyword::find($keywordId);
 
-            $data_push = [
-                "id" => $id++,
-                "keyword" => $item->keyword_name,
-                "keyword_id" => $item->keyword_id,
-                "no_of_message" => $this->point_two_digits($message),
-                "percentage" => $this->point_two_digits($percentage),
-                "type" => ($message >= 0 ? "plus" : "minus"),
+            $messageCount = $totalKeyword->firstWhere('keyword_id', $keywordId);
+
+            if ($messageCount) {
+                $percentage = ($messageCount->row_count / $messageAll) * 100;
+            } else {
+                $percentage = 0;
+            }
+
+            $mainKeyword[] = [
+                'keyword' => $keyword->name,
+                'keyword_id' => $keyword->id,
+                'no_of_message' => $this->point_two_digits($messageCount ? $messageCount->row_count : 0),
+                'percentage' => $this->point_two_digits($percentage),
+                'type' => "",
             ];
-
-            $data[] = $data_push;
         }
 
-        return $data;
+        return $mainKeyword;
+
     }
 
     private function topSites($start_date, $end_date)
     {
-        $data = [];
-
-        $message_keyword = [];
-        $message_total = 0;
-
-        $total_keywords = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->where('source_id', 5)
-            ->whereIn('classification_type_id', [1]);
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $total_keywords->where('keyword_id', $this->keyword_id);
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
 
+        $keyword = $keyword->get();
 
-    //    if ($this->source_id) {
-    //        $total_keywords->where('source_id', $this->source_id);
-    //    }
+        $keywordIds = $keyword->pluck('id')->all();
 
-        $total_keywords = $total_keywords->get();
+        $totalKeyword = DB::table('messages')
+            ->whereIn('keyword_id', $keywordIds)
+            ->where('source_id', 5)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
-        $id = 1;
+        $messageAll = $totalKeyword->count();
+        $totalKeyword = $totalKeyword->get();
+        
+        $mainLink = [];
 
-        foreach ($total_keywords as $object) {
+        foreach ($totalKeyword as $object) {
             $item = (array)$object;
 
-            if (isset($message_keyword[$item['link_message']])) {
-                $message_keyword[$item['link_message']] += 1;
+            if (isset($mainLink[$item['link_message']])) {
+                $mainLink[$item['link_message']] += 1;
             } else {
-                $message_keyword[$item['link_message']] = 1;
+                $mainLink[$item['link_message']] = 1;
             }
-
-            $message_total += 1;
         }
 
-        foreach ($message_keyword as $link_message => $value) {
-            $id + 1;
+        foreach ($mainLink as $link_message => $value) {
+            // $id + 1;
             $percentage = 0;
-            if ($value && $message_total) {
-                $percentage = self::point_two_digits(($value / $message_total) * 100);
+            if ($value && $messageAll) {
+                $percentage = self::point_two_digits(($value / $messageAll) * 100);
             }
 
             $data[$link_message] = [
-                'id' => $id++,
+                // 'id' => $id++,
                 'site_domain' => $link_message,
-                // 'keyword' => $this->find_keyword_name($keyword_id),
-                // 'keyword_id' => $keyword_id,
                 'percentage' => $percentage,
                 "no_of_message" => $value ?? 0
-                // "type" => ($value >= 0 ? "plus" : "minus"),
             ];
         }
 
         if ($data) {
             $data = array_values($data);
-            array_multisort( array_column($data, "no_of_message"), SORT_DESC, $data);
+            array_multisort(array_column($data, "no_of_message"), SORT_DESC, $data);
             $data = array_slice($data, 0, 10);
         }
 
@@ -685,10 +680,7 @@ class DashboardController extends Controller
                 $data[$hashtag->hashtag]['no_of_message'] += $hashtag->count_number;
                 $data[$hashtag->hashtag]["percentage"] = $total_keywords > 0 ? $data[$hashtag->hashtag]['no_of_message'] / $total_keywords * 100 : 0;
                 $data[$hashtag->hashtag]["type"] = $data[$hashtag->hashtag]['no_of_message'] >= 0 ? 'plus' : 'minus';
-
-
-            }
-            else {
+            } else {
                 $data[$hashtag->hashtag] = [
                     "id" => $hashtag->id,
                     "hashtag" => $hashtag->hashtag,
@@ -704,7 +696,7 @@ class DashboardController extends Controller
         if ($data) {
             $data = array_values($data);
 
-            usort($data, function($a, $b) {
+            usort($data, function ($a, $b) {
                 return $b['no_of_message'] - $a['no_of_message'];
             });
         }
@@ -743,7 +735,6 @@ class DashboardController extends Controller
         }
 
         return parent::handleRespond($data);
-
     }
 
     public function shareOfVoice(Request $request)
@@ -761,7 +752,6 @@ class DashboardController extends Controller
             } else {
                 $total_keywords->where('keyword_id', $this->keyword_id);
             }
-
         }
 
         if ($this->source_id) {
@@ -805,9 +795,7 @@ class DashboardController extends Controller
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['id'] = $labels['labels'][$i]['id'];
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['number_of_message'] = 1;
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['keyword_id'] = $item->keyword_id;
-
                 }
-
             }
         }
 
@@ -870,12 +858,10 @@ class DashboardController extends Controller
                     'Positive' => 0,
                     'total' => 0,
                 ];
-                
+
                 $data[$result->keyword_id][$result->classification_name] += 1;
                 $data[$result->keyword_id]['total'] += 1;
-                
             }
-
         }
 
         if ($data) {
@@ -909,16 +895,15 @@ class DashboardController extends Controller
                 $dummy_data[$world->word] = [
                     'text' => $world->word,
                     'value' => self::point_two_digits($world->count_number, 0),
-//                    'total' => self::point_two_digits($worlds->count(), 0)
+                    //                    'total' => self::point_two_digits($worlds->count(), 0)
                 ];
             }
-
         }
 
         if ($dummy_data) {
 
             $dummy_data = array_values($dummy_data);
-            usort($dummy_data, function($a, $b) {
+            usort($dummy_data, function ($a, $b) {
                 return $b['value'] - $a['value'];
             });
         }
@@ -1026,10 +1011,10 @@ class DashboardController extends Controller
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
         $raw_total = DB::table('word_clouds')
-            ->where('message_id','!=', '')
+            ->where('message_id', '!=', '')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
             ->whereIn('classification_type_id', [1])
-            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
+            ->whereBetween('date_count', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
@@ -1044,7 +1029,7 @@ class DashboardController extends Controller
             $raw_total->where('source_id', $this->source_id);
         }
 
-//      $worlds = $raw_total->get();
+        //      $worlds = $raw_total->get();
 
         $data['word_clouds'] = $this->wordCloudsMessage($raw_total, $select);
         $data['word_clouds_table'] = $this->wordCloudsMessageTable($raw_total, $request);
@@ -1069,9 +1054,9 @@ class DashboardController extends Controller
         $keywords = Keyword::where('campaign_id', $this->campaign_id)->get(['id', 'name']);
 
 
-//        if ($request->word) {
-//            $raw->where('word', 'like', '%' . $request->word . '%');
-//        }
+        //        if ($request->word) {
+        //            $raw->where('word', 'like', '%' . $request->word . '%');
+        //        }
 
         $wordclouds = $raw->orderBy('count_number', 'desc')->get();
         $total = $raw->sum('count_number');
@@ -1090,14 +1075,13 @@ class DashboardController extends Controller
                     'percent' => 0
                 ];
             }
-
         }
 
         if ($data) {
 
             $data = array_values($data);
 
-            usort($data, function($a, $b) {
+            usort($data, function ($a, $b) {
                 return $b['total'] - $a['total'];
             });
 
@@ -1148,12 +1132,12 @@ class DashboardController extends Controller
 
         $raw_total = DB::table('word_clouds')
             ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
-            ->where('word_clouds.message_id','!=', '')
+            ->where('word_clouds.message_id', '!=', '')
             ->whereIn('word_clouds.keyword_id', $keywords->pluck('id')->toArray())
             ->whereIn('classification_type_id', [1])
-            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
+            ->whereBetween('date_count', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
-        if ( $request->platform_id) {
+        if ($request->platform_id) {
             $this->source_id = $request->platform_id;
         }
 
@@ -1165,21 +1149,20 @@ class DashboardController extends Controller
             $raw_total->whereIn('keyword_id', $this->keyword_id);
         }
 
-
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $raw_total->whereIn('source_id', $source_ids);
         }
 
-
         $data['word_clouds_platform'] = $this->wordCloudsMessage($raw_total, $select);
-        $data['wordCloudByAccount'] = $this->wordCloudByAccount($raw_total, $request, $data['word_clouds_platform'] );
-//        $data['total'] = $this->wordCloudByAccount($request, true);
+        $data['wordCloudByAccount'] = $this->wordCloudByAccount($raw_total, $request, $data['word_clouds_platform']);
+        //        $data['total'] = $this->wordCloudByAccount($request, true);
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudByAccount($raw, $request, $lists = null) {
+    private function wordCloudByAccount($raw, $request, $lists = null)
+    {
 
         $top = null;
         $data = null;
@@ -1197,7 +1180,8 @@ class DashboardController extends Controller
 
         $wordclouds = $raw->select(
             'word_clouds.*',
-            'sources.name as source_name')
+            'sources.name as source_name'
+        )
             ->get();
 
 
@@ -1215,9 +1199,9 @@ class DashboardController extends Controller
         }
 
         if ($data) {
-            $total_message= array_column($data, 'total_message');
-            $engagements= array_column($data, 'engagements');
-            $date_count= array_column($data, 'date_count');
+            $total_message = array_column($data, 'total_message');
+            $engagements = array_column($data, 'engagements');
+            $date_count = array_column($data, 'date_count');
 
             array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
 
@@ -1229,41 +1213,10 @@ class DashboardController extends Controller
         return $data;
 
 
-//
-//
-//
-//        $total_message = 0;
-
-//        foreach ($wordclouds as $wordcloud) {
-//
-////            if (isset($data[$wordcloud->author])) {
-////                $data[$wordcloud->author]["total_message"] += 1;
-////                $data[$wordcloud->author]["engagements"] += 1;
-////            } else {
-////                $data[$wordcloud->author] = [
-////                    "author" => $wordcloud->author,
-////                    "source_id" => $wordcloud->source_id,
-////                    "source_name" => $wordcloud->source_name,
-////                    "total_message" => 1,
-////                    "engagements" => 1
-////                ];
-////
-////            }
-////            $total_message += 1;
-//        }
-
-
-//        if ($data) {
-//            $data = array_values($data);
-//        }
-//
-//        dd($data);
-//
-//
-//        return $data;
     }
 
-    private function get_engagements($message_id) {
+    private function get_engagements($message_id)
+    {
         $message =  DB::table('messages')
             ->where('message_id', $message_id)
             ->select(DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
@@ -1289,9 +1242,9 @@ class DashboardController extends Controller
 
         $raw_total = DB::table('word_clouds')
             ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
-            ->where('word_clouds.message_id','!=', '')
+            ->where('word_clouds.message_id', '!=', '')
             ->whereIn('word_clouds.keyword_id', $keywords->pluck('id')->toArray())
-            ->whereBetween('date_count', [$this->start_date, $this->end_date]);
+            ->whereBetween('date_count', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($request->sentiment_type) {
 
@@ -1301,16 +1254,15 @@ class DashboardController extends Controller
             }
 
             $raw_total->where('word_clouds.classification_id', $classification_id);
-
         }
 
-       if ($this->source_id) {
-           $raw_total->where('source_id', $this->source_id);
-       }
-//
-       if ($this->keyword_id) {
-           $raw_total->whereIn('keyword_id', $this->keyword_id);
-       }
+        if ($this->source_id) {
+            $raw_total->where('source_id', $this->source_id);
+        }
+        //
+        if ($this->keyword_id) {
+            $raw_total->whereIn('keyword_id', $this->keyword_id);
+        }
 
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
@@ -1321,94 +1273,13 @@ class DashboardController extends Controller
 
         $data['word_clouds_position'] = $this->wordCloudsMessage($raw_total, $select);
         $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($raw_total, $request, $data['word_clouds_position']);
-//        $data['total'] = $this->wordCloudBySentimentType($request, true);
+        //        $data['total'] = $this->wordCloudBySentimentType($request, true);
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudBySentimentType($raw, $request, $lists = null) {
-//        $page = $request->page ?? null;
-//        $limit = $request->limit ?? 5;
-//        $start = $page === null || $page === 1 ? null : $page * $limit;
-//        $start = $start === 1 ? null : $start - 1;
-//
-//        $data = [];
-//
-//
-//
-//        $raw = DB::table('word_clouds')
-//            ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
-//            ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
-//            ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
-//            ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number')
-//            ->offset($start)->limit($limit);
-//
-//        if ($only_total) {
-//            $raw = DB::table('word_clouds')
-//                ->join('sources', 'sources.id', '=', 'word_clouds.source_id')
-//                ->join('classifications', 'classifications.id', '=', 'word_clouds.classification_id')
-//                ->join('classification_types', 'classification_types.id', '=', 'word_clouds.classification_type_id')
-//                ->whereBetween('date_count', [$this->start_date, $this->end_date])->orderBy('count_number');
-//        }
-//
-//        if ($request->sentiment_type) {
-//
-//            $classification_id = 1;
-//            if ($request->sentiment_type !== 'positive') {
-//                $classification_id = 2;
-//            }
-//
-//            $raw->where('word_clouds.classification_id', $classification_id);
-//
-////
-//        }
-//
-//        if ($this->keyword_id) {
-//            $raw->whereIn('keyword_id', $this->keyword_id);
-//        }
-//
-//        if ($this->source_id) {
-//            $raw->where('source_id', $this->source_id);
-//        }
-//
-//        if ($only_total) {
-//            return $raw->count();
-//        }
-//
-//
-//        $wordclouds = $raw->select(
-//            'word_clouds.*',
-//            'sources.name as source_name',
-//            'classifications.name as classification_name',
-//            'classification_types.name as classification_type_name')
-//            ->get();
-//
-//        $total_message = 0;
-//
-//        foreach ($wordclouds as $wordcloud) {
-//
-//            if (isset($data[$wordcloud->author])) {
-//                $data[$wordcloud->author]["total_message"] += 1;
-//                $data[$wordcloud->author]["engagements"] += 1;
-//            } else {
-//                $data[$wordcloud->author] = [
-//                    "author" => $wordcloud->author,
-//                    "source_id" => $wordcloud->source_id,
-//                    "source_name" => $wordcloud->source_name,
-//                    "total_message" => 1,
-//                    "engagements" => 1
-//                ];
-//
-//            }
-//            $total_message += 1;
-//        }
-//
-//
-//        if ($data) {
-//            $data = array_values($data);
-//        }
-//
-//        return $data;
+    private function wordCloudBySentimentType($raw, $request, $lists = null)
+    {
 
         $top = null;
         $data = null;
@@ -1426,7 +1297,8 @@ class DashboardController extends Controller
 
         $wordclouds = $raw->select(
             'word_clouds.*',
-            'sources.name as source_name')
+            'sources.name as source_name'
+        )
             ->get();
 
 
@@ -1444,9 +1316,9 @@ class DashboardController extends Controller
         }
 
         if ($data) {
-            $total_message= array_column($data, 'total_message');
-            $engagements= array_column($data, 'engagements');
-            $date_count= array_column($data, 'date_count');
+            $total_message = array_column($data, 'total_message');
+            $engagements = array_column($data, 'engagements');
+            $date_count = array_column($data, 'date_count');
 
             array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
 
@@ -1471,16 +1343,11 @@ class DashboardController extends Controller
             case "top50":
                 $data = array_slice($dummy_data, 0, 50);
                 break;
-//            case "top100":
-//                $data = array_slice($dummy_data, 0, 100);
-//                break;
-//            default:
-//                $data = $dummy_data;
+
             default:
                 $data = array_slice($dummy_data, 0, 100);
         }
 
         return $data;
     }
-
 }
