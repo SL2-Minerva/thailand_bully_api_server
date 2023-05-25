@@ -9,15 +9,15 @@ class ActivityLogController extends Controller
 {
     public function index(Request $request)
     {
-        // $page = $request->page ?? null;
-        // $limit = $request->limit ?? 10;
-        // $start = $page === null || $page === 1 ? null : $page * $limit;
-        // $start = $start === 1 ? null : $start;
-        // $data = [];
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        $data = [];
 
         $raw = ActivityLog::join('users', 'users.id', 'activity_log.request_by')
             ->select('activity_log.*', 'users.name as request_by_name')
-            // ->offset($start)->limit($limit)
+            ->offset($start)->limit($limit)
             ->orderBy('activity_log.id', 'DESC');
 
         $raw_total = ActivityLog::join('users', 'users.id', 'activity_log.request_by')
@@ -78,10 +78,10 @@ class ActivityLogController extends Controller
             }
         }
         
-        // $data['total'] = $raw_total->get()->count();
-        // $data['activity_log'] = $raw_data;
+        $data['total'] = $raw_total->get()->count();
+        $data['activity_log'] = $raw_data;
 
-        return parent::handleRespond($raw_data);
+        return parent::handleRespond($data);
         
     }
 }

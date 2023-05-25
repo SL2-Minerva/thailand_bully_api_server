@@ -66,33 +66,69 @@ class DashboardController extends Controller
     public function overAll(Request $request)
     {
         $data = null;
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
-        $data['daily_message'] = $this->dailyMessage($this->start_date, $this->end_date);
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $total_keywords = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
+        }
+
+        $total_keywords_previous = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
+        }
+
+        $data['daily_message'] = $this->dailyMessage($total_keywords);
         $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
         $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous);
 
         return parent::handleRespond($data);
     }
 
-    private function dailyMessage($start_date, $end_date)
+    private function dailyMessage($total_keywords)
     {
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        $items = $raw->get();
+        $items = $total_keywords->get();
         $data = null;
 
         foreach ($items as $item) {
@@ -145,22 +181,10 @@ class DashboardController extends Controller
         return $data;
     }
 
-    private function percentageOfMessages($start_date, $end_date)
+    private function percentageOfMessages($start_date, $end_date, $total_keywords)
     {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
 
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        $items = $raw->get();
+        $items = $total_keywords->get();
         $data = null;
 
         $message_keyword = [];
@@ -211,14 +235,131 @@ class DashboardController extends Controller
 
     public function keyStats(Request $request)
     {
-        $data = null;
-        $source_id = $request->source ?? null;
+        //$source_id = $request->source ?? null;
 
-        $data['total_messages'] = $this->totalMessages($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
-        $data['total_engagement'] = $this->totalEngagement($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
-        $data['total_accounts'] = $this->totalAccounts($this->start_date, $this->end_date, $source_id, $this->start_date_previous, $this->end_date_previous);
+        //dd($this->source_id);
+        // Fetch keywordIds once
+        $keywordIds = Keyword::where('campaign_id', $this->campaign_id)
+            ->when($this->keyword_id, function($query) {
+                return $query->whereIn('id', $this->keyword_id);
+            })
+            ->pluck('id')
+            ->all();
 
+        $data['total_messages'] = $this->totalMessages($keywordIds, $this->start_date, $this->end_date,$this->source_id, $this->start_date_previous, $this->end_date_previous);
+        $data['total_engagement'] = $this->totalEngagement($keywordIds, $this->start_date, $this->end_date, $this->source_id, $this->start_date_previous, $this->end_date_previous);
+        $data['total_accounts'] = $this->totalAccounts($keywordIds, $this->start_date, $this->end_date, $this->source_id, $this->start_date_previous, $this->end_date_previous);
         return parent::handleRespond($data);
+    }
+
+    private function totalMessages($keywordIds, $start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
+    {
+
+        $total_current = $this->calculateMessage($keywordIds, $start_date, $end_date, $source_id);
+        $total_previous = $this->calculateMessage($keywordIds, $start_date_previous, $end_date_previous, $source_id);
+
+        $diff_date = $this->diff_date($start_date, $end_date);
+
+        $comparison = $total_current - $total_previous;
+        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
+
+        if ($percentage == -100) {
+            $percentage = 0;
+        }
+
+        return [
+            "total_message" => $this->point_two_digits($total_current, 2),
+            "average_message" => $diff_date ? $this->point_two_digits($total_current / $diff_date, 2) : 0,
+            "comparison" => $this->point_two_digits($comparison, 2),
+            "percentage" => $this->point_two_digits($percentage, 2),
+            "type" => ($comparison >= 0 ? "plus" : "minus")
+        ];
+    }
+
+    private function calculateMessage($keywordIds, $start_date, $end_date, $source_id)
+    {
+        return  $total_previous = DB::table('messages')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->when($source_id, function($query, $source_id) {
+                return $query->where('source_id', $source_id);
+            })
+            ->count();
+    }
+
+    private function totalAccounts($keywordIds,$start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
+    {
+        // No need to execute another query to get ids
+        // $keywordIds = $this->getKeywordIds();
+
+        // Use a helper method to calculate total accounts for a given period
+        $total_current = $this->calculateAccounts($keywordIds, $start_date, $end_date, $source_id);
+        $total_previous = $this->calculateAccounts($keywordIds, $start_date_previous, $end_date_previous, $source_id);
+
+        $diff_date = $this->diff_date($start_date, $end_date);
+
+        $comparison = $total_current - $total_previous;
+        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
+
+        if ($percentage == -100) {
+            $percentage = 0;
+        }
+
+        return [
+            "total_account" => $this->point_two_digits($total_current, 2),
+            "average_account" => $this->point_two_digits($total_current / $diff_date, 2),
+            "comparison" => $this->point_two_digits($comparison, 2),
+            "percentage" => $this->point_two_digits($percentage, 2),
+            "type" => ($comparison >= 0 ? "plus" : "minus")
+        ];
+    }
+
+// A new helper method to calculate total accounts for a given period
+    private function calculateAccounts($keywordIds, $start_date, $end_date, $source_id)
+    {
+        return DB::table('messages')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->when($source_id, function($query, $source_id) {
+                return $query->where('source_id', $source_id);
+            })
+            ->distinct('author')
+            ->count('author');
+    }
+
+    private function totalEngagement($keywordIds,$start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
+    {
+        $total_current = $this->calculateEngagement($keywordIds, $start_date, $end_date, $source_id);
+        $total_previous = $this->calculateEngagement($keywordIds, $start_date_previous, $end_date_previous, $source_id);
+
+        $diff_date = $this->diff_date($start_date, $end_date);
+
+        $comparison = $total_current - $total_previous;
+        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
+
+        if ($percentage == -100) {
+            $percentage = 0;
+        }
+
+        return [
+            "total_engagement" => $this->point_two_digits($total_current, 2),
+            "average_engagement" => $this->point_two_digits($total_current / $diff_date, 2),
+            "comparison" => $this->point_two_digits($comparison, 2),
+            "percentage" => $this->point_two_digits($percentage, 2),
+            "type" => ($comparison >= 0 ? "plus" : "minus")
+        ];
+    }
+
+    
+    private function calculateEngagement($keywordIds, $start_date, $end_date, $source_id)
+    {
+        return DB::table('messages')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->when($source_id, function($query, $source_id) {
+                return $query->where('source_id', $source_id);
+            })
+            ->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
     }
 
     public function sentimentScore(Request $request)
@@ -243,47 +384,39 @@ class DashboardController extends Controller
         $negative = 0;
         $neutral = 0;
         $sentiment_score = 0;
-        $table = 'message_result_full_data';
+        // $table = 'message_result_full_data';
 
-        $results = DB::table($table)->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->whereIn('classification_name', ["Positive", 'Negative', 'Neutral']);
-
-        if ($this->keyword_id) {
-            $results->whereIn('keyword_id', $this->keyword_id);
+        $results = DB::select(DB::raw("SELECT 
+            COUNT(*) AS total_count,
+            SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
+            SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
+            SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral,
+            ((SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) * 1) + 
+            (SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) * -1)) / COUNT(*) * 5 AS sentiment_score
+        FROM 
+            tbl_messages m
+            LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
+        LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
+            LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
+        WHERE 
+            c.name IN ('Positive', 'Negative', 'Neutral') AND k.campaign_id = $this->campaign_id AND m.message_datetime BETWEEN '$start_date' AND '$end_date'"));
+        
+        if (!empty($results)) {
+            $results = $results[0];
+            $sentiment_score = $results->sentiment_score ?? 0;
+            $positive = $results->positive;
+            $negative = $results->negative;
+            $neutral = $results->neutral;
+            $sentiment_score = $results->sentiment_score;
         }
 
-        if ($this->source_id) {
-            $results->where('source_id', $this->source_id);
-        }
+        $data['neutral'] = $neutral ?? 0;
+        $data['positive'] = $positive ?? 0;
+        $data['negative'] = $negative ?? 0;
+        $data['results'] = round($sentiment_score ?? 0, 2);
+        $data['sentiment_score'] = $sentiment_score ?? 0;
 
-        $results = $results->get();
-
-        if ($results->count() > 0) {
-
-            foreach ($results as $result) {
-                if ($result->classification_name == "Positive") {
-                    $positive += 1;
-                } else if ($result->classification_name == "Negative") {
-                    $negative += 1;
-                } else if ($result->classification_name == "Neutral") {
-                    $neutral += 1;
-                }
-            }
-
-            $sentiment_score = (((1 * $positive ?? 0) + (-1 * $negative ?? 1)) / ($positive + $negative + $neutral)) * 5;
-        }
-
-
-        $data['neutral'] = $neutral;
-        $data['positive'] = $positive;
-        $data['negative'] = $negative;
-        $data['results'] = round($sentiment_score, 2);
-        $data['sentiment_score'] = $sentiment_score;
-        // $percentage = 20;
-
-        $sentiment_score = (int)round($sentiment_score);
+        $sentiment_score = (int)round($sentiment_score ?? 0);
 
 
 
@@ -353,38 +486,45 @@ class DashboardController extends Controller
 
     public function keywordSummary(Request $request)
     {
-        $data = null;
-        $total_keywords = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->groupBy('keyword_id');
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $total_keywords->whereIn('keyword_id', $this->keyword_id);
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+        $totalKeyword = DB::table('messages')
+            ->select([
+                'keyword_id', DB::raw('COUNT(*) as row_count'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                'author', DB::raw('COUNT(DISTINCT author) as author_count'),
+            ])
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
+            $totalKeyword->where('source_id', $this->source_id);
         }
 
-        $diff_date = $this->diff_date($this->start_date, $this->end_date);
-        $id = 1;
+        $totalKeyword = $totalKeyword->groupBy('keyword_id')->get();
 
-        foreach ($total_keywords->get() as $item) {
-            $message = $this->messagesTable($this->start_date, $this->end_date, $item->keyword_id, 'message_result_full_data');
-            $engagement = $this->engagementTable($this->start_date, $this->end_date, $item->keyword_id, 'message_result_full_data');
-            $accounts = $this->accountTable($this->start_date, $this->end_date, $item->keyword_id, 'message_result_full_data');
-            $id + 1;
+        $diff_date = $this->diff_date($this->start_date, $this->end_date);
+
+        foreach ($keywordIds as $keywordId) {
+            $keyword = Keyword::find($keywordId);
+            $messageCount = $totalKeyword->firstWhere('keyword_id', $keywordId);
 
             $data_push = [
-                "id" => $id++,
-                "keyword" => $item->keyword_name,
-                "keyword_id" => $item->keyword_id,
-                "message" => $this->point_two_digits($message, 0),
-                "engagement" => $this->point_two_digits($engagement, 0),
-                "accounts" => $this->point_two_digits($accounts, 0),
-                "average_message" => $this->point_two_digits($message / $diff_date),
-                "average_engagement" => $this->point_two_digits($engagement / $diff_date),
+                // "id" => $id++,
+                "keyword" => $keyword->name,
+                "keyword_id" => $keyword->id,
+                "message" => $this->point_two_digits($messageCount->row_count, 0),
+                "engagement" => $this->point_two_digits($messageCount->total_engagement, 0),
+                "accounts" => $this->point_two_digits($messageCount->author_count, 0),
+                "average_message" => $this->point_two_digits($messageCount->row_count / $diff_date),
+                "average_engagement" => $this->point_two_digits($messageCount->total_engagement / $diff_date),
             ];
 
             $data[] = $data_push;
@@ -405,139 +545,6 @@ class DashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function totalMessages($start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
-    {
-
-        $total_current = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        $total_previous = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date_previous . " 00:00:00", $end_date_previous . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $total_current->whereIn('keyword_id', $this->keyword_id);
-            $total_previous->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $total_current->where('source_id', $this->source_id);
-            $total_previous->where('source_id', $this->source_id);
-        }
-
-        $total_current = $total_current->count();
-        $total_previous = $total_previous->count();
-
-        $diff_date = $this->diff_date($start_date, $end_date);
-
-        $comparison = $total_current - $total_previous;
-        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
-
-        if ($percentage == -100) {
-            $percentage = 0;
-        }
-
-        return [
-            "total_message" => $this->point_two_digits($total_current, 2),
-            "average_message" => $diff_date ? $this->point_two_digits($total_current / $diff_date, 2) : 0,
-            "comparison" => $this->point_two_digits($comparison, 2),
-            "percentage" => $this->point_two_digits($percentage, 2),
-            "type" => ($comparison >= 0 ? "plus" : "minus")
-        ];
-
-    }
-
-    private function totalEngagement($start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
-    {
-        $total_current = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        $total_previous = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date_previous . " 00:00:00", $end_date_previous . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-
-        if ($this->keyword_id) {
-            $total_current->whereIn('keyword_id', $this->keyword_id);
-            $total_previous->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $total_current->where('source_id', $this->source_id);
-            $total_previous->where('source_id', $this->source_id);
-        }
-
-        $total_current = $total_current->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
-        $total_previous = $total_previous->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
-
-        $diff_date = $this->diff_date($start_date, $end_date);
-
-        $comparison = $total_current - $total_previous;
-        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
-
-        if ($percentage == -100) {
-            $percentage = 0;
-        }
-
-        return [
-            "total_engagement" => $this->point_two_digits($total_current, 2),
-            "average_engagement" => $this->point_two_digits($total_current / $diff_date, 2),
-            "comparison" => $this->point_two_digits($comparison, 2),
-            "percentage" => $this->point_two_digits($percentage, 2),
-            "type" => ($comparison >= 0 ? "plus" : "minus")
-        ];
-    }
-
-    private function totalAccounts($start_date, $end_date, $source_id, $start_date_previous, $end_date_previous)
-    {
-        $total_current = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->groupBy('author');
-
-        $total_previous = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date_previous . " 00:00:00", $end_date_previous . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->groupBy('author');
-
-        if ($this->keyword_id) {
-            $total_current->whereIn('keyword_id', $this->keyword_id);
-            $total_previous->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $total_current->where('source_id', $this->source_id);
-            $total_previous->where('source_id', $this->source_id);
-        }
-
-        $total_current = $total_current->get()->count();
-        $total_previous = $total_previous->get()->count();
-
-        $diff_date = $this->diff_date($start_date, $end_date);
-
-        $comparison = $total_current - $total_previous;
-        $percentage = (($total_current - $total_previous) / ($total_previous === 0 ? 1 : $total_previous)) * 100;
-
-        if ($percentage == -100) {
-            $percentage = 0;
-        }
-
-        return [
-            "total_account" => $this->point_two_digits($total_current, 2),
-            "average_account" => $this->point_two_digits($total_current / $diff_date, 2),
-            "comparison" => $this->point_two_digits($comparison, 2),
-            "percentage" => $this->point_two_digits($percentage, 2),
-            "type" => ($comparison >= 0 ? "plus" : "minus")
-        ];
-    }
 
     public function mainKeyWords($start_date, $end_date)
     {
@@ -581,12 +588,11 @@ class DashboardController extends Controller
                 'keyword_id' => $keyword->id,
                 'no_of_message' => $this->point_two_digits($messageCount ? $messageCount->row_count : 0),
                 'percentage' => $this->point_two_digits($percentage),
-                'type' => "",
+                "type" => ($percentage >= 0 ? "plus" : "minus"),
             ];
         }
 
         return $mainKeyword;
-
     }
 
     private function topSites($start_date, $end_date)
@@ -643,7 +649,6 @@ class DashboardController extends Controller
         }
 
         return $data;
-
     }
 
     private function topHashtag($start_date, $end_date)
@@ -740,19 +745,29 @@ class DashboardController extends Controller
     public function shareOfVoice(Request $request)
     {
         $data = null;
-
-        $total_keywords = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-
-            if ($request->fillter_keywords) {
-                $total_keywords->whereIn('keyword_id', $this->keyword_id);
-            } else {
-                $total_keywords->where('keyword_id', $this->keyword_id);
-            }
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $total_keywords = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
@@ -775,7 +790,6 @@ class DashboardController extends Controller
 
         foreach ($total_keywords->get() as $item) {
             $keyword_id = $item->keyword_id;
-            // $data[$keyword_id]['total'] += 1;
             if (isset($data[$keyword_id]['value'])) {
 
                 $data[$keyword_id]['value'][$item->source_id]['number_of_message'] += 1;
@@ -1211,8 +1225,6 @@ class DashboardController extends Controller
         }
 
         return $data;
-
-
     }
 
     private function get_engagements($message_id)
