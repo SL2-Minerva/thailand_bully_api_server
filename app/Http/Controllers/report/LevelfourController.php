@@ -126,24 +126,19 @@ class LevelfourController extends Controller
         // $report_number === '6.2.018'
         ) {
 
-            // if ($request->sna_type) {
-            //     if ($request->sna_type === 'sentiment') {
-            //         $data = $this->getSNAbyType($request, 1);
-            //     }
+            if ($request->sna_type) {
+                if ($request->sna_type === 'sentiment') {
+                    $data = $this->getSNAbyType($request, 1);
+                }
 
-            //     if ($request->sna_type === 'bullyLevel') {
-            //         $data = $this->getSNAbyType($request, 2); 
-            //     }
+                if ($request->sna_type === 'bullyLevel') {
+                    $data = $this->getSNAbyType($request, 2); 
+                }
 
-            //     if ($request->sna_type === 'bullyType') {
-            //         $data = $this->getSNAbyType($request, 3);
-            //     }
-            // }
-            $data = [
-                "sentiment" => $this->getSNAbyType($request, 1),
-                // "bullyLevel" => $this->getSNAbyType($request, 2),
-                // "bullyType" => $this->getSNAbyType($request, 3),
-            ];
+                if ($request->sna_type === 'bullyType') {
+                    $data = $this->getSNAbyType($request, 3);
+                }
+            }
 
             return parent::handleRespond($data);
         } else {
