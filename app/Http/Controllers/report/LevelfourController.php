@@ -126,24 +126,24 @@ class LevelfourController extends Controller
         // $report_number === '6.2.018'
         ) {
 
-            if ($request->sna_type) {
-                if ($request->sna_type === 'sentiment') {
-                    $data = $this->getSNAbyType($request, 1);
-                }
+            // if ($request->sna_type) {
+            //     if ($request->sna_type === 'sentiment') {
+            //         $data = $this->getSNAbyType($request, 1);
+            //     }
 
-                if ($request->sna_type === 'bullyLevel') {
-                    $data = $this->getSNAbyType($request, 2); 
-                }
+            //     if ($request->sna_type === 'bullyLevel') {
+            //         $data = $this->getSNAbyType($request, 2); 
+            //     }
 
-                if ($request->sna_type === 'bullyType') {
-                    $data = $this->getSNAbyType($request, 3);
-                }
-            }
-            // $data = [
-            //     "sentiment" => $this->getSNAbyType($request, 1),
-            //     // "bullyLevel" => $this->getSNAbyType($request, 2),
-            //     // "bullyType" => $this->getSNAbyType($request, 3),
-            // ];
+            //     if ($request->sna_type === 'bullyType') {
+            //         $data = $this->getSNAbyType($request, 3);
+            //     }
+            // }
+            $data = [
+                "sentiment" => $this->getSNAbyType($request, 1),
+                // "bullyLevel" => $this->getSNAbyType($request, 2),
+                // "bullyType" => $this->getSNAbyType($request, 3),
+            ];
 
             return parent::handleRespond($data);
         } else {
@@ -210,13 +210,16 @@ class LevelfourController extends Controller
         if ($message_id) {
             $raw = $this->message($this->campaign_id, $this->start_date, $this->end_date);
         } else {
-            $raw = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
-            $raw = $raw->where('message_results.classification_type_id', $type)->where('reference_message_id', '');
+            $raw = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
+                ->where('message_results.classification_type_id', $type)
+                ->where('reference_message_id', '');
         }
 
         if ($is_child) {
-            $raw = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
-            $raw = $raw->where('message_results.classification_type_id', $type)->where('reference_message_id', '!=','')->limit(2000);
+            $raw = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
+                ->where('message_results.classification_type_id', $type)
+                ->where('reference_message_id', '!=','')
+                ->limit(2000);
         }
 
 
@@ -234,8 +237,10 @@ class LevelfourController extends Controller
 
         }
 
-        $raw_total = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_total = $raw->where('message_results.classification_type_id', $type)->where('reference_message_id', '!=','');
+        // $raw_total = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
+        $raw_total = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
+            ->where('message_results.classification_type_id', $type)
+            ->where('reference_message_id', '!=','');
 
         $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
 
@@ -325,7 +330,7 @@ class LevelfourController extends Controller
         return $raw;
     }
 
-    private function message_child($campaign_id, $start_date, $end_date)
+    private function message_root($campaign_id, $start_date, $end_date)
     {
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
@@ -337,37 +342,37 @@ class LevelfourController extends Controller
         $keywordIds = $keyword->pluck('id')->all();
 
         $raw = DB::table('messages')
-                ->select([
-                    'messages.message_id as message_id',
-                    'messages.reference_message_id as reference_message_id',
-                    'messages.keyword_id as keyword_id',
-                    'messages.message_datetime as date_m',
-                    'messages.author as author',
-                    'messages.source_id as source_id',
-                    'messages.full_message as full_message',
-                    'messages.message_type',
-                    'messages.device as device',
-                    'messages.number_of_views as number_of_views',
-                    'messages.number_of_comments as number_of_comments',
-                    'messages.number_of_shares as number_of_shares',
-                    'messages.number_of_reactions as number_of_reactions',
-                    'keywords.campaign_id AS campaign_id',
-                    'campaigns.name AS campaign_name',
-                    'keywords.name as keyword_name',
-                    'message_results.classification_type_id AS classification_type_id',
-                    'message_results.classification_id',
-                    'classifications.name as classification_name',
-                    'classifications.color as classification_color',
-                    'messages.created_at as created_at'
-                ])
-                ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
-                ->join('sources', 'messages.source_id', '=', 'sources.id')
-                ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-                ->join('message_results', 'message_results.message_id', '=', 'messages.id')
-                ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-                ->where('campaigns.id', $campaign_id)
-                ->whereIn('keyword_id', $keywordIds)
-                ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->select([
+                'messages.message_id as message_id',
+                'messages.reference_message_id as reference_message_id',
+                'messages.keyword_id as keyword_id',
+                'messages.message_datetime as date_m',
+                'messages.author as author',
+                'messages.source_id as source_id',
+                'messages.full_message as full_message',
+                'messages.message_type',
+                'messages.device as device',
+                'messages.number_of_views as number_of_views',
+                'messages.number_of_comments as number_of_comments',
+                'messages.number_of_shares as number_of_shares',
+                'messages.number_of_reactions as number_of_reactions',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'keywords.name as keyword_name',
+                'message_results.classification_type_id AS classification_type_id',
+                'message_results.classification_id',
+                'classifications.name as classification_name',
+                'classifications.color as classification_color',
+                'messages.created_at as created_at'
+            ])
+            ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->join('sources', 'messages.source_id', '=', 'sources.id')
+            ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->where('campaigns.id', $this->campaign_id)
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
             
             return $raw;
     }
