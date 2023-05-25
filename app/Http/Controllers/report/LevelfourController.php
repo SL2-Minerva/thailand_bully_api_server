@@ -134,11 +134,11 @@ class LevelfourController extends Controller
                 }
 
                 if ($request->sna_type === 'bullyLevel') {
-                    $data = $this->getSNAbyType($request, 2); 
+                    $data = $this->getSNAbyType($request, 3); 
                 }
 
                 if ($request->sna_type === 'bullyType') {
-                    $data = $this->getSNAbyType($request, 3);
+                    $data = $this->getSNAbyType($request, 2);
                 }
             }
 
