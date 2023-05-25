@@ -21,12 +21,14 @@ class LevelfourController extends Controller
     private $campaign_id;
     private $source_id;
     private $keyword_id;
+    private $report_number;
 
     public function __construct(Request $request)
     {
         $this->campaign_id = $request->campaign_id ? $request->campaign_id : $request->campaignId;
         $this->start_date = $this->date_carbon($request->start_date) ?? null;
         $this->end_date = $this->date_carbon($request->end_date) ?? null;
+        $this->report_number = $request->report_number ?? null;
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
@@ -203,7 +205,7 @@ class LevelfourController extends Controller
         }
 
         if ($message_id) {
-            $raw = $this->message($this->campaign_id, $this->start_date, $this->end_date);
+            $raw = $this->message($this->campaign_id, $this->start_date, $this->end_date, $this->report_number);
         } else {
             $raw = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
@@ -219,7 +221,7 @@ class LevelfourController extends Controller
 
 
         if ($message_id && !$is_child) {
-            $raw = $raw->where('message_id', $message_id);
+            $raw = $raw->where('messages.message_id', $message_id);
         }
 
         if ($message_id && $is_child) {
@@ -294,7 +296,7 @@ class LevelfourController extends Controller
         return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
     }
 
-    private function message($campaign_id, $start_date, $end_date)
+    private function message($campaign_id, $start_date, $end_date, $report_number = null)
     {
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
@@ -305,22 +307,55 @@ class LevelfourController extends Controller
         $keyword = $keyword->get();
         $keywordIds = $keyword->pluck('id')->all();
 
-        $raw = DB::table('messages')
-            ->select([
-                'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'messages.source_id as source_id',
-                'sources.name as source_name',
-                'messages.message_datetime as date_m',
-            ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->where('campaigns.id', $campaign_id)
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+        if ($report_number) {
+
+            $raw = DB::table('messages')
+                ->select([
+                    'messages.keyword_id as keyword_id',
+                    'keywords.name as keyword_name',
+                    'keywords.campaign_id AS campaign_id',
+                    'campaigns.name AS campaign_name',
+                    'messages.source_id as source_id',
+                    'sources.name as source_name',
+                    'messages.message_datetime as date_m',
+                    'messages.number_of_views as number_of_views',
+                    'messages.number_of_comments as number_of_comments',
+                    'messages.number_of_shares as number_of_shares',
+                    'messages.number_of_reactions as number_of_reactions',
+                    'messages.reference_message_id as reference_message_id',
+                    'messages.author as author',
+                    'classifications.name as classification_name',
+                    'classifications.color as classification_color',
+                    'messages.message_id as message_id',
+                ])
+                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+                ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+                ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+                ->where('campaigns.id', $campaign_id)
+                ->whereIn('keyword_id', $keywordIds)
+                ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+        } else {
+            $raw = DB::table('messages')
+                ->select([
+                    'messages.keyword_id as keyword_id',
+                    'keywords.name as keyword_name',
+                    'keywords.campaign_id AS campaign_id',
+                    'campaigns.name AS campaign_name',
+                    'messages.source_id as source_id',
+                    'sources.name as source_name',
+                    'messages.message_datetime as date_m',
+                    
+                ])
+                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+                
+                ->where('campaigns.id', $campaign_id)
+                ->whereIn('keyword_id', $keywordIds)
+                ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+        }
 
         return $raw;
     }
@@ -358,7 +393,7 @@ class LevelfourController extends Controller
                 'message_results.classification_id',
                 'classifications.name as classification_name',
                 'classifications.color as classification_color',
-                'messages.created_at as created_at'
+                'messages.created_at as created_at',
             ])
             ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->join('sources', 'messages.source_id', '=', 'sources.id')
