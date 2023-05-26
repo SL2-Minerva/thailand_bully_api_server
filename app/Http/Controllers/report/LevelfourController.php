@@ -198,6 +198,15 @@ class LevelfourController extends Controller
     private function getNode($request, $message_id, $start_date, $end_date, $is_child = false, $type = 1)
     {
 
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
         $limit = 1000;
 
         if ($request->limit) {
@@ -205,15 +214,15 @@ class LevelfourController extends Controller
         }
 
         if ($message_id) {
-            $raw = $this->message($this->campaign_id, $this->start_date, $this->end_date, $this->report_number);
+            $raw = $this->message($keywordIds, $this->campaign_id, $this->start_date, $this->end_date, $this->report_number,);
         } else {
-            $raw = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
+            $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
                 ->where('reference_message_id', '');
         }
 
         if ($is_child) {
-            $raw = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
+            $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
                 ->where('reference_message_id', '!=','')
                 ->limit(2000);
@@ -235,7 +244,7 @@ class LevelfourController extends Controller
         }
 
         // $raw_total = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_total = $this->message_root($this->campaign_id, $this->start_date, $this->end_date)
+        $raw_total = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
             ->where('message_results.classification_type_id', $type)
             ->where('reference_message_id', '!=','');
 
@@ -296,16 +305,8 @@ class LevelfourController extends Controller
         return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
     }
 
-    private function message($campaign_id, $start_date, $end_date, $report_number = null)
+    private function message($keywordIds, $campaign_id, $start_date, $end_date, $report_number = null)
     {
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
 
         if ($report_number) {
 
@@ -327,6 +328,7 @@ class LevelfourController extends Controller
                     'classifications.name as classification_name',
                     'classifications.color as classification_color',
                     'messages.message_id as message_id',
+                    'messages.link_message as link_message',
                 ])
                 ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
                 ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
@@ -346,6 +348,7 @@ class LevelfourController extends Controller
                     'messages.source_id as source_id',
                     'sources.name as source_name',
                     'messages.message_datetime as date_m',
+                    'messages.link_message as link_message',
                     
                 ])
                 ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
@@ -360,16 +363,8 @@ class LevelfourController extends Controller
         return $raw;
     }
 
-    private function message_root($campaign_id, $start_date, $end_date)
+    private function message_root($keywordIds, $campaign_id, $start_date, $end_date)
     {
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
 
         $raw = DB::table('messages')
             ->select([
@@ -394,13 +389,14 @@ class LevelfourController extends Controller
                 'classifications.name as classification_name',
                 'classifications.color as classification_color',
                 'messages.created_at as created_at',
+                'messages.link_message as link_message',
             ])
             ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->where('campaigns.id', $this->campaign_id)
+            ->where('campaigns.id', $campaign_id)
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
             
