@@ -1271,42 +1271,130 @@ class ChannelDashboardController extends Controller
 
     public function engagementBy()
     {
-        $data = null;
 
-        $data['period_over_period'] = $this->PeriodOverPeriodGroup();
-        $data['engagement_rate'] = $this->EngagementRateGroup();
-        $data['engagement_rate_previous'] = $this->EngagementRatePreviousGroup();
+
+        $source_group = $this->organization_group->platform;
+
+        if ($this->user_login->is_admin) {
+            $sources = Sources::where('status', 1)->get();
+        } else {
+            $sources = Sources::where('status', 1)
+                ->whereIn('name', $source_group)
+                ->get();
+        }
+
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+        $campaignId = $this->campaign_id;
+        $data = null;
+        $data['period_over_period'] = $this->PeriodOverPeriodGroup($campaignId,$keywordIds, $sources);
+        $data['engagement_rate'] = $this->totalFromEngagementRate($campaignId,$keywordIds, $sources, $this->start_date, $this->end_date, 'current_period');
+        $data['engagement_rate_previous'] = $this->totalFromEngagementRate($campaignId,$keywordIds, $sources, $this->start_date_previous, $this->end_date_previous, 'previous_period');
 
         return parent::handleRespond($data);
     }
 
-
-    public function PeriodOverPeriodGroup()
+    public function PeriodOverPeriodGroup($campaignId,$keywordIds, $sources)
     {
 
-        $soure_group = $this->organization_group->platform;
-        $source_id = Sources::where('status', 1)
-            ->whereIn('name', $soure_group)
-            ->get();
+        $sourceIds = $sources->pluck('id')->all();
 
-        if ($this->user_login->is_admin) {
-            $source_id = Sources::where('status', 1)->get();
-        }
+        $channel_message_current = $this->total_message_by_source($campaignId, $keywordIds, $sourceIds, $this->start_date, $this->end_date);
+        $channel_message_previous = $this->total_message_by_source($campaignId, $keywordIds, $sourceIds, $this->start_date_previous, $this->end_date_previous);
+        $data = array();
+        foreach ($sources as $item) {
+            $message_current = 1;
+            $message_previous = 1;
+            foreach ($channel_message_current as $current) {
+                if ($current->source_name == $item->name) {
+                    $message_current = $current->total_messages;
+                    break;
+                }
+            }
+            foreach ($channel_message_previous as $current) {
+                if ($current->source_name == $item->name) {
+                    $message_previous = $current->total_messages;
+                    break;
+                }
+            }
 
-
-        foreach ($source_id as $item) {
-
-            $channal_message_current = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
-            $channal_message_previous = $this->total_message_by_source_id('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $item->id);
-
-            $comparison = $channal_message_current - $channal_message_previous;
-            $percentage = ($channal_message_current - $channal_message_previous) / ($channal_message_previous === 0 ? 1 : $channal_message_previous) * 100;
+            $comparison = $message_current - $message_previous;
+            $percentage = ($message_current - $message_previous) / ($message_previous === 0 ? 1 : $message_previous) * 100;
 
             $data[$item->name] = [
                 "comparison_value" => $this->point_two_digits($comparison, 0),
                 "percentage" => $this->point_two_digits($percentage, 0),
                 "type" => ($comparison >= 0 ? "plus" : "minus"),
             ];
+        }
+        return $data;
+    }
+
+    private function total_message_by_source($campaignId, $keywordIds, $sourceIds, $start_date, $end_date)
+    {
+
+        $result = DB::table('messages')
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->where('keywords.campaign_id', $campaignId);
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $result = $result->whereIn('messages.source_id', $source_ids);
+        } else {
+            $result->whereIn('sources.id', $sourceIds);
+        }
+        $result->whereIn('keywords.id', $keywordIds)
+            ->whereBetween('messages.message_datetime', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
+            ->groupBy('sources.id', 'sources.name')
+            ->select('sources.id as source_id', 'sources.name as source_name', DB::raw('COUNT(*) as total_messages'));
+
+        return $result->get();
+    }
+
+    private function totalFromEngagementRate($campaignId,$keywordIds, $sources, $start_date, $end_date, $value_name)
+    {
+        $labels = parent::listSource();
+        $data = [
+            'labels' => $labels['labels'],
+            'value' => [$value_name => ['data' => array_fill(0, count($labels['labels']), 0)]]
+        ];
+
+        $engagement = DB::table('messages')
+            ->select([
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                DB::raw('SUM(tbl_messages.number_of_comments + tbl_messages.number_of_shares + tbl_messages.number_of_reactions) as engagement_count')
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->where('campaigns.id', $campaignId)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $engagement->where('source_id', $this->source_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $engagement->whereIn('source_id', $source_ids);
+        }
+
+        $engagementResults = $engagement->groupBy('messages.source_id', 'sources.name')->get();
+
+        foreach ($engagementResults as $item) {
+            $source_name = $item->source_name;
+            $index_label = array_search($source_name, $labels['labels']);
+
+            $data['value'][$value_name]['data'][$index_label] = $item->engagement_count;
         }
 
         return $data;
@@ -1660,43 +1748,6 @@ class ChannelDashboardController extends Controller
         return $data->count();
     }
 
-    private function totalFromEngagementRate($start_date, $end_date, $value_name)
-    {
-
-        $labels = parent::listSource();
-        $engagement = $this->raw_message($this->campaign_id, $start_date, $end_date);
-
-        $source_id = Sources::where('status', 1)->get();
-
-        if (!$this->user_login->is_admin) {
-            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
-        }
-
-        foreach ($source_id as $source_id) {
-            $data['labels'][] = $source_id->name;
-        }
-
-        for ($i = 0; $i < count($labels['labels']); $i++) {
-            $data['value'][$value_name]['data'][] = 0;
-        }
-
-        foreach ($engagement->get() as $item) {
-            $source_name = $item->source_name;
-            $index_label = array_search($source_name, $labels['labels']);
-
-            if (isset($data['value'][$value_name])) {
-                $data['value'][$value_name]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            } else {
-                $data['value'][$value_name] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $item->source_name,
-                    // 'data' => [0, 0, 0, 0, 0, 0]
-                ];
-            }
-        }
-
-        return $data;
-    }
 
     private function totalFromMessageResultSemetic($table, $start_date, $end_date, $keyword_name, $value_name)
     {
