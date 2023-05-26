@@ -10,6 +10,7 @@ use App\Models\Classification;
 use Illuminate\Support\Carbon;
 use App\Models\Sources;
 use Illuminate\Support\Facades\DB;
+use App\Models\Keyword;
 
 class ChannelDashboardController extends Controller
 {
@@ -60,58 +61,55 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
 
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $raw = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw->where('source_id', $source_ids);
+        }
+
         $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date);
         $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous);
-        $data['daily_message'] = $this->DailyChannelGroup();
+        $data['daily_message'] = $this->DailyChannelGroup($raw);
 
         return parent::handleRespond($data);
 
-    }
-
-    public function PercentageOfChannel(Request $request)
-    {
-
-        $data = null;
-        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date);
-        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous);
-
-        return parent::handleRespond($data);
     }
 
     private function PercentageToCal($start_date, $end_date)
     {
         $data = null;
-        $percentage_of_channal = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->groupBy('source_id');
-        $channal_message_total = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-            // ->get()
-            // ->count();
-
-        if ($this->keyword_id) {
-            $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
-            $channal_message_total->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $percentage_of_channal->where('source_id', $this->source_id);
-            $channal_message_total->where('source_id', $this->source_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-
-            $percentage_of_channal->whereIn('source_id', $source_ids);
-            $channal_message_total->whereIn('source_id', $source_ids);
-
-        }
+        $percentage_of_channal = $this->raw_message($this->campaign_id, $start_date, $end_date)->groupBy('source_id');
+        $channal_message_total = $this->raw_message($this->campaign_id, $start_date, $end_date);
 
         $channal_message_total = $channal_message_total->get()->count();
+        
 
         foreach ($percentage_of_channal->get() as $channal) {
             $source_id_id = $channal->source_id;
@@ -119,14 +117,11 @@ class ChannelDashboardController extends Controller
             $data[$source_id_id]['keyword_name'] = $channal->keyword_name;
             $data[$source_id_id]['campaign_id'] = $channal->campaign_id;
             $data[$source_id_id]['campaign_name'] = $channal->campaign_name;
-            // $data[$source_id_id]['organization_id'] = $channal->organization_id;
-            // $data[$source_id_id]['organizations_name'] = $channal->organizations_name;
             $data[$source_id_id]['source_id'] = $channal->source_id;
             $data[$source_id_id]['source_name'] = $channal->source_name;
 
 
             $channal_message = $this->channelTable($start_date, $end_date, $source_id_id);
-
             $data[$source_id_id]['total'] = self::point_two_digits($channal_message_total, 0);
 
 
@@ -211,28 +206,8 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function DailyChannelGroup()
+    public function DailyChannelGroup($raw)
     {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-
-
         $items = $raw->get();
         $data = null;
 
@@ -287,14 +262,15 @@ class ChannelDashboardController extends Controller
     public function channelBy()
     {
         $data = null;
+        $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
 
-        $data['channel_by_day'] = $this->ChannelByDayGroup();
-        $data['channel_by_time'] = $this->ChannelByTimeGroup();
-        $data['channel_by_device'] = $this->ChannelByDeviceGroup();
+        $data['channel_by_day'] = $this->ChannelByDayGroup($raw);
+        $data['channel_by_time'] = $this->ChannelByTimeGroup($raw);
+        $data['channel_by_device'] = $this->ChannelByDeviceGroup($raw);
         $data['channel_by_account'] = $this->ChannelByAccountGroup();
-        $data['channel_by_sentiment'] = $this->ChannelBySentimentGroup();
-        $data['channel_by_level'] = $this->ChannelBullyLevelGroup();
-        $data['channel_by_bully_type'] = $this->ChannelBullyTypeGroup();
+        $data['channel_by_sentiment'] = $this->ChannelBySentimentGroup($raw);
+        $data['channel_by_level'] = $this->ChannelBullyLevelGroup($raw);
+        $data['channel_by_bully_type'] = $this->ChannelBullyTypeGroup($raw);
 
         return parent::handleRespond($data);
     }
@@ -356,7 +332,7 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function ChannelByDayGroup()
+    private function ChannelByDayGroup($raw)
     {
         $data['labels'] = [
             "Mon",
@@ -368,28 +344,7 @@ class ChannelDashboardController extends Controller
             "Sun"
         ];
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-        }
-
-
         $data['value'] = null;
-
         foreach ($raw->get() as $item) {
 
             $day_name = Carbon::parse($item->date_m)->format('D');
@@ -495,7 +450,7 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function ChannelByTimeGroup()
+    public function ChannelByTimeGroup($raw)
     {
         $data['labels'] = [
             "Before 6 AM",
@@ -503,24 +458,6 @@ class ChannelDashboardController extends Controller
             "12 PM-6 PM",
             "After 6 PM"
         ];
-
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
 
         $data['value'] = null;
 
@@ -635,31 +572,13 @@ class ChannelDashboardController extends Controller
 
     }
 
-    public function ChannelByDeviceGroup()
+    public function ChannelByDeviceGroup($raw)
     {
         $data['labels'] = [
             "Android",
             "Iphone",
             "Web App",
         ];
-
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
 
         $data['value'] = null;
 
@@ -780,20 +699,63 @@ class ChannelDashboardController extends Controller
             "Follower",
         ];
 
-        $raw_child = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->where('reference_message_id', '!=', '')
-            // ->orWhere('reference_message_id', null)
-            ->whereIn('classification_type_id', [1]);
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $raw_child = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->where('reference_message_id', '!=', '');
+
+        $raw_root = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->where('reference_message_id', '');
+
+        if ($this->source_id) {
+            $raw_child->where('source_id', $this->source_id);
+            $raw_root->where('source_id', $this->source_id);
+        }
 
 
-        $raw_root = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->where('reference_message_id', '')
-            // ->orWhere('reference_message_id', null)
-            ->whereIn('classification_type_id', [1]);
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $raw_child->whereIn('source_id', $source_ids);
+            $raw_root->whereIn('source_id', $source_ids);
+        }
 
         $soures = parent::listSource();
 
@@ -904,7 +866,7 @@ class ChannelDashboardController extends Controller
 
     }
 
-    public function ChannelBySentimentGroup()
+    public function ChannelBySentimentGroup($raw)
     {
 
         $sentiment = Classification::where('classification_type_id', 1)->get();
@@ -914,26 +876,19 @@ class ChannelDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-
+        $raw = $raw->select([
+            'messages.keyword_id as keyword_id',
+            'keywords.name as keyword_name',
+            'keywords.campaign_id AS campaign_id',
+            'campaigns.name AS campaign_name',
+            'messages.source_id as source_id',
+            'sources.name as source_name',
+            'messages.message_datetime as date_m',
+            'messages.device as device',
+            'classifications.name as classification_name',
+            'message_results.classification_id as classification_id',
+        ])->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+        ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id');
 
         $data['value'] = null;
 
@@ -1031,7 +986,7 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function ChannelBullyLevelGroup()
+    public function ChannelBullyLevelGroup($raw)
     {
 
         $sentiment = Classification::where('classification_type_id', 3)->get();
@@ -1041,22 +996,45 @@ class ChannelDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [3]);
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $raw = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'classifications.name as classification_name',
+                'message_results.classification_id as classification_id',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
+
 
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $raw->whereIn('source_id', $source_ids);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -1153,7 +1131,7 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function ChannelBullyTypeGroup()
+    public function ChannelBullyTypeGroup($raw)
     {
         $sentiment = Classification::where('classification_type_id', 2)->get();
         $data['labels'] = [];
@@ -1162,24 +1140,45 @@ class ChannelDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [2]);
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $raw = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'classifications.name as classification_name',
+                'message_results.classification_id as classification_id',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
+        }
 
 
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $raw->whereIn('source_id', $source_ids);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
         }
 
         $data['value'] = null;
@@ -1226,45 +1225,48 @@ class ChannelDashboardController extends Controller
 
     private function total_message_by_source_id($table, $start_date, $end_date, $source_id_id)
     {
-        if ($source_id_id === "all") {
-            $channal_message_current = DB::table($table)
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-                ->whereIn('classification_type_id', [1]);
-
-
-            if ($this->keyword_id) {
-                $channal_message_current->whereIn('keyword_id', $this->keyword_id);
-            }
-
-            if (!$this->user_login->is_admin) {
-                $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-                $channal_message_current->whereIn('source_id', $source_ids);
-            }
-
-            if ($this->source_id) {
-                $channal_message_current->where('source_id', $this->source_id);
-            }
-
-
-            return $channal_message_current->get()->count();
-        }
-
-        $channal_message_current = DB::table($table)
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->where('source_id', $source_id_id);
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $channal_message_current->whereIn('keyword_id', $this->keyword_id);
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $data = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
-            $channal_message_current->where('source_id', $this->source_id);
+            $data->where('source_id', $this->source_id);
         }
 
-        return $channal_message_current->get()->count();
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+
+        if ($source_id_id === "all") {
+            return $data->get()->count();
+        }
+
+        $data = $data->where('source_id', $source_id_id);
+
+        return $data->get()->count();
     }
 
     public function engagementBy()
@@ -1349,6 +1351,7 @@ class ChannelDashboardController extends Controller
         $data['sentiment_score_previous'] = $this->SentimentScorePreviousGroup();
         $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group();
         $data['sentiment_by_level'] = $this->SentimentLevelGroup();
+
         return parent::handleRespond($data);
     }
 
@@ -1512,24 +1515,25 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
 
-        $percentage_of_channal = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
+        $percentage_of_channal = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date)
             ->groupBy('source_id');
+        //     ->where('campaign_id', $this->campaign_id)
+        //     ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+        //     ->whereIn('classification_type_id', [1])
+        //     ->groupBy('source_id');
 
-        if ($this->keyword_id) {
-            $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
-        }
+        // if ($this->keyword_id) {
+        //     $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+        // }
 
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $percentage_of_channal->whereIn('source_id', $source_ids);
-        }
+        // if (!$this->user_login->is_admin) {
+        //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+        //     $percentage_of_channal->whereIn('source_id', $source_ids);
+        // }
 
-        if ($this->source_id) {
-            $percentage_of_channal->where('source_id', $this->source_id);
-        }
+        // if ($this->source_id) {
+        //     $percentage_of_channal->where('source_id', $this->source_id);
+        // }
 
         // All
         $data[-1] = [
@@ -1545,10 +1549,7 @@ class ChannelDashboardController extends Controller
             'total' => 0
         ];
 
-        $sum = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])->get();
+        $sum = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date)->get();
         foreach ($sum as $item) {
             if (isset($item->classification_name) && $item->classification_name === "Negative") {
                 $data[-1]['negative'] = $data[-1]['negative'] + 1;
@@ -1581,11 +1582,9 @@ class ChannelDashboardController extends Controller
             $data[$source_id_id]['positive'] = 0;
             $data[$source_id_id]['total'] = 0;
 
-            $sum = DB::table('message_result_full_data')
-                ->where('campaign_id', $this->campaign_id)
-                ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                ->whereIn('classification_type_id', [1])
-                ->where('source_id', $channal->source_id)->get();
+            $sum = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date)
+                ->where('source_id', $channal->source_id)
+                ->get();
             foreach ($sum as $item) {
                 if (isset($item->classification_name) && $item->classification_name === "Negative") {
                     $data[$source_id_id]['negative'] = $data[$source_id_id]['negative'] + 1;
@@ -1614,43 +1613,58 @@ class ChannelDashboardController extends Controller
 
     private function channelTable($start_date, $end_date, $source_id_id)
     {
-        $count =  DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->where('source_id', $source_id_id)
-            ->whereIn('classification_type_id', [1]);
-            // ->get()
-            // ->count();
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $count->whereIn('keyword_id', $this->keyword_id);
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
         }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $data = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'messages.number_of_comments as number_of_comments',
+                'messages.number_of_reactions as number_of_reactions',
+                'messages.number_of_shares as number_of_shares',
+                'classifications.name as classification_name',
+                'message_results.classification_id as classification_id'
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->where('source_id', $source_id_id);
 
         if ($this->source_id) {
-            $count->where('source_id', $this->source_id);
+            $data->where('source_id', $this->source_id);
         }
 
-        $count = $count->get()->count();
 
-        return $count;
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+
+        return $data->count();
     }
 
     private function totalFromEngagementRate($start_date, $end_date, $value_name)
     {
 
         $labels = parent::listSource();
-        $engagement = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $engagement->where('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $engagement->where('source_id', $this->source_id);
-        }
+        $engagement = $this->raw_message($this->campaign_id, $start_date, $end_date);
 
         $source_id = Sources::where('status', 1)->get();
 
@@ -1686,30 +1700,14 @@ class ChannelDashboardController extends Controller
 
     private function totalFromMessageResultSemetic($table, $start_date, $end_date, $keyword_name, $value_name)
     {
-        $engagement_previous = DB::table($table)
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->keyword_id) {
-            $engagement_previous->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $engagement_previous->where('source_id', $this->source_id);
-        }
+        $raw = $this->raw_message($this->campaign_id, $start_date, $end_date);
 
         $source_id = Sources::where('status', 1)->get();
-
-        if (!$this->user_login->is_admin) {
-            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
-        }
-
         foreach ($source_id as $source_id) {
             $data['labels'][] = $source_id->name;
         }
 
-        foreach ($engagement_previous->get() as $item) {
+        foreach ($raw->get() as $item) {
             $source_name = $item->source_name;
             $index_label = array_search($source_name, $data['labels']);
 
@@ -1733,6 +1731,98 @@ class ChannelDashboardController extends Controller
     {
         $source_id = Sources::where('id', $source_id_id)->first();
         return $source_id->name;
+    }
+
+    private function raw_message($campaign_id, $start_date, $end_date)
+    {
+        $keyword = Keyword::where('campaign_id', $campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $data = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'messages.number_of_comments as number_of_comments',
+                'messages.number_of_reactions as number_of_reactions',
+                'messages.number_of_shares as number_of_shares',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+
+        return $data;
+    }
+
+    private function raw_message_classification($campaign_id, $start_date, $end_date)
+    {
+        $keyword = Keyword::where('campaign_id', $campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $data = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'messages.number_of_comments as number_of_comments',
+                'messages.number_of_reactions as number_of_reactions',
+                'messages.number_of_shares as number_of_shares',
+                'classifications.name as classification_name',
+                'message_results.classification_id as classification_id'
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+
+        return $data;
     }
 
 }
