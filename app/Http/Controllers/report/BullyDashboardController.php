@@ -67,32 +67,32 @@ class BullyDashboardController extends Controller
     public function bullyBy()
     {
         $data = null;
-        $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [3]);
+        $raw = $this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
 
         $data['bully_by_day'] = $this->BullyByDayGroup($raw);
         $data['bully_by_time'] = $this->BullyByTimeGroup($raw);
         $data['bully_by_device'] = $this->BullyByDeviceGroup($raw);
         $data['bully_by_account'] = $this->BullyByAccountGroup($raw);
         $data['bully_by_channel'] = $this->BullyByChannelGroup($raw);
-        $data['bully_by_sentiment'] = $this->BullyBySentimentGroup($this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [1, 3]));
+        $data['bully_by_sentiment'] = $this->BullyBySentimentGroup($this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['Positive', 'Negative', 'Neutral', 'Level 0', 'Level 1', 'Level 2', 'Level 3']));
 
         return parent::handleRespond($data);
     }
 
-    public function PercentageBully(Request $request)
-    {
-        $data = null;
-        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, 3);
-        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, 3);
+    // public function PercentageBully(Request $request)
+    // {
+    //     $data = null;
+    //     $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
+    //     $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
 
-        return parent::handleRespond($data);
-    }
+    //     return parent::handleRespond($data);
+    // }
 
     private function PercentageBullyGroup()
     {
         $data = null;
-        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, [3]);
-        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, [3]);
+        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
+        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
 
         return $data;
     }
@@ -101,7 +101,7 @@ class BullyDashboardController extends Controller
     {
         $data = [];
 
-        $raw = $this->raw_message_classification($this->campaign_id, $start_date, $end_date, $classification_id);
+        $raw = $this->raw_message_classification_name($this->campaign_id, $start_date, $end_date, $classification_id);
 
         $items = $raw->get();
         $message_total = 0;
@@ -134,7 +134,7 @@ class BullyDashboardController extends Controller
     private function DailyBullyGroup()
     {
         $data = null;
-        $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [3]);
+        $raw = $this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
 
         $items = $raw->get();
 
@@ -500,7 +500,7 @@ class BullyDashboardController extends Controller
     public function dailyTypeBy()
     {
         $data = null;
-        $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [2]);
+        $raw = $this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']);
 
         $data['bully_type_percentage'] = $this->BullyTypePercentageDailyGroup();
         $data['bully_type_daily'] = $this->BullyTypeDailyGroup($raw);
@@ -509,7 +509,7 @@ class BullyDashboardController extends Controller
         $data['bully_type_by_device'] = $this->BullyTypeByDeviceGroup($raw);
         $data['bully_type_by_account'] = $this->BullyTypeByAccountGroup($raw);
         $data['bully_type_by_channel'] = $this->BullyTypeByChannelGroup($raw);
-        $data['bully_type_by_sentiment'] = $this->BullyTypeBySentimentGroup($this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [1, 2]));
+        $data['bully_type_by_sentiment'] = $this->BullyTypeBySentimentGroup($this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['Positive', 'Negative', 'Neutral', 'NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']));
         return parent::handleRespond($data);
     }
 
@@ -517,8 +517,8 @@ class BullyDashboardController extends Controller
     {
         $data = null;
 
-        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, [2]);
-        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, [2]);
+        $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date, ['NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']);
+        $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous, ['NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']);
 
         return $data;
     }
@@ -889,8 +889,8 @@ class BullyDashboardController extends Controller
     public function bullyTypeBy()
     {
         $data = null;
-        $raw_classification_two = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [2]);
-        $raw_classification_tree = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, [3]);
+        $raw_classification_two = $this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']);
+        $raw_classification_tree = $this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
 
         $data['bully_type_by_level'] = $this->BullyChartLevelGroup($raw_classification_tree);
         $data['bully_chart_type'] = $this->BullyChartTypeGroup($raw_classification_two);
