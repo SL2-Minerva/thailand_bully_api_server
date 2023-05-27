@@ -42,8 +42,8 @@ class SentimentDashboardController extends Controller
             $this->keyword_id = explode(',', $fillter_keywords);
         }
 
-        if ($request->secure !== 'all') {
-            $this->source_id = $request->source_id;
+        if ($request->source !== 'all') {
+            $this->source_id = $request->source;
         }
 
         if (auth('api')->user()) {
