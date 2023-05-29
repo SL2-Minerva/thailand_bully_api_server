@@ -1423,59 +1423,315 @@ class ChannelDashboardController extends Controller
     //     return parent::handleRespond($data);
     // }
 
-    public function EngagementRatePreviousGroup()
-    {
-        $data = null;
+    // public function EngagementRatePreviousGroup()
+    // {
+    //     $data = null;
 
-        $data = $this->totalFromEngagementRate($this->start_date_previous, $this->end_date_previous, 'previous_period');
+    //     $data = $this->totalFromEngagementRate($this->start_date_previous, $this->end_date_previous, 'previous_period');
 
-        return $data;
-    }
+    //     return $data;
+    // }
 
     public function sentimentBy()
     {
+        $source_group = $this->organization_group->platform;
+        if ($this->user_login->is_admin) {
+            $sources = Sources::where('status', 1)->get();
+        } else {
+            $sources = Sources::where('status', 1)
+                ->whereIn('name', $source_group)
+                ->get();
+        }
+
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+        $campaignId = $this->campaign_id;
         $data = null;
-        $data['sentiment_score'] = $this->SentimentScoreGroup();
-        $data['sentiment_score_previous'] = $this->SentimentScorePreviousGroup();
-        $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group();
-        $data['sentiment_by_level'] = $this->SentimentLevelGroup();
+
+        $data['sentiment_score'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date, "current period", "current_period");
+        $data['sentiment_score_previous'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date_previous, $this->end_date_previous, "current period", "current_period");
+        $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
+        $data['sentiment_by_level'] = $this->SentimentLevelGroup($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
     }
 
-    public function SentimentScore(Request $request)
-    {
-        $data = null;
-        $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
 
-        return parent::handleRespond($data);
+    private function ChannelBySentiment2Group($campaignId, $keywordIds, $sources, $start_date, $end_date)
+    {
+        $source_id = Sources::where('status', 1)->get();
+
+        $sourceIds = $sources->pluck('id')->all();
+
+        if (!$this->user_login->is_admin) {
+            $sourceIds = $source_id->whereIn('name', $this->organization_group->platform);
+        }
+        $channal_message_all = $this->total_message_by_source($campaignId, $keywordIds, $sourceIds, $start_date, $end_date);
+        $data = [];
+        $totalValue = 0;
+
+        foreach ($channal_message_all as $item) {
+            $totalValue += $item->total_messages;
+            $data[] = [
+                'keyword_name' => $item->source_name,
+                'total_value' => $item->total_messages
+            ];
+        }
+        $data = array_merge([['keyword_name' => 'all', 'total_value' => $totalValue]], $data);
+        return $data;
     }
 
-    private function SentimentScoreGroup()
+    public function SentimentLevelGroup($campaignId, $keywordIds, $sources, $start_date, $end_date)
     {
-        $data = null;
-        $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
+        $query = "SELECT
+        s.id  as source_id,
+        s.name as source_name,
+        SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
+        SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
+        SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral
+    FROM
+        tbl_messages m
+        LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
+        LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
+        LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
+        LEFT JOIN tbl_sources s ON m.source_id = s.id
+    WHERE
+        k.campaign_id = 3
+        AND s.id IN (1, 2, 3, 4, 5, 6)
+        AND m.message_datetime BETWEEN '2023-05-21 00:00:00' AND '2023-05-27 23:59:59'
+    GROUP BY s.id;";
+
+        $data = DB::select($query);
+
+        $items = array();
+        $result = array();
+        $totals = [
+            'positive' => 0,
+            'negative' => 0,
+            'neutral' => 0,
+            'total' => 0,
+            'source_id' => 0,
+            'source_name' => "All"
+        ];
+
+        foreach ($data as $item) {
+            $positive = intval($item->positive);
+            $negative = intval($item->negative);
+            $neutral = intval($item->neutral);
+            $total = $positive + $negative + $neutral;
+            $i['source_id'] = $item->source_id;
+            $i['source_name'] = $item->source_name;
+            $i['total'] = $total;
+            $i['positive'] = self::point_two_digits(($positive / $total) * 100);
+            $i['negative'] = self::point_two_digits(($negative / $total) * 100);
+            $i['neutral'] = self::point_two_digits(($neutral / $total) * 100);
+            $totals['positive'] += intval($item->positive);
+            $totals['negative'] += intval($item->negative);
+            $totals['neutral'] += intval($item->neutral);
+            $totals['total'] += $total;
+            $items[] = $i;
+        }
+        $positive= self::point_two_digits((  $totals['positive'] /   $totals['total']) * 100);
+        $negative= self::point_two_digits((  $totals['negative'] /   $totals['total']) * 100);
+        $neutral= self::point_two_digits((  $totals['neutral'] /   $totals['total']) * 100);
+        $totals['positive']=$positive;
+        $totals['negative']=$negative;
+        $totals['neutral']=$neutral;
+        $result[] = $totals;
+        foreach ($items as $item) {
+            $result[] = $item;
+        }
+        return $result;
+    }
+
+    private function totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $start_date, $end_date, $keyword_name, $value_name)
+    {
+        $labels = parent::listSource();
+        $data = [
+            'labels' => $labels['labels'],
+            'value' => [$value_name => ['data' => array_fill(0, count($labels['labels']), 0)]]
+        ];
+
+        $engagement = DB::table('messages')
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            //->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->where('keywords.campaign_id', $campaignId)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->groupBy('sources.id', 'sources.name')
+            ->select([
+                'sources.id as source_id',
+                'sources.name as source_name',
+                DB::raw('COUNT(*) as count')
+            ])
+            ->pluck('count', 'source_name');
+        $data['value'][$value_name]['keyword_name'] = $keyword_name;
+        foreach ($engagement as $source_name => $count) {
+            $index_label = array_search($source_name, $data['labels']);
+            $data['value'][$value_name]['data'][$index_label] = $count;
+        }
 
         return $data;
     }
 
-    public function SentimentScorePrevious(Request $request)
-    {
 
-        $data = null;
-        $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+    // private function ChannelBySentiment2Group($campaignId, $keywordIds, $sources, $start_date, $end_date)
+    // {
+    //     $source_id = Sources::where('status', 1)->get();
 
-        return parent::handleRespond($data);
-    }
+    //     $sourceIds = $sources->pluck('id')->all();
 
-    private function SentimentScorePreviousGroup()
-    {
+    //     if (!$this->user_login->is_admin) {
+    //         $sourceIds = $source_id->whereIn('name', $this->organization_group->platform);
+    //     }
+    //     $channal_message_all = $this->total_message_by_source($campaignId, $keywordIds, $sourceIds, $start_date, $end_date);
+    //     $data = [];
+    //     $totalValue = 0;
 
-        $data = null;
-        $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+    //     foreach ($channal_message_all as $item) {
+    //         $totalValue += $item->total_messages;
+    //         $data[] = [
+    //             'keyword_name' => $item->source_name,
+    //             'total_value' => $item->total_messages
+    //         ];
+    //     }
+    //     $data = array_merge([['keyword_name' => 'all', 'total_value' => $totalValue]], $data);
+    //     return $data;
+    // }
 
-        return $data;
-    }
+    // public function SentimentLevelGroup($campaignId, $keywordIds, $sources, $start_date, $end_date)
+    // {
+    //     $query = "SELECT
+    //     s.id  as source_id,
+    //     s.name as source_name,
+    //     SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
+    //     SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
+    //     SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral
+    // FROM
+    //     tbl_messages m
+    //     LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
+    //     LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
+    //     LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
+    //     LEFT JOIN tbl_sources s ON m.source_id = s.id
+    // WHERE
+    //     k.campaign_id = 3
+    //     AND s.id IN (1, 2, 3, 4, 5, 6)
+    //     AND m.message_datetime BETWEEN '2023-05-21 00:00:00' AND '2023-05-27 23:59:59'
+    // GROUP BY s.id;";
+
+    //     $data = DB::select($query);
+
+    //     $items = array();
+    //     $result = array();
+    //     $totals = [
+    //         'positive' => 0,
+    //         'negative' => 0,
+    //         'neutral' => 0,
+    //         'total' => 0,
+    //         'source_id' => 0,
+    //         'source_name' => "All"
+    //     ];
+
+    //     foreach ($data as $item) {
+    //         $positive = intval($item->positive);
+    //         $negative = intval($item->negative);
+    //         $neutral = intval($item->neutral);
+    //         $total = $positive + $negative + $neutral;
+    //         $i['source_id'] = $item->source_id;
+    //         $i['source_name'] = $item->source_name;
+    //         $i['total'] = $total;
+    //         $i['positive'] = self::point_two_digits(($positive / $total) * 100);
+    //         $i['negative'] = self::point_two_digits(($negative / $total) * 100);
+    //         $i['neutral'] = self::point_two_digits(($neutral / $total) * 100);
+    //         $totals['positive'] += intval($item->positive);
+    //         $totals['negative'] += intval($item->negative);
+    //         $totals['neutral'] += intval($item->neutral);
+    //         $totals['total'] += $total;
+    //         $items[] = $i;
+    //     }
+    //     $positive= self::point_two_digits((  $totals['positive'] /   $totals['total']) * 100);
+    //     $negative= self::point_two_digits((  $totals['negative'] /   $totals['total']) * 100);
+    //     $neutral= self::point_two_digits((  $totals['neutral'] /   $totals['total']) * 100);
+    //     $totals['positive']=$positive;
+    //     $totals['negative']=$negative;
+    //     $totals['neutral']=$neutral;
+    //     $result[] = $totals;
+    //     foreach ($items as $item) {
+    //         $result[] = $item;
+    //     }
+    //     return $result;
+    // }
+
+    // private function totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $start_date, $end_date, $keyword_name, $value_name)
+    // {
+    //     $labels = parent::listSource();
+    //     $data = [
+    //         'labels' => $labels['labels'],
+    //         'value' => [$value_name => ['data' => array_fill(0, count($labels['labels']), 0)]]
+    //     ];
+
+    //     $engagement = DB::table('messages')
+    //         ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+    //         //->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+    //         ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+    //         ->whereIn('keyword_id', $keywordIds)
+    //         ->where('keywords.campaign_id', $campaignId)
+    //         ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+    //         ->groupBy('sources.id', 'sources.name')
+    //         ->select([
+    //             'sources.id as source_id',
+    //             'sources.name as source_name',
+    //             DB::raw('COUNT(*) as count')
+    //         ])
+    //         ->pluck('count', 'source_name');
+    //     $data['value'][$value_name]['keyword_name'] = $keyword_name;
+    //     foreach ($engagement as $source_name => $count) {
+    //         $index_label = array_search($source_name, $data['labels']);
+    //         $data['value'][$value_name]['data'][$index_label] = $count;
+    //     }
+
+    //     return $data;
+    // }
+
+    // public function SentimentScore(Request $request)
+    // {
+    //     $data = null;
+    //     $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
+
+    //     return parent::handleRespond($data);
+    // }
+
+    // private function SentimentScoreGroup()
+    // {
+    //     $data = null;
+    //     $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date, $this->end_date, "current period", "current_period");
+
+    //     return $data;
+    // }
+
+    // public function SentimentScorePrevious(Request $request)
+    // {
+
+    //     $data = null;
+    //     $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+
+    //     return parent::handleRespond($data);
+    // }
+
+    // private function SentimentScorePreviousGroup()
+    // {
+
+    //     $data = null;
+    //     $data = $this->totalFromMessageResultSemetic("message_result_full_data", $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+
+    //     return $data;
+    // }
 
     public function ChannelBySentiment2(Request $request)
     {
@@ -1507,36 +1763,36 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond(array_values($data));
     }
 
-    private function ChannelBySentiment2Group()
-    {
-        $data = null;
-        $source_id = Sources::where('status', 1)->get();
+    // private function ChannelBySentiment2Group()
+    // {
+    //     $data = null;
+    //     $source_id = Sources::where('status', 1)->get();
 
-        if (!$this->user_login->is_admin) {
-            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
-        }
+    //     if (!$this->user_login->is_admin) {
+    //         $source_id = $source_id->whereIn('name', $this->organization_group->platform);
+    //     }
 
-        $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
+    //     $channal_message_all = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, "all");
 
-        $data["all"] = [
-            "keyword_name" => "All",
-            "total_value" => $channal_message_all,
-        ];
-        foreach ($source_id as $item) {
+    //     $data["all"] = [
+    //         "keyword_name" => "All",
+    //         "total_value" => $channal_message_all,
+    //     ];
+    //     foreach ($source_id as $item) {
 
-            $channal_message = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
-            $data[$item->name] = [
-                "keyword_name" => $item->name,
-                "total_value" => $channal_message,
-            ];
-        }
+    //         $channal_message = $this->total_message_by_source_id('message_result_full_data', $this->start_date, $this->end_date, $item->id);
+    //         $data[$item->name] = [
+    //             "keyword_name" => $item->name,
+    //             "total_value" => $channal_message,
+    //         ];
+    //     }
 
-        if (!$data) {
-            return parent::handleNotFound($data);
-        }
+    //     if (!$data) {
+    //         return parent::handleNotFound($data);
+    //     }
 
-        return array_values($data);
-    }
+    //     return array_values($data);
+    // }
 
     public function SentimentLevel(Request $request)
     {
@@ -1599,105 +1855,105 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SentimentLevelGroup()
-    {
-        $data = null;
+    // public function SentimentLevelGroup()
+    // {
+    //     $data = null;
 
-        $percentage_of_channal = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date)
-            ->groupBy('source_id');
-        //     ->where('campaign_id', $this->campaign_id)
-        //     ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-        //     ->whereIn('classification_type_id', [1])
-        //     ->groupBy('source_id');
+    //     $percentage_of_channal = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date)
+    //         ->groupBy('source_id');
+    //     //     ->where('campaign_id', $this->campaign_id)
+    //     //     ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+    //     //     ->whereIn('classification_type_id', [1])
+    //     //     ->groupBy('source_id');
 
-        // if ($this->keyword_id) {
-        //     $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
-        // }
+    //     // if ($this->keyword_id) {
+    //     //     $percentage_of_channal->whereIn('keyword_id', $this->keyword_id);
+    //     // }
 
-        // if (!$this->user_login->is_admin) {
-        //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-        //     $percentage_of_channal->whereIn('source_id', $source_ids);
-        // }
+    //     // if (!$this->user_login->is_admin) {
+    //     //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+    //     //     $percentage_of_channal->whereIn('source_id', $source_ids);
+    //     // }
 
-        // if ($this->source_id) {
-        //     $percentage_of_channal->where('source_id', $this->source_id);
-        // }
+    //     // if ($this->source_id) {
+    //     //     $percentage_of_channal->where('source_id', $this->source_id);
+    //     // }
 
-        // All
-        $data[-1] = [
-            'keyword_id' => 0,
-            'keyword_name' => 'All',
-            'campaign_id' => '0',
-            'campaign_name' => 'All',
-            'source_id' => 0,
-            'source_name' => 'All',
-            'negative' => 0,
-            'neutral' => 0,
-            'positive' => 0,
-            'total' => 0
-        ];
+    //     // All
+    //     $data[-1] = [
+    //         'keyword_id' => 0,
+    //         'keyword_name' => 'All',
+    //         'campaign_id' => '0',
+    //         'campaign_name' => 'All',
+    //         'source_id' => 0,
+    //         'source_name' => 'All',
+    //         'negative' => 0,
+    //         'neutral' => 0,
+    //         'positive' => 0,
+    //         'total' => 0
+    //     ];
 
-        $sum = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date)->get();
-        foreach ($sum as $item) {
-            if (isset($item->classification_name) && $item->classification_name === "Negative") {
-                $data[-1]['negative'] = $data[-1]['negative'] + 1;
-                $data[-1]['total'] = $data[-1]['total'] + 1;
-            } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
-                $data[-1]['positive'] = $data[-1]['positive'] + 1;
-                $data[-1]['total'] = $data[-1]['total'] + 1;
-            } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
-                $data[-1]['neutral'] = $data[-1]['neutral'] + 1;
-                $data[-1]['total'] = $data[-1]['total'] + 1;
-            }
+    //     $sum = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date)->get();
+    //     foreach ($sum as $item) {
+    //         if (isset($item->classification_name) && $item->classification_name === "Negative") {
+    //             $data[-1]['negative'] = $data[-1]['negative'] + 1;
+    //             $data[-1]['total'] = $data[-1]['total'] + 1;
+    //         } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
+    //             $data[-1]['positive'] = $data[-1]['positive'] + 1;
+    //             $data[-1]['total'] = $data[-1]['total'] + 1;
+    //         } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
+    //             $data[-1]['neutral'] = $data[-1]['neutral'] + 1;
+    //             $data[-1]['total'] = $data[-1]['total'] + 1;
+    //         }
 
-        }
+    //     }
 
-        $data[-1]['negative'] = $this->point_two_digits($data[-1]['total'] ? ($data[-1]['negative'] / $data[-1]['total']) * 100 : 0);
-        $data[-1]['positive'] = $this->point_two_digits($data[-1]['total'] ? ($data[-1]['positive'] / $data[-1]['total']) * 100 : 0);
-        $data[-1]['neutral'] = $this->point_two_digits( $data[-1]['total'] ? ($data[-1]['neutral'] / $data[-1]['total']) * 100 : 0);
+    //     $data[-1]['negative'] = $this->point_two_digits($data[-1]['total'] ? ($data[-1]['negative'] / $data[-1]['total']) * 100 : 0);
+    //     $data[-1]['positive'] = $this->point_two_digits($data[-1]['total'] ? ($data[-1]['positive'] / $data[-1]['total']) * 100 : 0);
+    //     $data[-1]['neutral'] = $this->point_two_digits( $data[-1]['total'] ? ($data[-1]['neutral'] / $data[-1]['total']) * 100 : 0);
 
-        // By source Id
-        foreach ($percentage_of_channal->get() as $channal) {
-            $source_id_id = $channal->source_id;
-            $data[$source_id_id]['keyword_id'] = $channal->keyword_id;
-            $data[$source_id_id]['keyword_name'] = $channal->keyword_name;
-            $data[$source_id_id]['campaign_id'] = $channal->campaign_id;
-            $data[$source_id_id]['campaign_name'] = $channal->campaign_name;
-            $data[$source_id_id]['source_id'] = $channal->source_id;
-            $data[$source_id_id]['source_name'] = $this->source_name($channal->source_id);
-            $data[$source_id_id]['negative'] = 0;
-            $data[$source_id_id]['neutral'] = 0;
-            $data[$source_id_id]['positive'] = 0;
-            $data[$source_id_id]['total'] = 0;
+    //     // By source Id
+    //     foreach ($percentage_of_channal->get() as $channal) {
+    //         $source_id_id = $channal->source_id;
+    //         $data[$source_id_id]['keyword_id'] = $channal->keyword_id;
+    //         $data[$source_id_id]['keyword_name'] = $channal->keyword_name;
+    //         $data[$source_id_id]['campaign_id'] = $channal->campaign_id;
+    //         $data[$source_id_id]['campaign_name'] = $channal->campaign_name;
+    //         $data[$source_id_id]['source_id'] = $channal->source_id;
+    //         $data[$source_id_id]['source_name'] = $this->source_name($channal->source_id);
+    //         $data[$source_id_id]['negative'] = 0;
+    //         $data[$source_id_id]['neutral'] = 0;
+    //         $data[$source_id_id]['positive'] = 0;
+    //         $data[$source_id_id]['total'] = 0;
 
-            $sum = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date)
-                ->where('source_id', $channal->source_id)
-                ->get();
-            foreach ($sum as $item) {
-                if (isset($item->classification_name) && $item->classification_name === "Negative") {
-                    $data[$source_id_id]['negative'] = $data[$source_id_id]['negative'] + 1;
-                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
-                } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
-                    $data[$source_id_id]['positive'] = $data[$source_id_id]['positive'] + 1;
-                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
-                } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
-                    $data[$source_id_id]['neutral'] = $data[$source_id_id]['neutral'] + 1;
-                    $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
-                }
+    //         $sum = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date)
+    //             ->where('source_id', $channal->source_id)
+    //             ->get();
+    //         foreach ($sum as $item) {
+    //             if (isset($item->classification_name) && $item->classification_name === "Negative") {
+    //                 $data[$source_id_id]['negative'] = $data[$source_id_id]['negative'] + 1;
+    //                 $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
+    //             } else if (isset($item->classification_name) && $item->classification_name === "Positive") {
+    //                 $data[$source_id_id]['positive'] = $data[$source_id_id]['positive'] + 1;
+    //                 $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
+    //             } else if (isset($item->classification_name) && $item->classification_name === "Neutral") {
+    //                 $data[$source_id_id]['neutral'] = $data[$source_id_id]['neutral'] + 1;
+    //                 $data[$source_id_id]['total'] = $data[$source_id_id]['total'] + 1;
+    //             }
 
-            }
+    //         }
 
-            $data[$source_id_id]['negative'] = $this->point_two_digits(($data[$source_id_id]['negative'] / $data[$source_id_id]['total']) * 100);
-            $data[$source_id_id]['positive'] = $this->point_two_digits(($data[$source_id_id]['positive'] / $data[$source_id_id]['total']) * 100);
-            $data[$source_id_id]['neutral'] = $this->point_two_digits(($data[$source_id_id]['neutral'] / $data[$source_id_id]['total']) * 100);
-        }
+    //         $data[$source_id_id]['negative'] = $this->point_two_digits(($data[$source_id_id]['negative'] / $data[$source_id_id]['total']) * 100);
+    //         $data[$source_id_id]['positive'] = $this->point_two_digits(($data[$source_id_id]['positive'] / $data[$source_id_id]['total']) * 100);
+    //         $data[$source_id_id]['neutral'] = $this->point_two_digits(($data[$source_id_id]['neutral'] / $data[$source_id_id]['total']) * 100);
+    //     }
 
-        if ($data) {
-            return array_values($data);
-        }
+    //     if ($data) {
+    //         return array_values($data);
+    //     }
 
-        return $data;
-    }
+    //     return $data;
+    // }
 
     private function channelTable($start_date, $end_date, $source_id_id)
     {
@@ -1749,34 +2005,34 @@ class ChannelDashboardController extends Controller
     }
 
 
-    private function totalFromMessageResultSemetic($table, $start_date, $end_date, $keyword_name, $value_name)
-    {
-        $raw = $this->raw_message($this->campaign_id, $start_date, $end_date);
+    // private function totalFromMessageResultSemetic($table, $start_date, $end_date, $keyword_name, $value_name)
+    // {
+    //     $raw = $this->raw_message($this->campaign_id, $start_date, $end_date);
 
-        $source_id = Sources::where('status', 1)->get();
-        foreach ($source_id as $source_id) {
-            $data['labels'][] = $source_id->name;
-        }
+    //     $source_id = Sources::where('status', 1)->get();
+    //     foreach ($source_id as $source_id) {
+    //         $data['labels'][] = $source_id->name;
+    //     }
 
-        foreach ($raw->get() as $item) {
-            $source_name = $item->source_name;
-            $index_label = array_search($source_name, $data['labels']);
+    //     foreach ($raw->get() as $item) {
+    //         $source_name = $item->source_name;
+    //         $index_label = array_search($source_name, $data['labels']);
 
-            if (isset($data['value'][$value_name])) {
-                $data['value'][$value_name]['data'][$index_label] += 1;
-            } else {
-                $data['value'][$value_name] = [
-                    'id' => $item->keyword_id,
-                    'keyword_name' => $keyword_name,
-                    'data' => [0, 0, 0, 0, 0, 0]
-                ];
+    //         if (isset($data['value'][$value_name])) {
+    //             $data['value'][$value_name]['data'][$index_label] += 1;
+    //         } else {
+    //             $data['value'][$value_name] = [
+    //                 'id' => $item->keyword_id,
+    //                 'keyword_name' => $keyword_name,
+    //                 'data' => [0, 0, 0, 0, 0, 0]
+    //             ];
 
-                $data['value'][$value_name]['data'][$index_label] += 1;
-            }
-        }
+    //             $data['value'][$value_name]['data'][$index_label] += 1;
+    //         }
+    //     }
 
-        return $data;
-    }
+    //     return $data;
+    // }
 
     private function source_name($source_id_id)
     {
