@@ -1728,6 +1728,9 @@ class EngagementDashboardController extends Controller
             if ($data) {
                 $data_['data'] = $data;
                 $data_['total'] = count($data_['data']);
+
+                $page = $page < 1 ? 1 : $page;
+                $start = ($page - 1) * (9 + 1);
                 $offset = 9 + 1;
 
                 $data_['data'] = array_slice($data_['data'], $start, $offset);
