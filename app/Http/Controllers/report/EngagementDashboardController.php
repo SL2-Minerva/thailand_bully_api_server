@@ -1133,7 +1133,7 @@ class EngagementDashboardController extends Controller
     {
         $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
         $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
-
+        
         return parent::handleRespond([
             "EngagementComparison" => $this->EngagementComparison($request, true),
             "EngagementPeriodPlarform" => $this->EngagementPeriodPlarform($raw, $raw_previous, $request, true),
@@ -1200,7 +1200,7 @@ class EngagementDashboardController extends Controller
 
         $data['reaction'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
-            "comparison" => $total_reactions_previous !== 0 ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous) : 0,
+            "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous) : 0,
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
@@ -1635,6 +1635,7 @@ class EngagementDashboardController extends Controller
     public function EngagementByInfulencer($raw_current, $raw_previous, Request $request, $only_data = false)
     {
         $data = null;
+
         $page = $request->page ?? null;
         $limit = $request->limit ?? 5;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -1642,12 +1643,6 @@ class EngagementDashboardController extends Controller
 
         $raw_current = $raw_current->groupBy('author');
         $raw_previous = $raw_previous->groupBy('author');
-        if ($request->enable_page) {
-            $raw_current->offset($start)->limit($limit)->orderBy('created', 'desc');
-            $raw_previous->offset($start)->limit($limit)->orderBy('created', 'desc');
-        }
-//
-
 
         $items_current = $raw_current->get();
         $items_previous = $raw_previous->get();
@@ -1655,6 +1650,7 @@ class EngagementDashboardController extends Controller
 
         $current = null;
         $previous = null;
+        $total = 0;
 
         foreach ($items_current as $item) {
 
@@ -1729,7 +1725,19 @@ class EngagementDashboardController extends Controller
         }
 
         if ($only_data) {
-            return $data;
+            if ($data) {
+                $data_['data'] = $data;
+                $data_['total'] = count($data_['data']);
+
+                $page = $page < 1 ? 1 : $page;
+                $start = ($page - 1) * (9 + 1);
+                $offset = 9 + 1;
+
+                $data_['data'] = array_slice($data_['data'], $start, $offset);
+
+            }
+            
+            return $data_ ?? null;
         }
 
 

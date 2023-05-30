@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\Campaign;
 use App\Models\Keyword;
+use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
 use App\Models\UserOrganizationGroup;
@@ -81,6 +82,7 @@ class UserController extends Controller
 
     public function info()
     {
+
         $user = auth('api')->user();
         $permissions = null;
 
@@ -262,6 +264,43 @@ class UserController extends Controller
             }
 
         }
+    }
+
+    public function info_transaction()
+    {
+        $user = auth('api')->user();
+        if ($user) {
+            $organization_id = $user->organization_id;
+            
+        }
+        if ($organization_id) {
+            $organization = Organization::where('id', $organization_id)
+                ->select('id', 'name', 'description', 'transaction_limit', 'transaction_reamining', 'transaction_start_at')
+                ->first();
+
+            if ($organization) {
+                $campaign_id = Campaign::where('organization_id', $user->organization_id)->select('id')->first();
+                if (!empty($campaign_id->id)) {
+                    $keyword_id = Keyword::where('campaign_id', $campaign_id->id)->select('id')->pluck('id');
+                    
+                    if (!empty($keyword_id)) {
+                        $transaction_per_month = Message::whereMonth('message_datetime', Carbon::now()->month)
+                            ->whereIn('keyword_id', $keyword_id)
+                            ->select(DB::raw('COUNT(*) as transaction_per_month'))->first();
+    
+                        $organization['transaction_per_month'] = $transaction_per_month->transaction_per_month ?? null;
+                    }
+                }
+
+            }
+
+            if ($organization) {
+                return parent::handleRespond($organization);
+            }
+
+        }
+
+        return parent::handleRespond(null);
     }
 
 }
