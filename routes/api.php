@@ -71,6 +71,7 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'user'], function () {
             Route::get('/info', [UserController::class, 'info']);
+            Route::get('/info-transaction', [UserController::class, 'info_transaction']);
             Route::get('/list', [UserController::class, 'data']);
             Route::get('/list-active', [UserController::class, 'list_active']);
             Route::post('/create', [UserController::class, 'create']);

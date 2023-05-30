@@ -108,14 +108,12 @@ class UserController extends Controller
             $data['info']['campaign_per_user'] = $this->campaign_per_user($user->organization_id);
             $data['info']['campaign_per_organize'] = $this->campaign_per_organize($user->organization_id);
             $data['organization_group'] = $this->organization_group($user->organization_id);
-            $data['organization'] = $this->organization($user, $user->organization_id);
             $data['role_description'] = 'ssss';
             $data['role_name'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
             $data['menu'] = ['all'];
             $data['is_admin'] = $user->is_admin;
             $data['authorized_report'] = $this->permission_report($user);
-            $data['transaction'] = $transaction ?? null;
             return parent::handleRespond($data);
         }
 
@@ -268,8 +266,13 @@ class UserController extends Controller
         }
     }
 
-    private function organization($user, $organization_id)
+    public function info_transaction()
     {
+        $user = auth('api')->user();
+        if ($user) {
+            $organization_id = $user->organization_id;
+            
+        }
         if ($organization_id) {
             $organization = Organization::where('id', $organization_id)
                 ->select('id', 'name', 'description', 'transaction_limit', 'transaction_reamining', 'transaction_start_at')
@@ -292,10 +295,12 @@ class UserController extends Controller
             }
 
             if ($organization) {
-                return $organization;
+                return parent::handleRespond($organization);
             }
 
         }
+
+        return parent::handleRespond(null);
     }
 
 }
