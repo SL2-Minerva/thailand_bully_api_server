@@ -138,4 +138,27 @@ class AuthController extends Controller
         ], null);
     }
 
+    public function reset_password(Request $request)
+    {
+        $request->validate([
+            'id' => 'required',
+            'new_password' => 'required|string|min:6',
+            'old_password' => 'required|string|min:6',
+        ]);
+
+        $user = User::findOrFail($request->id);
+
+        if (Hash::check($request->old_password, $user->password)) { 
+            $user->fill([
+                'password' => Hash::make($request->new_password)
+            ])->save();
+            
+        } else {
+            return parent::handleRespond(null, null, 400, 'Password does not match!');
+        }
+
+        return parent::handleRespond($user);
+
+    }
+
 }

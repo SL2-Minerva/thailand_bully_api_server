@@ -1133,7 +1133,7 @@ class EngagementDashboardController extends Controller
     {
         $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
         $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
-
+        
         return parent::handleRespond([
             "EngagementComparison" => $this->EngagementComparison($request, true),
             "EngagementPeriodPlarform" => $this->EngagementPeriodPlarform($raw, $raw_previous, $request, true),
@@ -1648,7 +1648,6 @@ class EngagementDashboardController extends Controller
         }
 //
 
-
         $items_current = $raw_current->get();
         $items_previous = $raw_previous->get();
 
@@ -1729,7 +1728,13 @@ class EngagementDashboardController extends Controller
         }
 
         if ($only_data) {
-            return $data;
+            if ($data) {
+                $data_['data'] = $data;
+                $data_['total'] = count($data);
+
+            }
+            
+            return $data_;
         }
 
 

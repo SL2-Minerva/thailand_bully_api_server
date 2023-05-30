@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\Campaign;
 use App\Models\Keyword;
+use App\Models\Message;
 use App\Models\Organization;
 use App\Models\User;
 use App\Models\UserOrganizationGroup;
@@ -81,6 +82,7 @@ class UserController extends Controller
 
     public function info()
     {
+
         $user = auth('api')->user();
         $permissions = null;
 
@@ -101,6 +103,27 @@ class UserController extends Controller
             }
         }
 
+        if (isset($user->organization_id)) {
+            $transaction = Organization::where('id', $user->organization_id)
+                ->select('id', 'transaction_limit', 'transaction_reamining', 'transaction_start_at')
+                ->first();
+
+            if ($transaction) {
+                $campaign_id = Campaign::where('organization_id', $user->organization_id)->select('id')->first();
+                $keyword_id = Keyword::where('campaign_id', $campaign_id->id)->select('id')->pluck('id');
+                
+                if (!empty($keyword_id)) {
+                    $transaction_per_month = Message::whereMonth('message_datetime', Carbon::now()->month)
+                        ->whereIn('keyword_id', $keyword_id)
+                        ->select(DB::raw('COUNT(*) as transaction_per_month'))->first();
+
+                    $transaction['transaction_per_month'] = $transaction_per_month->transaction_per_month ?? null;
+                }
+
+                $transaction;
+            }
+        }
+
         if ($user) {
             $data['info'] = $user;
             $data['info']['campaign_per_user'] = $this->campaign_per_user($user->organization_id);
@@ -112,6 +135,7 @@ class UserController extends Controller
             $data['menu'] = ['all'];
             $data['is_admin'] = $user->is_admin;
             $data['authorized_report'] = $this->permission_report($user);
+            $data['transaction'] = $transaction ?? null;
             return parent::handleRespond($data);
         }
 
