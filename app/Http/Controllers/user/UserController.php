@@ -110,14 +110,16 @@ class UserController extends Controller
 
             if ($transaction) {
                 $campaign_id = Campaign::where('organization_id', $user->organization_id)->select('id')->first();
-                $keyword_id = Keyword::where('campaign_id', $campaign_id->id)->select('id')->pluck('id');
-                
-                if (!empty($keyword_id)) {
-                    $transaction_per_month = Message::whereMonth('message_datetime', Carbon::now()->month)
-                        ->whereIn('keyword_id', $keyword_id)
-                        ->select(DB::raw('COUNT(*) as transaction_per_month'))->first();
-
-                    $transaction['transaction_per_month'] = $transaction_per_month->transaction_per_month ?? null;
+                if (!empty($campaign_id->id)) {
+                    $keyword_id = Keyword::where('campaign_id', $campaign_id->id)->select('id')->pluck('id');
+                    
+                    if (!empty($keyword_id)) {
+                        $transaction_per_month = Message::whereMonth('message_datetime', Carbon::now()->month)
+                            ->whereIn('keyword_id', $keyword_id)
+                            ->select(DB::raw('COUNT(*) as transaction_per_month'))->first();
+    
+                        $transaction['transaction_per_month'] = $transaction_per_month->transaction_per_month ?? null;
+                    }
                 }
 
                 $transaction;
