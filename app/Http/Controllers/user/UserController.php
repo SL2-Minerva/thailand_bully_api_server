@@ -103,34 +103,12 @@ class UserController extends Controller
             }
         }
 
-        if (isset($user->organization_id)) {
-            $transaction = Organization::where('id', $user->organization_id)
-                ->select('id', 'transaction_limit', 'transaction_reamining', 'transaction_start_at')
-                ->first();
-
-            if ($transaction) {
-                $campaign_id = Campaign::where('organization_id', $user->organization_id)->select('id')->first();
-                if (!empty($campaign_id->id)) {
-                    $keyword_id = Keyword::where('campaign_id', $campaign_id->id)->select('id')->pluck('id');
-                    
-                    if (!empty($keyword_id)) {
-                        $transaction_per_month = Message::whereMonth('message_datetime', Carbon::now()->month)
-                            ->whereIn('keyword_id', $keyword_id)
-                            ->select(DB::raw('COUNT(*) as transaction_per_month'))->first();
-    
-                        $transaction['transaction_per_month'] = $transaction_per_month->transaction_per_month ?? null;
-                    }
-                }
-
-                $transaction;
-            }
-        }
-
         if ($user) {
             $data['info'] = $user;
             $data['info']['campaign_per_user'] = $this->campaign_per_user($user->organization_id);
             $data['info']['campaign_per_organize'] = $this->campaign_per_organize($user->organization_id);
             $data['organization_group'] = $this->organization_group($user->organization_id);
+            $data['organization'] = $this->organization($user, $user->organization_id);
             $data['role_description'] = 'ssss';
             $data['role_name'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
@@ -285,6 +263,36 @@ class UserController extends Controller
 
             if ($organization_group) {
                 return $organization_group;
+            }
+
+        }
+    }
+
+    private function organization($user, $organization_id)
+    {
+        if ($organization_id) {
+            $organization = Organization::where('id', $organization_id)
+                ->select('id', 'name', 'description', 'transaction_limit', 'transaction_reamining', 'transaction_start_at')
+                ->first();
+
+            if ($organization) {
+                $campaign_id = Campaign::where('organization_id', $user->organization_id)->select('id')->first();
+                if (!empty($campaign_id->id)) {
+                    $keyword_id = Keyword::where('campaign_id', $campaign_id->id)->select('id')->pluck('id');
+                    
+                    if (!empty($keyword_id)) {
+                        $transaction_per_month = Message::whereMonth('message_datetime', Carbon::now()->month)
+                            ->whereIn('keyword_id', $keyword_id)
+                            ->select(DB::raw('COUNT(*) as transaction_per_month'))->first();
+    
+                        $organization['transaction_per_month'] = $transaction_per_month->transaction_per_month ?? null;
+                    }
+                }
+
+            }
+
+            if ($organization) {
+                return $organization;
             }
 
         }
