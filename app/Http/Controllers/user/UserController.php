@@ -108,6 +108,7 @@ class UserController extends Controller
             $data['info']['campaign_per_user'] = $this->campaign_per_user($user->organization_id);
             $data['info']['campaign_per_organize'] = $this->campaign_per_organize($user->organization_id);
             $data['organization_group'] = $this->organization_group($user->organization_id);
+            $data['organization'] = $this->organization_name($user->organization_id);
             $data['role_description'] = 'ssss';
             $data['role_name'] = $user->is_admin ?? null;
             $data['permission'] = $permissions;
@@ -264,6 +265,21 @@ class UserController extends Controller
             }
 
         }
+    }
+
+    private function organization_name($organization_id) {
+        if ($organization_id) {
+            $organization = Organization::where('id', $organization_id)
+                ->select('id', 'name', 'description')
+                ->first();
+
+            if ($organization) {
+                return $organization;
+            }
+
+        }
+
+        return null;
     }
 
     public function info_transaction()
