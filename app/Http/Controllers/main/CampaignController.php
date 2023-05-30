@@ -30,8 +30,11 @@ class CampaignController extends Controller
         // }
 
         if ($request->status) {
-            $campaigns = $campaigns->where('status', $request->status);
+            if (!$request->status == 'all') {
+                $campaigns = $campaigns->where('status', $request->status);
+            }
         }
+        
 
         if ($request->name) {
             $campaigns = $campaigns->where('name', $request->name);
