@@ -154,7 +154,7 @@ class AuthController extends Controller
             ])->save();
             
         } else {
-            return parent::handleRespond(null, null, 400, 'Password does not match!');
+            return parent::handleRespond(null, null, 400, 'Old Password does not match! ');
         }
 
         return parent::handleRespond($user);
