@@ -110,6 +110,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::group(['prefix' => 'source'], function () {
             Route::get('/', [SourceController::class, 'show']);
             Route::get('/list', [SourceController::class, 'data']);
+            Route::get('/public-source', [SourceController::class, 'public_source']);
             Route::post('/create', [SourceController::class, 'store']);
             Route::post('/update', [SourceController::class, 'update']);
             Route::put('/delete', [SourceController::class, 'destroy']);
