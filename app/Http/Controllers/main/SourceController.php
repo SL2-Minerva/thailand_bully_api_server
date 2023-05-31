@@ -18,6 +18,20 @@ class SourceController extends Controller
        return parent::handleRespond($sources);
     }
 
+    public function public_source() {
+        $sources = Sources::where('status', 1);
+ 
+         if (!$this->user_login->is_admin) {
+             $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+         }
+
+        if ($sources) {
+            $sources = $sources->get();
+        }
+
+        return parent::handleRespond($sources);
+     }
+
     public function data(Request $request) {
         $sources = Sources::all();
 
