@@ -1405,6 +1405,12 @@ class SentimentDashboardController extends Controller
             ];
 
         }
+        
+        if ($data) {
+            usort($data, function ($a, $b) {
+                return $b['total'] - $a['total'];
+            });
+        }
 
 //        $data[] = [
 //            "infulencer" => "User 1",
@@ -1413,7 +1419,7 @@ class SentimentDashboardController extends Controller
 //            "neutral" => 70,
 //            "negative" => 10,
 //        ];
-
+        
         if ($only_data) {
             return $data;
         }
@@ -1516,6 +1522,12 @@ class SentimentDashboardController extends Controller
 //            "negative" => 10,
 //        ];
 
+        if ($data) {
+            usort($data, function ($a, $b) {
+                return $b['total'] - $a['total'];
+            });
+        }
+
         if ($only_data) {
             return $data;
         }
@@ -1551,6 +1563,12 @@ class SentimentDashboardController extends Controller
 
         if ($data) {
             $data = array_values($data);
+
+            if ($data) {
+                usort($data, function ($a, $b) {
+                    return $b['total_messages'] - $a['total_messages'];
+                });
+            }
         }
 
 //        dd($analysis_current);
