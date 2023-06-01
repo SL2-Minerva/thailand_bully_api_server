@@ -738,28 +738,24 @@ class SentimentDashboardController extends Controller
             "totalValue" => $this->custom_number_format((int)$totalEngagement_current),
             "comparison" => (float)parent::point_two_digits($totalEngagement_current - $totalEngagement_previous !== 0 ? $this->overPeriodComparison($totalEngagement_current, $totalEngagement_previous) : 0),
             "type" => $totalEngagement_current - $totalEngagement_previous > 0 ? "plus" : "minus",
-            'label' => 'totalSentiment'
         ];
 
         $data['neutral'] = [
             "totalValue" => $this->custom_number_format((int)$total_comment_current),
             "comparison" => (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
             "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
-            'label' => 'neutral'
         ];
 
         $data['positive'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
             "comparison" => $total_share_previous ? (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0) : 0,
             "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
-            'label' => 'positive'
         ];
 
         $data['negative'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
             "comparison" => (float)parent::point_two_digits($this->overPeriodComparison($total_reactions_current, $total_reactions_previous)),
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
-            'label' => 'negative'
         ];
 
         if ($only_data) {
