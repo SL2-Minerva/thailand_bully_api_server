@@ -682,8 +682,8 @@ class SentimentDashboardController extends Controller
         
         return parent::handleRespond([
             "PeriodOverPeriod" => $this->PeriodOverPeriod($raw_current, $raw_previous, true),
-            // "ComparisonByChannel" => $this->ComparisonByChannel($request, true),
-            // "ComparisonByEngagementType" => $this->ComparisonByEngagementType($request, true),
+            "ComparisonByChannel" => $this->ComparisonByChannel($request, true),
+            "ComparisonByEngagementType" => $this->ComparisonByEngagementType($request, true),
         ]);
     }
 
