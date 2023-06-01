@@ -1140,6 +1140,15 @@ class EngagementDashboardController extends Controller
             "EngagementPeriodSentiment" => $this->EngagementPeriodSentiment($request, true),
             "EngagementTypeComparison" => $this->EngagementTypeComparison($raw, $raw_previous, $request, true),
             "EngagementActionComparison" => $this->EngagementActionComparison($raw, $request, true),
+        ]);
+    }
+
+    public function EngagementComparisonByAccount(Request $request)
+    {
+        $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
+        $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
+        
+        return parent::handleRespond([
             "EngagementByInfulencer" => $this->EngagementByInfulencer($raw, $raw_previous, $request, true),
         ]);
     }
@@ -1637,9 +1646,9 @@ class EngagementDashboardController extends Controller
         $data = null;
 
         $page = $request->page ?? null;
-        $limit = $request->limit ?? 5;
-        $start = $page === null || $page === 1 ? null : $page * $limit;
-        $start = $start === 1 ? null : $start - 1;
+        // $limit = $request->limit ?? 5;
+        // $start = $page === null || $page === 1 ? null : $page * $limit;
+        // $start = $start === 1 ? null : $start - 1;
 
         $raw_current = $raw_current->groupBy('author');
         $raw_previous = $raw_previous->groupBy('author');
@@ -1724,12 +1733,19 @@ class EngagementDashboardController extends Controller
                 $data = $data ? $data : null;
         }
 
+        if ($data) {
+            usort($data, function ($a, $b) {
+                return $b['total'] - $a['total'];
+            });
+        }
+
         if ($only_data) {
             if ($data) {
+
                 $data_['data'] = $data;
                 $data_['total'] = count($data_['data']);
 
-                $page = $page < 1 ? 1 : $page;
+                // $page = $page < 1 ? 1 : $page;
                 $start = ($page - 1) * (9 + 1);
                 $offset = 9 + 1;
 

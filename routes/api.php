@@ -221,6 +221,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/engagement-by', [EngagementDashboardController::class, 'EngagementBy']);
             Route::get('/engagement-type-by', [EngagementDashboardController::class, 'EngagementTypeBy']);
             Route::get('/engagement-comparison-by', [EngagementDashboardController::class, 'EngagementComparisonBy']);
+            Route::get('/engagement-comparison-account', [EngagementDashboardController::class, 'EngagementComparisonByAccount']);
             Route::get('/level-three/', [LevelThreeEngagementDashboardController::class, 'report']);
         });
 
