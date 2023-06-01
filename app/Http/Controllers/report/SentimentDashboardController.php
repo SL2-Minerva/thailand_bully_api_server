@@ -762,13 +762,13 @@ class SentimentDashboardController extends Controller
             'label' => 'negative'
         ];
 
-        // if ($data) {
-        //     $data = array_values($data);
+        if ($data) {
+            $data = array_values($data);
 
-        //     usort($data, function ($a, $b) {
-        //         return (int)$b['totalValue'] - (int)$a['totalValue'];
-        //     });
-        // }
+            usort($data, function ($a, $b) {
+                return (int)$b['totalValue'] - (int)$a['totalValue'];
+            });
+        }
 
         if ($only_data) {
             return $data;
