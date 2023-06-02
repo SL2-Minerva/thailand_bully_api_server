@@ -291,8 +291,10 @@ class UserController extends Controller
         }
         if ($organization_id) {
             $organization = Organization::where('id', $organization_id)
-                ->select('id', 'name', 'description', 'transaction_limit', 'transaction_reamining', 'transaction_start_at')
+                ->select('id', 'name', 'description', 'transaction_limit', 'transaction_reamining', 'transaction_start_at', 'organization_group_id')
                 ->first();
+            $organization_group = UserOrganizationGroup::where('id', $organization->organization_group_id)->first();
+            $organization['transaction_limit_group'] = $organization_group->msg_transaction ?? null;
 
             if ($organization) {
                 $campaign_id = Campaign::where('organization_id', $user->organization_id)->select('id')->first();
