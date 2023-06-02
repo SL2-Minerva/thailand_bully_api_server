@@ -60,7 +60,9 @@ class LevelThreeTableController extends Controller
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
         $data = null;
+
         $label = str_replace("+", " ", $request->label);
+        $Llabel = str_replace("+", " ", $request->Llabel);
 
         $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
         $total = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
@@ -73,7 +75,8 @@ class LevelThreeTableController extends Controller
         //Overall Dashboard
         if ($request->report_number === '1.2.002' ||
             $request->report_number === '2.2.002' ||
-            $request->report_number === '2.2.013'
+            $request->report_number === '2.2.013' ||
+            $request->report_number === '3.2.002'
 
         ) {
 
@@ -83,18 +86,28 @@ class LevelThreeTableController extends Controller
             $total->whereBetween('message_datetime', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
 
             if ($request->report_number === '2.2.013') {
-
                 $raw->whereNotNull('author')->groupBy('author');
                 $total->whereNotNull('author')->groupBy('author');
+            }
 
+            if ($request->report_number === '3.2.002') { 
+                $raw->where('sources.name', $Llabel);
+                $total->where('sources.name', $Llabel);
             }
         }
 
         // Date Format
-        if ($request->report_number === '2.2.003' ) {
+        if ($request->report_number === '2.2.003' || 
+            $request->report_number === '3.2.003'
+        ) {
             
             $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
             $total->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
+
+            if ($request->report_number === '3.2.003') { 
+                $raw->where('sources.name', $Llabel);
+                $total->where('sources.name', $Llabel);
+            }
             
         }
 

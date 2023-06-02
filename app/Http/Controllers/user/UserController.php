@@ -145,24 +145,55 @@ class UserController extends Controller
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
 
-        $user = User::query()->offset($start)->limit($limit);
+        $user = User::join('organizations', 'users.organization_id', '=', 'organizations.id')
+            ->join('user_organization_groups', 'organizations.organization_group_id', '=', 'user_organization_groups.id')
+            ->join('user_organization_types', 'organizations.organization_type_id', '=', 'user_organization_types.id')
+            ->select(
+                'users.id', 
+                'users.name', 
+                'users.mobile', 
+                'users.email', 
+                'users.company', 
+                'users.organization_id', 
+                'users.role_id', 
+                'users.status', 
+                'users.created_at',
+                'organizations.name AS organization_name',
+                'user_organization_groups.organization_group_name AS organization_group_name',
+                'user_organization_types.organization_type_name AS organization_type_name'
+            )
+            ->offset($start)->limit($limit);
+
         $status = $request->status ?? 1;
 
         if ($request->name) {
-            $user = $user->where('name', 'like', "%$request->name%");
+            $user = $user->where('users.name', 'like', "%$request->name%");
         }
 
         if (!$status || $status) {
-            $user = $user->where('status', $status);
+            $user = $user->where('users.status', $status);
         }
 
         if ($request->organization_id) {
-            $user = $user->where('organization_id', $request->organization_id);
+            $user = $user->where('users.organization_id', $request->organization_id);
         }
 
         if (!$this->user_login->is_admin) {
             $user->where('organization_id', $this->user_login->organization_id);
-            $user->select('id', 'name', 'mobile', 'email', 'company', 'organization_id', 'role_id', 'status', 'created_at');
+            $user->select(
+                'users.id', 
+                'users.name', 
+                'users.mobile', 
+                'users.email', 
+                'users.company', 
+                'users.organization_id', 
+                'users.role_id', 
+                'users.status', 
+                'users.created_at',
+                'organizations.name AS organization_name',
+                'user_organization_groups.organization_group_name AS organization_group_name',
+                'user_organization_types.organization_type_name AS organization_type_name'
+            );
         }
 
         return parent::handleRespond($user->get());
