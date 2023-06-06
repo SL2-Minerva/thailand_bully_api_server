@@ -458,7 +458,9 @@ class LevelThreeTableController extends Controller
             //$total->where('message_id', $request->meesage_id);
         }
 
-        $items = $raw->get();
+        $total = $raw->count();
+        $items = $raw->offset($start)->limit($limit)->get();
+        // $items = $raw->get();
 
         $parents = [];
         foreach ($items as $item) {
@@ -518,18 +520,18 @@ class LevelThreeTableController extends Controller
 
         if (isset($data['message'])) {
             $data['message'] = array_values($data['message']);
-            $total = count($data['message']) ?? 0;
-            usort($data['message'], function ($a, $b) {
-                return $b['engagement'] - $a['engagement'];
-            });
+        //     $total = count($data['message']) ?? 0;
+        //     usort($data['message'], function ($a, $b) {
+        //         return $b['engagement'] - $a['engagement'];
+        //     });
 
-            $data['total'] = $total;
-            $offset = 9 + 1;
+        //     $data['total'] = $total;
+        //     $offset = 9 + 1;
 
-            $data['message'] = array_slice($data['message'], $start, $offset);
+        //     $data['message'] = array_slice($data['message'], $start, $offset);
         }
 
-        // $data['total'] = $total->get()->count();
+        $data['total'] = $total;
         // $data['total'] = $total;
         return parent::handleRespond($data);
     }
@@ -572,7 +574,10 @@ class LevelThreeTableController extends Controller
                 'classifications.color AS classification_color',
                 'sources.name AS source_name',
                 'messages.created_at AS created_at',
-                'classifications.name AS classification_name'
+                'classifications.name AS classification_name',
+                DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
+                    COALESCE(tbl_messages.number_of_shares, 0) +
+                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
                 
             ])
             ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
@@ -581,7 +586,8 @@ class LevelThreeTableController extends Controller
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->orderByDesc('total_engagement');
         
         if ($classification_name) {
             $data->whereIn('classifications.name', $classification_name);
