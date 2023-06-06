@@ -77,7 +77,7 @@ class LevelThreeTableController extends Controller
         
 
         if ($request->message_id) {
-            $raw->where('message_id', $request->message_id);
+            $raw->where('messages.message_id', $request->message_id);
             //$total->where('message_id', $request->message_id);
         }
 
@@ -454,7 +454,7 @@ class LevelThreeTableController extends Controller
         }
 
         if (isset($request->meesage_id)) {
-            $raw->where('message_id', $request->meesage_id);
+            $raw->where('messages.message_id', $request->meesage_id);
             //$total->where('message_id', $request->meesage_id);
         }
 
