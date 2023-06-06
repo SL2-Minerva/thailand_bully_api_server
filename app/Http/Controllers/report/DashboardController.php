@@ -963,7 +963,7 @@ class DashboardController extends Controller
             $count->where('source_id', $this->source_id);
         }
 
-        $count = $count->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));;
+        $count = $count->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
 
         return $count;
     }
