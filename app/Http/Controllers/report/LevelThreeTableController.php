@@ -462,14 +462,14 @@ class LevelThreeTableController extends Controller
         $items = $raw->offset($start)->limit($limit)->get();
         // $items = $raw->get();
 
-        $parents = [];
-        foreach ($items as $item) {
-            if ($item->reference_message_id) {
-                if (array_search($item->reference_message_id, $parents) === false) {
-                    $parents[] = $item->reference_message_id;
-                }
-            }
-        }
+        // $parents = [];
+        // foreach ($items as $item) {
+        //     if ($item->reference_message_id) {
+        //         if (array_search($item->reference_message_id, $parents) === false) {
+        //             $parents[] = $item->reference_message_id;
+        //         }
+        //     }
+        // }
 
 
         foreach ($items as $ke => $item) {
@@ -477,7 +477,10 @@ class LevelThreeTableController extends Controller
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
 
-            if (array_search($item->message_id, $parents) !== false) {
+            // if (array_search($item->message_id, $parents) !== false) {
+            //     $parent = $item->message_id;
+            // }
+            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
                 $parent = $item->message_id;
             }
 
