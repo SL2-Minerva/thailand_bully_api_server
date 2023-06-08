@@ -1125,7 +1125,7 @@ class DashboardController extends Controller
                     $data = array_slice($data, 0, 100);
                     break;
                 default:
-                    $data = array_slice($data, 0, 1000);
+                    $data = array_slice($data, 0, 100);
             }
         }
 
