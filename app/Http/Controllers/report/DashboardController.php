@@ -365,8 +365,8 @@ class DashboardController extends Controller
     public function sentimentScore(Request $request)
     {
 
-        $current = $this->findSentiment('message_result_full_data', $this->start_date, $this->end_date, $this->source_id);
-        $pervious = $this->findSentiment('message_result_full_data', $this->start_date_previous, $this->end_date_previous, $this->source_id);
+        $current = $this->findSentiment($this->start_date, $this->end_date, $this->source_id);
+        $pervious = $this->findSentiment($this->start_date_previous, $this->end_date_previous, $this->source_id);
 
         return parent::handleRespond([
             "neutral_value" => $current['results'] ?? 0.00,
@@ -378,7 +378,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    private function findSentiment($table, $start_date, $end_date, $source_id_id = null)
+    private function findSentiment($start_date, $end_date, $source_id_id = null)
     {
         $positive = 0;
         $negative = 0;
@@ -711,36 +711,36 @@ class DashboardController extends Controller
         return $data;
     }
 
-    public function shareOfVoiceNumber(Request $request)
-    {
-        $data = null;
+    // public function shareOfVoiceNumber(Request $request)
+    // {
+    //     $data = null;
 
-        $total_keywords = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereIn('classification_type_id', [1])
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->groupBy('keyword_id');
+    //     $total_keywords = DB::table('message_result_full_data')
+    //         ->where('campaign_id', $this->campaign_id)
+    //         ->whereIn('classification_type_id', [1])
+    //         ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+    //         ->groupBy('keyword_id');
 
-        if ($this->keyword_id) {
-            $total_keywords->whereIn('keyword_id', $this->keyword_id);
-        }
+    //     if ($this->keyword_id) {
+    //         $total_keywords->whereIn('keyword_id', $this->keyword_id);
+    //     }
 
-        if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
-        }
+    //     if ($this->source_id) {
+    //         $total_keywords->where('source_id', $this->source_id);
+    //     }
 
-        foreach ($total_keywords->get() as $item) {
-            $message = $this->shareOfVoiceByNumber($this->campaign_id, $this->start_date, $this->end_date, $item->keyword_id);
-            $push_data = [
-                'keyword_name' => $item->keyword_name,
-                'number_of_massage' => $message,
-            ];
+    //     foreach ($total_keywords->get() as $item) {
+    //         $message = $this->shareOfVoiceByNumber($this->campaign_id, $this->start_date, $this->end_date, $item->keyword_id);
+    //         $push_data = [
+    //             'keyword_name' => $item->keyword_name,
+    //             'number_of_massage' => $message,
+    //         ];
 
-            $data[] = $push_data;
-        }
+    //         $data[] = $push_data;
+    //     }
 
-        return parent::handleRespond($data);
-    }
+    //     return parent::handleRespond($data);
+    // }
 
     public function shareOfVoice(Request $request)
     {
@@ -839,9 +839,34 @@ class DashboardController extends Controller
     {
         $data = null;
 
-        $raw_query = DB::table('message_result_full_data')->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $raw_query = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+                'messages.message_datetime as date_m',
+                'classifications.name as classification_name',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
+            ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
 
         if ($this->keyword_id) {
             $raw_query->whereIn('keyword_id', $this->keyword_id);
@@ -926,90 +951,90 @@ class DashboardController extends Controller
         return $dummy_data;
     }
 
-    private function messagesTable($start_date, $end_date, $keyword_id, $table = null, $colum = null)
-    {
-        $count = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->where('keyword_id', $keyword_id)
-            ->whereIn('classification_type_id', [1]);
+    // private function messagesTable($start_date, $end_date, $keyword_id, $table = null, $colum = null)
+    // {
+    //     $count = DB::table('message_result_full_data')
+    //         ->where('campaign_id', $this->campaign_id)
+    //         ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->whereIn('classification_type_id', [1]);
 
-        if ($this->keyword_id) {
-            $count->whereIn('keyword_id', $this->keyword_id);
-        }
+    //     if ($this->keyword_id) {
+    //         $count->whereIn('keyword_id', $this->keyword_id);
+    //     }
 
-        if ($this->source_id) {
-            $count->where('source_id', $this->source_id);
-        }
+    //     if ($this->source_id) {
+    //         $count->where('source_id', $this->source_id);
+    //     }
 
-        $count = $count->get()->count();
+    //     $count = $count->get()->count();
 
-        return $count;
-    }
+    //     return $count;
+    // }
 
-    private function engagementTable($start_date, $end_date, $keyword_id)
-    {
-        $count = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->where('keyword_id', $keyword_id)
-            ->whereIn('classification_type_id', [1]);
+    // private function engagementTable($start_date, $end_date, $keyword_id)
+    // {
+    //     $count = DB::table('message_result_full_data')
+    //         ->where('campaign_id', $this->campaign_id)
+    //         ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->whereIn('classification_type_id', [1]);
 
-        if ($this->keyword_id) {
-            $count->whereIn('keyword_id', $this->keyword_id);
-        }
+    //     if ($this->keyword_id) {
+    //         $count->whereIn('keyword_id', $this->keyword_id);
+    //     }
 
-        if ($this->source_id) {
-            $count->where('source_id', $this->source_id);
-        }
+    //     if ($this->source_id) {
+    //         $count->where('source_id', $this->source_id);
+    //     }
 
-        $count = $count->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+    //     $count = $count->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
 
-        return $count;
-    }
+    //     return $count;
+    // }
 
-    private function accountTable($start_date, $end_date, $keyword_id)
-    {
-        $count = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->where('keyword_id', $keyword_id)
-            ->groupBy('author');
+    // private function accountTable($start_date, $end_date, $keyword_id)
+    // {
+    //     $count = DB::table('message_result_full_data')
+    //         ->where('campaign_id', $this->campaign_id)
+    //         ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+    //         ->whereIn('classification_type_id', [1])
+    //         ->where('keyword_id', $keyword_id)
+    //         ->groupBy('author');
 
-        if ($this->keyword_id) {
-            $count->whereIn('keyword_id', $this->keyword_id);
-        }
+    //     if ($this->keyword_id) {
+    //         $count->whereIn('keyword_id', $this->keyword_id);
+    //     }
 
-        if ($this->source_id) {
-            $count->where('source_id', $this->source_id);
-        }
+    //     if ($this->source_id) {
+    //         $count->where('source_id', $this->source_id);
+    //     }
 
-        $count = $count->get()->count();
+    //     $count = $count->get()->count();
 
-        return $count;
-    }
+    //     return $count;
+    // }
 
-    private function shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $keyword_id)
-    {
-        $total_account = DB::table('message_result_full_data')
-            ->where('campaign_id', $campaign_id)
-            ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->where('keyword_id', $keyword_id);
+    // private function shareOfVoiceByNumber($campaign_id, $start_date, $end_date, $keyword_id)
+    // {
+    //     $total_account = DB::table('message_result_full_data')
+    //         ->where('campaign_id', $campaign_id)
+    //         ->whereBetween('date_m', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+    //         ->whereIn('classification_type_id', [1])
+    //         ->where('keyword_id', $keyword_id);
 
-        if ($this->keyword_id) {
-            $total_account->whereIn('keyword_id', $this->keyword_id);
-        }
+    //     if ($this->keyword_id) {
+    //         $total_account->whereIn('keyword_id', $this->keyword_id);
+    //     }
 
-        if ($this->source_id) {
-            $total_account->where('source_id', $this->source_id);
-        }
+    //     if ($this->source_id) {
+    //         $total_account->where('source_id', $this->source_id);
+    //     }
 
-        $total_account = $total_account->get()->count();
+    //     $total_account = $total_account->get()->count();
 
-        return $total_account;
-    }
+    //     return $total_account;
+    // }
 
 
     public function wordClouds(Request $request)
