@@ -100,7 +100,9 @@ class LevelThreeTableController extends Controller
             //$total->whereBetween('message_datetime', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
 
             if ($request->report_number === '2.2.013') {
-                $raw->whereNotNull('author')->groupBy('author');
+                // $raw->whereNotNull('author')->groupBy('author');
+                return $this->raw_account($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
+                // dd($raw->first());
                 //$total->whereNotNull('author')->groupBy('author');
             }
 
@@ -127,6 +129,7 @@ class LevelThreeTableController extends Controller
 
             }
         }
+
 
         // Date Format
         if ($request->report_number === '2.2.003' || 
@@ -428,7 +431,6 @@ class LevelThreeTableController extends Controller
             $raw->where('sources.name', $label);
 
         }
-        // dd($raw->get());
         
         // Last
         
@@ -589,8 +591,31 @@ class LevelThreeTableController extends Controller
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->orderByDesc('total_engagement');
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            // ->orderByDesc('total_engagement');
+
+        if ($request->sort && $request->field) {
+            $field = $request->field;
+            switch( $field ) {
+                case 'message_type' : $field_table = "messages.message_type"; break;
+                case 'author' : $field_table = "messages.author"; break;
+                case 'date' : $field_table = "messages.message_datetime"; break;
+                case 'device' : $field_table = "messages.device"; break;
+                case 'source' : $field_table = "sources.name"; break;
+                case 'engagement' : $field_table = "total_engagement"; break;
+                case 'bully_type' : $field_table = "classifications.name"; break;
+                case 'sentiment' : $field_table = "classifications.name"; break;
+                case 'engagement' : $field_table = "classifications.name"; break;
+                default : $field_table= "total_engagement"; break;
+                 
+            }
+            
+            $data->orderBy($field_table, $request->sort);
+
+        } else {
+            $data->orderByDesc('total_engagement');
+        }
+
         
         if ($classification_name) {
             $data->whereIn('classifications.name', $classification_name);
@@ -716,6 +741,146 @@ class LevelThreeTableController extends Controller
     {
         return DB::table('message_result_full_data')->where('message_id', $message_id)
             ->limit(3)->get(['classification_type_id', 'classification_name']);
+    }
+
+    private function raw_account(Request $request, $campaign_id, $start_date, $end_date, $report_number)
+    {
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        $data = null;
+        $keyword = Keyword::where('campaign_id', $campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+        $keywordIds = $keyword->pluck('id')->all();
+
+        $Llabel = str_replace("+", " ", $request->Llabel);
+        $label = str_replace("+", " ", $request->label);
+
+        $subquery = DB::table('messages')
+                    ->select([
+                        'messages.author AS author',
+                        'messages.message_id AS message_id',
+                        'messages.reference_message_id AS reference_message_id',
+                        'messages.keyword_id AS keyword_id',
+                        'messages.message_datetime AS date_m',
+                        'messages.source_id AS source_id',
+                        'messages.full_message AS full_message',
+                        'messages.message_type',
+                        'messages.link_message AS link_message',
+                        'messages.device AS device',
+                        'messages.number_of_views AS number_of_views',
+                        'messages.number_of_comments AS number_of_comments',
+                        'messages.number_of_shares AS number_of_shares',
+                        'messages.number_of_reactions AS number_of_reactions',
+                        'keywords.campaign_id AS campaign_id',
+                        'campaigns.name AS campaign_name',
+                        'keywords.name AS keyword_name',
+                        'classifications.classification_type_id',
+                        'message_results.classification_id',
+                        'classifications.color AS classification_color',
+                        'sources.name AS source_name',
+                        'messages.created_at AS created_at',
+                        'classifications.name AS classification_name',
+                        DB::raw('COALESCE(number_of_comments, 0) +
+                            COALESCE(number_of_shares, 0) +
+                            COALESCE(number_of_reactions, 0) AS total_engagement')
+                    ])
+                    ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
+                    ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+                    ->join('sources', 'messages.source_id', '=', 'sources.id')
+                    ->join('message_results', 'message_results.message_id', '=', 'messages.id')
+                    ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
+                    ->whereIn('keyword_id', $keywordIds)
+                    ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+                    ->groupBy('messages.author')
+                    ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
+                    // ->orderByDesc('total_engagement');
+                    // ->get();
+                
+                // $count = $results->count();
+
+                    // dd($subquery->get()->count());
+        if ($request->sort && $request->field) {
+            $field = $request->field;
+            switch( $field ) {
+                case 'message_type' : $field_table = "messages.message_type"; break;
+                case 'author' : $field_table = "messages.author"; break;
+                case 'date' : $field_table = "messages.message_datetime"; break;
+                case 'device' : $field_table = "messages.device"; break;
+                case 'source' : $field_table = "sources.name"; break;
+                case 'engagement' : $field_table = "total_engagement"; break;
+                case 'bully_type' : $field_table = "classifications.name"; break;
+                case 'sentiment' : $field_table = "classifications.name"; break;
+                case 'engagement' : $field_table = "classifications.name"; break;
+                default : $field_table= "total_engagement"; break;
+                 
+            }
+            
+            $subquery->orderBy($field_table, $request->sort);
+
+        } else {
+            $subquery->orderByDesc('total_engagement');
+        }
+        $total = $subquery->count() ?? 0;
+        $raw = $subquery->get();
+
+        foreach ($raw as $ke => $item) {
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            $types = $this->getClassificationName($item->message_id);
+            $parent = null;
+            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
+                $parent = $item->message_id;
+            }
+
+
+            $data_push = [
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
+                "day" => $date_d,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $item->source_name,
+                "source_name" => $item->source_name,
+                "link_message" => $item->link_message,
+                "parent" => $parent,
+                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+            ];
+
+
+            // loop for get classification name
+            foreach ($types as $type) {
+                if ($type->classification_type_id == 1) {
+                    $data_push['sentiment'] = $type->classification_name;
+                }
+
+                if ($type->classification_type_id == 2) {
+                    $data_push['bully_type'] = $type->classification_name;
+                }
+
+                if ($type->classification_type_id == 3) {
+                    $data_push['bully_level'] = $type->classification_name;
+                }
+            }
+
+            $data['message'][$item->message_id] = $data_push;
+        }
+
+
+        if (isset($data['message'])) {
+            $data['message'] = array_values($data['message']);
+        }
+
+        $data['total'] = $total;
+        return parent::handleRespond($data);
     }
 
     private function classifacation_multiple(Request $request, $campaign_id, $start_date, $end_date, $report_number) 
