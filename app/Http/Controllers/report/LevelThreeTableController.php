@@ -101,7 +101,7 @@ class LevelThreeTableController extends Controller
 
             if ($request->report_number === '2.2.013') {
                 // $raw->whereNotNull('author')->groupBy('author');
-                return $this->raw_account($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
+                return $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
                 // dd($raw->first());
                 //$total->whereNotNull('author')->groupBy('author');
             }
