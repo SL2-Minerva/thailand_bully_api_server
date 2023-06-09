@@ -828,7 +828,7 @@ class LevelThreeTableController extends Controller
             $subquery->orderByDesc('total_engagement');
         }
         $total = $subquery->count() ?? 0;
-        $raw = $subquery->get();
+        $raw = $subquery->offset($start)->limit($limit)->get();
 
         foreach ($raw as $ke => $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
