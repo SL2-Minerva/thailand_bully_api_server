@@ -245,27 +245,6 @@ class VoiceDashboardController extends Controller
         return $data;
     }
 
-    public function MessageByDayold(Request $request)
-    {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        $items = $raw->get();
-
-        $data = $this->messageByDay($items);
-
-        return parent::handleRespond($data);
-    }
 
     private function messageByTime($items)
     {
@@ -323,31 +302,6 @@ class VoiceDashboardController extends Controller
         return $data;
     }
 
-    public function MessageByTimeold(Request $request)
-    {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        $data = [];
-
-        $items = $raw->get();
-
-//        $table =  'daily_message_device_d_m_y_h_i_s';
-//        $data = $this->listDataByType('time', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null );
-//
-        return parent::handleRespond($this->messageByTime($items));
-    }
-
     private function messageByDevice($items)
     {
         $data['labels'] = [
@@ -403,34 +357,6 @@ class VoiceDashboardController extends Controller
         return $data;
     }
 
-
-    public function MessageByDeviceold(Request $request)
-    {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        $items = $raw->get();
-
-        return parent::handleRespond($this->messageByDevice($items));
-
-
-//        $table =  'daily_message_device';
-//        $data = $this->listDataByType('device', $table, $this->campaign_id, $this->start_date, $this->end_date, null, null, null, null );
-//
-//        return parent::handleRespond($data);
-    }
-
-
     private function messageByAccount($items)
     {
         $data['labels'] = [
@@ -474,78 +400,6 @@ class VoiceDashboardController extends Controller
         return $data;
 
     }
-
-    public function MessageByAccountold(Request $request)
-    {
-        $data['labels'] = [
-            "Post Owner",
-            "Follower",
-        ];
-
-//        $table = 'sna_root_node';
-//
-//        $infulencer_root = DB::table($table)->where('campaign_id', $this->campaign_id)
-//            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-//
-//        $infulencers = $infulencer_root->get();
-//
-//
-//        foreach ($infulencers as $infulencer) {
-//
-//            if (isset($data['value'][$infulencer->keyword_id]['data'][0])) {
-//                $data['value'][$infulencer->keyword_id]['data'][0] += 1;
-//            } else {
-//                $data['value'][$infulencer->keyword_id]['id'] = $infulencer->keyword_id;
-//                $data['value'][$infulencer->keyword_id]['keyword_name'] = $infulencer->keyword_name;
-//                $data['value'][$infulencer->keyword_id]['data'][0] = 0;
-//
-//            }
-//
-//        }
-//
-//        $table = 'sna_child_node';
-//        $follower_raw = DB::table($table)->where('campaign_id', $this->campaign_id)
-//            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-//
-//
-//        $followers = $follower_raw->get();
-//
-//
-//        foreach ($followers as $follower) {
-//
-//            if (isset($data['value'][$follower->keyword_id]['data'][1])) {
-//                $data['value'][$follower->keyword_id]['data'][1] += 1;
-//            } else {
-//                $data['value'][$follower->keyword_id]['id'] = $follower->keyword_id;
-//                $data['value'][$follower->keyword_id]['keyword_name'] = $follower->keyword_name;
-//                $data['value'][$follower->keyword_id]['data'][1] = 0;
-//            }
-//
-//        }
-//
-//        if (isset($data['value'])) {
-//            $data['value'] = array_values($data['value']);
-//        }
-
-
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        $items = $raw->get();
-
-        return parent::handleRespond($this->messageByAccount($items));
-    }
-
 
     private function messageByChannel($items)
     {
@@ -622,28 +476,6 @@ class VoiceDashboardController extends Controller
         return $data;
     }
 
-    public function MessageBySentimentold(Request $request)
-    {
-
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        $items = $raw->get();
-
-        return parent::handleRespond($this->messageBySentiment($items));
-
-    }
-
     private function messageByLevel($raw = null)
     {
         $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, ['Level 0', 'Level 1', 'Level 2', 'Level 3']);
@@ -685,56 +517,6 @@ class VoiceDashboardController extends Controller
 
     }
 
-    public function MessageByLevelold(Request $request)
-    {
-
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [3]);
-
-
-//        $items = MessageResultBully::where('campaign_id', $this->campaign_id)
-//            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-//            ->where('classification_type_id', 3);
-//
-//        $level = Classification::where('classification_type_id', 3)->get();
-//        $data['labels'] = [];
-//
-//        foreach ($level as $item) {
-//            $data['labels'][] = $item->name;
-//        }
-//
-//        foreach ($items->get() as $item) {
-//
-//            $index_label = 0;
-//            $index_label = array_search($item->classification_name, $data['labels']);
-//
-//
-//            if (isset($data['value'][$item->keyword_id])) {
-//                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
-//            } else {
-//                $data['value'][$item->keyword_id] = [
-//                    'id' => $item->keyword_id,
-//                    'keyword_id' => $item->keyword_id,
-//                    'keyword_name' => $item->keyword_name,
-//                    'data' => [0, 0, 0, 0]
-//                ];
-//
-//                $data['value'][$item->keyword_id]['data'][$index_label] += $item->total_at_date;
-//            }
-//
-//        }
-//
-//
-//        if (isset($data['value'])) {
-//            $data['value'] = array_values($data['value']);
-//        }
-
-        return parent::handleRespond($this->messageByLevel($raw));
-    }
-
-
     private function messageByType($raw = null)
     {
         $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, ['NoBully', 'Gossip', 'Harassment', 'Exclusion'. 'HateSpeech', 'Violence']);
@@ -772,16 +554,6 @@ class VoiceDashboardController extends Controller
         }
 
         return $data;
-    }
-
-    public function MessageByTypeold(Request $request)
-    {
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [2]);
-
-        return parent::handleRespond($this->messageByType($raw));
     }
 
 
@@ -1310,23 +1082,6 @@ class VoiceDashboardController extends Controller
 
     public function channelPlatformChannelDevice(Request $request)
     {
-        // $raw = DB::table('message_result_full_data')
-        //     ->where('campaign_id', $this->campaign_id)
-        //     ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-        //     ->whereIn('classification_type_id', [3]);
-
-        // if ($this->keyword_id) {
-        //     $raw->whereIn('keyword_id', $this->keyword_id);
-        // }
-
-        // if (!$this->user_login->is_admin) {
-        //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-        //     $raw->whereIn('source_id', $source_ids);
-        // }
-
-        // if ($this->source_id) {
-        //     $raw->where('source_id', $this->source_id);
-        // }
         $classification_tree = [
             'Level 0', 'Level 1', 'Level 2', 'Level 3'
         ];
@@ -1351,17 +1106,6 @@ class VoiceDashboardController extends Controller
 
         return parent::handleRespond($data);
     }
-
-    // public function ChannelPlatform(Request $request)
-    // {
-
-    //     $raw = DB::table('message_result_full_data')
-    //         ->where('campaign_id', $this->campaign_id)
-    //         ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-    //         ->whereIn('classification_type_id', [3]);
-
-    //     return parent::handleRespond($this->getChannelPlatform(['raw' => $raw]));
-    // }
 
     private function getChannelPlatform($raw, $raw_previous)
     {
@@ -1404,22 +1148,7 @@ class VoiceDashboardController extends Controller
     {
         $data = null;
         $labels = ["labels" => ['Andriod', 'Iphone', 'Web App']];
-        // $raw = $condition['raw'] ?? null;
-        // $raw_previous = DB::table('message_result_full_data')
-        //     ->where('campaign_id', $this->campaign_id)
-        //     ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
-        //     ->whereIn('classification_type_id', [1]);
-
-        // if ($this->keyword_id) {
-        //     $raw->whereIn('keyword_id', $this->keyword_id);
-        //     $raw_previous->whereIn('keyword_id', $this->keyword_id);
-        // }
-
-        // if ($this->source_id) {
-        //     $raw->where('source_id', $this->source_id);
-        //     $raw_previous->where('source_id', $this->source_id);
-        // }
-
+       
         $items = $raw->get();
         $items_previous = $raw_previous->get();
 
@@ -1474,66 +1203,6 @@ class VoiceDashboardController extends Controller
 
         return $data;
     }
-
-
-//     public function Device(Request $request)
-//     {
-//         $raw = DB::table('message_result_full_data')
-//             ->where('campaign_id', $this->campaign_id)
-//             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-//             ->whereIn('classification_type_id', [1]);
-
-
-// //        $data['previous_period']['label'] = [
-// //            "Andriod",
-// //            "Iphone",
-// //            "Web App"
-// //        ];
-// //
-// //        $data['current_period']['label'] = [
-// //            "Andriod",
-// //            "Iphone",
-// //            "Web App"
-// //        ];
-// //
-// //        $data['previous_period']['data'] = [0, 0, 0];
-// //        $data['current_period']['data'] = [0, 0, 0];
-// //
-// //        $items_current = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-// //            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-// //        $items_previous = DB::table('daily_message_device')->where('campaign_id', $this->campaign_id)
-// //            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
-// //
-// //        foreach ($items_current->get() as $item) {
-// //            if ($item->device === "android") {
-// //                $data['current_period']['data'][0] += $item->total_at_date;
-// //            }
-// //            if ($item->device === "iphone") {
-// //                $data['current_period']['data'][1] += $item->total_at_date;
-// //            }
-// //            if ($item->device === "webapp") {
-// //                $data['current_period']['data'][2] += $item->total_at_date;
-// //            }
-// //        }
-// //        $data['current_period']['total'] = array_sum($data['current_period']['data']);
-// //
-// //
-// //        foreach ($items_previous->get() as $item) {
-// //            if ($item->device === "android") {
-// //                $data['previous_period']['data'][0] += $item->total_at_date;
-// //            }
-// //            if ($item->device === "iphone") {
-// //                $data['previous_period']['data'][1] += $item->total_at_date;
-// //            }
-// //            if ($item->device === "webapp") {
-// //                $data['previous_period']['data'][2] += $item->total_at_date;
-// //            }
-// //        }
-// //        $data['previous_period']['total'] = array_sum($data['previous_period']['data']);
-
-//         return parent::handleRespond($this->getDevice(['raw' => $raw]));
-//     }
-
 
     private function getChannelDevice($conditions = null)
     {
@@ -1619,19 +1288,6 @@ class VoiceDashboardController extends Controller
         $data = parent::listSource();
         // $raw = $conditions['raw'] ?? null;
         $meesage_total = 0;
-//        $raw_previous = DB::table('message_result_full_data')
-//            ->where('campaign_id', $this->campaign_id)
-//            ->whereBetween('date_m', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
-//            ->whereIn('classification_type_id', [1]);
-
-//         if ($this->keyword_id) {
-//             $raw->whereIn('keyword_id', $this->keyword_id);
-// //            $raw_previous->whereIn('keyword_id', $this->keyword_id);
-//         }
-
-        // if ($this->source_id) {
-        //     $raw->where('source_id', $this->source_id);
-        // }
 
         $items = $raw->get();
         if ($items) {
