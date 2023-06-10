@@ -354,8 +354,6 @@ class BullyDashboardController extends Controller
             "Follower",
         ];
 
-        $table = 'message_result_full_data';
-
         $infulencer_root = $raw;
         $infulencers = $infulencer_root->get();
 
@@ -744,8 +742,6 @@ class BullyDashboardController extends Controller
             "Follower",
         ];
 
-        $table = 'message_result_full_data';
-
         $infulencer_root = $raw;
         $infulencers = $infulencer_root->get();
 
@@ -933,21 +929,8 @@ class BullyDashboardController extends Controller
         return array_values($data);
     }
 
-    private function BullyChartTypeGroup()
+    private function BullyChartTypeGroup($bully)
     {
-        $bully = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [2]);
-            // ->get();
-
-        if ($this->keyword_id) {
-            $bully->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $bully->where('source_id', $this->source_id);
-        }
 
         $bully = $bully->get();
 
@@ -1063,101 +1046,6 @@ class BullyDashboardController extends Controller
 
         return $data;
     }
-
-    // public function BullyTableType(Request $request)
-    // {
-
-    //     $raw = DB::table('message_result_full_data')
-    //         ->where('campaign_id', $this->campaign_id)
-    //         ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-    //         ->whereIn('classification_type_id', [2]);
-
-    //     if ($this->keyword_id) {
-    //         $raw->where('keyword_id', $this->keyword_id);
-    //     }
-
-    //     if ($this->source_id) {
-    //         $raw->where('source_id', $this->source_id);
-    //     }
-
-    //     $items = $raw->get();
-    //     $soures = parent::listSource();
-    //     $anylsys = [];
-    //     $anylsys['all'] = [
-    //         'id' => -1,
-    //         'keyword_name' => "all",
-    //         'total' => 0
-    //     ];
-
-    //     for ($i = 0; $i < count($soures['labels']); $i++) {
-    //         $anylsys['all']['value'][$soures['labels'][$i]]['id'] = $i;
-    //         $anylsys['all']['value'][$soures['labels'][$i]]['channel'] = $soures['labels'][$i];
-    //         $anylsys['all']['value'][$soures['labels'][$i]]['percentage'] = 0;
-    //         $anylsys['all']['value'][$soures['labels'][$i]]['total'] = 0;
-    //     }
-
-
-    //     foreach ($items as $item) {
-
-    //         if (isset($anylsys['all'])) {
-    //             $anylsys['all']["campaign_id"] = $item->campaign_id;
-    //             $anylsys['all']["campaign_name"] = $item->campaign_name;
-    //             $anylsys['all']['total'] += 1;
-    //             $anylsys['all']['value'][$item->source_name]['total'] += 1;
-    //         }
-
-    //         if (isset($anylsys[$item->classification_name])) {
-    //             $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
-    //             $anylsys[$item->classification_name]['total'] += 1;
-    //         } else {
-    //             $anylsys[$item->classification_name] = [
-    //                 "id" => $item->classification_id,
-    //                 "keyword_name" => $item->classification_name,
-    //                 "campaign_id" => $item->campaign_id,
-    //                 "campaign_name" => $item->campaign_name,
-    //                 "total" => 1,
-    //             ];
-
-    //             for ($i = 0; $i < count($soures['labels']); $i++) {
-    //                 $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['id'] =  $i;
-    //                 $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['channel'] =  $soures['labels'][$i];
-    //                 $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['total'] = 0;
-    //                 $anylsys[$item->classification_name]['value'][$soures['labels'][$i]]['percentage'] = 0;
-    //             }
-
-    //             $anylsys[$item->classification_name]['value'][$item->source_name]['total'] += 1;
-    //         }
-    //     }
-
-    //     $data = [];
-
-    //     foreach ($anylsys as $key => $item) {
-    //         $total = $item['total'];
-    //         $data[$key] = [
-    //             'id' => $item['id'],
-    //             'keyword_name' => $item['keyword_name'],
-    //             // 'campaign_id' => $item['campaign_id'],
-    //             // 'campaign_name' => $item['campaign_name'],
-    //             'value' => $item['value'],
-    //             'total' => $item['total'],
-    //         ];
-
-    //         foreach ($item['value'] as $index => $value) {
-    //             $data[$key]['value'][$index]['percentage'] = $value['total'] ? $value['total'] / $total * 100 : 0;
-    //         }
-
-    //     }
-
-    //     if ($data) {
-    //         $data = array_values($data);
-    //     }
-
-    //     foreach ($data as $key => $item) {
-    //         $data[$key]['value'] = array_values($item['value']);
-    //     }
-
-    //     return parent::handleRespond($data);
-    // }
 
     private function BullyTableTypeGroup($raw)
     {
