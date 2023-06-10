@@ -63,45 +63,60 @@ class LevelthreeController extends Controller
     private function messageFullData($start_date, $end_date, $campaign_id, $report_number = null)
     {
         if ($report_number === '2.2.013') {
-            $data = DB::table('message_result_full_data')
-                ->where('campaign_id', $campaign_id)
-                ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
-                ->whereIn('classification_type_id', [1, 2, 3])
-                ->whereNotNull('author')->groupBy('author')
-                ->select(
-                    'message_id',
-                    'keyword_name',
-                    'date_m',
-                    'author',
-                    'source_name',
-                    'full_message',
-                    'link_message',
-                    'message_type',
-                    'device',
-                    'classification_name',
-                    'classification_type_id',
-                )
-                ->orderBy('date_m', 'ASC');
+            $data = DB::table('messages')
+            ->select([
+                'messages.message_id AS message_id',
+                'keywords.name AS keyword_name',
+                'messages.message_datetime AS date_m',
+                'messages.author AS author',
+                'sources.name AS source_name',
+                'messages.keyword_id AS keyword_id',
+                'messages.full_message AS full_message',
+                'messages.link_message AS link_message',
+                'messages.message_type AS message_type',
+                'messages.device AS device',
+                'campaigns.name AS campaign_name',
+                'classifications.name AS classification_name',
+                'classifications.classification_type_id AS classification_type_id'
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereIn('classifications.classification_type_id', [1, 2, 3])
+            ->whereNotNull('author')->groupBy('author')
+            ->orderBy('date_m', 'ASC');
         } else {
 
-            $data = DB::table('message_result_full_data')
-                ->where('campaign_id', $campaign_id)
-                ->whereBetween('date_m', [$start_date. " 00:00:00", $end_date. " 23:59:59"])
-                ->whereIn('classification_type_id', [1, 2, 3])
-                ->select(
-                    'message_id',
-                    'keyword_name',
-                    'date_m',
-                    'author',
-                    'source_name',
-                    'full_message',
-                    'link_message',
-                    'message_type',
-                    'device',
-                    'classification_name',
-                    'classification_type_id',
-                )
-                ->orderBy('date_m', 'ASC');
+            $data = 
+            $data = DB::table('messages')
+            ->select([
+                'messages.message_id AS message_id',
+                'keywords.name AS keyword_name',
+                'messages.message_datetime AS date_m',
+                'messages.author AS author',
+                'sources.name AS source_name',
+                'messages.keyword_id AS keyword_id',
+                'messages.full_message AS full_message',
+                'messages.link_message AS link_message',
+                'messages.message_type AS message_type',
+                'messages.device AS device',
+                'campaigns.name AS campaign_name',
+                'classifications.name AS classification_name',
+                'classifications.classification_type_id AS classification_type_id'
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->where('campaign_id', $campaign_id)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereIn('classifications.classification_type_id', [1, 2, 3])
+            ->orderBy('date_m', 'ASC');
         }
 
         return $data;
