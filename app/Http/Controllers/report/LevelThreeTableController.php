@@ -739,8 +739,16 @@ class LevelThreeTableController extends Controller
 
     private function getClassificationName($message_id)
     {
-        return DB::table('message_result_full_data')->where('message_id', $message_id)
-            ->limit(3)->get(['classification_type_id', 'classification_name']);
+        return DB::table('messages')
+            ->select([
+                'classifications.name AS classification_name',
+                'classifications.classification_type_id AS classification_type_id'
+            ])
+            ->where('messages.message_id', $message_id)
+            ->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->limit(3)
+            ->get(['classifications.classification_type_id', 'classification_name']);
     }
 
     private function raw_account(Request $request, $campaign_id, $start_date, $end_date, $report_number)
