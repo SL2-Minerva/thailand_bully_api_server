@@ -353,8 +353,6 @@ class EngagementDashboardController extends Controller
     public function EngagementChannel(Request $request, $only_data = false)
     {
         $data = parent::listSource();
-        $table = 'message_result_full_data';
-        // $items = $raw->get();
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
