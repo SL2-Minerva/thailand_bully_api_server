@@ -37,12 +37,8 @@ class OrganizationContentController extends Controller
             $organization_content->where('date', $request->date);
         }
 
-        $data['data'] = $organization_content->offset($start)->limit($limit)->get();
         $data['total'] = $organization_content->count();
-
-        if (!$organization_content || $organization_content->count() == 0) {
-            return parent::handleNotFound('Organization content not found');
-        }
+        $data['data'] = $organization_content->offset($start)->limit($limit)->get();
         
         return parent::handleRespond($data);
     }
