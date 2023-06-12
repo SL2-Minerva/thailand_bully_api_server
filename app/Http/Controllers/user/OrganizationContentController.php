@@ -10,17 +10,37 @@ use Illuminate\Http\Request;
 class OrganizationContentController extends Controller
 {
 
-
-
     public function index(Request $request)
     {
 
-        $organization_content = OrganizationContent::where('organization_id', $this->organization->id)->get();
-        if (!$organization_content || $organization_content->count() == 0) {
-            return parent::handleNotFound('Organization content not found');
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        $data = null;
+
+        $organization_content = OrganizationContent::where('organization_id', $this->organization->id);
+
+        if ($request->content_id) {
+            $organization_content->where('content_id', $request->content_id);
         }
 
-        return parent::handleRespond($organization_content);
+        if ($request->title) {
+            $organization_content->where('title', 'like', "%$request->title%");
+        }
+
+        if ($request->status || $request->status === '0') {
+            $organization_content->where('status', $request->status);
+        }
+
+        if ($request->date) {
+            $organization_content->where('date', $request->date);
+        }
+
+        $data['total'] = $organization_content->count();
+        $data['data'] = $organization_content->offset($start)->limit($limit)->get();
+        
+        return parent::handleRespond($data);
     }
 
     public function store(Request $request)
@@ -108,7 +128,7 @@ class OrganizationContentController extends Controller
         }
 
 
-        $organization_content = OrganizationContent::where('organization_id', $this->organization_->id)->where('id' , $id)->first();
+        $organization_content = OrganizationContent::where('organization_id', $this->organization->id)->where('id' , $id)->first();
         if ($organization_content) {
             $organization_content->update($data);
             return parent::handleRespond($organization_content);
