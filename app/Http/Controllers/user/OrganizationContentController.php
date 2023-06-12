@@ -17,6 +17,7 @@ class OrganizationContentController extends Controller
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
         $start = $start === 1 ? null : $start;
+        $data = null;
 
         $organization_content = OrganizationContent::where('organization_id', $this->organization->id);
 
@@ -36,13 +37,14 @@ class OrganizationContentController extends Controller
             $organization_content->where('date', $request->date);
         }
 
-        $organization_content = $organization_content->offset($start)->limit($limit)->get();
+        $data['data'] = $organization_content->offset($start)->limit($limit)->get();
+        $data['total'] = $organization_content->count();
 
         if (!$organization_content || $organization_content->count() == 0) {
             return parent::handleNotFound('Organization content not found');
         }
         
-        return parent::handleRespond($organization_content);
+        return parent::handleRespond($data);
     }
 
     public function store(Request $request)
