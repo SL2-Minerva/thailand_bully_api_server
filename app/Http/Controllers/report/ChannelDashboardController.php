@@ -924,7 +924,7 @@ class ChannelDashboardController extends Controller
         $data = null;
 
         $data['sentiment_score'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date, "current period", "current_period");
-        $data['sentiment_score_previous'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date_previous, $this->end_date_previous, "previous period", "previous period");
+        $data['sentiment_score_previous'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
         $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
         $data['sentiment_by_level'] = $this->SentimentLevelGroup($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
 
