@@ -423,10 +423,10 @@ class LevelThreeTableController extends Controller
 
             $raw = $this->raw_message_classification($request, $this->campaign_id, $start_date, $end_date);
 
-            if ($request->report_number === '3.2.013') {
-                $raw->addSelect([DB::raw('number_of_reactions + number_of_comments + number_of_reactions as total_engagement')])
-                    ->havingRaw('total_engagement > ?', [0]);
-            }
+            // if ($request->report_number === '3.2.013') {
+            //     $raw->addSelect([DB::raw('number_of_reactions + number_of_comments + number_of_reactions as total_engagement')])
+            //         ->havingRaw('total_engagement > ?', [0]);
+            // }
 
             $raw->where('sources.name', $label);
 
