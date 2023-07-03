@@ -651,33 +651,32 @@ class VoiceDashboardController extends Controller
             $items_current = $raw_current->groupBy('author')->get();
             $items_previous = $raw_previous->groupBy('author')->get();
 
-            $total_account_current = [];
-            $total_account_previous = [];
+            // $total_account_current = [];
+            // $total_account_previous = [];
+
+            // foreach ($items_current as $current) {
+            //     // $total_message_current += 1;
+            //     if (isset($total_account_current[$current->author])) {
+            //         $total_account_current[$current->author] += 1;
+            //     } else {
+            //         $total_account_current[$current->author] = 1;
+            //     }
+
+            // }
 
 
-            foreach ($items_current as $current) {
-                // $total_message_current += 1;
-                if (isset($total_account_current[$current->author])) {
-                    $total_account_current[$current->author] += 1;
-                } else {
-                    $total_account_current[$current->author] = 1;
-                }
+            // foreach ($items_previous as $previous) {
+            //     // $total_message_previous += 1;
+            //     if (isset($total_account_previous[$previous->author])) {
+            //         $total_account_previous[$previous->author] += 1;
+            //     } else {
+            //         $total_account_previous[$previous->author] = 1;
+            //     }
 
-            }
+            // }
 
-
-            foreach ($items_previous as $previous) {
-                // $total_message_previous += 1;
-                if (isset($total_account_previous[$previous->author])) {
-                    $total_account_previous[$previous->author] += 1;
-                } else {
-                    $total_account_previous[$previous->author] = 1;
-                }
-
-            }
-
-            $total_account_current = count($total_account_current);
-            $total_account_previous = count($total_account_previous);
+            $total_account_current = $items_current->count() ?? 0;
+            $total_account_previous = $items_previous->count() ?? 0;
 
             $data['total_messages'] = [
                 "total_message" => $total_message_current,
