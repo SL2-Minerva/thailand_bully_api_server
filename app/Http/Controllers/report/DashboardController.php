@@ -795,15 +795,46 @@ class DashboardController extends Controller
             }
         }
 
+        // if ($data) {
+        //     foreach ($data as $item_share) {
+        //         $keyword_id = $item_share['keyword_id'];
+        //         $total = $item_share['total'];
+
+        //         foreach ($item_share['value'] as $value) {
+        //             $percentage = !$total ? 0 : ($value['number_of_message'] / $total) * 100;
+        //             $data[$value['keyword_id']]['value'][$value['id']]['percentage'] = self::point_two_digits($percentage);
+        //         }
+
+        //         if (isset($data[$keyword_id]['value'])) {
+        //             $data[$keyword_id]['value'] = array_values($data[$keyword_id]['value']);
+        //         }
+        //     }
+        // }
+
         if ($data) {
-            foreach ($data as $item_share) {
+            foreach ($data as &$item_share) {
                 $keyword_id = $item_share['keyword_id'];
                 $total = $item_share['total'];
-                foreach ($item_share['value'] as $value) {
+                $total_percentage = 0;
+                
+                foreach ($item_share['value'] as &$value) {
                     $percentage = !$total ? 0 : ($value['number_of_message'] / $total) * 100;
-                    $data[$value['keyword_id']]['value'][$value['id']]['percentage'] = self::point_two_digits($percentage);
+                    $value['percentage'] = self::point_two_digits($percentage);
+                    $total_percentage += self::point_two_digits($percentage);
                 }
-
+                
+                $last_index = count($item_share['value']) - 1;
+                if ($total_percentage != 100) {
+                    $diff = 100 - $total_percentage;
+                    $value = &$item_share['value'][$last_index];
+                    $value["percentage"] += $diff;
+                    $value["percentage"] =self::point_two_digits($value["percentage"]);
+                    
+                    if ($value['percentage'] > 100) {
+                        $value['percentage'] = 100;
+                    }
+                }
+                
                 if (isset($data[$keyword_id]['value'])) {
                     $data[$keyword_id]['value'] = array_values($data[$keyword_id]['value']);
                 }
