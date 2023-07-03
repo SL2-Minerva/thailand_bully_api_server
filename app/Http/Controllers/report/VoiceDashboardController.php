@@ -1295,6 +1295,7 @@ class VoiceDashboardController extends Controller
                 $index_label = array_search($item->source_name, $data['labels']);
                 if (isset($data['value'][$item->keyword_id])) {
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    $data['value'][$item->keyword_id]['total'] += 1;
                 } else {
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,
@@ -1304,17 +1305,24 @@ class VoiceDashboardController extends Controller
 
                     for ($i = 0; $i < count($data['labels']); $i++) {
                         $data['value'][$item->keyword_id]['data'][] = 0;
+                        $data['value'][$item->keyword_id]['total'] = 0;
                     }
 
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    $data['value'][$item->keyword_id]['total'] += 1;
                 }
             }
         }
 
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
+            foreach ($data['value'] as $keyword => $item_keyword) {
+                foreach ($item_keyword['data'] as $key => $item) {
+                    $data['value'][$keyword]['data'][$key] = Self::point_two_digits(($item / $item_keyword['total']) * 100, 2);
+                }
+            }
         }
-
+        
         return $data;
     }
 
@@ -1336,21 +1344,30 @@ class VoiceDashboardController extends Controller
                 $message_total += 1;
                 if (isset($data['value'][$item->keyword_id])) {
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    $data['value'][$item->keyword_id]['total'] += 1;
                 } else {
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,
                         'keyword_id' => $item->keyword_id,
                         'keyword_name' => $item->keyword_name,
-                        'data' => [0, 0, 0]
+                        'data' => [0, 0, 0],
+                        'total' => 0
                     ];
 
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                    $data['value'][$item->keyword_id]['total'] += 1;
                 }
             }
         }
 
         if (isset($data['value'])) {
+            // $data['value'] = array_values($data['value']);
             $data['value'] = array_values($data['value']);
+            foreach ($data['value'] as $keyword => $item_keyword) {
+                foreach ($item_keyword['data'] as $key => $item) {
+                    $data['value'][$keyword]['data'][$key] = Self::point_two_digits(($item / $item_keyword['total']) * 100, 2);
+                }
+            }
         }
 
         return $data;
@@ -1373,20 +1390,29 @@ class VoiceDashboardController extends Controller
             $message_total += 1;
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['total'] += 1;
             } else {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
                     'keyword_id' => $item->keyword_id,
                     'keyword_name' => $item->keyword_name,
-                    'data' => [0, 0, 0, 0]
+                    'data' => [0, 0, 0, 0],
+                    'total' => 0
                 ];
 
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['total'] += 1;
             }
         }
 
         if (isset($data['value'])) {
+            // $data['value'] = array_values($data['value']);
             $data['value'] = array_values($data['value']);
+            foreach ($data['value'] as $keyword => $item_keyword) {
+                foreach ($item_keyword['data'] as $key => $item) {
+                    $data['value'][$keyword]['data'][$key] = Self::point_two_digits(($item / $item_keyword['total']) * 100, 2);
+                }
+            }
         }
 
         return $data;
@@ -1409,6 +1435,7 @@ class VoiceDashboardController extends Controller
             $message_total += 1;
             if (isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['total'] += 1;
             } else {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
@@ -1418,14 +1445,22 @@ class VoiceDashboardController extends Controller
 
                 for ($i = 0; $i < count($data['labels']); $i++) {
                     $data['value'][$item->keyword_id]['data'][] = 0;
+                    $data['value'][$item->keyword_id]['total'] = 0;
                 }
 
                 $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+                $data['value'][$item->keyword_id]['total'] += 1;
             }
         }
 
         if (isset($data['value'])) {
+            // $data['value'] = array_values($data['value']);
             $data['value'] = array_values($data['value']);
+            foreach ($data['value'] as $keyword => $item_keyword) {
+                foreach ($item_keyword['data'] as $key => $item) {
+                    $data['value'][$keyword]['data'][$key] = Self::point_two_digits(($item / $item_keyword['total']) * 100, 2);
+                }
+            }
         }
 
         return $data;
