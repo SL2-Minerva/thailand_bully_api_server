@@ -385,6 +385,20 @@ class DashboardController extends Controller
         $neutral = 0;
         $sentiment_score = 0;
 
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keyword_id = $keyword->pluck('id')->all();
+        $convert_id = null;
+        if ($keyword_id) {
+            $convert_id = implode(',', $keyword_id);
+        }
+
         $results = DB::select(DB::raw("SELECT 
             COUNT(*) AS total_count,
             SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
@@ -398,7 +412,7 @@ class DashboardController extends Controller
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
             LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
         WHERE 
-            c.name IN ('Positive', 'Negative', 'Neutral') AND k.campaign_id = $this->campaign_id AND m.message_datetime BETWEEN '$start_date' AND '$end_date'"));
+            m.keyword_id IN ($convert_id) AND c.name IN ('Positive', 'Negative', 'Neutral') AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
         
         if (!empty($results)) {
             $results = $results[0];
@@ -473,7 +487,7 @@ class DashboardController extends Controller
     public function sentimentType(Request $request)
     {
 
-        $current = $this->findSentiment('message_result_semetic', $this->start_date, $this->end_date, $this->source_id);
+        $current = $this->findSentiment($this->start_date, $this->end_date, $this->source_id);
         $message_total = $current['positive'] + $current['negative'] + $current['neutral'];
 
         return parent::handleRespond([
@@ -833,7 +847,7 @@ class DashboardController extends Controller
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
 
         if ($this->keyword_id) {
