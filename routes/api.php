@@ -263,6 +263,10 @@ Route::group(['middleware' => ['api']], function () {
         Route::group(['prefix' => 'activity-log'], function () {
             Route::get('/', [ActivityLogController::class, 'index']);
         });
+
+        Route::group(['prefix' => 'delete'], function () {
+            Route::post('/message', [LevelThreeTableController::class, 'deleteMessage']);
+        });
     });
 });
 
