@@ -4,6 +4,8 @@ namespace App\Http\Controllers\report;
 
 use App\Http\Controllers\Controller;
 use App\Models\Keyword;
+use App\Models\Message;
+use App\Models\MessageDeleteLog;
 use App\Models\Organization;
 use App\Models\Sources;
 use App\Models\UserOrganizationGroup;
@@ -488,6 +490,7 @@ class LevelThreeTableController extends Controller
 
 
             $data_push = [
+                "id" => $item->id,
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
@@ -557,6 +560,7 @@ class LevelThreeTableController extends Controller
 
         $data = DB::table('messages')
             ->select([
+                'messages.id AS id',
                 'messages.message_id AS message_id',
                 'messages.reference_message_id AS reference_message_id',
                 'messages.keyword_id AS keyword_id',
@@ -848,6 +852,7 @@ class LevelThreeTableController extends Controller
 
 
             $data_push = [
+                "id" => $item->id,
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
@@ -903,6 +908,7 @@ class LevelThreeTableController extends Controller
         $Llabel = str_replace("+", " ", $request->Llabel);
 
         $raw = DB::select(DB::raw("SELECT
+            tbl_messages.id as id,
             tbl_messages.message_id as message_id,
             tbl_messages.reference_message_id as reference_message_id,
             tbl_messages.keyword_id as keyword_id,
@@ -934,7 +940,7 @@ class LevelThreeTableController extends Controller
             JOIN tbl_message_results ON tbl_message_results.message_id = tbl_messages.id
             JOIN tbl_classifications ON tbl_message_results.classification_id = tbl_classifications.id
         WHERE 
-            tbl_keywords.campaign_id = $campaign_id AND tbl_messages.message_datetime BETWEEN '$start_date' AND '$end_date'"
+            tbl_keywords.campaign_id = $campaign_id AND tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"
         ));
 
         $parents = [];
@@ -957,6 +963,7 @@ class LevelThreeTableController extends Controller
             }
 
             $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+            $anylsys[$item->message_id]["id"] = $item->id;
             $anylsys[$item->message_id]["message_id"] = $item->message_id;
             $anylsys[$item->message_id]["message_type"] = $item->message_type;
             $anylsys[$item->message_id]["message_detail"] = $item->full_message;
@@ -1027,5 +1034,41 @@ class LevelThreeTableController extends Controller
         }
 
        return parent::handleRespond($data);
+    }
+
+    public function deleteMessage(Request $request)
+    {
+        if ($request->id) {
+            $originalMessage = Message::find($request->id);
+
+            if ($originalMessage) {
+                $newMessage = new MessageDeleteLog();
+                $newMessage->id = $originalMessage->id;
+                $newMessage->message_id = $originalMessage->message_id;
+                $newMessage->reference_message_id = $originalMessage->reference_message_id;
+                $newMessage->keyword_id = $originalMessage->keyword_id;
+                $newMessage->message_datetime = $originalMessage->message_datetime;
+                $newMessage->author = $originalMessage->author;
+                $newMessage->source_id = $originalMessage->source_id;
+                $newMessage->full_message = $originalMessage->full_message;
+                $newMessage->link_message = $originalMessage->link_message;
+                $newMessage->message_type = $originalMessage->message_type;
+                $newMessage->device = $originalMessage->device;
+                $newMessage->number_of_shares = $originalMessage->number_of_shares;
+                $newMessage->number_of_comments = $originalMessage->number_of_comments;
+                $newMessage->number_of_reactions = $originalMessage->number_of_reactions;
+                $newMessage->number_of_views = $originalMessage->number_of_views;
+    
+                $newMessage->save();
+                // remove data old table
+                Message::destroy($originalMessage->id);
+
+                return parent::handleRespond($newMessage);
+            }
+
+            return parent::handleRespond(null, null, 404, 'Message id not found');
+        }
+
+        return parent::handleRespond(null, null, 404, 'Plase send id of message');
     }
 }
