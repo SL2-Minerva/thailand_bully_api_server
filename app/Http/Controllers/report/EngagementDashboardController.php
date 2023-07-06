@@ -1207,7 +1207,7 @@ class EngagementDashboardController extends Controller
 
         $data['reaction'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
-            "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous) : 0,
+            "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous * 100) : 0,
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
