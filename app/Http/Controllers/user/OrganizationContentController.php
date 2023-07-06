@@ -71,22 +71,27 @@ class OrganizationContentController extends Controller
             $organization_content->where('date', $request->date);
         }
 
-        $content = $organization_content->get();
-        foreach ($content as $item) {
-            if ($item->organization_id == $this->organization->id) {
-                $data['data'][] = $item;
-            }
+        $data['total'] = 0;
+        $data['data'] = null;
 
-            if ($item->created_by) {
-                $is_admin = $this->find_supperadmin($item->created_by);
-                if ($is_admin === '1') {
+        $content = $organization_content->get();
+        if ($content) {
+            foreach ($content as $item) {
+                if ($item->organization_id == $this->organization->id) {
                     $data['data'][] = $item;
                 }
+    
+                if ($item->created_by) {
+                    $is_admin = $this->find_supperadmin($item->created_by);
+                    if ($is_admin === '1') {
+                        $data['data'][] = $item;
+                    }
+                }
             }
+    
+            $data['total'] = count($data['data']) ?? 0;
+            $data['data'] = $data['data'] ?? null;
         }
-
-        $data['total'] = count($data['data']);
-        $data['data'] = $data['data'] ?? null;
         
         return parent::handleRespond($data);
     }
