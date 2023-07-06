@@ -89,7 +89,7 @@ class OrganizationContentController extends Controller
                 }
             }
     
-            $data['total'] = count($data['data']) ?? 0;
+            $data['total'] = is_array($data['data']) ? count($data['data']) : 0;
             $data['data'] = $data['data'] ?? null;
         }
         
