@@ -138,6 +138,7 @@ Route::group(['middleware' => ['api']], function () {
         Route::group(['prefix' => 'organization-content'], function () {
             Route::get('/', [OrganizationContentController::class, 'index']);
             Route::post('/', [OrganizationContentController::class, 'store']);
+            Route::get('/show', [OrganizationContentController::class, 'show']);
             Route::post('/update', [OrganizationContentController::class, 'update']);
         });
 
