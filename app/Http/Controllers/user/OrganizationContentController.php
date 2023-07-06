@@ -5,6 +5,7 @@ namespace App\Http\Controllers\user;
 use App\Http\Controllers\Controller;
 use App\Models\BaseModel;
 use App\Models\OrganizationContent;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class OrganizationContentController extends Controller
@@ -35,6 +36,53 @@ class OrganizationContentController extends Controller
 
         if ($request->date) {
             $organization_content->where('date', $request->date);
+        }
+
+        $data['total'] = $organization_content->count();
+        $data['data'] = $organization_content->offset($start)->limit($limit)->get();
+        
+        return parent::handleRespond($data);
+    }
+
+    public function show(Request $request)
+    {
+
+        $page = $request->page ?? null;
+        $limit = $request->limit ?? 10;
+        $start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;
+        $data = null;
+
+        $organization_content = OrganizationContent::query();
+
+        if ($request->content_id) {
+            $organization_content->where('content_id', $request->content_id);
+        }
+
+        if ($request->title) {
+            $organization_content->where('title', 'like', "%$request->title%");
+        }
+
+        if ($request->status || $request->status === '0') {
+            $organization_content->where('status', $request->status);
+        }
+
+        if ($request->date) {
+            $organization_content->where('date', $request->date);
+        }
+
+        $content = $organization_content->get();
+        foreach ($content as $item) {
+            if ($item->organization_id == $this->organization->id) {
+                $data['data'][] = $item;
+            }
+
+            if ($item->created_by) {
+                $is_admin = $this->find_supperadmin($item->created_by);
+                if ($is_admin === '1') {
+                    $data['data'][] = $item;
+                }
+            }
         }
 
         $data['total'] = $organization_content->count();
@@ -136,6 +184,14 @@ class OrganizationContentController extends Controller
 
         return  parent::handleNotFound($request->all());
 
+    }
+
+    private function find_supperadmin($id) {
+        $user = User::find($id);
+        if ($user) {
+            return $user->is_admin;
+        }
+        return 0;
     }
 
 
