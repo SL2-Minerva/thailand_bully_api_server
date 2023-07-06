@@ -846,11 +846,13 @@ class ChannelDashboardController extends Controller
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
             ->where('keywords.campaign_id', $campaignId);
 
+        if ($this->source_id) {
+            $result->where('source_id', $this->source_id);
+        }
+
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $result = $result->whereIn('messages.source_id', $source_ids);
-        } else {
-            $result->whereIn('sources.id', $sourceIds);
+            $result->whereIn('source_id', $source_ids);
         }
         $result->whereIn('keywords.id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
@@ -902,7 +904,7 @@ class ChannelDashboardController extends Controller
         return $data;
     }
 
-    public function sentimentBy()
+    public function sentimentBy(Request $request)
     {
         $source_group = $this->organization_group->platform;
         if ($this->user_login->is_admin) {
@@ -923,8 +925,8 @@ class ChannelDashboardController extends Controller
         $campaignId = $this->campaign_id;
         $data = null;
 
-        $data['sentiment_score'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date, "current period", "current_period");
-        $data['sentiment_score_previous'] = $this->totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
+        $data['sentiment_score'] = $this->totalFromMessageResultSemetic($request, $campaignId, $keywordIds, $sources, $this->start_date, $this->end_date, "current period", "current_period");
+        $data['sentiment_score_previous'] = $this->totalFromMessageResultSemetic($request, $campaignId, $keywordIds, $sources, $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
         $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
         $data['sentiment_by_level'] = $this->SentimentLevelGroup($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
 
@@ -958,23 +960,33 @@ class ChannelDashboardController extends Controller
 
     public function SentimentLevelGroup($campaignId, $keywordIds, $sources, $start_date, $end_date)
     {
+        if ($this->source_id !== 'all') {
+            $sources = $this->source_id;
+        }
+        
+        if ($this->source_id == "") {
+            $source_id = Sources::where('status', 1)->get();
+            $sourceIds = $source_id->pluck('id')->all();
+            $sources = implode(',', $sourceIds);
+        }
+
         $query = "SELECT
-        s.id  as source_id,
-        s.name as source_name,
-        SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
-        SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
-        SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral
-    FROM
-        tbl_messages m
-        LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
-        LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
-        LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
-        LEFT JOIN tbl_sources s ON m.source_id = s.id
-    WHERE
-        k.campaign_id = 3
-        AND s.id IN (1, 2, 3, 4, 5, 6)
-        AND m.message_datetime BETWEEN '2023-05-21 00:00:00' AND '2023-05-27 23:59:59'
-    GROUP BY s.id;";
+            s.id  as source_id,
+            s.name as source_name,
+            SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
+            SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
+            SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral
+        FROM
+            tbl_messages m
+            LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
+            LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
+            LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
+            LEFT JOIN tbl_sources s ON m.source_id = s.id
+        WHERE
+            k.campaign_id = 3
+            AND s.id IN ($sources)
+            AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
+        GROUP BY s.id;";
 
         $data = DB::select($query);
 
@@ -1019,9 +1031,10 @@ class ChannelDashboardController extends Controller
         return $result;
     }
 
-    private function totalFromMessageResultSemetic($campaignId, $keywordIds, $sources, $start_date, $end_date, $keyword_name, $value_name)
+    private function totalFromMessageResultSemetic(Request $request, $campaignId, $keywordIds, $sources, $start_date, $end_date, $keyword_name, $value_name)
     {
         $labels = parent::listSource();
+        
         $data = [
             'labels' => $labels['labels'],
             'value' => [$value_name => ['data' => array_fill(0, count($labels['labels']), 0)]]
@@ -1039,8 +1052,13 @@ class ChannelDashboardController extends Controller
                 'sources.id as source_id',
                 'sources.name as source_name',
                 DB::raw('COUNT(*) as count')
-            ])
-            ->pluck('count', 'source_name');
+            ]);
+
+        if ($this->source_id) {
+            $engagement->where('source_id', $this->source_id);
+        }
+        $engagement = $engagement->pluck('count', 'source_name');
+
         $data['value'][$value_name]['keyword_name'] = $keyword_name;
         foreach ($engagement as $source_name => $count) {
             $index_label = array_search($source_name, $data['labels']);
