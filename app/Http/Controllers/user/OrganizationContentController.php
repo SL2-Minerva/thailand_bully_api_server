@@ -85,8 +85,8 @@ class OrganizationContentController extends Controller
             }
         }
 
-        $data['total'] = $organization_content->count();
-        $data['data'] = $organization_content->offset($start)->limit($limit)->get();
+        $data['total'] = count($data['data']);
+        $data['data'] = $data['data'] ?? null;
         
         return parent::handleRespond($data);
     }
