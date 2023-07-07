@@ -701,9 +701,9 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.014' ||
             $request->report_number === '6.2.015' ||
             $request->report_number === '6.2.016' ||
-            $request->report_number === '6.2.017' ||
+            $request->report_number === '6.2.017'
             // $request->report_number === '5.2.008' ||
-            $request->report_number === '5.2.009' 
+            // $request->report_number === '5.2.009' 
         ) {
             if ($Llabel === 'Hate Speech') {
                 $Llabel = 'HateSpeech';
@@ -913,6 +913,14 @@ class LevelThreeTableController extends Controller
 
         if ($Llabel === "Hate Speech") {
             $Llabel = "HateSpeech";
+        }
+
+        if ($label === "No Bully") {
+            $label = "NoBully";
+        }
+
+        if ($label === "Hate Speech") {
+            $label = "HateSpeech";
         }
 
         $raw = DB::select(DB::raw("SELECT
