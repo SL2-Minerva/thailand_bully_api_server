@@ -907,6 +907,14 @@ class LevelThreeTableController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
+        if ($Llabel === "No Bully") {
+            $Llabel = "NoBully";
+        }
+
+        if ($Llabel === "Hate Speech") {
+            $Llabel = "HateSpeech";
+        }
+
         $raw = DB::select(DB::raw("SELECT
             tbl_messages.id as id,
             tbl_messages.message_id as message_id,
