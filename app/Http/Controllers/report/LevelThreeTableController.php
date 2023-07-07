@@ -241,8 +241,8 @@ class LevelThreeTableController extends Controller
             }
 
             if ($label === 'Web App') {
-                $target = 'webapp';
-                $raw->where('device', $target)->orWhere('device', 'webapp');
+                $target = 'web';
+                $raw->where('device', "%$target%");
             }
             
             //$total->where('device', $target);
