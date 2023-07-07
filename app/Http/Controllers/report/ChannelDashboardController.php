@@ -1018,9 +1018,9 @@ class ChannelDashboardController extends Controller
             $totals['total'] += $total;
             $items[] = $i;
         }
-        $positive= self::point_two_digits((  $totals['positive'] /   $totals['total']) * 100);
-        $negative= self::point_two_digits((  $totals['negative'] /   $totals['total']) * 100);
-        $neutral= self::point_two_digits((  $totals['neutral'] /   $totals['total']) * 100);
+        $positive= $totals['total'] ? self::point_two_digits((  $totals['positive'] /   $totals['total']) * 100) : 0;
+        $negative= $totals['total'] ? self::point_two_digits((  $totals['negative'] /   $totals['total']) * 100) : 0;
+        $neutral= $totals['total'] ? self::point_two_digits((  $totals['neutral'] /   $totals['total']) * 100) : 0;
         $totals['positive']=$positive;
         $totals['negative']=$negative;
         $totals['neutral']=$neutral;
