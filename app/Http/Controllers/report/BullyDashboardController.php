@@ -102,8 +102,8 @@ class BullyDashboardController extends Controller
         $data = [];
 
         $raw = $this->raw_message_classification_name($this->campaign_id, $start_date, $end_date, $classification_id);
-
-        $items = $raw->get();
+        
+        $items = $raw->orderBy('classification_id', 'asc')->get();
         $message_total = 0;
 
         foreach ($items as $item) {
@@ -203,7 +203,7 @@ class BullyDashboardController extends Controller
             "Sun"
         ];
 
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
 
         foreach ($items as $item) {
 
@@ -524,7 +524,7 @@ class BullyDashboardController extends Controller
     private function BullyTypeDailyGroup($raw)
     {
         $data = null;
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
 
         foreach ($items as $item) {
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
@@ -590,7 +590,7 @@ class BullyDashboardController extends Controller
             "Sun"
         ];
 
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
 
         foreach ($items as $item) {
 
@@ -632,7 +632,7 @@ class BullyDashboardController extends Controller
             "After 6 PM"
         ];
 
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
 
         foreach ($items as $item) {
 
@@ -691,7 +691,7 @@ class BullyDashboardController extends Controller
             "Web App",
         ];
 
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
 
         $data['value'] = null;
 
@@ -743,7 +743,7 @@ class BullyDashboardController extends Controller
         ];
 
         $infulencer_root = $raw;
-        $infulencers = $infulencer_root->get();
+        $infulencers = $infulencer_root->orderBy('classification_id', 'asc')->get();
 
 
         foreach ($infulencers as $infulencer) {
@@ -767,7 +767,7 @@ class BullyDashboardController extends Controller
         }
 
         $follower_raw = $raw;
-        $followers = $follower_raw->get();
+        $followers = $follower_raw->orderBy('classification_id', 'asc')->get();
 
 
         foreach ($followers as $follower) {
@@ -809,7 +809,7 @@ class BullyDashboardController extends Controller
             $data['labels'][] = $source_id->name;
         }
 
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
         $data['value'] = null;
 
         foreach ($items as $item) {
@@ -858,7 +858,7 @@ class BullyDashboardController extends Controller
             ];
         }
 
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'asc')->get();
         $anylsys = [];
 
         foreach ($items as $item) {
@@ -932,7 +932,7 @@ class BullyDashboardController extends Controller
     private function BullyChartTypeGroup($bully)
     {
 
-        $bully = $bully->get();
+        $bully = $bully->orderBy('classification_id', 'asc')->get();
 
         $all = 0;
 

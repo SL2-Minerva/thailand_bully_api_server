@@ -957,7 +957,7 @@ class VoiceDashboardController extends Controller
     {
 
         $data = null;
-        $items = $raw->get();
+        $items = $raw->orderBy('classification_id', 'ASC')->get();
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
