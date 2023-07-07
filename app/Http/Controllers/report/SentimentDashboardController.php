@@ -1483,9 +1483,9 @@ class SentimentDashboardController extends Controller
                 $data[] = [
                     "channel" => $source->name,
                     "total" => $analysis[$source->id]['total'],
-                    "positive" => $analysis[$source->id]['positive'],
-                    "neutral" => $analysis[$source->id]['neutral'],
-                    "negative" => $analysis[$source->id]['negative'],
+                    "positive" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['positive'] / $analysis[$source->id]['total']) * 100) : 0,
+                    "neutral" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['neutral'] / $analysis[$source->id]['total']) * 100) : 0,
+                    "negative" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['negative'] / $analysis[$source->id]['total']) * 100) : 0,
                     "sentiment_score" => round((((1 * $analysis[$source->id]['positive']) + (-1 * $analysis[$source->id]['negative'])) / ($analysis[$source->id]['positive'] + $analysis[$source->id]['negative'] + $analysis[$source->id]['neutral'])) * 5),
                 ];
             } else {
