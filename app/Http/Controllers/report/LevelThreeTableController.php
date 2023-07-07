@@ -232,16 +232,18 @@ class LevelThreeTableController extends Controller
 
             if ($label === 'Andriod' || $label === 'Android') {
                 $target = 'android';
+                $raw->where('device', $target);
             }
 
             if ($label === 'Iphone') {
                 $target = 'iphone';
+                $raw->where('device', $target);
             }
 
             if ($label === 'Web App') {
                 $target = 'webapp';
+                $raw->where('device', $target)->where('device', 'website');
             }
-            $raw->where('device', $target);
             //$total->where('device', $target);
             
             if ($request->report_number === '4.2.015') {
