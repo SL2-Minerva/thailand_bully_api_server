@@ -54,6 +54,21 @@ class OrganizationContentController extends Controller
         $data = null;
 
         $organization_content = OrganizationContent::join('users', 'organization_contents.created_by', 'users.id')
+            ->select(
+                "organization_contents.id",
+                "organization_contents.organization_id",
+                "organization_contents.title",
+                "organization_contents.content_text",
+                "organization_contents.picture",
+                "organization_contents.date",
+                "organization_contents.content_id",
+                "organization_contents.status",
+                "organization_contents.created_by",
+                "organization_contents.updated_by",
+                "organization_contents.created_at",
+                "organization_contents.updated_at",
+                "users.is_admin"
+            )
             ->orderBy('is_admin', 'desc');
 
         if ($request->content_id) {
@@ -71,25 +86,23 @@ class OrganizationContentController extends Controller
         if ($request->date) {
             $organization_content->where('organization_contents.date', $request->date);
         }
+
         $data['total'] = 0;
         $data['data'] = null;
 
         $content = $organization_content->get();
         foreach ($content as $item) {
+            if ($item->is_admin) {
+                $data['data'][] = $item;
+            }
+
             if ($item->organization_id == $this->organization->id) {
                 $data['data'][] = $item;
-            } else {
-                if (isset($item->created_by)) {
-                    $is_admin = $this->find_supperadmin($item->created_by);
-                    if ($is_admin === 1) {
-                        $data['data'][] = $item;
-                    }
-                }
             }
         }
 
         $data['total'] = is_array($data['data']) ? count($data['data']) : 0;
-        $data['data'] = $data['data'] ?? null;
+        $data['data'] = $content ?? null;
         
         return parent::handleRespond($data);
     }
