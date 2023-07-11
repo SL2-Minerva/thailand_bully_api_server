@@ -53,22 +53,23 @@ class OrganizationContentController extends Controller
         $start = $start === 1 ? null : $start;
         $data = null;
 
-        $organization_content = OrganizationContent::query();
+        $organization_content = OrganizationContent::join('users', 'organization_contents.created_by', 'users.id')
+            ->orderBy('is_admin', 'desc');
 
         if ($request->content_id) {
-            $organization_content->where('content_id', $request->content_id);
+            $organization_content->where('organization_contents.content_id', $request->content_id);
         }
 
         if ($request->title) {
-            $organization_content->where('title', 'like', "%$request->title%");
+            $organization_content->where('organization_contents.title', 'like', "%$request->title%");
         }
 
         if ($request->status || $request->status === '0') {
-            $organization_content->where('status', $request->status);
+            $organization_content->where('organization_contents.status', $request->status);
         }
 
         if ($request->date) {
-            $organization_content->where('date', $request->date);
+            $organization_content->where('organization_contents.date', $request->date);
         }
         $data['total'] = 0;
         $data['data'] = null;
@@ -85,7 +86,6 @@ class OrganizationContentController extends Controller
                     }
                 }
             }
-
         }
 
         $data['total'] = is_array($data['data']) ? count($data['data']) : 0;
