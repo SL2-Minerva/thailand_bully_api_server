@@ -178,6 +178,10 @@ class OrganizationContentController extends Controller
             $data['date'] = $request->date;
         }
 
+        if ($request->content_id) {
+            $data['content_id'] = $request->content_id;
+        }
+
 
         $organization_content = OrganizationContent::where('organization_id', $this->organization->id)->where('id' , $id)->first();
         if ($organization_content) {
@@ -187,6 +191,17 @@ class OrganizationContentController extends Controller
 
         return  parent::handleNotFound($request->all());
 
+    }
+
+    public function destroy(Request $request) {
+
+        if ($request->id) {
+            $id = OrganizationContent::find($request->id);
+            $delete = OrganizationContent::where('id', $id->id)->delete();
+            return parent::handleRespond($delete);
+        }
+
+        return  parent::handleNotFound($request->id);
     }
 
     private function find_supperadmin($id) {
