@@ -89,10 +89,10 @@ class ChannelDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->where('source_id', $source_ids);
-        }
+        // if (!$this->user_login->is_admin) {
+        //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+        //     $raw->where('source_id', $source_ids);
+        // }
 
         $data['prcentage_of_messages_current'] = $this->PercentageToCal($this->start_date, $this->end_date);
         $data['prcentage_of_messages_previous'] = $this->PercentageToCal($this->start_date_previous, $this->end_date_previous);
