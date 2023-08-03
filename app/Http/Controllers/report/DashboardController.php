@@ -789,7 +789,7 @@ class DashboardController extends Controller
                 for ($i = 0; $i < count($labels['labels']); $i++) {
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['channel'] = $labels['labels'][$i]['name'];
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['id'] = $labels['labels'][$i]['id'];
-                    $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['number_of_message'] = 1;
+                    $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['number_of_message'] = 0;
                     $data[$keyword_id]['value'][$labels['labels'][$i]['id']]['keyword_id'] = $item->keyword_id;
                 }
             }
