@@ -1059,28 +1059,31 @@ class LevelThreeTableController extends Controller
             $originalMessage = Message::find($request->id);
 
             if ($originalMessage) {
-                $newMessage = new MessageDeleteLog();
-                $newMessage->id = $originalMessage->id;
-                $newMessage->message_id = $originalMessage->message_id;
-                $newMessage->reference_message_id = $originalMessage->reference_message_id;
-                $newMessage->keyword_id = $originalMessage->keyword_id;
-                $newMessage->message_datetime = $originalMessage->message_datetime;
-                $newMessage->author = $originalMessage->author;
-                $newMessage->source_id = $originalMessage->source_id;
-                $newMessage->full_message = $originalMessage->full_message;
-                $newMessage->link_message = $originalMessage->link_message;
-                $newMessage->message_type = $originalMessage->message_type;
-                $newMessage->device = $originalMessage->device;
-                $newMessage->number_of_shares = $originalMessage->number_of_shares;
-                $newMessage->number_of_comments = $originalMessage->number_of_comments;
-                $newMessage->number_of_reactions = $originalMessage->number_of_reactions;
-                $newMessage->number_of_views = $originalMessage->number_of_views;
-    
-                $newMessage->save();
                 // remove data old table
-                Message::destroy($originalMessage->id);
-
-                return parent::handleRespond($newMessage);
+                $delete = Message::destroy($originalMessage->id);
+                
+                if ($delete) {
+                    $newMessage = new MessageDeleteLog();
+                    $newMessage->id = $originalMessage->id;
+                    $newMessage->message_id = $originalMessage->message_id;
+                    $newMessage->reference_message_id = $originalMessage->reference_message_id;
+                    $newMessage->keyword_id = $originalMessage->keyword_id;
+                    $newMessage->message_datetime = $originalMessage->message_datetime;
+                    $newMessage->author = $originalMessage->author;
+                    $newMessage->source_id = $originalMessage->source_id;
+                    $newMessage->full_message = $originalMessage->full_message;
+                    $newMessage->link_message = $originalMessage->link_message;
+                    $newMessage->message_type = $originalMessage->message_type;
+                    $newMessage->device = $originalMessage->device;
+                    $newMessage->number_of_shares = $originalMessage->number_of_shares;
+                    $newMessage->number_of_comments = $originalMessage->number_of_comments;
+                    $newMessage->number_of_reactions = $originalMessage->number_of_reactions;
+                    $newMessage->number_of_views = $originalMessage->number_of_views;
+        
+                    $newMessage->save();
+    
+                    return parent::handleRespond($newMessage);
+                }
             }
 
             return parent::handleRespond(null, null, 404, 'Message id not found');
