@@ -478,10 +478,20 @@ class ChannelDashboardController extends Controller
         }
 
         if ($data['value']) {
-            $data['value'] = array_values($data['value']);
+            $value = array_values($data['value']);
+            $data['value'] = $this->filteredData($value);
         }
 
         return $data;
+    }
+
+    public function filteredData($data) {
+        $filteredData = array_filter($data, function ($item) {
+            return $item["data"] !== [0, 0];
+        });
+
+        $filteredData = array_values($filteredData);
+        return $filteredData;
     }
 
     
@@ -510,14 +520,23 @@ class ChannelDashboardController extends Controller
         ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id');
 
         $data['value'] = null;
-
         foreach ($raw->get() as $item) {
 
             $index_label = 0;
             $index_label = array_search($item->classification_name, $data['labels']);
 
             if (isset($data['value'][$item->source_id])) {
-                $data['value'][$item->source_id]['data'][$index_label] += 1;
+                if ($item->classification_name === 'Positive') {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
+
+                if ($item->classification_name === 'Negative') {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
+
+                if ($item->classification_name === 'Neutral') {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
             } else {
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
