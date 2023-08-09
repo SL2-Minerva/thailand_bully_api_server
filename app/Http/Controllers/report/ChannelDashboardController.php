@@ -604,6 +604,7 @@ class ChannelDashboardController extends Controller
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
+            ->whereIn('classifications.name', ["Level 0", "Level 1", "Level 2", "Level 3"])
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
@@ -624,7 +625,9 @@ class ChannelDashboardController extends Controller
             $index_label = array_search($item->classification_name, $data['labels']);
 
             if (isset($data['value'][$item->source_id])) {
+                
                 $data['value'][$item->source_id]['data'][$index_label] += 1;
+                
             } else {
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
@@ -690,6 +693,7 @@ class ChannelDashboardController extends Controller
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
+            ->whereIn('classifications.name', ['NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence'])
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
