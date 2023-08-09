@@ -89,20 +89,21 @@ class OrganizationContentController extends Controller
 
         $data['total'] = 0;
         $data['data'] = null;
+        $data_content = null;
 
         $content = $organization_content->get();
         foreach ($content as $item) {
             if ($item->is_admin) {
-                $data['data'][] = $item;
+                $data_content[] = $item;
             }
 
             if ($item->organization_id == $this->organization->id) {
-                $data['data'][] = $item;
+                $data_content[] = $item;
             }
         }
 
-        $data['total'] = is_array($data['data']) ? count($data['data']) : 0;
-        $data['data'] = $content ?? null;
+        $data['total'] = is_array($data_content) ? count($data_content) : 0;
+        $data['data'] = $data_content ?? null;
         
         return parent::handleRespond($data);
     }

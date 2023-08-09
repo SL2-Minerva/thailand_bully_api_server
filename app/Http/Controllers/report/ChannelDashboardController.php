@@ -1032,6 +1032,9 @@ class ChannelDashboardController extends Controller
             $i['source_id'] = $item->source_id;
             $i['source_name'] = $item->source_name;
             $i['total'] = $total;
+            $i['positive_total'] = $positive;
+            $i['negative_total'] = $negative;
+            $i['neutral_total'] = $neutral;
             $i['positive'] = self::point_two_digits(($positive / $total) * 100);
             $i['negative'] = self::point_two_digits(($negative / $total) * 100);
             $i['neutral'] = self::point_two_digits(($neutral / $total) * 100);
