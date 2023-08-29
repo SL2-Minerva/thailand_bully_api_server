@@ -93,11 +93,12 @@ class OrganizationContentController extends Controller
 
         $content = $organization_content->get();
         foreach ($content as $item) {
+
             if ($item->is_admin) {
                 $data_content[] = $item;
             }
 
-            if ($item->organization_id == $this->organization->id) {
+            if (!$item->is_admin && $item->organization_id == $this->organization->id) {
                 $data_content[] = $item;
             }
         }
