@@ -1301,7 +1301,7 @@ class VoiceDashboardController extends Controller
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,
                         'keyword_id' => $item->keyword_name,
-                        'keyword_name' => $item->source_name . ' ' . $item->keyword_name
+                        'keyword_name' => $item->keyword_name
                     ];
 
                     for ($i = 0; $i < count($data['labels']); $i++) {
