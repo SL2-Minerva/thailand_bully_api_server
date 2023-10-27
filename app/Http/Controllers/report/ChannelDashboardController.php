@@ -877,10 +877,11 @@ class ChannelDashboardController extends Controller
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $result->whereIn('source_id', $source_ids);
         }
+        
         $result->whereIn('keywords.id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
             ->groupBy('sources.id', 'sources.name')
-            ->select('sources.id as source_id', 'sources.name as source_name', DB::raw('COUNT(*) as total_messages'));
+            ->select('sources.id as source_id', 'sources.name as source_name', 'sources.color as source_color', DB::raw('COUNT(*) as total_messages'));
 
         return $result->get();
     }
@@ -967,6 +968,7 @@ class ChannelDashboardController extends Controller
             $sourceIds = $source_id->whereIn('name', $this->organization_group->platform);
         }
         $channal_message_all = $this->total_message_by_source($campaignId, $keywordIds, $sourceIds, $start_date, $end_date);
+
         $data = [];
         $totalValue = 0;
 
@@ -974,7 +976,8 @@ class ChannelDashboardController extends Controller
             $totalValue += $item->total_messages;
             $data[] = [
                 'keyword_name' => $item->source_name,
-                'total_value' => $item->total_messages
+                'total_value' => $item->total_messages,
+                'source_color' => $item->source_color ?? null
             ];
         }
         $data = array_merge([['keyword_name' => 'all', 'total_value' => $totalValue]], $data);
