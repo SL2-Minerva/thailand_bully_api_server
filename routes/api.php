@@ -181,7 +181,6 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
             Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
             Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
-            Route::get('engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
             Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
         });
 
@@ -191,6 +190,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/', [DashboardController::class, 'overAll']);
 //            Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
             Route::get('/daily-message/level-four/', [LevelfourController::class, 'dailyMessageLevelFour']);
+            Route::get('/engagement-trnsaction/', [EngagementDashboardController::class, 'EngagementTrans']);
             Route::get('/key-stats/', [DashboardController::class, 'keyStats']);
             Route::get('/keyword-summary/', [DashboardController::class, 'keywordSummary']);
             Route::get('/keyword-summary-top/', [DashboardController::class, 'keywordSummaryTop']);
