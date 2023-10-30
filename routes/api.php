@@ -181,6 +181,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
             Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
             Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
+            Route::get('engagement-trnsaction', [EngagementDashboardController::class, 'EngagementTrans']);
             Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
         });
 
