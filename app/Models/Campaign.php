@@ -19,4 +19,9 @@ class Campaign extends BaseModel
     public const DESCRIPTION = 'description';
     public const FREQUENCY = 'frequency';
     public const PRIVACY_CAMPAIGN = 'privacy_campaign';
+    public const PLATFORM = 'platform';
+
+    protected $casts = [
+        'platform' => 'array',
+    ];
 }

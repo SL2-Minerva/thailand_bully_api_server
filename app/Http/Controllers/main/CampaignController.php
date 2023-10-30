@@ -87,7 +87,8 @@ class CampaignController extends Controller
             Campaign::START_AT => $request->start_at,
             Campaign::END_AT => $request->end_at,
             Campaign::FREQUENCY => (int)$request->frequency ?? 120,
-            Campaign::PRIVACY_CAMPAIGN => $request->privacy_campaign
+            Campaign::PRIVACY_CAMPAIGN => $request->privacy_campaign,
+            Campaign::PLATFORM => $request->platform ?? null
             // Campaign::MSG_TRANSACTION => $request->msg_transaction
         ];
 
@@ -298,6 +299,10 @@ class CampaignController extends Controller
 
             if ($request->privacy_campaign) {
                 $data_submit[Campaign::PRIVACY_CAMPAIGN] = $request->privacy_campaign;
+            }
+
+            if ($request->platform) {
+                $data_submit[Campaign::PLATFORM] = $request->platform;
             }
 
             // if ($request->msg_transaction) {
