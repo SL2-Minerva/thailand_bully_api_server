@@ -106,10 +106,7 @@ class ChannelDashboardController extends Controller
     {
         $data = null;
         $percentage_of_channal = $this->raw_message($this->campaign_id, $start_date, $end_date)->groupBy('source_id');
-        $channal_message_total = $this->raw_message($this->campaign_id, $start_date, $end_date);
-
-        $channal_message_total = $channal_message_total->get()->count();
-        
+        $channal_message_total = $this->channelTable($start_date, $end_date, null);
 
         foreach ($percentage_of_channal->get() as $channal) {
             $source_id_id = $channal->source_id;
@@ -123,11 +120,11 @@ class ChannelDashboardController extends Controller
 
             $channal_message = $this->channelTable($start_date, $end_date, $source_id_id);
             $data[$source_id_id]['total'] = self::point_two_digits($channal_message_total, 0);
-
+            $data[$source_id_id]['count'] = $channal_message;
 
             $nestData = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
-                'percentage' => $this->point_two_digits(($channal_message / $channal_message_total) * 100),
+                'percentage' => $channal_message_total ? $this->point_two_digits(($channal_message / $channal_message_total) * 100) : 0,
             ];
 
             $data[$source_id_id]['value'][] = $nestData;
@@ -1128,7 +1125,7 @@ class ChannelDashboardController extends Controller
     }
 
     
-    private function channelTable($start_date, $end_date, $source_id_id)
+    private function channelTable($start_date, $end_date, $source_id_id = null)
     {
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
@@ -1161,8 +1158,12 @@ class ChannelDashboardController extends Controller
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->where('source_id', $source_id_id);
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            // ->where('source_id', $source_id_id);
+
+        if ($source_id_id) {
+            $data->where('source_id', $source_id_id);
+        }
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
