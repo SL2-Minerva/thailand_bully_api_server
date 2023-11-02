@@ -495,12 +495,14 @@ class ChannelDashboardController extends Controller
     public function ChannelBySentimentGroup($raw)
     {
 
-        $sentiment = Classification::where('classification_type_id', 1)->get();
-        $data['labels'] = [];
+        // $sentiment = Classification::where('classification_type_id', 1)->get();
+        // $data['labels'] = [];
 
-        foreach ($sentiment as $item) {
-            $data['labels'][] = $item->name;
-        }
+        $data['labels'] = [
+            "Positive",
+            "Neutral",
+            "Negative",
+        ];
 
         $raw = $raw->select([
             'messages.keyword_id as keyword_id',
