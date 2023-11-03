@@ -599,6 +599,10 @@ class LevelThreeTableController extends Controller
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
             // ->orderByDesc('total_engagement');
 
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
         if ($request->sort && $request->field) {
             $field = $request->field;
             switch( $field ) {
@@ -776,45 +780,48 @@ class LevelThreeTableController extends Controller
         $label = str_replace("+", " ", $request->label);
 
         $subquery = DB::table('messages')
-                    ->select([
-                        'messages.author AS author',
-                        'messages.message_id AS message_id',
-                        'messages.reference_message_id AS reference_message_id',
-                        'messages.keyword_id AS keyword_id',
-                        'messages.message_datetime AS date_m',
-                        'messages.source_id AS source_id',
-                        'messages.full_message AS full_message',
-                        'messages.message_type',
-                        'messages.link_message AS link_message',
-                        'messages.device AS device',
-                        'messages.number_of_views AS number_of_views',
-                        'messages.number_of_comments AS number_of_comments',
-                        'messages.number_of_shares AS number_of_shares',
-                        'messages.number_of_reactions AS number_of_reactions',
-                        'keywords.campaign_id AS campaign_id',
-                        'campaigns.name AS campaign_name',
-                        'keywords.name AS keyword_name',
-                        'classifications.classification_type_id',
-                        'message_results.classification_id',
-                        'classifications.color AS classification_color',
-                        'sources.name AS source_name',
-                        'messages.created_at AS created_at',
-                        'classifications.name AS classification_name',
-                        DB::raw('COALESCE(number_of_comments, 0) +
-                            COALESCE(number_of_shares, 0) +
-                            COALESCE(number_of_reactions, 0) AS total_engagement')
-                    ])
-                    ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
-                    ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-                    ->join('sources', 'messages.source_id', '=', 'sources.id')
-                    ->join('message_results', 'message_results.message_id', '=', 'messages.id')
-                    ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-                    ->whereIn('keyword_id', $keywordIds)
-                    ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-                    ->groupBy('messages.author')
-                    ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
-                    // ->orderByDesc('total_engagement');
-                    // ->get();
+            ->select([
+                'messages.author AS author',
+                'messages.message_id AS message_id',
+                'messages.reference_message_id AS reference_message_id',
+                'messages.keyword_id AS keyword_id',
+                'messages.message_datetime AS date_m',
+                'messages.source_id AS source_id',
+                'messages.full_message AS full_message',
+                'messages.message_type',
+                'messages.link_message AS link_message',
+                'messages.device AS device',
+                'messages.number_of_views AS number_of_views',
+                'messages.number_of_comments AS number_of_comments',
+                'messages.number_of_shares AS number_of_shares',
+                'messages.number_of_reactions AS number_of_reactions',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'keywords.name AS keyword_name',
+                'classifications.classification_type_id',
+                'message_results.classification_id',
+                'classifications.color AS classification_color',
+                'sources.name AS source_name',
+                'messages.created_at AS created_at',
+                'classifications.name AS classification_name',
+                DB::raw('COALESCE(number_of_comments, 0) +
+                    COALESCE(number_of_shares, 0) +
+                    COALESCE(number_of_reactions, 0) AS total_engagement')
+            ])
+            ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->join('sources', 'messages.source_id', '=', 'sources.id')
+            ->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->groupBy('messages.author')
+            ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
+            // ->orderByDesc('total_engagement');
+            // ->get();
+        if ($this->source_id) {
+            $subquery->where('source_id', $this->source_id);
+        }
                 
                 // $count = $results->count();
 
@@ -853,7 +860,7 @@ class LevelThreeTableController extends Controller
 
 
             $data_push = [
-                "id" => $item->id,
+                "id" => $item->id ?? null,
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
@@ -924,7 +931,7 @@ class LevelThreeTableController extends Controller
             $label = "HateSpeech";
         }
 
-        $raw = DB::select(DB::raw("SELECT
+        $rawQuery = "SELECT
             tbl_messages.id as id,
             tbl_messages.message_id as message_id,
             tbl_messages.reference_message_id as reference_message_id,
@@ -957,9 +964,15 @@ class LevelThreeTableController extends Controller
             JOIN tbl_message_results ON tbl_message_results.message_id = tbl_messages.id
             JOIN tbl_classifications ON tbl_message_results.classification_id = tbl_classifications.id
         WHERE 
-            tbl_keywords.campaign_id = $campaign_id AND tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"
-        ));
+            tbl_keywords.campaign_id = $campaign_id AND tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
 
+        if ($this->source_id) {
+            $rawQuery .= " AND tbl_messages.source_id = " . $this->source_id;
+        }
+
+        $query = DB::table(DB::raw("($rawQuery) as subquery"));
+
+        $raw = $query->get();
         $parents = [];
         foreach ($raw as $item) {
             if ($item->reference_message_id) {
