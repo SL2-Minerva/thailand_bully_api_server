@@ -995,6 +995,18 @@ class ChannelDashboardController extends Controller
             $sources = implode(',', $sourceIds);
         }
 
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        if ($keyword->get()) {
+            $keyword = $keyword->get();
+            $keywordIds = $keyword->pluck('id')->all();
+            $keywords = implode(',', $keywordIds);
+        }
+
         $query = "SELECT
             s.id  as source_id,
             s.name as source_name,
@@ -1010,6 +1022,7 @@ class ChannelDashboardController extends Controller
         WHERE
             k.campaign_id = 3
             AND s.id IN ($sources)
+            AND k.id IN ($keywords)
             AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
         GROUP BY s.id;";
 
