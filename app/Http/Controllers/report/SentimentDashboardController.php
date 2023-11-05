@@ -1424,7 +1424,7 @@ class SentimentDashboardController extends Controller
 
 
         $raw = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        $raw = $raw->whereIn('message_type', ['Post', 'Video']);
+        // $raw = $raw->whereIn('message_type', ['Post', 'Video']);
 
         if ($this->keyword_id) {
             $raw->whereIn('keyword_id', $this->keyword_id);
@@ -1444,17 +1444,24 @@ class SentimentDashboardController extends Controller
 
         $items = $raw->get();
         $message_total = 0;
+        $total = [];
         $analysis = [];
+        $total['positive'] = 0;
+        $total['negative'] = 0;
+        $total['neutral'] = 0;
         foreach ($items as $item) {
             $message_total += 1;
             if (isset($analysis[$item->source_id])) {
                 $analysis[$item->source_id]['total'] += 1;
                 if ($item->classification_id === 1) {
                     $analysis[$item->source_id]['positive'] += 1;
+                    $total['positive'] += 1;
                 } else if ($item->classification_id === 2) {
                     $analysis[$item->source_id]['negative'] += 1;
+                    $total['negative'] += 1;
                 } else if ($item->classification_id === 3) {
                     $analysis[$item->source_id]['neutral'] += 1;
+                    $total['neutral'] += 1;
                 }
             } else {
                 $analysis[$item->source_id] = [
@@ -1467,10 +1474,13 @@ class SentimentDashboardController extends Controller
                 ];
                 if ($item->classification_id === 1) {
                     $analysis[$item->source_id]['positive'] += 1;
+                    $total['positive'] += 1;
                 } else if ($item->classification_id === 2) {
                     $analysis[$item->source_id]['negative'] += 1;
+                    $total['negative'] += 1;
                 } else if ($item->classification_id === 3) {
                     $analysis[$item->source_id]['neutral'] += 1;
+                    $total['neutral'] += 1;
                 }
             }
 
@@ -1483,9 +1493,9 @@ class SentimentDashboardController extends Controller
                 $data[] = [
                     "channel" => $source->name,
                     "total" => $analysis[$source->id]['total'],
-                    "positive" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['positive'] / $analysis[$source->id]['total']) * 100) : 0,
-                    "neutral" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['neutral'] / $analysis[$source->id]['total']) * 100) : 0,
-                    "negative" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['negative'] / $analysis[$source->id]['total']) * 100) : 0,
+                    "positive" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['positive'] / $total['positive']) * 100) : 0,
+                    "neutral" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['neutral'] / $total['neutral']) * 100) : 0,
+                    "negative" => $analysis[$source->id]['total'] ? self::point_two_digits(($analysis[$source->id]['negative'] / $total['negative']) * 100) : 0,
                     "sentiment_score" => round((((1 * $analysis[$source->id]['positive']) + (-1 * $analysis[$source->id]['negative'])) / ($analysis[$source->id]['positive'] + $analysis[$source->id]['negative'] + $analysis[$source->id]['neutral'])) * 5),
                 ];
             } else {
