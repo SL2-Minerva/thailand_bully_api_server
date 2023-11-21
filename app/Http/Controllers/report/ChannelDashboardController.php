@@ -1161,20 +1161,14 @@ class ChannelDashboardController extends Controller
                 'sources.name as source_name',
                 'messages.message_datetime as date_m',
                 'messages.device as device',
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_reactions as number_of_reactions',
-                'messages.number_of_shares as number_of_shares',
-                'classifications.name as classification_name',
-                'message_results.classification_id as classification_id'
+                'messages.reference_message_id as reference_message_id',
+                'messages.author as author',
             ])
             ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-            // ->where('source_id', $source_id_id);
 
         if ($source_id_id) {
             $data->where('source_id', $source_id_id);
