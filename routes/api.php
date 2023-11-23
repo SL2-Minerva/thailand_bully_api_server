@@ -29,6 +29,7 @@ use App\Http\Controllers\report\LeveltreeVoiceDashboardController;
 use App\Http\Controllers\report\SentimentDashboardController;
 use App\Http\Controllers\report\LevethreeOverAllDashboardController;
 use App\Http\Controllers\HeathCheckController;
+use App\Http\Controllers\report\MonitoringController;
 use App\Http\Controllers\report\LevelThreeTableController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -245,6 +246,12 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
             Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
             Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
+        });
+
+        Route::group(['prefix' => 'dashboard-monitoring'], function () {
+            Route::get('daily-by', [MonitoringController::class, 'dailyBy']);
+            Route::get('top-engagement', [MonitoringController::class, 'topEngagementOfPost']);
+            Route::get('engagement-post', [MonitoringController::class, 'engagementOfPost']);
         });
 
         Route::group(['prefix' => 'level-three-table'], function () {
