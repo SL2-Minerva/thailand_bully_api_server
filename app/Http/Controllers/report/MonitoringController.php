@@ -85,8 +85,8 @@ class MonitoringController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-                'message_results.classification_id',
-                'message_results.classification_type_id',
+                /*'message_results.classification_id',
+                'message_results.classification_type_id',*/
                 'messages.created_at AS created_at',
                 'keywords.name AS keyword_name',
                 'keywords.campaign_id AS campaign_id',
@@ -101,7 +101,7 @@ class MonitoringController extends Controller
             ])
             ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            //->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             /*->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
             ->whereIn('keyword_id', $keywordIds)
@@ -421,11 +421,12 @@ class MonitoringController extends Controller
             ];
             $data[] = $data_push;
         }
+        $result = array();
         if (count($messageIds) > 0) {
             $messageResult = DB::table('message_results')
                 ->select('*')
                 ->whereIn('message_id', $messageIds)->get();
-            $result = array();
+
             foreach ($data as $message) {
                 $message['sentiment'] = "";
                 $message['bully_type'] = "";
@@ -521,6 +522,8 @@ class MonitoringController extends Controller
         $data = ["id" => $post->id ?? null,
             "message_id" => $post->message_id,
             "message_detail" => $post->full_message,
+            "post_date" => Carbon::parse($post->message_datetime)->format('Y/m/d'),
+            "post_time" => Carbon::parse($post->message_datetime)->format('H:i'),
             "icon" => "",
             "cover_image" => "",
             "source_id" => $post->source_id,
@@ -570,62 +573,155 @@ class MonitoringController extends Controller
 
     public function topInfluencerPost(Request $request)
     {
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);//->omit(['full_message']);
+        $raw_data = $raw->limit(5)->get();
 
-        $raw = $this->rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_data = $raw->orderByDesc('total_engagement')->limit(5)->get();
-
-        foreach ($raw_data as $ke => $item) {
-            $date_d = Carbon::parse($item->date_m)->format('D');
-            $types = $this->getClassificationName($item->id);
-            $parent = null;
-
-            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
-                $parent = $item->message_id;
-            }
-
+        $classificationTypes = self::getClassificationMaster();
+        $messageIds = $raw_data->pluck('id')->all();
+        foreach ($raw_data as $item) {
+            //$date_d = Carbon::parse($item->date_m)->format('D');
             $data_push = [
                 "id" => $item->id ?? null,
                 "message_id" => $item->message_id,
                 "message_detail" => $item->full_message,
                 "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
-                "day" => $date_d,
+                "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
+                "icon" => "",
+                "cover_image" => "",
+                "message_count"=> $item->message_count,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
                 "channel" => $item->source_name,
                 "source_name" => $item->source_name,
                 "link_message" => $item->link_message,
-                "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+                "parent" =>  $item->reference_message_id,
+                "engagement" => $item->total_engagement
             ];
-
-
-            // loop for get classification name
-            foreach ($types as $type) {
-                if ($type->classification_type_id == 1) {
-                    $data_push['sentiment'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 2) {
-                    $data_push['bully_type'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 3) {
-                    $data_push['bully_level'] = $type->classification_name;
-                }
-            }
-
             $data[] = $data_push;
         }
+        $result = array();
+        if (count($messageIds) > 0) {
+            $messageResult = DB::table('message_results')
+                ->select('*')
+                ->whereIn('message_id', $messageIds)->get();
 
-        return parent::handleRespond($data);
+            foreach ($data as $message) {
+                $message['sentiment'] = "";
+                $message['bully_type'] = "";
+                $message['bully_level'] = "";
+                $count = 0;
+                foreach ($messageResult as $item) {
+                    if ($message['id'] == $item->message_id) {
+                        $count++;
+                        $message = $this->packClassification($classificationTypes, $item, $message);
+                    }
+                    if ($count > 2) {
+                        break;
+                    }
+                }
+                $result[] = $message;
+            }
+        }
+
+        return parent::handleRespond($result);
     }
 
     public function influencerPost(Request $request)
     {
 
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);//->omit(['full_message']);
+        $raw_data  = self::selectData($raw, $request->select);
+
+        $classificationTypes = self::getClassificationMaster();
+        $messageIds = $raw_data->pluck('id')->all();
+        foreach ($raw_data as $item) {
+            //$date_d = Carbon::parse($item->date_m)->format('D');
+            $data_push = [
+                "id" => $item->id ?? null,
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
+                "icon" => "",
+                "cover_image" => "",
+                "message_count"=> $item->message_count,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $item->source_name,
+                "source_name" => $item->source_name,
+                "link_message" => $item->link_message,
+                "parent" =>  $item->reference_message_id,
+                "engagement" => $item->total_engagement
+            ];
+            $data[] = $data_push;
+        }
+        $result = array();
+        if (count($messageIds) > 0) {
+            $messageResult = DB::table('message_results')
+                ->select('*')
+                ->whereIn('message_id', $messageIds)->get();
+
+            foreach ($data as $message) {
+                $message['sentiment'] = "";
+                $message['bully_type'] = "";
+                $message['bully_level'] = "";
+                $count = 0;
+                foreach ($messageResult as $item) {
+                    if ($message['id'] == $item->message_id) {
+                        $count++;
+                        $message = $this->packClassification($classificationTypes, $item, $message);
+                    }
+                    if ($count > 2) {
+                        break;
+                    }
+                }
+                $result[] = $message;
+            }
+        }
+
+        return parent::handleRespond($result);
     }
 
+
+    private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date)
+    {
+        $keyword = Keyword::where('campaign_id', $campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+        $data = DB::table('messages')
+            ->select('messages.*', 'k.name as keyword_name', 'k.campaign_id as campaign_id', 's.name as source_name',  DB::raw('COALESCE(number_of_comments, 0) +
+                    COALESCE(number_of_shares, 0) +
+                    COALESCE(number_of_reactions, 0) AS total_engagement'))
+            ->selectRaw('COUNT(CASE WHEN message_type IN (?, ?) THEN 1 END) AS message_count', ['post', 'Post'])
+            ->leftJoin('keywords as k', 'k.id', '=', 'messages.keyword_id')
+
+            ->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
+            ->where('k.campaign_id', 3)
+            ->whereIn('messages.keyword_id', $keywordIds)
+            ->whereBetween('messages.message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->groupBy('messages.author')
+            ->having('message_count', '>', 0)
+            ->orderByDesc('message_count');
+
+
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+        // $data->dd();
+        return $data;
+    }
 
 }
