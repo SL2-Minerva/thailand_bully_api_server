@@ -399,8 +399,8 @@ class MonitoringController extends Controller
         $raw = $raw->orderByDesc('total_engagement')->limit(1);
         $raw_data = self::selectData($raw, $request->select);
 
-        //$classificationTypes = self::getClassificationMaster();
-        $messageIds = $raw_data->pluck('message_id')->all();
+        $classificationTypes = self::getClassificationMaster();
+        $messageIds = $raw_data->pluck('id')->all();
         foreach ($raw_data as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             //$types = $this->getClassificationName($item->message_id);
@@ -449,11 +449,25 @@ class MonitoringController extends Controller
             $data[] = $data_push;
         }
 
-        $messageResult = DB::table('messages')
-            ->select(['message_results.classification_id,message_results.classification_type_id')
+        $messageResult = DB::table('message_results')
+            ->select('*')
             ->whereIn('message_id', $messageIds)->get();
+        $result = array();
+        foreach ($data as $message) {
+            $count = 0;
+            foreach ($messageResult as $item) {
+                if ($message['id'] == $item->message_id) {
+                    $count++;
+                    $message=$this->packClassification($classificationTypes, $item,$message);
+                }
+                if ($count > 2) {
+                    break;
+                }
+            }
+            $result[] = $message;
+        }
 
-        return parent::handleRespond($data);
+        return parent::handleRespond($result);
     }
 
     public function detailOfPost(Request $request)
@@ -527,48 +541,49 @@ class MonitoringController extends Controller
         return parent::handleRespond($data);
     }
 
-    function packClassification($classificationTypes, $item)
+    function packClassification($classificationTypes, $item ,$message)
     {
-
         if ($item->classification_type_id == 1) {
             foreach ($classificationTypes as $classificationType) {
                 if ($classificationType->id == $item->classification_id) {
-                    $item->sentiment = $classificationType->name;
+                    $message['sentiment'] = $classificationType->name;
                     break;
                 }
             }
         } else if ($item->classification_type_id == 2) {
             foreach ($classificationTypes as $classificationType) {
                 if ($classificationType->id == $item->classification_id) {
-                    $item->bully_type = $classificationType->name;
+                    $message['bully_type'] = $classificationType->name;
                     break;
                 }
             }
         } else {
             foreach ($classificationTypes as $classificationType) {
                 if ($classificationType->id == $item->classification_id) {
-                    $item->bully_level = $classificationType->name;
+                    $message['bully_level'] = $classificationType->name;
                     break;
                 }
             }
         }
-        return $item;
-    }/*
+        return $message;
+    }
 
-    {
-        if ($item->classification_type_id == 1) {
-            $data_push->sentiment = $item->classification_name;
-        }
+    /*
 
-        if ($item->classification_type_id == 2) {
-            $data_push->bully_type = $item->classification_name;
-        }
+        {
+            if ($item->classification_type_id == 1) {
+                $data_push->sentiment = $item->classification_name;
+            }
 
-        if ($item->classification_type_id == 3) {
-            $data_push->bully_level = $item->classification_name;
-        }
-        return $data_push;
-    }*/
+            if ($item->classification_type_id == 2) {
+                $data_push->bully_type = $item->classification_name;
+            }
+
+            if ($item->classification_type_id == 3) {
+                $data_push->bully_level = $item->classification_name;
+            }
+            return $data_push;
+        }*/
 
     public function topInfluencerPost(Request $request)
     {
