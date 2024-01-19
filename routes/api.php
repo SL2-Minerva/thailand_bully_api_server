@@ -252,6 +252,9 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('daily-by', [MonitoringController::class, 'dailyBy']);
             Route::get('top-engagement', [MonitoringController::class, 'topEngagementOfPost']);
             Route::get('engagement-post', [MonitoringController::class, 'engagementOfPost']);
+            Route::get('top-influencer', [MonitoringController::class, 'topInfluencerPost']);
+            Route::get('influencer', [MonitoringController::class, 'influencerPost']);
+            Route::get('post-detail', [MonitoringController::class, 'detailOfPost']);
         });
 
         Route::group(['prefix' => 'level-three-table'], function () {

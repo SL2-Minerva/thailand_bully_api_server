@@ -49,10 +49,9 @@ class MonitoringController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
+            $this->start_date_previous = $this->date_carbon($request->start_date_period);
+            $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
-
 
 
     }
@@ -86,34 +85,35 @@ class MonitoringController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name AS keyword_name',
-                'classifications.classification_type_id',
                 'message_results.classification_id',
-                'classifications.color AS classification_color',
-                'sources.name AS source_name',
+                'message_results.classification_type_id',
                 'messages.created_at AS created_at',
+                'keywords.name AS keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                /*'campaigns.name AS campaign_name',
+                'classifications.classification_type_id',
                 'classifications.name AS classification_name',
+                'classifications.color AS classification_color',*/
+                'sources.name AS source_name',
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement')
             ])
             ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            /*->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
+            /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
             ->whereIn('keyword_id', $keywordIds)
+            ->where(function ($query) {
+                $query->where('message_type', '=', 'Post')
+                    ->orWhere('message_type', '=', 'post');
+            })
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
-            // ->orderByDesc('total_engagement');
-            // ->get();
-
-        if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
-        }
+        // ->orderByDesc('total_engagement');
+        // ->get();
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
@@ -123,7 +123,7 @@ class MonitoringController extends Controller
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $data->whereIn('source_id', $source_ids);
         }
-
+        // $data->dd();
         return $data;
     }
 
@@ -156,7 +156,7 @@ class MonitoringController extends Controller
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-            
+
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
         }
@@ -299,6 +299,13 @@ class MonitoringController extends Controller
 
     }
 
+    /*private function getClassificationMaster()
+    {
+        return DB::table('tbl_classifications')
+            ->join('tbl_classification_types', 'tbl_classifications.classification_type_id', '=', 'tbl_classification_types.id')
+            ->get();
+    }*/
+
     private function getClassificationName($message_id)
     {
         return DB::table('messages')
@@ -315,27 +322,256 @@ class MonitoringController extends Controller
 
     private function selectData($raw, $select, $type = null)
     {
-
-        switch ($select) {
-            case "top10":
-                $data = $raw->limit(10)->get();
-                break;
-            case "top20":
-                $data = $raw->limit(20)->get();
-                break;
-            case "top50":
-                $data = $raw->limit(50)->get();
-            case "top100":
-                $data = $raw->limit(100)->get();
-                break;
-            default:
-                $data = $raw->get();
-        }
-
-        return $data;
+        return match ($select) {
+            "top10" => $raw->limit(10)->get(),
+            "top20" => $raw->limit(20)->get(),
+            "top50" => $raw->limit(50)->get(),
+            "top100" => $raw->limit(100)->get(),
+            default => $raw->get(),
+        };
     }
 
-    public function topEngagementOfPost(Request $request) {
+    private function getClassificationMaster()
+    {
+        return DB::table('classifications')->select("classifications.*", "classification_types.name as classification_type_name")
+            ->join('classification_types', 'classifications.classification_type_id', '=', 'classification_types.id')
+            ->get();
+    }
+
+    public function topEngagementOfPost(Request $request)
+    {
+
+        // $classificationTypes = self::getClassificationMaster();
+        $raw = self::raw_message($this->campaign_id, $this->start_date, $this->end_date);
+        $raw_data = $raw->orderByDesc('total_engagement')->limit(5)->get();
+        foreach ($raw_data as $item) {
+
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            $types = $this->getClassificationName($item->message_id);
+            $parent = null;
+
+            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
+                $parent = $item->message_id;
+            }
+
+            $data_push = [
+                "id" => $item->id ?? null,
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
+                "day" => $date_d,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $item->source_name,
+                "source_name" => $item->source_name,
+                "link_message" => $item->link_message,
+                "parent" => $parent,
+                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+            ];
+
+
+            // loop for get classification name
+            foreach ($types as $type) {
+                if ($type->classification_type_id == 1) {
+                    $data_push['sentiment'] = $type->classification_name;
+                }
+
+                if ($type->classification_type_id == 2) {
+                    $data_push['bully_type'] = $type->classification_name;
+                }
+
+                if ($type->classification_type_id == 3) {
+                    $data_push['bully_level'] = $type->classification_name;
+                }
+            }
+
+            $data[] = $data_push;
+        }
+
+        return parent::handleRespond($data);
+    }
+
+    public function engagementOfPost(Request $request)
+    {
+        $raw = self::raw_message($this->campaign_id, $this->start_date, $this->end_date);
+        $raw = $raw->orderByDesc('total_engagement')->limit(1);
+        $raw_data = self::selectData($raw, $request->select);
+
+        //$classificationTypes = self::getClassificationMaster();
+        $messageIds = $raw_data->pluck('message_id')->all();
+        foreach ($raw_data as $item) {
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            //$types = $this->getClassificationName($item->message_id);
+            $parent = null;
+
+            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
+                $parent = $item->message_id;
+            }
+            //$sentiment = self::packClassification($classificationTypes, $item);
+            $data_push = [
+                "id" => $item->id ?? null,
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
+                "day" => $date_d,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $item->source_name,
+                "source_name" => $item->source_name,
+                "link_message" => $item->link_message,
+                "parent" => $parent,
+                "engagement" => $item->total_engagement,
+                /*"sentiment" =>$sentiment->sentiment,
+                "bully_type" => $item->bully_type,
+                "bully_level" => $item->bully_level*/
+            ];
+
+
+            // loop for get classification name
+            /* foreach ($types as $type) {
+                 if ($type->classification_type_id == 1) {
+                     $data_push['sentiment'] = $type->classification_name;
+                 }
+
+                 if ($type->classification_type_id == 2) {
+                     $data_push['bully_type'] = $type->classification_name;
+                 }
+
+                 if ($type->classification_type_id == 3) {
+                     $data_push['bully_level'] = $type->classification_name;
+                 }
+             }*/
+
+            $data[] = $data_push;
+        }
+
+        $messageResult = DB::table('messages')
+            ->select(['message_results.classification_id,message_results.classification_type_id')
+            ->whereIn('message_id', $messageIds)->get();
+
+        return parent::handleRespond($data);
+    }
+
+    public function detailOfPost(Request $request)
+    {
+        $messageId = $request->message_id;
+
+        $query = DB::table('messages')
+            ->select([
+                'messages.*',
+                'message_results.classification_id as classification_id',
+                'classifications.classification_type_id',
+                'classifications.name AS classification_name',
+                'classifications.color AS classification_color',
+            ])
+            ->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id');
+
+        $post = $query->where('messages.message_id', $messageId)
+            ->where('messages.reference_message_id', $messageId)
+            ->get();
+
+        $comment = $query->where('messages.message_id', '!=', $messageId)
+            ->where('messages.reference_message_id', '=', $messageId)
+            ->get();
+
+        $data_push = null;
+        $messageId = 0;
+
+        foreach ($post as $item) {
+            if ($messageId != $item->message_id) {
+                $messageId = $item->message_id;
+                $data_push = $item;
+            }
+            $data_push = self::packClassification($data_push, $item);
+        }
+
+        $data_comment = array();
+        $referenceMessageId = 0;
+        foreach ($comment as $item) {
+            if ($referenceMessageId != $item->reference_message_id) {
+                $referenceMessageId = $item->reference_message_id;
+                $data_comment[] = $item;
+            }
+            foreach ($data_comment as $ke => $comment) {
+                if ($comment->id == $item->id) {
+                    $data_comment[$ke] = self::packClassification($data_push, $item);
+                }
+            }
+        }
+
+        $data = ["id" => $data_push->id ?? null,
+            "message_id" => $data_push->message_id,
+            "message_detail" => $data_push->full_message,
+            "icon" => "",
+            "cover_image" => "",
+            "source_id" => $data_push->source_id,
+            "account_name" => $data_push->author,
+            "message_type" => $data_push->message_type,
+            "device" => $data_push->device,
+            "message_datetime" => $data_push->message_datetime,
+            "author" => $data_push->author,
+            "number_of_shares" => $data_push->number_of_shares,
+            "number_of_reactions" => $data_push->number_of_reactions,
+            "number_of_comments" => $data_push->number_of_comments,
+            "number_of_views" => $data_push->number_of_views,
+            "sentiment" => $data_push->sentiment,
+            "bully_level" => $data_push->bully_level,
+            "bully_type" => $data_push->bully_type,
+            "link_message" => $data_push->link_message, "comments" => $data_comment];
+
+        return parent::handleRespond($data);
+    }
+
+    function packClassification($classificationTypes, $item)
+    {
+
+        if ($item->classification_type_id == 1) {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $item->sentiment = $classificationType->name;
+                    break;
+                }
+            }
+        } else if ($item->classification_type_id == 2) {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $item->bully_type = $classificationType->name;
+                    break;
+                }
+            }
+        } else {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $item->bully_level = $classificationType->name;
+                    break;
+                }
+            }
+        }
+        return $item;
+    }/*
+
+    {
+        if ($item->classification_type_id == 1) {
+            $data_push->sentiment = $item->classification_name;
+        }
+
+        if ($item->classification_type_id == 2) {
+            $data_push->bully_type = $item->classification_name;
+        }
+
+        if ($item->classification_type_id == 3) {
+            $data_push->bully_level = $item->classification_name;
+        }
+        return $data_push;
+    }*/
+
+    public function topInfluencerPost(Request $request)
+    {
 
         $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(5)->get();
@@ -388,56 +624,10 @@ class MonitoringController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function engagementOfPost(Request $request) {
+    public function influencerPost(Request $request)
+    {
 
-        $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_data = self::selectData($raw, $request->select);
-
-        foreach ($raw_data as $ke => $item) {
-            $date_d = Carbon::parse($item->date_m)->format('D');
-            $types = $this->getClassificationName($item->message_id);
-            $parent = null;
-            
-            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
-                $parent = $item->message_id;
-            }
-
-            $data_push = [
-                "id" => $item->id ?? null,
-                "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
-                "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
-                "day" => $date_d,
-                "message_type" => $item->message_type,
-                "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
-                "link_message" => $item->link_message,
-                "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
-            ];
-
-
-            // loop for get classification name
-            foreach ($types as $type) {
-                if ($type->classification_type_id == 1) {
-                    $data_push['sentiment'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 2) {
-                    $data_push['bully_type'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 3) {
-                    $data_push['bully_level'] = $type->classification_name;
-                }
-            }
-
-            $data[] = $data_push;
-        }
-
-        return parent::handleRespond($data);
     }
+
+
 }
