@@ -350,7 +350,7 @@ class DashboardController extends Controller
         ];
     }
 
-    
+
     private function calculateEngagement($keywordIds, $start_date, $end_date, $source_id)
     {
         return DB::table('messages')
@@ -399,21 +399,21 @@ class DashboardController extends Controller
             $convert_id = implode(',', $keyword_id);
         }
 
-        $results = DB::select(DB::raw("SELECT 
+        $results = DB::select(DB::raw("SELECT
             COUNT(*) AS total_count,
             SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
             SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
             SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral,
-            ((SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) * 1) + 
+            ((SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) * 1) +
             (SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) * -1)) / COUNT(*) * 5 AS sentiment_score
-        FROM 
+        FROM
             tbl_messages m
             LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
             LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
-        WHERE 
+        WHERE
             m.keyword_id IN ($convert_id) AND c.name IN ('Positive', 'Negative', 'Neutral') AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
-        
+
         if (!empty($results)) {
             $results = $results[0];
             $sentiment_score = $results->sentiment_score ?? 0;
@@ -627,7 +627,7 @@ class DashboardController extends Controller
 
         $messageAll = $totalKeyword->count();
         $totalKeyword = $totalKeyword->get();
-        
+
         $mainLink = [];
 
         foreach ($totalKeyword as $object) {
@@ -816,25 +816,25 @@ class DashboardController extends Controller
                 $keyword_id = $item_share['keyword_id'];
                 $total = $item_share['total'];
                 $total_percentage = 0;
-                
+
                 foreach ($item_share['value'] as &$value) {
                     $percentage = !$total ? 0 : ($value['number_of_message'] / $total) * 100;
                     $value['percentage'] = self::point_two_digits($percentage);
                     $total_percentage += self::point_two_digits($percentage);
                 }
-                
+
                 $last_index = count($item_share['value']) - 1;
                 if ($total_percentage != 100) {
                     $diff = 100 - $total_percentage;
                     $value = &$item_share['value'][$last_index];
                     $value["percentage"] += $diff;
                     $value["percentage"] =self::point_two_digits($value["percentage"]);
-                    
+
                     if ($value['percentage'] > 100) {
                         $value['percentage'] = 100;
                     }
                 }
-                
+
                 if (isset($data[$keyword_id]['value'])) {
                     $data[$keyword_id]['value'] = array_values($data[$keyword_id]['value']);
                 }
@@ -1063,22 +1063,12 @@ class DashboardController extends Controller
 
         //todo: sort by total
         if (count($data) > 0) {
-            switch ($select) {
-                case "top10":
-                    $data = array_slice($data, 0, 10);
-                    break;
-                case "top20":
-                    $data = array_slice($data, 0, 20);
-                    break;
-                case "top50":
-                    $data = array_slice($data, 0, 50);
-                    break;
-                case "top100":
-                    $data = array_slice($data, 0, 100);
-                    break;
-                default:
-                    $data = array_slice($data, 0, 100);
-            }
+            $data = match ($select) {
+                "top10" => array_slice($data, 0, 10),
+                "top20" => array_slice($data, 0, 20),
+                "top50" => array_slice($data, 0, 50),
+                default => array_slice($data, 0, 100),
+            };
         }
 
         return $data;
@@ -1297,21 +1287,11 @@ class DashboardController extends Controller
     private function wordCloudsMessage($raw, $select, $type = null)
     {
         $dummy_data = $this->wordCloudsData($raw);
-        switch ($select) {
-            case "top10":
-                $data = array_slice($dummy_data, 0, 10);
-                break;
-            case "top20":
-                $data = array_slice($dummy_data, 0, 20);
-                break;
-            case "top50":
-                $data = array_slice($dummy_data, 0, 50);
-                break;
-
-            default:
-                $data = array_slice($dummy_data, 0, 100);
-        }
-
-        return $data;
+        return match ($select) {
+            "top10" => array_slice($dummy_data, 0, 10),
+            "top20" => array_slice($dummy_data, 0, 20),
+            "top50" => array_slice($dummy_data, 0, 50),
+            default => array_slice($dummy_data, 0, 100),
+        };
     }
 }

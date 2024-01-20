@@ -299,8 +299,8 @@ class MonitoringController extends Controller
 
     /*private function getClassificationMaster()
     {
-        return DB::table('tbl_classifications')
-            ->join('tbl_classification_types', 'tbl_classifications.classification_type_id', '=', 'tbl_classification_types.id')
+        return DB::table('classifications')
+            ->join('classification_types', 'classifications.classification_type_id', '=', 'classification_types.id')
             ->get();
     }*/
 
@@ -321,11 +321,11 @@ class MonitoringController extends Controller
     private function selectData($raw, $select, $type = null)
     {
         return match ($select) {
-            "top10" => $raw->limit(10)->get(),
+            "all" => $raw->get(),
             "top20" => $raw->limit(20)->get(),
             "top50" => $raw->limit(50)->get(),
             "top100" => $raw->limit(100)->get(),
-            default => $raw->get(),
+            default => $raw->limit(10)->get()
         };
     }
 
@@ -366,7 +366,7 @@ class MonitoringController extends Controller
                 "source_name" => $item->source_name,
                 "link_message" => $item->link_message,
                 "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+                "total_engagement" => $item->total_engagement,
             ];
 
 
@@ -416,7 +416,64 @@ class MonitoringController extends Controller
                 "source_id" => $item->source_id,
                 /*"source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
-                "parent" =>  $item->reference_message_id,
+                "parent" => $item->reference_message_id,
+                "total_engagement" => $item->total_engagement
+            ];
+            $data[] = $data_push;
+        }
+        $result = array();
+        if (count($messageIds) > 0) {
+            $messageResult = DB::table('message_results')
+                ->select('*')
+                ->whereIn('message_id', $messageIds)->get();
+
+            foreach ($data as $message) {
+                $message['sentiment'] = "";
+                $message['bully_type'] = "";
+                $message['bully_level'] = "";
+                $count = 0;
+                foreach ($messageResult as $item) {
+                    if ($message['id'] == $item->message_id) {
+                        $count++;
+                        $message = $this->packClassification($classificationTypes, $item, $message);
+                    }
+                    if ($count > 2) {
+                        break;
+                    }
+                }
+                $result[] = $message;
+            }
+        }
+
+        return parent::handleRespond($result);
+    }
+
+    public function engagementExport(Request $request)
+    {
+        $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $raw = $raw->orderByDesc('total_engagement');
+        $raw_data = self::selectData($raw, $request->select);
+
+        $classificationTypes = self::getClassificationMaster();
+        $messageIds = $raw_data->pluck('id')->all();
+        foreach ($raw_data as $item) {
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            $data_push = [
+                "id" => $item->id ?? null,
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
+                "day" => $date_d,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $item->source_name,
+                "source_name" => $item->source_name,
+                "source_id" => $item->source_id,
+                /*"source_name" => $item->source_name,*/
+                "link_message" => $item->link_message,
+                "parent" => $item->reference_message_id,
                 "engagement" => $item->total_engagement
             ];
             $data[] = $data_push;
@@ -451,15 +508,7 @@ class MonitoringController extends Controller
     private function rawQueryMessage()
     {
         $query = DB::table('messages')
-            ->select([
-                'messages.*'/*,
-                'message_results.classification_id as classification_id',
-                'classifications.classification_type_id',
-                'classifications.name AS classification_name',
-                'classifications.color AS classification_color',*/
-            ])
-            /*->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
+            ->select(['messages.*'])
             ->groupBy('messages.author');
         return $query;
     }
@@ -531,7 +580,7 @@ class MonitoringController extends Controller
             "device" => $post->device,
             "message_datetime" => $post->message_datetime,
             "author" => $post->author,
-            "parent" =>  "",
+            "parent" => "",
             "number_of_shares" => $post->number_of_shares,
             "number_of_reactions" => $post->number_of_reactions,
             "number_of_comments" => $post->number_of_comments,
@@ -572,70 +621,74 @@ class MonitoringController extends Controller
 
     public function topInfluencerPost(Request $request)
     {
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);//->omit(['full_message']);
-        $raw_data = $raw->limit(5)->get();
-
-        $classificationTypes = self::getClassificationMaster();
-        $messageIds = $raw_data->pluck('id')->all();
-        foreach ($raw_data as $item) {
-            //$date_d = Carbon::parse($item->date_m)->format('D');
-            $data_push = [
-                "id" => $item->id ?? null,
-                "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
-                "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
-                "icon" => "",
-                "cover_image" => "",
-                "message_count"=> $item->message_count,
-                "message_type" => $item->message_type,
-                "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
-                "source_id" => $item->source_id,
-                "link_message" => $item->link_message,
-                "parent" =>  $item->reference_message_id,
-                "engagement" => $item->total_engagement
-            ];
-            $data[] = $data_push;
-        }
-        $result = array();
-        if (count($messageIds) > 0) {
-            $messageResult = DB::table('message_results')
-                ->select('*')
-                ->whereIn('message_id', $messageIds)->get();
-
-            foreach ($data as $message) {
-                $message['sentiment'] = "";
-                $message['bully_type'] = "";
-                $message['bully_level'] = "";
-                $count = 0;
-                foreach ($messageResult as $item) {
-                    if ($message['id'] == $item->message_id) {
-                        $count++;
-                        $message = $this->packClassification($classificationTypes, $item, $message);
-                    }
-                    if ($count > 2) {
-                        break;
-                    }
-                }
-                $result[] = $message;
-            }
-        }
-
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $result = self::parseInfluencer($raw);
         return parent::handleRespond($result);
     }
 
     public function influencerPost(Request $request)
     {
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $result = self::parseInfluencer($raw);
+        return parent::handleRespond($result);
+    }
 
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);//->omit(['full_message']);
-        $raw_data  = self::selectData($raw, $request->select);
+    private function parseInfluencer($raw)
+    {
+        $data = array();
+        foreach ($raw as $item) {
+            $data_push = [
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
+                "icon" => "",
+                "cover_image" => "",
+                "total_post" => ($item->total_post / 3),
+                "total_engagement" => ($item->total_engagement / 3),
+                "positive" => $item->positive,
+                "negative" => $item->negative,
+                "neutral" => $item->neutral,
+            ];
+            $data[] = $data_push;
+        }
+        return $data;
+    }
+
+    public function influencerAuthor(Request $request)
+    {
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+        $query = DB::table('messages')
+            ->select('messages.*',/* 'k.name as keyword_name', 'k.campaign_id as campaign_id', */ 's.name as source_name', DB::raw('COALESCE(number_of_comments, 0) +
+                    COALESCE(number_of_shares, 0) +
+                    COALESCE(number_of_reactions, 0) AS total_engagement'))
+            //->leftJoin('keywords as k', 'k.id', '=', 'messages.keyword_id')
+            ->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
+            //->where('k.campaign_id', 3)
+            ->whereIn('messages.keyword_id', $keywordIds)
+            ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $query->where('source_id', $this->source_id);
+        }
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $query->whereIn('source_id', $source_ids);
+        }
+        $ofset = $request->limit * ($request->page - 1);
+        $dataRaw = $query->where("messages.author", $request->author)->limit($request->limit)->offset($ofset)->orderByDesc("messages.message_datetime")->get();
 
         $classificationTypes = self::getClassificationMaster();
-        $messageIds = $raw_data->pluck('id')->all();
-        foreach ($raw_data as $item) {
+        $messageIds = $dataRaw->pluck('id')->all();
+        foreach ($dataRaw as $item) {
             //$date_d = Carbon::parse($item->date_m)->format('D');
             $data_push = [
                 "id" => $item->id ?? null,
@@ -646,14 +699,14 @@ class MonitoringController extends Controller
                 "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                 "icon" => "",
                 "cover_image" => "",
-                "message_count"=> $item->message_count,
+                /*"message_count"=> $item->message_count,*/
                 "message_type" => $item->message_type,
                 "device" => $item->device,
                 "channel" => $item->source_name,
                 "source_name" => $item->source_name,
                 "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
-                "parent" =>  $item->reference_message_id,
+                "parent" => $item->reference_message_id,
                 "engagement" => $item->total_engagement
             ];
             $data[] = $data_push;
@@ -685,8 +738,15 @@ class MonitoringController extends Controller
         return parent::handleRespond($result);
     }
 
+    public function influencerExport(Request $request)
+    {
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $result = self::parseInfluencer($raw);
+        return parent::handleRespond($result);
+    }
 
-    private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date)
+
+    private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date, $limit, $page)
     {
         $keyword = Keyword::where('campaign_id', $campaign_id);
 
@@ -697,31 +757,55 @@ class MonitoringController extends Controller
         $keyword = $keyword->get();
 
         $keywordIds = $keyword->pluck('id')->all();
-        $data = DB::table('messages')
-            ->select('messages.*',/* 'k.name as keyword_name', 'k.campaign_id as campaign_id', */'s.name as source_name',  DB::raw('COALESCE(number_of_comments, 0) +
-                    COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement'))
-            ->selectRaw('COUNT(CASE WHEN message_type IN (?, ?) THEN 1 END) AS message_count', ['post', 'Post'])
-            //->leftJoin('keywords as k', 'k.id', '=', 'messages.keyword_id')
 
-            ->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
-            //->where('k.campaign_id', 3)
-            ->whereIn('messages.keyword_id', $keywordIds)
-            ->whereBetween('messages.message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->groupBy('messages.author')
-            ->having('message_count', '>', 0)
-            ->orderByDesc('message_count');
 
-        if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
+        /*if ($this->source_id) {
+            $data->where('outer_messages.source_id', $this->source_id);
         }
-
-        if (!$this->user_login->is_admin) {
+        */
+        /*if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $data->whereIn('source_id', $source_ids);
-        }
-        // $data->dd();
+            $data->whereIn('outer_messages.source_id', $source_ids);
+        }*/
+        if ($page == 0)
+            $page = 1;
+        if ($limit == 0)
+            $limit = 10;
+        $offset = $limit * ($page - 1);
+        $data = DB::select("SELECT
+    m.author,m.message_datetime,m.source_id,
+    COALESCE(SUM(mr.total_engagement), 0) AS total_engagement,
+    COUNT(m.id) as total_post,
+    SUM(CASE WHEN message_results.classification_id = '1' THEN 1 ELSE 0 END) AS positive,
+    SUM(CASE WHEN message_results.classification_id = '2' THEN 1 ELSE 0 END) AS negative,
+    SUM(CASE WHEN message_results.classification_id = '3' THEN 1 ELSE 0 END) AS neutral
+FROM
+    tbl_messages m
+LEFT JOIN (
+    SELECT
+        message_id,
+        SUM(COALESCE(number_of_comments, 0) + COALESCE(number_of_shares, 0) + COALESCE(number_of_reactions, 0)) AS total_engagement
+    FROM
+        tbl_messages
+    WHERE
+        keyword_id IN (" . implode(",", $keywordIds) . ")
+        AND (number_of_comments > 0 OR number_of_reactions > 0 OR number_of_shares > 0)
+        AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
+    GROUP BY
+        message_id
+) mr ON m.message_id = mr.message_id
+LEFT JOIN tbl_message_results message_results ON m.id = message_results.message_id
+WHERE
+    m.keyword_id IN (" . implode(",", $keywordIds) . ")
+    AND (m.number_of_comments > 0 OR m.number_of_reactions > 0 OR m.number_of_shares > 0)
+    AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
+    AND m.author IS NOT NULL
+GROUP BY
+    m.author
+HAVING
+    total_engagement > 0
+ORDER BY
+    total_engagement DESC limit $limit offset $offset");
         return $data;
     }
-
 }

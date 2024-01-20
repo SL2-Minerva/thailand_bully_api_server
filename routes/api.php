@@ -253,8 +253,11 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('top-engagement', [MonitoringController::class, 'topEngagementOfPost']);
             Route::get('engagement-post', [MonitoringController::class, 'engagementOfPost']);
             Route::get('post-detail', [MonitoringController::class, 'detailOfPost']);
-            Route::get('top-influencer', [MonitoringController::class, 'topInfluencerPost']);
-            Route::get('influencer', [MonitoringController::class, 'influencerPost']);
+            Route::get('influencers/top', [MonitoringController::class, 'topInfluencerPost']);
+            Route::get('influencers', [MonitoringController::class, 'influencerPost']);
+            Route::get('engagements/export', [MonitoringController::class, 'engagementExport']);
+            Route::get('influencers/export', [MonitoringController::class, 'influencerExport']);
+            Route::get('influencers/author', [MonitoringController::class, 'influencerAuthor']);
 
         });
 
