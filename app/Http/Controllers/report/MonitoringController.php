@@ -52,8 +52,6 @@ class MonitoringController extends Controller
             $this->start_date_previous = $this->date_carbon($request->start_date_period);
             $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
-
-
     }
 
     private function rawMessageCampaign($campaign_id, $start_date, $end_date)
@@ -308,13 +306,13 @@ class MonitoringController extends Controller
 
     private function getClassificationName($message_id)
     {
-        return DB::table('messages')
+        return DB::table('message_results')
             ->select([
                 'classifications.name AS classification_name',
                 'classifications.classification_type_id AS classification_type_id'
             ])
-            ->where('messages.id', $message_id)
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->where('message_results.message_id', $message_id)
+            //->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->limit(3)
             ->get(['classifications.classification_type_id', 'classification_name']);
