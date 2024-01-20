@@ -364,8 +364,8 @@ class MonitoringController extends Controller
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
+                "channel" => $item->channel,
+                /*"source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
@@ -415,6 +415,8 @@ class MonitoringController extends Controller
                 "device" => $item->device,
                 "channel" => $item->source_name,
                 "source_name" => $item->source_name,
+                "source_id" => $item->source_id,
+                /*"source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
                 "parent" =>  $item->reference_message_id,
                 "engagement" => $item->total_engagement
@@ -452,14 +454,14 @@ class MonitoringController extends Controller
     {
         $query = DB::table('messages')
             ->select([
-                'messages.*',
+                'messages.*'/*,
                 'message_results.classification_id as classification_id',
                 'classifications.classification_type_id',
                 'classifications.name AS classification_name',
-                'classifications.color AS classification_color',
+                'classifications.color AS classification_color',*/
             ])
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            /*->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
             ->groupBy('messages.author');
         return $query;
     }
@@ -474,7 +476,6 @@ class MonitoringController extends Controller
 
         $post = self:: rawQueryMessage()->where('messages.message_id', $messageId)
             ->where('messages.reference_message_id', $messageId)->first();
-
 
         $post->sentiment = "";
         $post->bully_type = "";
@@ -594,6 +595,7 @@ class MonitoringController extends Controller
                 "device" => $item->device,
                 "channel" => $item->source_name,
                 "source_name" => $item->source_name,
+                "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
                 "parent" =>  $item->reference_message_id,
                 "engagement" => $item->total_engagement
@@ -651,6 +653,7 @@ class MonitoringController extends Controller
                 "device" => $item->device,
                 "channel" => $item->source_name,
                 "source_name" => $item->source_name,
+                "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
                 "parent" =>  $item->reference_message_id,
                 "engagement" => $item->total_engagement
@@ -697,20 +700,19 @@ class MonitoringController extends Controller
 
         $keywordIds = $keyword->pluck('id')->all();
         $data = DB::table('messages')
-            ->select('messages.*', 'k.name as keyword_name', 'k.campaign_id as campaign_id', 's.name as source_name',  DB::raw('COALESCE(number_of_comments, 0) +
+            ->select('messages.*',/* 'k.name as keyword_name', 'k.campaign_id as campaign_id', */'s.name as source_name',  DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'))
             ->selectRaw('COUNT(CASE WHEN message_type IN (?, ?) THEN 1 END) AS message_count', ['post', 'Post'])
-            ->leftJoin('keywords as k', 'k.id', '=', 'messages.keyword_id')
+            //->leftJoin('keywords as k', 'k.id', '=', 'messages.keyword_id')
 
             ->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
-            ->where('k.campaign_id', 3)
+            //->where('k.campaign_id', 3)
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
             ->having('message_count', '>', 0)
             ->orderByDesc('message_count');
-
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
