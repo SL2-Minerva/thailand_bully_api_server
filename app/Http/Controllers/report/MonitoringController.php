@@ -396,8 +396,22 @@ class MonitoringController extends Controller
         $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
         $raw = $raw->orderByDesc('total_engagement');
         $raw_data = self::selectData($raw, $request->select);
+        $result = self::parseEngamement($raw_data);
+        return parent::handleRespond($result);
+    }
 
-        $classificationTypes = self::getClassificationMaster();
+    public function engagementExport(Request $request)
+    {
+        $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $raw = $raw->orderByDesc('total_engagement');
+        $raw_data = self::selectData($raw, $request->select);
+        $result = self::parseEngamement($raw_data);
+        return parent::handleRespond($result);
+    }
+
+    private function parseEngamement($raw_data)
+    {
+        $data = array();
         $messageIds = $raw_data->pluck('id')->all();
         foreach ($raw_data as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
@@ -421,96 +435,12 @@ class MonitoringController extends Controller
             ];
             $data[] = $data_push;
         }
-        $result = array();
-        if (count($messageIds) > 0) {
-            $messageResult = DB::table('message_results')
-                ->select('*')
-                ->whereIn('message_id', $messageIds)->get();
-
-            foreach ($data as $message) {
-                $message['sentiment'] = "";
-                $message['bully_type'] = "";
-                $message['bully_level'] = "";
-                $count = 0;
-                foreach ($messageResult as $item) {
-                    if ($message['id'] == $item->message_id) {
-                        $count++;
-                        $message = $this->packClassification($classificationTypes, $item, $message);
-                    }
-                    if ($count > 2) {
-                        break;
-                    }
-                }
-                $result[] = $message;
-            }
-        }
-
-        return parent::handleRespond($result);
-    }
-
-    public function engagementExport(Request $request)
-    {
-        $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
-        $raw = $raw->orderByDesc('total_engagement');
-        $raw_data = self::selectData($raw, $request->select);
-
-        $classificationTypes = self::getClassificationMaster();
-        $messageIds = $raw_data->pluck('id')->all();
-        foreach ($raw_data as $item) {
-            $date_d = Carbon::parse($item->date_m)->format('D');
-            $data_push = [
-                "id" => $item->id ?? null,
-                "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
-                "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
-                "day" => $date_d,
-                "message_type" => $item->message_type,
-                "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
-                "source_id" => $item->source_id,
-                /*"source_name" => $item->source_name,*/
-                "link_message" => $item->link_message,
-                "parent" => $item->reference_message_id,
-                "engagement" => $item->total_engagement
-            ];
-            $data[] = $data_push;
-        }
-        $result = array();
-        if (count($messageIds) > 0) {
-            $messageResult = DB::table('message_results')
-                ->select('*')
-                ->whereIn('message_id', $messageIds)->get();
-
-            foreach ($data as $message) {
-                $message['sentiment'] = "";
-                $message['bully_type'] = "";
-                $message['bully_level'] = "";
-                $count = 0;
-                foreach ($messageResult as $item) {
-                    if ($message['id'] == $item->message_id) {
-                        $count++;
-                        $message = $this->packClassification($classificationTypes, $item, $message);
-                    }
-                    if ($count > 2) {
-                        break;
-                    }
-                }
-                $result[] = $message;
-            }
-        }
-
-        return parent::handleRespond($result);
+        return self::parseEngagementLevel($messageIds, $data);
     }
 
     private function rawQueryMessage()
     {
-        $query = DB::table('messages')
-            ->select(['messages.*'])
-            ->groupBy('messages.author');
-        return $query;
+        return DB::table('messages')->select(['messages.*'])->groupBy('messages.author');
     }
 
     public function detailOfPost(Request $request)
@@ -542,31 +472,8 @@ class MonitoringController extends Controller
             }
         }
 
-        $classificationTypes = self::getClassificationMaster();
-        $result = array();
         $messageIds = $comment->pluck('id')->all();
-        if (count($messageIds) > 0) {
-            $messageResult = DB::table('message_results')
-                ->select('*')
-                ->whereIn('message_id', $messageIds)->get();
-
-            foreach ($post as $message) {
-                $message['sentiment'] = "";
-                $message['bully_type'] = "";
-                $message['bully_level'] = "";
-                $count = 0;
-                foreach ($messageResult as $item) {
-                    if ($message['id'] == $item->message_id) {
-                        $count++;
-                        $message = $this->packClassification($classificationTypes, $item, $message);
-                    }
-                    if ($count > 2) {
-                        break;
-                    }
-                }
-                $result[] = $message;
-            }
-        }
+        $resultComment = self::parseEngagementLevel($messageIds, $comment);
         $data = ["id" => $post->id ?? null,
             "message_id" => $post->message_id,
             "message_detail" => $post->full_message,
@@ -588,7 +495,7 @@ class MonitoringController extends Controller
             "sentiment" => $post->sentiment,
             "bully_type" => $post->bully_type,
             "bully_level" => $post->bully_level,
-            "link_message" => $post->link_message, "comments" => $result];
+            "link_message" => $post->link_message, "comments" => $resultComment];
         return parent::handleRespond($data);
     }
 
@@ -666,12 +573,10 @@ class MonitoringController extends Controller
 
         $keywordIds = $keyword->pluck('id')->all();
         $query = DB::table('messages')
-            ->select('messages.*',/* 'k.name as keyword_name', 'k.campaign_id as campaign_id', */ 's.name as source_name', DB::raw('COALESCE(number_of_comments, 0) +
+            ->select('messages.*', 's.name as source_name', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'))
-            //->leftJoin('keywords as k', 'k.id', '=', 'messages.keyword_id')
             ->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
-            //->where('k.campaign_id', 3)
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
@@ -682,14 +587,20 @@ class MonitoringController extends Controller
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $query->whereIn('source_id', $source_ids);
-        }
-        $ofset = $request->limit * ($request->page - 1);
-        $dataRaw = $query->where("messages.author", $request->author)->limit($request->limit)->offset($ofset)->orderByDesc("messages.message_datetime")->get();
 
-        $classificationTypes = self::getClassificationMaster();
+        }
+        $limit = $request->limit;
+        $page = $request->page;
+        if ($page == 0)
+            $page = 1;
+        if ($limit == 0)
+            $limit = 10;
+        $offset = $limit * ($page - 1);
+        $dataRaw = $query->where("messages.author", $request->author)->limit($limit)->offset($offset)->orderByDesc("messages.message_datetime")->get();
+
+        $data = array();
         $messageIds = $dataRaw->pluck('id')->all();
         foreach ($dataRaw as $item) {
-            //$date_d = Carbon::parse($item->date_m)->format('D');
             $data_push = [
                 "id" => $item->id ?? null,
                 "message_id" => $item->message_id,
@@ -699,7 +610,6 @@ class MonitoringController extends Controller
                 "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                 "icon" => "",
                 "cover_image" => "",
-                /*"message_count"=> $item->message_count,*/
                 "message_type" => $item->message_type,
                 "device" => $item->device,
                 "channel" => $item->source_name,
@@ -707,10 +617,17 @@ class MonitoringController extends Controller
                 "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
                 "parent" => $item->reference_message_id,
-                "engagement" => $item->total_engagement
+                "total_engagement" => $item->total_engagement
             ];
             $data[] = $data_push;
         }
+        $result = self::parseEngagementLevel($messageIds, $data);
+        return parent::handleRespond($result);
+    }
+
+    private function parseEngagementLevel($messageIds, $data)
+    {
+        $classificationTypes = self::getClassificationMaster();
         $result = array();
         if (count($messageIds) > 0) {
             $messageResult = DB::table('message_results')
@@ -734,8 +651,7 @@ class MonitoringController extends Controller
                 $result[] = $message;
             }
         }
-
-        return parent::handleRespond($result);
+        return $result;
     }
 
     public function influencerExport(Request $request)

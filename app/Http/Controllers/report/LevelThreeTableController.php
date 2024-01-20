@@ -76,7 +76,7 @@ class LevelThreeTableController extends Controller
             $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
             $total = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
         }
-        
+
 
         if ($request->message_id) {
             $raw->where('messages.message_id', $request->message_id);
@@ -134,7 +134,7 @@ class LevelThreeTableController extends Controller
 
 
         // Date Format
-        if ($request->report_number === '2.2.003' || 
+        if ($request->report_number === '2.2.003' ||
             $request->report_number === '3.2.003' ||
             $request->report_number === '4.2.003' ||
             $request->report_number === '4.2.013' ||
@@ -142,10 +142,10 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.003' ||
             $request->report_number === '6.2.013'
         ) {
-            
+
             $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
             //$total->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
-            
+
             if ($request->report_number === '4.2.013') {
                 if ($Llabel === 'Comment') {
                     $raw->where('number_of_comments', '>', 0);
@@ -244,7 +244,7 @@ class LevelThreeTableController extends Controller
 
             $raw->where('device', $target);
             $total->where('device', $target);
-            
+
             if ($request->report_number === '4.2.015') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
@@ -274,7 +274,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.006' ||
             $request->report_number === '6.2.016'
         ) {
-            
+
             if ($request->report_number === '2.2.006') {
                 if ($request->label === 'Post Owner') {
                     $raw->where('reference_message_id', '');
@@ -292,7 +292,7 @@ class LevelThreeTableController extends Controller
                     //$total->where('reference_message_id', '!=', '');
                 }
             }
-            
+
 
             if ($request->report_number === '4.2.016') {
                 if ($Llabel === 'Comment') {
@@ -404,7 +404,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '3.2.006' ||
             $request->report_number === '3.2.007' ||
             $request->report_number === '3.2.008' ||
-            $request->report_number === '3.2.009' 
+            $request->report_number === '3.2.009'
 
         ) {
             // dd($raw->get());
@@ -434,9 +434,9 @@ class LevelThreeTableController extends Controller
             $raw->where('sources.name', $label);
 
         }
-        
+
         // Last
-        
+
         if ($request->report_number !== "3.2.002" &&
             $request->report_number !== "4.2.008" &&
             $request->report_number !== '4.2.012' &&
@@ -450,7 +450,7 @@ class LevelThreeTableController extends Controller
             $request->report_number !== '5.2.005' &&
             $request->report_number !== '5.2.006' &&
             $request->report_number !== '5.2.007' &&
-            $request->report_number !== '5.2.008' 
+            $request->report_number !== '5.2.008'
         ) {
             if (isset($request->keyword_id)) {
                 $raw->where('keyword_id', $request->keyword_id);
@@ -477,7 +477,7 @@ class LevelThreeTableController extends Controller
         // }
 
 
-        foreach ($items as $ke => $item) {
+        foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
@@ -588,7 +588,7 @@ class LevelThreeTableController extends Controller
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
-                
+
             ])
             ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
@@ -616,16 +616,16 @@ class LevelThreeTableController extends Controller
                 case 'sentiment' : $field_table = "classifications.name"; break;
                 case 'engagement' : $field_table = "classifications.name"; break;
                 default : $field_table= "total_engagement"; break;
-                 
+
             }
-            
+
             $data->orderBy($field_table, $request->sort);
 
         } else {
             $data->orderByDesc('total_engagement');
         }
 
-        
+
         if ($classification_name) {
             $data->whereIn('classifications.name', $classification_name);
         }
@@ -671,9 +671,9 @@ class LevelThreeTableController extends Controller
                 $request->label === 'Exclusion' ||
                 $request->label === 'Hate Speech' ||
                 $request->label === 'Violence'
-            
+
             ) {
-                
+
                 if ($label === 'Hate Speech') {
                     $label = 'HateSpeech';
                 } else if ($label === 'No Bully') {
@@ -708,7 +708,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.016' ||
             $request->report_number === '6.2.017'
             // $request->report_number === '5.2.008' ||
-            // $request->report_number === '5.2.009' 
+            // $request->report_number === '5.2.009'
         ) {
             if ($Llabel === 'Hate Speech') {
                 $Llabel = 'HateSpeech';
@@ -726,9 +726,9 @@ class LevelThreeTableController extends Controller
         //     // $request->report_number === '5.2.004' ||
         //     // $request->report_number === '5.2.005' ||
         //     // $request->report_number === '5.2.006' ||
-        //     // $request->report_number === '5.2.007' 
+        //     // $request->report_number === '5.2.007'
         //     // $request->report_number === '5.2.008' ||
-        //     // $request->report_number === '5.2.009' 
+        //     // $request->report_number === '5.2.009'
         // ) {
         //     $data->where('classifications.name', $Llabel);
         //     // $data->where('classification_name', $Llabel);
@@ -736,7 +736,7 @@ class LevelThreeTableController extends Controller
         // }
 
         // if ($request->report_number === '5.2.008' ||
-        //     $request->report_number === '5.2.009' 
+        //     $request->report_number === '5.2.009'
         // ) {
         //     $data->whereIn('classifications.classification_type_id', [1 ,2, 3]);
 
@@ -822,7 +822,7 @@ class LevelThreeTableController extends Controller
         if ($this->source_id) {
             $subquery->where('source_id', $this->source_id);
         }
-                
+
                 // $count = $results->count();
 
                     // dd($subquery->get()->count());
@@ -839,9 +839,9 @@ class LevelThreeTableController extends Controller
                 case 'sentiment' : $field_table = "classifications.name"; break;
                 case 'engagement' : $field_table = "classifications.name"; break;
                 default : $field_table= "total_engagement"; break;
-                 
+
             }
-            
+
             $subquery->orderBy($field_table, $request->sort);
 
         } else {
@@ -904,7 +904,7 @@ class LevelThreeTableController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function classifacation_multiple(Request $request, $campaign_id, $start_date, $end_date, $report_number) 
+    private function classifacation_multiple(Request $request, $campaign_id, $start_date, $end_date, $report_number)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -963,7 +963,7 @@ class LevelThreeTableController extends Controller
             JOIN tbl_campaigns ON tbl_keywords.campaign_id = tbl_campaigns.id
             JOIN tbl_message_results ON tbl_message_results.message_id = tbl_messages.id
             JOIN tbl_classifications ON tbl_message_results.classification_id = tbl_classifications.id
-        WHERE 
+        WHERE
             tbl_keywords.campaign_id = $campaign_id AND tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
 
         if ($this->source_id) {
@@ -1018,7 +1018,7 @@ class LevelThreeTableController extends Controller
                 $anylsy["bully_level"] = $anylsy[3];
                 $anylsy["bully_type"] = $anylsy[2];
                 $anylsy["sentiment"] = $anylsy[1];
-    
+
                 if ($anylsy[1] == $Llabel && $anylsy[3] == $label) {
                     $data['message'][] = $anylsy;
                 }
@@ -1028,7 +1028,7 @@ class LevelThreeTableController extends Controller
                 $anylsy["bully_level"] = $anylsy[3];
                 $anylsy["bully_type"] = $anylsy[2];
                 $anylsy["sentiment"] = $anylsy[1];
-    
+
                 if ($anylsy[1] == $Llabel && $anylsy[2] == $label) {
                     $data['message'][] = $anylsy;
                 }
@@ -1038,7 +1038,7 @@ class LevelThreeTableController extends Controller
                 $anylsy["bully_level"] = $anylsy[3];
                 $anylsy["bully_type"] = $anylsy[2];
                 $anylsy["sentiment"] = $anylsy[1];
-    
+
                 if ($anylsy[3] == $Llabel && $anylsy[1] == $label) {
                     $data['message'][] = $anylsy;
                 }
@@ -1048,7 +1048,7 @@ class LevelThreeTableController extends Controller
                 $anylsy["bully_level"] = $anylsy[3];
                 $anylsy["bully_type"] = $anylsy[2];
                 $anylsy["sentiment"] = $anylsy[1];
-    
+
                 if ($anylsy[2] == $Llabel && $anylsy[1] == $label) {
                     $data['message'][] = $anylsy;
                 }
@@ -1074,7 +1074,7 @@ class LevelThreeTableController extends Controller
             if ($originalMessage) {
                 // remove data old table
                 $delete = Message::destroy($originalMessage->id);
-                
+
                 if ($delete) {
                     $newMessage = new MessageDeleteLog();
                     $newMessage->id = $originalMessage->id;
@@ -1092,9 +1092,9 @@ class LevelThreeTableController extends Controller
                     $newMessage->number_of_comments = $originalMessage->number_of_comments;
                     $newMessage->number_of_reactions = $originalMessage->number_of_reactions;
                     $newMessage->number_of_views = $originalMessage->number_of_views;
-        
+
                     $newMessage->save();
-    
+
                     return parent::handleRespond($newMessage);
                 }
             }
