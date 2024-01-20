@@ -362,8 +362,8 @@ class MonitoringController extends Controller
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "channel" => $item->channel,
-                /*"source_name" => $item->source_name,*/
+                "channel" => $item->source_name,
+                "source_name" => $item->source_name,
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
