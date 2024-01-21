@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\report;
 
+use App\Exports\MonitoringExport;
 use App\Http\Controllers\Controller;
 use App\Models\Keyword;
 use App\Models\Organization;
@@ -10,6 +11,7 @@ use App\Models\UserOrganizationGroup;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MonitoringController extends Controller
 {
@@ -86,19 +88,19 @@ class MonitoringController extends Controller
                 /*'message_results.classification_id',
                 'message_results.classification_type_id',*/
                 'messages.created_at AS created_at',
-                'keywords.name AS keyword_name',
+                /*'keywords.name AS keyword_name',
                 'keywords.campaign_id AS campaign_id',
-                /*'campaigns.name AS campaign_name',
+                'campaigns.name AS campaign_name',
                 'classifications.classification_type_id',
                 'classifications.name AS classification_name',
-                'classifications.color AS classification_color',*/
-                'sources.name AS source_name',
+                'classifications.color AS classification_color',
+                'sources.name AS source_name',*/
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement')
             ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            //->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            //->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
             //->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             /*->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
@@ -342,6 +344,7 @@ class MonitoringController extends Controller
         // $classificationTypes = self::getClassificationMaster();
         $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(5)->get();
+        $source = DB::table('sources')->where("status", "=", 1)->get();
         foreach ($raw_data as $item) {
 
             $date_d = Carbon::parse($item->date_m)->format('D');
@@ -361,9 +364,9 @@ class MonitoringController extends Controller
                 "post_time" => Carbon::parse($item->date_m)->format('H:i'),
                 "day" => $date_d,
                 "message_type" => $item->message_type,
+                "full_message" => $item->full_message,
                 "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
+                "source_name" => self::matchSource($source, $item->source_id),
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "total_engagement" => $item->total_engagement,
@@ -406,28 +409,33 @@ class MonitoringController extends Controller
         $raw = $raw->orderByDesc('total_engagement');
         $raw_data = self::selectData($raw, $request->select);
         $result = self::parseEngamement($raw_data);
-        return parent::handleRespond($result);
+        return Excel::download(new MonitoringExport($result, 'engagement'), 'monitoring-engagement-' . Carbon::now() . '.xlsx');
     }
 
     private function parseEngamement($raw_data)
     {
         $data = array();
         $messageIds = $raw_data->pluck('id')->all();
+        $source = DB::table('sources')->where("status", "=", 1)->get();
+        $keywordName = DB::table('keywords')->where("status", "=", 1)
+            ->where("campaign_id", "=", $this->campaign_id)->get();
         foreach ($raw_data as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             $data_push = [
                 "id" => $item->id ?? null,
                 "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
                 "account_name" => $item->author,
+                "full_message" => $item->full_message,
                 "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
                 "post_time" => Carbon::parse($item->date_m)->format('H:i'),
                 "day" => $date_d,
+                "date_m" => $item->date_m,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
+                //"source_name" => $item->source_name,
                 "source_id" => $item->source_id,
+                "source_name" => self::matchSource($source, $item->source_id),
+                "keyword_name" => self::matchKeyword($keywordName, $item->keyword_id),
                 /*"source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
                 "parent" => $item->reference_message_id,
@@ -543,11 +551,13 @@ class MonitoringController extends Controller
     private function parseInfluencer($raw)
     {
         $data = array();
+        $source = DB::table('sources')->where("status", "=", 1)->get();
+        //error_log(json_encode($source));
+
         foreach ($raw as $item) {
             $data_push = [
                 "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
+                "source_name" => self::matchSource($source, $item->source_id),
                 "icon" => "",
                 "cover_image" => "",
                 "total_post" => ($item->total_post / 3),
@@ -559,6 +569,26 @@ class MonitoringController extends Controller
             $data[] = $data_push;
         }
         return $data;
+    }
+
+    private function matchSource($source, $sourceId)
+    {
+        foreach ($source as $item) {
+            if ($item->id == $sourceId) {
+                return $item->name;
+            }
+        }
+        return "";
+    }
+
+    private function matchKeyword($keyword, $keywordId)
+    {
+        foreach ($keyword as $item) {
+            if ($item->id == $keywordId) {
+                return $item->name;
+            }
+        }
+        return "";
     }
 
     public function influencerAuthor(Request $request)
@@ -573,10 +603,10 @@ class MonitoringController extends Controller
 
         $keywordIds = $keyword->pluck('id')->all();
         $query = DB::table('messages')
-            ->select('messages.*', 's.name as source_name', DB::raw('COALESCE(number_of_comments, 0) +
+            ->select('messages.*', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'))
-            ->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
+            //->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
@@ -597,7 +627,7 @@ class MonitoringController extends Controller
             $limit = 10;
         $offset = $limit * ($page - 1);
         $dataRaw = $query->where("messages.author", $request->author)->limit($limit)->offset($offset)->orderByDesc("messages.message_datetime")->get();
-
+        $source = DB::table('sources')->where("status", "=", 1)->get();
         $data = array();
         $messageIds = $dataRaw->pluck('id')->all();
         foreach ($dataRaw as $item) {
@@ -612,8 +642,7 @@ class MonitoringController extends Controller
                 "cover_image" => "",
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
+                "source_name" =>self::matchSource($source, $item->source_id),
                 "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
                 "parent" => $item->reference_message_id,
@@ -658,7 +687,7 @@ class MonitoringController extends Controller
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespond($result);
+        return Excel::download(new MonitoringExport($result, 'sentiment'), 'monitoring-sentiment-' . Carbon::now() . '.xlsx');
     }
 
 
@@ -689,7 +718,7 @@ class MonitoringController extends Controller
             $limit = 10;
         $offset = $limit * ($page - 1);
         $data = DB::select("SELECT
-    m.author,m.message_datetime,m.source_id,
+    m.author,m.source_id,
     COALESCE(SUM(mr.total_engagement), 0) AS total_engagement,
     COUNT(m.id) as total_post,
     SUM(CASE WHEN message_results.classification_id = '1' THEN 1 ELSE 0 END) AS positive,
