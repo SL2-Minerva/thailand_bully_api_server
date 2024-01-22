@@ -442,12 +442,12 @@ class MonitoringController extends Controller
     {
         $messageId = $request->message_id;
 
+
+
+        $post = self:: rawQueryMessage()->where('messages.id', $messageId)->first();
         $comment = self::rawQueryMessage()->where('messages.message_type', '=', "Comment")
-            ->where('messages.reference_message_id', '=', $messageId)
+            ->where('messages.reference_message_id', '=', $post->message_id)
             ->get();
-
-        $post = self:: rawQueryMessage()->where('messages.message_id', $messageId)->first();
-
         if (!$post) {
             return parent::handleNotFound(null);
         }
