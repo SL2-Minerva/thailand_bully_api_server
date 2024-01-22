@@ -246,7 +246,7 @@ class Controller extends BaseController
         return "";
     }
 
-    protected function matchKeyword($keyword, $keywordId)
+    protected function matchKeywordName($keyword, $keywordId)
     {
         foreach ($keyword as $item) {
             if ($item->id == $keywordId) {
@@ -255,7 +255,18 @@ class Controller extends BaseController
         }
         return "";
     }
-    protected function matchClassification($classify, $classifyId)
+
+    protected function matchCampaign($campaign, $campaignId)
+    {
+        foreach ($campaign as $item) {
+            if ($item->id == $campaignId) {
+                return $item->name;
+            }
+        }
+        return "";
+    }
+
+    protected function matchClassificationName($classify, $classifyId)
     {
         foreach ($classify as $item) {
             if ($item->id == $classifyId) {
@@ -274,7 +285,7 @@ class Controller extends BaseController
         return "";
     }
 
-    protected function packClassificationType($classificationTypes, $item, $message)
+    protected function packClassificationTypeName($classificationTypes, $item, $message)
     {
         if ($item->classification_type_id == 1) {
             foreach ($classificationTypes as $classificationType) {
