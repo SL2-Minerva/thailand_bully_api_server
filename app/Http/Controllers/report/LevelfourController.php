@@ -134,7 +134,7 @@ class LevelfourController extends Controller
                 }
 
                 if ($request->sna_type === 'bullyLevel') {
-                    $data = $this->getSNAbyType($request, 3); 
+                    $data = $this->getSNAbyType($request, 3);
                 }
 
                 if ($request->sna_type === 'bullyType') {
@@ -225,7 +225,7 @@ class LevelfourController extends Controller
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
                 ->where('reference_message_id', '!=','')
-                ->limit(2000);
+                ->limit(1000);
         }
 
 
@@ -240,7 +240,6 @@ class LevelfourController extends Controller
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $raw->whereIn('source_id', $source_ids);
-
         }
 
         // $raw_total = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
@@ -263,7 +262,10 @@ class LevelfourController extends Controller
         $items = $raw->get();
 
         $data = [];
-        $checkparent = [];
+        //$checkparent = [];
+        $keywordName = DB::table('keywords')->where("status", "=", 1)->get();
+        //$campaign = DB::table('campaigns')->where("id", "=", $this->campaign_id)->get()->first();
+        $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100 : 0;
@@ -271,7 +273,7 @@ class LevelfourController extends Controller
                 "id" => $item->message_id,
                 "label_name" => $item->author,
                 "title" => $item->author,
-                "color" => $item->classification_color,
+                "color" => parent::matchClassificationColor($classification,$item->classification_id),
                 "shape" => "dot",
                 "size" => $this->factorNodeSize($influent_rate, $is_child),
                 'link_message' => $item->link_message ?? ""
@@ -349,12 +351,12 @@ class LevelfourController extends Controller
                     'sources.name as source_name',
                     'messages.message_datetime as date_m',
                     'messages.link_message as link_message',
-                    
+
                 ])
                 ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
                 ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
                 ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-                
+
                 ->where('campaigns.id', $campaign_id)
                 ->whereIn('keyword_id', $keywordIds)
                 ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
@@ -368,38 +370,39 @@ class LevelfourController extends Controller
 
         $raw = DB::table('messages')
             ->select([
-                'messages.message_id as message_id',
-                'messages.reference_message_id as reference_message_id',
-                'messages.keyword_id as keyword_id',
+                'messages.message_id',
+                'messages.reference_message_id',
+                'messages.keyword_id',
                 'messages.message_datetime as date_m',
-                'messages.author as author',
-                'messages.source_id as source_id',
-                'messages.full_message as full_message',
+                'messages.author',
+                'messages.source_id',
+                'messages.full_message',
                 'messages.message_type',
                 'messages.device as device',
-                'messages.number_of_views as number_of_views',
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_shares as number_of_shares',
-                'messages.number_of_reactions as number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name as keyword_name',
-                'message_results.classification_type_id AS classification_type_id',
-                'message_results.classification_id',
-                'classifications.name as classification_name',
-                'classifications.color as classification_color',
+                'messages.number_of_views',
+                'messages.number_of_comments',
+                'messages.number_of_shares',
+                'messages.number_of_reactions',
                 'messages.created_at as created_at',
                 'messages.link_message as link_message',
+                'message_results.classification_type_id',
+                'message_results.classification_id',
+                /*'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'keywords.name as keyword_name',
+                'classifications.name as classification_name',
+                'classifications.color as classification_color',*/
+
             ])
-            ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            /*->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->where('campaigns.id', $campaign_id)
+            */->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            //->where('campaigns.id', $campaign_id)
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-            
+
             return $raw;
     }
 
