@@ -455,12 +455,15 @@ class MonitoringController extends Controller
     {
         $messageId = $request->message_id;
 
-        $comment = self::rawQueryMessage()->where('messages.message_id', '!=', $messageId)
+        $comment = self::rawQueryMessage()->where('messages.message_type', '=', "comment")
             ->where('messages.reference_message_id', '=', $messageId)
             ->get();
 
-        $post = self:: rawQueryMessage()->where('messages.message_id', $messageId)
-            ->where('messages.reference_message_id', $messageId)->first();
+        $post = self:: rawQueryMessage()->where('messages.message_id', $messageId)->first();
+
+        if (!$post) {
+            return parent::handleNotFound(null);
+        }
 
         $post->sentiment = "";
         $post->bully_type = "";
@@ -480,8 +483,12 @@ class MonitoringController extends Controller
             }
         }
 
-        $messageIds = $comment->pluck('id')->all();
-        $resultComment = self::parseEngagementLevel($messageIds, $comment);
+        if ($comment != null && count($comment) > 0) {
+            $messageIds = $comment->pluck('id')->all();
+            $resultComment = self::parseEngagementLevel($messageIds, $comment);
+        } else {
+            $resultComment = [];
+        }
         $data = ["id" => $post->id ?? null,
             "message_id" => $post->message_id,
             "message_detail" => $post->full_message,
@@ -642,7 +649,7 @@ class MonitoringController extends Controller
                 "cover_image" => "",
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "source_name" =>self::matchSource($source, $item->source_id),
+                "source_name" => self::matchSource($source, $item->source_id),
                 "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
                 "parent" => $item->reference_message_id,
