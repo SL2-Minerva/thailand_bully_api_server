@@ -236,6 +236,84 @@ class Controller extends BaseController
         return $data;
     }
 
+    protected function matchSource($source, $sourceId)
+    {
+        foreach ($source as $item) {
+            if ($item->id == $sourceId) {
+                return $item->name;
+            }
+        }
+        return "";
+    }
+
+    protected function matchKeyword($keyword, $keywordId)
+    {
+        foreach ($keyword as $item) {
+            if ($item->id == $keywordId) {
+                return $item->name;
+            }
+        }
+        return "";
+    }
+    protected function matchClassification($classify, $classifyId)
+    {
+        foreach ($classify as $item) {
+            if ($item->id == $classifyId) {
+                return $item->name;
+            }
+        }
+        return "";
+    }
+    protected function matchClassificationColor($classify, $classifyId)
+    {
+        foreach ($classify as $item) {
+            if ($item->id == $classifyId) {
+                return $item->color;
+            }
+        }
+        return "";
+    }
+
+    protected function packClassificationType($classificationTypes, $item, $message)
+    {
+        if ($item->classification_type_id == 1) {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $message['sentiment'] = $classificationType->name;
+                    break;
+                }
+            }
+        } else if ($item->classification_type_id == 2) {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $message['bully_type'] = $classificationType->name;
+                    break;
+                }
+            }
+        } else {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $message['bully_level'] = $classificationType->name;
+                    break;
+                }
+            }
+        }
+        return $message;
+    }
+
+    protected function getClassificationJoinTypeMaster()
+    {
+        return DB::table('classifications')->select("classifications.*", "classification_types.name as classification_type_name")
+            ->leftJoin('classification_types', 'classifications.classification_type_id', '=', 'classification_types.id')
+            ->get();
+    }
+
+
+    protected function getClassificationMaster()
+    {
+        return DB::table('classifications')
+            ->get();
+    }
 }
 
 

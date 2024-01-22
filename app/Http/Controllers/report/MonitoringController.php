@@ -299,13 +299,6 @@ class MonitoringController extends Controller
 
     }
 
-    /*private function getClassificationMaster()
-    {
-        return DB::table('classifications')
-            ->join('classification_types', 'classifications.classification_type_id', '=', 'classification_types.id')
-            ->get();
-    }*/
-
     private function getClassificationName($message_id)
     {
         return DB::table('message_results')
@@ -331,12 +324,6 @@ class MonitoringController extends Controller
         };
     }
 
-    private function getClassificationMaster()
-    {
-        return DB::table('classifications')->select("classifications.*", "classification_types.name as classification_type_name")
-            ->leftJoin('classification_types', 'classifications.classification_type_id', '=', 'classification_types.id')
-            ->get();
-    }
 
     public function topEngagementOfPost(Request $request)
     {
@@ -366,7 +353,7 @@ class MonitoringController extends Controller
                 "message_type" => $item->message_type,
                 "full_message" => $item->full_message,
                 "device" => $item->device,
-                "source_name" => self::matchSource($source, $item->source_id),
+                "source_name" => parent::matchSource($source, $item->source_id),
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "total_engagement" => $item->total_engagement,
@@ -536,33 +523,6 @@ class MonitoringController extends Controller
         return parent::handleRespond($data);
     }
 
-    function packClassification($classificationTypes, $item, $message)
-    {
-        if ($item->classification_type_id == 1) {
-            foreach ($classificationTypes as $classificationType) {
-                if ($classificationType->id == $item->classification_id) {
-                    $message['sentiment'] = $classificationType->name;
-                    break;
-                }
-            }
-        } else if ($item->classification_type_id == 2) {
-            foreach ($classificationTypes as $classificationType) {
-                if ($classificationType->id == $item->classification_id) {
-                    $message['bully_type'] = $classificationType->name;
-                    break;
-                }
-            }
-        } else {
-            foreach ($classificationTypes as $classificationType) {
-                if ($classificationType->id == $item->classification_id) {
-                    $message['bully_level'] = $classificationType->name;
-                    break;
-                }
-            }
-        }
-        return $message;
-    }
-
     public function topInfluencerPost(Request $request)
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
@@ -600,25 +560,6 @@ class MonitoringController extends Controller
         return $data;
     }
 
-    private function matchSource($source, $sourceId)
-    {
-        foreach ($source as $item) {
-            if ($item->id == $sourceId) {
-                return $item->name;
-            }
-        }
-        return "";
-    }
-
-    private function matchKeyword($keyword, $keywordId)
-    {
-        foreach ($keyword as $item) {
-            if ($item->id == $keywordId) {
-                return $item->name;
-            }
-        }
-        return "";
-    }
 
     public function influencerAuthor(Request $request)
     {
@@ -685,7 +626,7 @@ class MonitoringController extends Controller
 
     private function parseEngagementLevel($messageIds, $data)
     {
-        $classificationTypes = self::getClassificationMaster();
+        $classificationTypes = self::getClassificationJoinTypeMaster();
         $result = array();
         if (count($messageIds) > 0) {
             $messageResult = DB::table('message_results')
@@ -700,7 +641,7 @@ class MonitoringController extends Controller
                 foreach ($messageResult as $item) {
                     if ($message['id'] == $item->message_id) {
                         $count++;
-                        $message = $this->packClassification($classificationTypes, $item, $message);
+                        $message = $this->packClassificationType($classificationTypes, $item, $message);
                     }
                     if ($count > 2) {
                         break;

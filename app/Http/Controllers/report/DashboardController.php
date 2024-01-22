@@ -365,25 +365,23 @@ class DashboardController extends Controller
     public function sentimentScore(Request $request)
     {
 
-        $current = $this->findSentiment($this->start_date, $this->end_date, $this->source_id);
-        $pervious = $this->findSentiment($this->start_date_previous, $this->end_date_previous, $this->source_id);
+        $result = $this->findSentiment($this->start_date, $this->end_date, $this->source_id);
+        $current= self::parseSentiment($result);
+        $result = $this->findSentiment($this->start_date_previous, $this->end_date_previous, $this->source_id);
+        $previous = self::parseSentiment($result);
 
         return parent::handleRespond([
             "neutral_value" => $current['results'] ?? 0.00,
             "current" => $current,
-            "pervious" => $pervious,
+            "pervious" => $previous,
             "sentiment_percentage" => $current['sentiment_percentage'] ?? 0,
-            "pervious_sentiment" => $pervious['results'] ?? 0.00,
+            "pervious_sentiment" => $previous['results'] ?? 0.00,
             "text" => $current['text']
         ]);
     }
 
     private function findSentiment($start_date, $end_date, $source_id_id = null)
     {
-        $positive = 0;
-        $negative = 0;
-        $neutral = 0;
-        $sentiment_score = 0;
 
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
@@ -401,26 +399,35 @@ class DashboardController extends Controller
 
         $results = DB::select(DB::raw("SELECT
             COUNT(*) AS total_count,
-            SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
-            SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
-            SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral,
-            ((SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) * 1) +
-            (SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) * -1)) / COUNT(*) * 5 AS sentiment_score
+            SUM(CASE WHEN mr.classification_id = '1' THEN 1 ELSE 0 END) AS positive,
+            SUM(CASE WHEN mr.classification_id = '2' THEN 1 ELSE 0 END) AS negative,
+            SUM(CASE WHEN mr.classification_id = '3' THEN 1 ELSE 0 END) AS neutral,
+            ((SUM(CASE WHEN mr.classification_id = '1' THEN 1 ELSE 0 END) * 1) +
+            (SUM(CASE WHEN mr.classification_id = '2' THEN 1 ELSE 0 END) * -1)) / COUNT(*) * 5 AS sentiment_score
         FROM
             tbl_messages m
-            LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
-            LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
         WHERE
-            m.keyword_id IN ($convert_id) AND c.name IN ('Positive', 'Negative', 'Neutral') AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
+            m.keyword_id IN ($convert_id) AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
+        /*AND c.name IN ('Positive', 'Negative', 'Neutral')*/
+        return $results;
 
+
+    }
+
+    function parseSentiment($results){
+
+        $positive = 0;
+        $negative = 0;
+        $neutral = 0;
+        $sentiment_score = 0;
         if (!empty($results)) {
             $results = $results[0];
             $sentiment_score = $results->sentiment_score ?? 0;
             $positive = $results->positive;
             $negative = $results->negative;
             $neutral = $results->neutral;
-            $sentiment_score = $results->sentiment_score;
+            //$sentiment_score = $results->sentiment_score;
         }
 
         $data['neutral'] = $neutral ?? 0;
@@ -463,10 +470,7 @@ class DashboardController extends Controller
 
         $data['sentiment_percentage'] = $percentage ?? 0;
         $data['text'] = $this->closest_sentiment_score($data['sentiment_percentage'] ?? 0);
-
         return $data;
-
-
     }
 
     private function closest_sentiment_score($target)
@@ -487,7 +491,8 @@ class DashboardController extends Controller
     public function sentimentType(Request $request)
     {
 
-        $current = $this->findSentiment($this->start_date, $this->end_date, $this->source_id);
+        $result = $this->findSentiment($this->start_date, $this->end_date, $this->source_id);
+        $current= self::parseSentiment($result);
         $message_total = $current['positive'] + $current['negative'] + $current['neutral'];
 
         return parent::handleRespond([
@@ -864,22 +869,23 @@ class DashboardController extends Controller
         $raw_query = DB::table('messages')
             ->select([
                 'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
+                /*'keywords.name as keyword_name',*/
                 'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
+                /*'campaigns.name AS campaign_name',*/
                 'messages.source_id as source_id',
-                'sources.name as source_name',
+                /*'sources.name as source_name',*/
                 'messages.message_datetime as date_m',
-                'classifications.name as classification_name',
+                'message_results.classification_id as classification_id',
+                /*'classifications.name as classification_name',*/
             ])
             ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            //->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            /*->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            /*->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
+            ->whereIn('message_results.classification_id', ['1', '2', '3']);
 
         if ($this->keyword_id) {
             $raw_query->whereIn('keyword_id', $this->keyword_id);
@@ -890,19 +896,22 @@ class DashboardController extends Controller
         }
 
         $raw_query = $raw_query->get();
-
-        foreach ($raw_query as $index => $result) {
-
+        $keywordName = DB::table('keywords')->where("status", "=", 1)->get();
+        //$campaign = DB::table('campaigns')->where("id", "=", $this->campaign_id)->get()->first();
+        $classification = parent::getClassificationMaster();
+        foreach ($raw_query as $result) {
+            $classification_name= $this->matchClassificationColor($classification, $result->classification_id);
             if (isset($data[$result->keyword_id])) {
-                $data[$result->keyword_id][$result->classification_name] += 1;
+                $data[$result->keyword_id][$classification_name] += 1;
                 $data[$result->keyword_id]['total'] += 1;
             } else {
 
                 $data[$result->keyword_id] = [
                     'keyword_id' => $result->keyword_id,
-                    'keyword_name' => $result->keyword_name,
+                    'keyword_name' => self::matchKeyword($keywordName,$result->keyword_id),
                     'campaign_id' => $result->campaign_id,
-                    'campaign_name' => $result->campaign_name,
+
+                    /*'campaign_name' => $campaign->name,*/
                     'organization_id' => 1,
                     'organizations_name' => 'organizations_name 1',
                     'Negative' => 0,
@@ -911,7 +920,7 @@ class DashboardController extends Controller
                     'total' => 0,
                 ];
 
-                $data[$result->keyword_id][$result->classification_name] += 1;
+                $data[$result->keyword_id][$classification_name] += 1;
                 $data[$result->keyword_id]['total'] += 1;
             }
         }
