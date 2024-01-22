@@ -448,14 +448,14 @@ class MonitoringController extends Controller
 
     private function rawQueryMessage()
     {
-        return DB::table('messages')->select(['messages.*'])->groupBy('messages.author');
+        return DB::table('messages')->select(['messages.*']);
     }
 
     public function detailOfPost(Request $request)
     {
         $messageId = $request->message_id;
 
-        $comment = self::rawQueryMessage()->where('messages.message_type', '=', "comment")
+        $comment = self::rawQueryMessage()->where('messages.message_type', '=', "Comment")
             ->where('messages.reference_message_id', '=', $messageId)
             ->get();
 
@@ -482,12 +482,34 @@ class MonitoringController extends Controller
                 $post->bully_level = $type->classification_name;
             }
         }
+        $resultComment = [];
 
         if ($comment != null && count($comment) > 0) {
             $messageIds = $comment->pluck('id')->all();
-            $resultComment = self::parseEngagementLevel($messageIds, $comment);
-        } else {
-            $resultComment = [];
+            $commentData = [];
+            foreach ($comment as $item) {
+                $rs = ["id" => $item->id ?? null,
+                    "message_id" => $item->message_id,
+                    "message_detail" => $item->full_message,
+                    "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
+                    "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
+                    "icon" => "",
+                    "cover_image" => "",
+                    "source_id" => $item->source_id,
+                    "account_name" => $item->author,
+                    "message_type" => $item->message_type,
+                    "device" => $item->device,
+                    "message_datetime" => $item->message_datetime,
+                    "author" => $item->author,
+                    "number_of_shares" => $item->number_of_shares,
+                    "number_of_reactions" => $item->number_of_reactions,
+                    "number_of_comments" => $item->number_of_comments,
+                    "number_of_views" => $item->number_of_views,
+                    "link_message" => $item->link_message];
+                $commentData[] = $rs;
+            }
+
+            $resultComment = self::parseEngagementLevel($messageIds, $commentData);
         }
         $data = ["id" => $post->id ?? null,
             "message_id" => $post->message_id,
