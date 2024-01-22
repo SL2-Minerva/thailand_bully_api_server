@@ -900,7 +900,7 @@ class DashboardController extends Controller
         //$campaign = DB::table('campaigns')->where("id", "=", $this->campaign_id)->get()->first();
         $classification = parent::getClassificationMaster();
         foreach ($raw_query as $result) {
-            $classification_name= $this->matchClassificationColor($classification, $result->classification_id);
+            $classification_name= $this->matchClassification($classification, $result->classification_id);
             if (isset($data[$result->keyword_id])) {
                 $data[$result->keyword_id][$classification_name] += 1;
                 $data[$result->keyword_id]['total'] += 1;
