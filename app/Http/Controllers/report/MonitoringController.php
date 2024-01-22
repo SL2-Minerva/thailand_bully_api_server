@@ -422,7 +422,7 @@ class MonitoringController extends Controller
                 //"source_name" => $item->source_name,
                 "source_id" => $item->source_id,
                 "source_name" => self::matchSource($source, $item->source_id),
-                "keyword_name" => self::matchKeyword($keywordName, $item->keyword_id),
+                "keyword_name" => self::matchKeywordName($keywordName, $item->keyword_id),
                 /*"source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
                 "parent" => $item->reference_message_id,
@@ -641,7 +641,7 @@ class MonitoringController extends Controller
                 foreach ($messageResult as $item) {
                     if ($message['id'] == $item->message_id) {
                         $count++;
-                        $message = $this->packClassificationType($classificationTypes, $item, $message);
+                        $message = $this->packClassificationTypeName($classificationTypes, $item, $message);
                     }
                     if ($count > 2) {
                         break;
