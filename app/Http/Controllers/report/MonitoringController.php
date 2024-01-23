@@ -443,7 +443,6 @@ class MonitoringController extends Controller
         $messageId = $request->message_id;
 
 
-
         $post = self:: rawQueryMessage()->where('messages.id', $messageId)->first();
         $comment = self::rawQueryMessage()->where('messages.message_type', '=', "Comment")
             ->where('messages.reference_message_id', '=', $post->message_id)
@@ -591,12 +590,16 @@ class MonitoringController extends Controller
         }
         $limit = $request->limit;
         $page = $request->page;
-        if ($page == 0)
+        if ($page == null || $page == 0)
             $page = 1;
-        if ($limit == 0)
+        if ($limit == null || $limit == 0)
             $limit = 10;
         $offset = $limit * ($page - 1);
+        $baseQuery = $query->where("messages.author", $request->author);
+        $total = $baseQuery->count();
         $dataRaw = $query->where("messages.author", $request->author)->limit($limit)->offset($offset)->orderByDesc("messages.message_datetime")->get();
+
+
         $source = DB::table('sources')->where("status", "=", 1)->get();
         $data = array();
         $messageIds = $dataRaw->pluck('id')->all();
@@ -621,7 +624,7 @@ class MonitoringController extends Controller
             $data[] = $data_push;
         }
         $result = self::parseEngagementLevel($messageIds, $data);
-        return parent::handleRespond($result);
+        return parent::handleRespondPage($result,$meta = ['total_page' => $total, 'limit' => intval($limit), 'page' =>intval( $page)]);
     }
 
     private function parseEngagementLevel($messageIds, $data)
