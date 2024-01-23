@@ -56,6 +56,18 @@ class Controller extends BaseController
         return response()->json($options ? array_merge($options, $default) : $default, $status);
     }
 
+    protected static function handleRespondPage($data = null, $meta = null, $options = null, int $status = 200, string $msg = BaseModel::SUCCESS_TEXT)
+    {
+        $default = [
+            'status' => $status,
+            'msg' => $msg,
+            "meta" => $meta,
+            'data' => $data
+        ];
+
+        return response()->json($options ? array_merge($options, $default) : $default, $status);
+    }
+
     /**
      * function for return only notfound or something ele not excust
      * @param $data
@@ -156,7 +168,7 @@ class Controller extends BaseController
         if ($file) {
 
 
-            return $file->store($path ??  "organization-content", 'public');
+            return $file->store($path ?? "organization-content", 'public');
         }
     }
 
@@ -275,6 +287,7 @@ class Controller extends BaseController
         }
         return "";
     }
+
     protected function matchClassificationColor($classify, $classifyId)
     {
         foreach ($classify as $item) {
