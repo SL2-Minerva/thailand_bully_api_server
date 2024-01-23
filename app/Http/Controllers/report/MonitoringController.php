@@ -313,14 +313,14 @@ class MonitoringController extends Controller
             ->get(['classifications.classification_type_id', 'classification_name']);
     }
 
-    private function selectData($raw, $select, $type = null)
+    private function selectData($select)
     {
         return match ($select) {
-            "all" => $raw->get(),
-            "top20" => $raw->limit(20)->get(),
-            "top50" => $raw->limit(50)->get(),
-            "top100" => $raw->limit(100)->get(),
-            default => $raw->limit(10)->get()
+            "all" => 0,
+            "top20" => 20,
+            "top50" => 50,
+            "top100" => 100,
+            default => 10
         };
     }
 
@@ -384,17 +384,36 @@ class MonitoringController extends Controller
     public function engagementOfPost(Request $request)
     {
         $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
-        $raw = $raw->orderByDesc('total_engagement');
-        $raw_data = self::selectData($raw, $request->select);
+        $query = $raw->orderByDesc('total_engagement');
+
+        $limit = self::selectData($request->select);
+        if ($limit == 0) {
+            $limit = $request->limit;
+            $count = $raw->count(["*"]);
+        } else {
+            $count = $limit;
+        }
+
+        $page = $request->page;
+        if ($page == null || $page == 0)
+            $page = 1;
+        if ($limit == null || $limit == 0)
+            $limit = 10;
+
+        $offset = $limit * ($page - 1);
+
+        $raw_data = $query->limit($limit)->offset($offset)->get();
+
+
         $result = self::parseEngamement($raw_data);
-        return parent::handleRespond($result);
+        return parent::handleRespondPage($result, ['total_row' => $count, 'limit' => intval($limit), 'page' => intval($request->page)]);
     }
 
     public function engagementExport(Request $request)
     {
         $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
         $raw = $raw->orderByDesc('total_engagement');
-        $raw_data = self::selectData($raw, $request->select);
+        $raw_data = $raw->limit(self::selectData($request->select))->get();
         $result = self::parseEngamement($raw_data);
         return Excel::download(new MonitoringExport($result, 'engagement'), 'monitoring-engagement-' . Carbon::now() . '.xlsx');
     }
