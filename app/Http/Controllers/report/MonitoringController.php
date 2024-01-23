@@ -406,7 +406,7 @@ class MonitoringController extends Controller
 
 
         $result = self::parseEngamement($raw_data);
-        return parent::handleRespondPage($result, ['total_row' => $count, 'limit' => intval($limit), 'page' => intval($request->page)]);
+        return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => intval($limit), 'page' => intval($request->page)]);
     }
 
     public function engagementExport(Request $request)
@@ -545,14 +545,14 @@ class MonitoringController extends Controller
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespondPage($result, ['total_row' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
+        return parent::handleRespondPage($result, ['total_rows' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
 
     public function influencerPost(Request $request)
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespondPage($result, ['total_row' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
+        return parent::handleRespondPage($result, ['total_rows' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
 
     private function parseInfluencer($raw)
@@ -643,7 +643,7 @@ class MonitoringController extends Controller
             $data[] = $data_push;
         }
         $result = self::parseEngagementLevel($messageIds, $data);
-        return parent::handleRespondPage($result, ['total_row' => $total, 'limit' => intval($limit), 'page' => intval($page)]);
+        return parent::handleRespondPage($result, ['total_rows' => $total, 'limit' => intval($limit), 'page' => intval($page)]);
     }
 
     private function parseEngagementLevel($messageIds, $data)
