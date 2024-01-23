@@ -595,6 +595,10 @@ class MonitoringController extends Controller
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'))
             //->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
+            ->where(function ($query) {
+                $query->where('message_type', '=', 'Post')
+                    ->orWhere('message_type', '=', 'post');
+            })
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
