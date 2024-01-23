@@ -42,8 +42,8 @@ class LevelThreeTableController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
+            $this->start_date_previous = $this->date_carbon($request->start_date_period);
+            $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
 
         if (auth('api')->user()) {
@@ -57,6 +57,12 @@ class LevelThreeTableController extends Controller
 
     public function messageLevelThree(Request $request)
     {
+
+        $classificationTypes = self::getClassificationJoinTypeMaster();
+        $classification = self::getClassificationMaster();
+        $keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
+        $source = DB::table('sources')->get();
+
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -489,7 +495,7 @@ class LevelThreeTableController extends Controller
                 $parent = $item->message_id;
             }
 
-
+            $sourceName = $this->matchSource($source, $item->source_id);
             $data_push = [
                 "id" => $item->id,
                 "message_id" => $item->message_id,
@@ -500,8 +506,8 @@ class LevelThreeTableController extends Controller
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
+                "channel" => $sourceName,
+                "source_name" => $sourceName,
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
@@ -529,20 +535,20 @@ class LevelThreeTableController extends Controller
 
         if (isset($data['message'])) {
             $data['message'] = array_values($data['message']);
-        //     $total = count($data['message']) ?? 0;
-        //     usort($data['message'], function ($a, $b) {
-        //         return $b['engagement'] - $a['engagement'];
-        //     });
+            //     $total = count($data['message']) ?? 0;
+            //     usort($data['message'], function ($a, $b) {
+            //         return $b['engagement'] - $a['engagement'];
+            //     });
 
-        //     $data['total'] = $total;
-        //     $offset = 9 + 1;
+            //     $data['total'] = $total;
+            //     $offset = 9 + 1;
 
-        //     $data['message'] = array_slice($data['message'], $start, $offset);
+            //     $data['message'] = array_slice($data['message'], $start, $offset);
         }
 
         $data['total'] = $total;
         // $data['total'] = $total;
-        return parent::handleRespond($data);
+        return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
     private function raw_message_classification(Request $request, $campaign_id, $start_date, $end_date, $classification_name = null)
@@ -576,28 +582,30 @@ class LevelThreeTableController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name AS keyword_name',
-                'classifications.classification_type_id',
+
+                /*'campaigns.name AS campaign_name',*/
+                /*'keywords.campaign_id AS campaign_id',
+                'keywords.name AS keyword_name',*/
+                'message_results.classification_type_id',
                 'message_results.classification_id',
-                'classifications.color AS classification_color',
-                'sources.name AS source_name',
+
+                /*'sources.name AS source_name',*/
                 'messages.created_at AS created_at',
-                'classifications.name AS classification_name',
+                /*                'classifications.color AS classification_color',
+                                'classifications.name AS classification_name',*/
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
 
             ])
-            ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->join('sources', 'messages.source_id', '=', 'sources.id')
+            //->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            //->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            //->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
+            //->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-            // ->orderByDesc('total_engagement');
+        // ->orderByDesc('total_engagement');
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
@@ -605,19 +613,16 @@ class LevelThreeTableController extends Controller
 
         if ($request->sort && $request->field) {
             $field = $request->field;
-            switch( $field ) {
-                case 'message_type' : $field_table = "messages.message_type"; break;
-                case 'author' : $field_table = "messages.author"; break;
-                case 'date' : $field_table = "messages.message_datetime"; break;
-                case 'device' : $field_table = "messages.device"; break;
-                case 'source' : $field_table = "sources.name"; break;
-                case 'engagement' : $field_table = "total_engagement"; break;
-                case 'bully_type' : $field_table = "classifications.name"; break;
-                case 'sentiment' : $field_table = "classifications.name"; break;
-                case 'engagement' : $field_table = "classifications.name"; break;
-                default : $field_table= "total_engagement"; break;
-
-            }
+            $field_table = match ($field) {
+                'message_type' => "messages.message_type",
+                'author' => "messages.author",
+                'date' => "messages.message_datetime",
+                'device' => "messages.device",
+                'source' => "messages.sources_id",
+                'engagement' => "total_engagement",
+                'bully_type', 'sentiment' => "message_results.classification_id",
+                default => "total_engagement",
+            };
 
             $data->orderBy($field_table, $request->sort);
 
@@ -625,9 +630,15 @@ class LevelThreeTableController extends Controller
             $data->orderByDesc('total_engagement');
         }
 
-
+        //error_log($classification_name);
         if ($classification_name) {
-            $data->whereIn('classifications.name', $classification_name);
+            $classification_name = DB::table("classifications")
+                ->select("classifications.id")
+                ->whereIn('classifications.name', $classification_name)
+                ->get()
+                ->pluck('id')
+                ->all();
+            $data->whereIn('message_results.classification_id', $classification_name);
         }
 
         // if ($this->source_id) {
@@ -675,16 +686,16 @@ class LevelThreeTableController extends Controller
             ) {
 
                 if ($label === 'Hate Speech') {
-                    $label = 'HateSpeech';
+                    $label = 8;
                 } else if ($label === 'No Bully') {
-                    $label = 'NoBully';
+                    $label = 4;
                 } else if ($label === 'Violence') {
-                    $label = 'Violence';
+                    $label = 9;
                 }
 
-                $data->where('classifications.name', $label);
+                $data->where('message_results.classification_id', $label);
             } else {
-                $data->whereIn('classifications.name', ['Neutral', 'Positive', 'Negative']);
+                $data->whereIn('message_results.classification_id', ['1', '2', '3']);
             }
         }
 
@@ -711,14 +722,14 @@ class LevelThreeTableController extends Controller
             // $request->report_number === '5.2.009'
         ) {
             if ($Llabel === 'Hate Speech') {
-                $Llabel = 'HateSpeech';
+                $Llabel = 8;
             } else if ($Llabel === 'No Bully') {
-                $Llabel = 'NoBully';
+                $Llabel = 4;
             } else if ($Llabel === 'Violence') {
-                $Llabel = 'Violence';
+                $Llabel = 9;
             }
 
-            $data->where('classifications.name', '=', $Llabel);
+            $data->where('message_results.classification_id', '=', $Llabel);
         }
 
         // if ($request->report_number === '6.2.002'
@@ -817,28 +828,48 @@ class LevelThreeTableController extends Controller
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
-            // ->orderByDesc('total_engagement');
-            // ->get();
+        // ->orderByDesc('total_engagement');
+        // ->get();
         if ($this->source_id) {
             $subquery->where('source_id', $this->source_id);
         }
 
-                // $count = $results->count();
+        // $count = $results->count();
 
-                    // dd($subquery->get()->count());
+        // dd($subquery->get()->count());
         if ($request->sort && $request->field) {
             $field = $request->field;
-            switch( $field ) {
-                case 'message_type' : $field_table = "messages.message_type"; break;
-                case 'author' : $field_table = "messages.author"; break;
-                case 'date' : $field_table = "messages.message_datetime"; break;
-                case 'device' : $field_table = "messages.device"; break;
-                case 'source' : $field_table = "sources.name"; break;
-                case 'engagement' : $field_table = "total_engagement"; break;
-                case 'bully_type' : $field_table = "classifications.name"; break;
-                case 'sentiment' : $field_table = "classifications.name"; break;
-                case 'engagement' : $field_table = "classifications.name"; break;
-                default : $field_table= "total_engagement"; break;
+            switch ($field) {
+                case 'message_type' :
+                    $field_table = "messages.message_type";
+                    break;
+                case 'author' :
+                    $field_table = "messages.author";
+                    break;
+                case 'date' :
+                    $field_table = "messages.message_datetime";
+                    break;
+                case 'device' :
+                    $field_table = "messages.device";
+                    break;
+                case 'source' :
+                    $field_table = "sources.name";
+                    break;
+                case 'engagement' :
+                    $field_table = "total_engagement";
+                    break;
+                case 'bully_type' :
+                    $field_table = "classifications.name";
+                    break;
+                case 'sentiment' :
+                    $field_table = "classifications.name";
+                    break;
+                case 'engagement' :
+                    $field_table = "classifications.name";
+                    break;
+                default :
+                    $field_table = "total_engagement";
+                    break;
 
             }
 
@@ -1063,7 +1094,7 @@ class LevelThreeTableController extends Controller
             $data['message'] = array_slice($data['message'], $start, $offset);
         }
 
-       return parent::handleRespond($data);
+        return parent::handleRespond($data);
     }
 
     public function deleteMessage(Request $request)
