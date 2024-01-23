@@ -526,14 +526,14 @@ class MonitoringController extends Controller
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespondPage($result,['total_row' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' =>intval(  $request->page)]);
+        return parent::handleRespondPage($result, ['total_row' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
 
     public function influencerPost(Request $request)
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespondPage($result,['total_row' =>self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' =>intval(  $request->page)]);
+        return parent::handleRespondPage($result, ['total_row' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
 
     private function parseInfluencer($raw)
@@ -624,7 +624,7 @@ class MonitoringController extends Controller
             $data[] = $data_push;
         }
         $result = self::parseEngagementLevel($messageIds, $data);
-        return parent::handleRespondPage($result,['total_row' => $total, 'limit' => intval($limit), 'page' =>intval( $page)]);
+        return parent::handleRespondPage($result, ['total_row' => $total, 'limit' => intval($limit), 'page' => intval($page)]);
     }
 
     private function parseEngagementLevel($messageIds, $data)
@@ -675,18 +675,18 @@ class MonitoringController extends Controller
 
         $keywordIds = $keyword->pluck('id')->all();
 
-        $data = DB::select("SELECT count(*) as total
+        $data = DB::select("SELECT
+    COUNT(DISTINCT m.author) AS total_authors
 FROM
     tbl_messages m
 WHERE
     m.keyword_id IN (" . implode(",", $keywordIds) . ")
-    AND (m.number_of_comments > 0 OR m.number_of_reactions > 0 OR m.number_of_shares > 0)
-    AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
-    AND m.author IS NOT NULL
-GROUP BY
-    m.author");
-        return $data["0"]->total;
-}
+    AND ( m.message_type = 'Post' OR m.message_type = 'post' )
+    AND m.message_datetime BETWEEN '" . $start_date . " 00:00:00' AND '" . $end_date . " 23:59:59'
+    AND m.author IS NOT NULL");
+        return $data["0"]->total_authors;
+    }
+
     private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date, $limit, $page)
     {
         $keyword = Keyword::where('campaign_id', $campaign_id);
