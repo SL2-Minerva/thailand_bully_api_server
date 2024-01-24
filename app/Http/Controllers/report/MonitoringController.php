@@ -550,9 +550,25 @@ class MonitoringController extends Controller
 
     public function influencerPost(Request $request)
     {
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $limit = self::selectData($request->select);
+        if ($limit == 0) {
+            $limit = $request->limit;
+            $count = self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date);
+        } else {
+            $count = $limit;
+        }
+
+        $page = $request->page;
+        if ($page == null || $page == 0)
+            $page = 1;
+        if ($limit == null || $limit == 0)
+            $limit = 10;
+
+        $offset = $limit * ($page - 1);
+
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $limit, $offset);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespondPage($result, ['total_rows' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
+        return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
 
     private function parseInfluencer($raw)
