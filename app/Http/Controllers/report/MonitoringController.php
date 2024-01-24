@@ -545,54 +545,96 @@ class MonitoringController extends Controller
     {
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
-        return parent::handleRespondPage($result, ['total_rows' => self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
+        if (count($result) > 5) {
+            $result = array_slice($result, 0, 5);
+        }
+        return parent::handleRespondPage($result, ['total_rows' => count($result), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
+    }
+
+    function parseInfluencer($raw)
+    {
+        {
+            $source = DB::table('sources')->where("status", "=", 1)->get();
+            $finalResults = [];
+
+// Loop through each author's messages
+            foreach ($raw as $messages) {
+                $positiveCount = 0;
+                $negativeCount = 0;
+                $neutralCount = 0;
+
+                // Loop through each message
+                foreach ($messages["classification"] as $classification) {
+                    // Count classifications
+                    switch ($classification) {
+                        case 1:
+                            $positiveCount++;
+                            break;
+                        case 2:
+                            $negativeCount++;
+                            break;
+                        case 3:
+                            $neutralCount++;
+                            break;
+                        // Add more cases if needed
+                    }
+                }
+
+                // Create a result array for the current author
+                $messages['positive'] = $positiveCount;
+                $messages['negative'] = $negativeCount;
+                $messages['neutral'] = $neutralCount;
+                $messages["icon"] = "";
+                $messages["cover_image"] = "";
+                $messages["account_name"] = $messages['author'];
+                $messages["source_name"] = self::matchSource($source, $messages['source_id']);
+                unset($messages["classification"]);
+                unset($messages["author"]);
+                $finalResults[] = $messages;
+            }
+        }
+        return $finalResults;
     }
 
     public function influencerPost(Request $request)
     {
         $limit = self::selectData($request->select);
-        if ($limit == 0) {
-            $limit = $request->limit;
-            $count = self::rawMessageInfluencerCampaignCount($this->campaign_id, $this->start_date, $this->end_date);
-        } else {
-            $count = $limit;
-        }
 
-        $page = $request->page;
-        if ($page == null || $page == 0)
-            $page = 1;
         if ($limit == null || $limit == 0)
             $limit = 10;
 
-        $offset = $limit * ($page - 1);
-
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $limit, $offset);
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
         $result = self::parseInfluencer($raw);
+        $count = count($result);
+        if (count($result) > $limit) {
+            $result = array_slice($result, 0, $limit);
+        }
         return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
 
-    private function parseInfluencer($raw)
-    {
-        $data = array();
-        $source = DB::table('sources')->where("status", "=", 1)->get();
-        //error_log(json_encode($source));
+    /*
+        private function parseInfluencer($raw)
+        {
+            $data = array();
 
-        foreach ($raw as $item) {
-            $data_push = [
-                "account_name" => $item->author,
-                "source_name" => self::matchSource($source, $item->source_id),
-                "icon" => "",
-                "cover_image" => "",
-                "total_post" => ($item->total_post / 3),
-                "total_engagement" => ($item->total_engagement / 3),
-                "positive" => $item->positive,
-                "negative" => $item->negative,
-                "neutral" => $item->neutral,
-            ];
-            $data[] = $data_push;
-        }
-        return $data;
-    }
+            //error_log(json_encode($source));
+
+            foreach ($raw as $item) {
+                $data_push = [
+                    "account_name" => $item->author,
+                    "source_name" => self::matchSource($source, $item->source_id),
+                    "icon" => "",
+                    "cover_image" => "",
+                    "total_post" => ($item->total_post / 3),
+                    "total_engagement" => ($item->total_engagement / 3),
+                    "positive" => $item->positive,
+                    "negative" => $item->negative,
+                    "neutral" => $item->neutral,
+                ];
+                $data[] = $data_push;
+            }
+            return $data;
+        }*/
 
 
     public function influencerAuthor(Request $request)
@@ -747,45 +789,89 @@ WHERE
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $data->whereIn('outer_messages.source_id', $source_ids);
         }*/
-        if ($page == 0)
-            $page = 1;
-        if ($limit == 0)
-            $limit = 10;
-        $offset = $limit * ($page - 1);
-        $data = DB::select("SELECT
-    m.author,m.source_id,
-    COALESCE(SUM(mr.total_engagement), 0) AS total_engagement,
-    COUNT(m.id) as total_post,
-    SUM(CASE WHEN message_results.classification_id = '1' THEN 1 ELSE 0 END) AS positive,
-    SUM(CASE WHEN message_results.classification_id = '2' THEN 1 ELSE 0 END) AS negative,
-    SUM(CASE WHEN message_results.classification_id = '3' THEN 1 ELSE 0 END) AS neutral
+        $rows = DB::select("SELECT m.source_id,
+    m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
 FROM
     tbl_messages m
-LEFT JOIN (
-    SELECT
-        message_id,
-        SUM(COALESCE(number_of_comments, 0) + COALESCE(number_of_shares, 0) + COALESCE(number_of_reactions, 0)) AS total_engagement
-    FROM
-        tbl_messages
-    WHERE
-        keyword_id IN (" . implode(",", $keywordIds) . ")
-        AND (number_of_comments > 0 OR number_of_reactions > 0 OR number_of_shares > 0)
-        AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
-    GROUP BY
-        message_id
-) mr ON m.message_id = mr.message_id
-LEFT JOIN tbl_message_results message_results ON m.id = message_results.message_id
+    LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
 WHERE
-    m.keyword_id IN (" . implode(",", $keywordIds) . ")
-    AND (m.number_of_comments > 0 OR m.number_of_reactions > 0 OR m.number_of_shares > 0)
-    AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
-    AND m.author IS NOT NULL
-GROUP BY
-    m.author
-HAVING
-    total_engagement > 0
-ORDER BY
-    total_engagement DESC limit $limit offset $offset");
-        return $data;
+    keyword_id IN (" . implode(",", $keywordIds) . ")
+    AND author != ''
+   AND mr.classification_type_id=1
+    AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
+        $newGroupedData = [];
+
+        foreach ($rows as $message) {
+            if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && $message->reference_message_id === "") {
+                $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
+                if ($totalEngagement > 10) {
+                    $messageId = $message->message_id;
+                    if (!isset($newGroupedData[$messageId])) {
+                        $newGroupedData[$messageId] = [
+                            'author' => $message->author,
+                            'number_of_comments' => 0,
+                            'number_of_shares' => 0,
+                            'source_id' => 0,
+                            'number_of_reactions' => 0,
+                            'message_datetime' => '',
+                            'total_engagement' => 0,
+                            'classification' => [],
+                        ];
+                    }
+
+                    $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
+                    $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
+                    $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
+
+                    if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
+                        $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
+                    }
+
+                    $newGroupedData[$messageId]['source_id'] = $message->source_id;
+
+                    $newGroupedData[$messageId]['total_engagement'] += $totalEngagement;
+                }
+            } else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
+                if (isset($newGroupedData[$message->reference_message_id])) {
+                    $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
+                }
+            }
+        }
+
+
+        foreach ($newGroupedData as $messageData) {
+            $author = $messageData['author'];
+            if (!isset($groupedResults[$author])) {
+                $groupedResults[$author] = [
+                    'author' => $author,
+                    'number_of_comments' => 0,
+                    'number_of_shares' => 0,
+                    'number_of_reactions' => 0,
+                    'source_id' => 0,
+                    'message_datetime' => '',
+                    'total_engagement' => 0,
+                    'classification' => [],
+                ];
+            }
+
+            $groupedResults[$author]['number_of_comments'] += $messageData['number_of_comments'];
+            $groupedResults[$author]['number_of_shares'] += $messageData['number_of_shares'];
+            $groupedResults[$author]['number_of_reactions'] += $messageData['number_of_reactions'];
+            $groupedResults[$author]['source_id'] = $messageData['source_id'];
+
+            if ($messageData['message_datetime'] > $groupedResults[$author]['message_datetime']) {
+                $groupedResults[$author]['message_datetime'] = $messageData['message_datetime'];
+            }
+
+            $groupedResults[$author]['total_engagement'] += $messageData['total_engagement'];
+            $groupedResults[$author]['classification'] = array_merge($groupedResults[$author]['classification'], $messageData['classification']);
+        }
+
+// Convert associative array to indexed array
+        $result = array_values($groupedResults);
+        usort($result, function ($a, $b) {
+            return $b['total_engagement'] <=> $a['total_engagement'];
+        });
+        return $result;
     }
 }
