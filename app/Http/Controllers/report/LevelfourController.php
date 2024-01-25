@@ -222,17 +222,17 @@ class LevelfourController extends Controller
         } else {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '')->limit(1000);
+                ->where('reference_message_id', '')->limit(1500);
         }
 
         if ($is_child) {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
                 //->where('reference_message_id', '!=','')
-                ->whereIn('messages.reference_message_id', $messageId)
+                ->whereIn('messages.reference_message_id', $messageId);
                 //->orderBy("total_engagement", "desc")
 
-            ->limit(20000);
+            //->limit(30000);
         }
 
 
