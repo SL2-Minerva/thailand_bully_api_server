@@ -182,24 +182,24 @@ class MonitoringController extends Controller
             $total_keywords->where('source_id', $this->source_id);
         }
 
-        $data['daily_message'] = $this->dailyMessage($total_keywords);
+
+        $sources = DB::table('sources')->where("status", "=", 1)->get();
+        $keywords = DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();
+        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
+        $data['daily_message'] = $this->dailyMessage($total_keywords,$sources,$keywords,$campaign);
         $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
         $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords,$sources,$keywords,$campaign);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous,$sources,$keywords,$campaign);
 
         return parent::handleRespond($data);
     }
 
-    private function dailyMessage($total_keywords)
+    private function dailyMessage($total_keywords,$sources,$keywords,$campaign)
     {
 
         $items = $total_keywords->get();
         $data = null;
-
-        $sources = DB::table('sources')->where("status", "=", 1)->get();
-        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get();
-        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
 
         foreach ($items as $item) {
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
@@ -251,7 +251,7 @@ class MonitoringController extends Controller
         return $data;
     }
 
-    private function percentageOfMessages($start_date, $end_date, $total_keywords)
+    private function percentageOfMessages($start_date, $end_date, $total_keywords,$sources,$keywords,$campaign)
     {
 
         $items = $total_keywords->get();
@@ -284,8 +284,6 @@ class MonitoringController extends Controller
 
         }
 
-        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get();
-        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
         foreach ($items as $item) {
             $keyword_id = $item->keyword_id;
             $data[$keyword_id]['keyword_id'] = $keyword_id;
