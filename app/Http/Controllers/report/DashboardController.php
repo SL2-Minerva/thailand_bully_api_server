@@ -911,9 +911,10 @@ class DashboardController extends Controller
         $keywords = $this->findKeywords($campaign_id, $this->keyword_id);
 
         $raw_total = DB::table('word_clouds')
+            ->select('count_number', 'word', 'keyword_id', 'date_count', 'classification_type_id')
             ->where('message_id', '!=', '')
             ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->whereIn('classification_type_id', [1])
+            ->where('classification_type_id', '=', 1)
             ->whereBetween('date_count', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if (!$this->user_login->is_admin) {
@@ -930,16 +931,20 @@ class DashboardController extends Controller
         $data['word_total'] = self::point_two_digits((int)$raw_total->sum('count_number'), 0);*/
 
         $wordclouds = $raw_total->orderBy('count_number', 'desc')->get();
-
+        $count_number = 0;
+        foreach ($wordclouds as $wordcloud) {
+            $count_number =$wordcloud->count_number;
+        }
+        $data['word_total'] =  self::point_two_digits($count_number);
         $data['total'] = count($wordclouds);
-        $data['word_clouds_table'] = $this->wordCloudsMessageTable($keywords,$wordclouds, $request);
+        $data['word_clouds_table'] = $this->wordCloudsMessageTable($keywords, $wordclouds, $request);
         /**/
 
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsMessageTable($keywords,$wordclouds, $request)
+    private function wordCloudsMessageTable($keywords, $wordclouds, $request)
     {
 
         $select = $request->select ?? null;
