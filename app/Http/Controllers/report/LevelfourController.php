@@ -230,7 +230,7 @@ class LevelfourController extends Controller
                 ->where('message_results.classification_type_id', $type)
                 //->where('reference_message_id', '!=','')
                 ->whereIn('messages.reference_message_id', $messageId)
-                ->orderBy("total_engagement", "desc")
+                //->orderBy("total_engagement", "desc")
 
             ->limit(10000);
         }
