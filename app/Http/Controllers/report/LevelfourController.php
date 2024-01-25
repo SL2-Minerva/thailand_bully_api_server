@@ -332,9 +332,11 @@ class LevelfourController extends Controller
                     'messages.number_of_shares as number_of_shares',
                     'messages.number_of_reactions as number_of_reactions',
                     'messages.reference_message_id as reference_message_id',
+                    'message_results.classification_id as classification_id',
                     'messages.author as author',
                     'messages.message_id as message_id',
                     'messages.link_message as link_message',
+                    DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
                     /*'sources.name as source_name',
                     'keywords.name as keyword_name',
                     'keywords.campaign_id AS campaign_id',
@@ -347,7 +349,7 @@ class LevelfourController extends Controller
                 //->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
                 ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
                 //->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
-                ->where('campaigns.id', $campaign_id)
+                //->where('campaigns.id', $campaign_id)
                 ->whereIn('keyword_id', $keywordIds)
                 ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
         } else {
