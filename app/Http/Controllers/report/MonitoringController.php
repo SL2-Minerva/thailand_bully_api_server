@@ -581,9 +581,9 @@ class MonitoringController extends Controller
                 }
 
                 // Create a result array for the current author
-                $messages['positive'] = $positiveCount;
-                $messages['negative'] = $negativeCount;
-                $messages['neutral'] = $neutralCount;
+                $messages['positive'] = strval($positiveCount);
+                $messages['negative'] = strval($negativeCount);
+                $messages['neutral'] = strval($neutralCount);
                 $messages["icon"] = "";
                 $messages["cover_image"] = "";
                 $messages["account_name"] = $messages['author'];
