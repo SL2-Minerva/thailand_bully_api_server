@@ -901,16 +901,11 @@ class DashboardController extends Controller
         $classification = parent::getClassificationMaster();
         foreach ($raw_query as $result) {
             $classification_name= $this->matchClassificationName($classification, $result->classification_id);
-            if (isset($data[$result->keyword_id])) {
-                $data[$result->keyword_id][$classification_name] += 1;
-                $data[$result->keyword_id]['total'] += 1;
-            } else {
-
+            if (!isset($data[$result->keyword_id])) {
                 $data[$result->keyword_id] = [
                     'keyword_id' => $result->keyword_id,
-                    'keyword_name' => self::matchKeywordName($keywordName,$result->keyword_id),
+                    'keyword_name' => self::matchKeywordName($keywordName, $result->keyword_id),
                     'campaign_id' => $result->campaign_id,
-
                     /*'campaign_name' => $campaign->name,*/
                     'organization_id' => 1,
                     'organizations_name' => 'organizations_name 1',
@@ -920,9 +915,9 @@ class DashboardController extends Controller
                     'total' => 0,
                 ];
 
-                $data[$result->keyword_id][$classification_name] += 1;
-                $data[$result->keyword_id]['total'] += 1;
             }
+            $data[$result->keyword_id][$classification_name] += 1;
+            $data[$result->keyword_id]['total'] += 1;
         }
 
         if ($data) {
