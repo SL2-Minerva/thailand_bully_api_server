@@ -51,8 +51,8 @@ class LevelfourController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
+            $this->start_date_previous = $this->date_carbon($request->start_date_period);
+            $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
 
     }
@@ -65,67 +65,67 @@ class LevelfourController extends Controller
         $type = 1;
 
         if ($report_number === 'sna' ||
-        // Over all
-        $report_number === '1.2.002' ||
-        // Voice Dashboard
-        $report_number === '2.2.002' ||
-        $report_number === '2.2.003' ||
-        $report_number === '2.2.004' ||
-        $report_number === '2.2.005' ||
-        $report_number === '2.2.006' ||
-        $report_number === '2.2.007' ||
-        $report_number === '2.2.008' ||
-        $report_number === '2.2.009' ||
-        $report_number === '2.2.010' ||
-        $report_number === '2.2.013' ||
-        // Channel Dashboard
-        $report_number === '3.2.002' ||
-        $report_number === '3.2.003' ||
-        $report_number === '3.2.004' ||
-        $report_number === '3.2.005' ||
-        $report_number === '3.2.006' ||
-        $report_number === '3.2.007' ||
-        $report_number === '3.2.008' ||
-        $report_number === '3.2.009'
+            // Over all
+            $report_number === '1.2.002' ||
+            // Voice Dashboard
+            $report_number === '2.2.002' ||
+            $report_number === '2.2.003' ||
+            $report_number === '2.2.004' ||
+            $report_number === '2.2.005' ||
+            $report_number === '2.2.006' ||
+            $report_number === '2.2.007' ||
+            $report_number === '2.2.008' ||
+            $report_number === '2.2.009' ||
+            $report_number === '2.2.010' ||
+            $report_number === '2.2.013' ||
+            // Channel Dashboard
+            $report_number === '3.2.002' ||
+            $report_number === '3.2.003' ||
+            $report_number === '3.2.004' ||
+            $report_number === '3.2.005' ||
+            $report_number === '3.2.006' ||
+            $report_number === '3.2.007' ||
+            $report_number === '3.2.008' ||
+            $report_number === '3.2.009'
 
-        // // Engagement Dashboard
-        // $report_number === '4.2.002' ||
-        // $report_number === '4.2.003' ||
-        // $report_number === '4.2.004' ||
-        // $report_number === '4.2.005' ||
-        // $report_number === '4.2.006' ||
-        // $report_number === '4.2.007' ||
-        // $report_number === '4.2.008' ||
-        // $report_number === '4.2.012' ||
-        // $report_number === '4.2.013' ||
-        // $report_number === '4.2.014' ||
-        // $report_number === '4.2.015' ||
-        // $report_number === '4.2.016' ||
-        // $report_number === '4.2.017' ||
-        // // Sentiment Dashboard
-        // $report_number === '5.2.002' ||
-        // $report_number === '5.2.003' ||
-        // $report_number === '5.2.004' ||
-        // $report_number === '5.2.005' ||
-        // $report_number === '5.2.006' ||
-        // $report_number === '5.2.007' ||
-        // $report_number === '5.2.008' ||
-        // $report_number === '5.2.009' ||
-        // // Bully Dashboard
-        // $report_number === '6.2.002' ||
-        // $report_number === '6.2.003' ||
-        // $report_number === '6.2.004' ||
-        // $report_number === '6.2.005' ||
-        // $report_number === '6.2.006' ||
-        // $report_number === '6.2.007' ||
-        // $report_number === '6.2.008' ||
-        // $report_number === '6.2.012' ||
-        // $report_number === '6.2.013' ||
-        // $report_number === '6.2.014' ||
-        // $report_number === '6.2.015' ||
-        // $report_number === '6.2.016' ||
-        // $report_number === '6.2.017' ||
-        // $report_number === '6.2.018'
+            // // Engagement Dashboard
+            // $report_number === '4.2.002' ||
+            // $report_number === '4.2.003' ||
+            // $report_number === '4.2.004' ||
+            // $report_number === '4.2.005' ||
+            // $report_number === '4.2.006' ||
+            // $report_number === '4.2.007' ||
+            // $report_number === '4.2.008' ||
+            // $report_number === '4.2.012' ||
+            // $report_number === '4.2.013' ||
+            // $report_number === '4.2.014' ||
+            // $report_number === '4.2.015' ||
+            // $report_number === '4.2.016' ||
+            // $report_number === '4.2.017' ||
+            // // Sentiment Dashboard
+            // $report_number === '5.2.002' ||
+            // $report_number === '5.2.003' ||
+            // $report_number === '5.2.004' ||
+            // $report_number === '5.2.005' ||
+            // $report_number === '5.2.006' ||
+            // $report_number === '5.2.007' ||
+            // $report_number === '5.2.008' ||
+            // $report_number === '5.2.009' ||
+            // // Bully Dashboard
+            // $report_number === '6.2.002' ||
+            // $report_number === '6.2.003' ||
+            // $report_number === '6.2.004' ||
+            // $report_number === '6.2.005' ||
+            // $report_number === '6.2.006' ||
+            // $report_number === '6.2.007' ||
+            // $report_number === '6.2.008' ||
+            // $report_number === '6.2.012' ||
+            // $report_number === '6.2.013' ||
+            // $report_number === '6.2.014' ||
+            // $report_number === '6.2.015' ||
+            // $report_number === '6.2.016' ||
+            // $report_number === '6.2.017' ||
+            // $report_number === '6.2.018'
         ) {
 
             if ($request->sna_type) {
@@ -153,8 +153,15 @@ class LevelfourController extends Controller
 
     private function getSNAbyType($request, $type = 1)
     {
-        $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, false, $type);
-        $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true, $type);
+        $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, false, $type, []);
+
+        $messageIds = [];
+        foreach ($roots["nodes"] as $node) {
+            //error_log(json_encode($node));
+            $messageIds[] = $node["id"];
+        }
+
+        $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true, $type, $messageIds);
         $nodes = array_merge($roots['nodes'] ?? [], $childs['nodes'] ?? []);
 
         $data = ['nodes' => null, 'edges' => null];
@@ -163,8 +170,7 @@ class LevelfourController extends Controller
         foreach ($nodes as $node) {
             // data from each node;
 
-            if (!in_array($node['id'], $check))
-            {
+            if (!in_array($node['id'], $check)) {
                 $check[] = $node['id'];
                 $data['nodes'][] = $node;
 
@@ -188,14 +194,12 @@ class LevelfourController extends Controller
             }
 
 
-
-
         }
 
         return $data;
     }
 
-    private function getNode($request, $message_id, $start_date, $end_date, $is_child = false, $type = 1)
+    private function getNode($request, $message_id, $start_date, $end_date, $is_child = false, $type = 1, $messageId)
     {
 
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
@@ -218,18 +222,19 @@ class LevelfourController extends Controller
         } else {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '')->limit(1000);
+                ->where('reference_message_id', '')->limit(500);
         }
 
         if ($is_child) {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '!=','')
-                ->limit(200);
+                //->where('reference_message_id', '!=','')
+                ->whereIn('messages.reference_message_id', $messageId);
+            //->limit(1000);
         }
 
 
-        $raw ->orderBy("total_engagement", "desc");
+        $raw->orderBy("total_engagement", "desc");
 
         if ($message_id && !$is_child) {
             $raw = $raw->where('messages.message_id', $message_id);
@@ -247,9 +252,9 @@ class LevelfourController extends Controller
         // $raw_total = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
         $raw_total = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
             ->where('message_results.classification_type_id', $type)
-            ->where('reference_message_id', '!=','');
+            ->where('reference_message_id', '!=', '');
 
-        $total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+        //$total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -270,12 +275,12 @@ class LevelfourController extends Controller
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $total_interaction_from > 0 ? $influent_rate / $total_interaction_from * 100 : 0;
+            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 100 : 0;
             $data_push = [
                 "id" => $item->message_id,
                 "label_name" => $item->author,
                 "title" => $item->author,
-                "color" => parent::matchClassificationColor($classification,$item->classification_id),
+                "color" => parent::matchClassificationColor($classification, $item->classification_id),
                 "shape" => "dot",
                 "size" => $this->factorNodeSize($influent_rate, $is_child),
                 'link_message' => $item->link_message ?? ""
@@ -355,9 +360,9 @@ class LevelfourController extends Controller
                     'messages.link_message as link_message',
 
                 ])
-/*                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
+                /*                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+                                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+                                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
 
                 /*->where('campaigns.id', $campaign_id)*/
                 ->whereIn('keyword_id', $keywordIds)
@@ -401,13 +406,13 @@ class LevelfourController extends Controller
             ->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            */->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            */ ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             //->where('campaigns.id', $campaign_id)
             ->whereIn('keyword_id', $keywordIds)
             ->groupBy("messages.message_id")
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
-            return $raw;
+        return $raw;
     }
 
 }
