@@ -214,20 +214,22 @@ class LevelfourController extends Controller
         }
 
         if ($message_id) {
-            $raw = $this->message($keywordIds, $this->campaign_id, $this->start_date, $this->end_date, $this->report_number,);
+            $raw = $this->message($keywordIds, $this->campaign_id, $this->start_date, $this->end_date, $this->report_number)->limit(1000);
         } else {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '');
+                ->where('reference_message_id', '')->limit(1000);
         }
 
         if ($is_child) {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
                 ->where('reference_message_id', '!=','')
-                ->limit(1000);
+                ->limit(200);
         }
 
+
+        $raw ->orderBy("total_engagement", "desc");
 
         if ($message_id && !$is_child) {
             $raw = $raw->where('messages.message_id', $message_id);
@@ -282,7 +284,7 @@ class LevelfourController extends Controller
 
 //            if ($is_child) {
             $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 5;
-            $data_push["length"] = (int)$influent_rate ?? 1;
+            //$data_push["length"] = (int)$influent_rate ?? 1;
 
             $data_push["parent_id"] = $item->reference_message_id;
 //            }
@@ -315,11 +317,7 @@ class LevelfourController extends Controller
             $raw = DB::table('messages')
                 ->select([
                     'messages.keyword_id as keyword_id',
-                    'keywords.name as keyword_name',
-                    'keywords.campaign_id AS campaign_id',
-                    'campaigns.name AS campaign_name',
                     'messages.source_id as source_id',
-                    'sources.name as source_name',
                     'messages.message_datetime as date_m',
                     'messages.number_of_views as number_of_views',
                     'messages.number_of_comments as number_of_comments',
@@ -327,16 +325,20 @@ class LevelfourController extends Controller
                     'messages.number_of_reactions as number_of_reactions',
                     'messages.reference_message_id as reference_message_id',
                     'messages.author as author',
-                    'classifications.name as classification_name',
-                    'classifications.color as classification_color',
                     'messages.message_id as message_id',
                     'messages.link_message as link_message',
+                    /*'sources.name as source_name',
+                    'keywords.name as keyword_name',
+                    'keywords.campaign_id AS campaign_id',
+                    'campaigns.name AS campaign_name',
+                    'classifications.name as classification_name',
+                    'classifications.color as classification_color',*/
                 ])
-                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+                /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
+                //->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
                 ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-                ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
+                //->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
                 ->where('campaigns.id', $campaign_id)
                 ->whereIn('keyword_id', $keywordIds)
                 ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
@@ -344,20 +346,20 @@ class LevelfourController extends Controller
             $raw = DB::table('messages')
                 ->select([
                     'messages.keyword_id as keyword_id',
-                    'keywords.name as keyword_name',
+                    /*'keywords.name as keyword_name',
                     'keywords.campaign_id AS campaign_id',
-                    'campaigns.name AS campaign_name',
+                    'campaigns.name AS campaign_name',*/
                     'messages.source_id as source_id',
-                    'sources.name as source_name',
+                    /*'sources.name as source_name',*/
                     'messages.message_datetime as date_m',
                     'messages.link_message as link_message',
 
                 ])
-                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+/*                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
                 ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
 
-                ->where('campaigns.id', $campaign_id)
+                /*->where('campaigns.id', $campaign_id)*/
                 ->whereIn('keyword_id', $keywordIds)
                 ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
         }
@@ -392,6 +394,7 @@ class LevelfourController extends Controller
                 'keywords.name as keyword_name',
                 'classifications.name as classification_name',
                 'classifications.color as classification_color',*/
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
 
             ])
             /*->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
@@ -401,6 +404,7 @@ class LevelfourController extends Controller
             */->join('message_results', 'message_results.message_id', '=', 'messages.id')
             //->where('campaigns.id', $campaign_id)
             ->whereIn('keyword_id', $keywordIds)
+            ->groupBy("messages.message_id")
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
             return $raw;
