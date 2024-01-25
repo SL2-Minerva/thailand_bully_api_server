@@ -903,17 +903,6 @@ class DashboardController extends Controller
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
         }
-
-        $select = $request->select ?? null;
-        $keywords = $this->findKeywords($campaign_id, $this->keyword_id);
-
-       /* $raw_total = DB::table('word_clouds')
-            ->select('count_number', 'word', 'keyword_id', 'date_count', 'classification_type_id')
-            ->where('message_id', '!=', '')
-            ->whereIn('keyword_id', $keywords->pluck('id')->toArray())
-            ->where('classification_type_id', '=', 1)
-            ->whereBetween('date_count', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);*/
-        //$select = $request->select ?? null;
         $keywords = self::findKeywords($campaign_id, $this->keyword_id);
         $limit = self::selectData($request->select);
         if ($limit == 0) {
@@ -961,34 +950,34 @@ GROUP BY
         $data['word_clouds'] = $wordclouds;//self::wordCloudsMessage($this->wordCloudsData($wordclouds), $select);
         $data['word_total'] = self::point_two_digits($count_number);
         $data['total'] = count($wordclouds);
-        //$data['word_clouds_table'] = self::wordCloudsMessage($this->wordCloudsMessageTable($keywords, $wordclouds), $select);
+        $data['word_clouds_table'] = $this->wordCloudsMessageTable($keywords, $wordclouds,$count_number);
         /**/
 
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsMessageTable($keywords, $wordclouds)
+    private function wordCloudsMessageTable($keywords, $wordclouds,$countNumberTotal)
     {
 
         $data = null;
         $total = count($wordclouds);
 
         foreach ($wordclouds as $wordcloud) {
-            if (isset($data[$wordcloud->word])) {
+            if (isset($data[$wordcloud->text])) {
                 $data[$wordcloud->word]['total'] += $wordcloud->count_number;
             } else {
-                $data[$wordcloud->word] = [
-                    'keyword' => $wordcloud->word,
+                $data[$wordcloud->text] = [
+                    'keyword' => $wordcloud->text,
                     'keyword_id' => $wordcloud->keyword_id,
                     'keyword_name' => self::matchKeywordName($keywords, $wordcloud->keyword_id),
-                    'total' => $wordcloud->count_number,
+                    'total' => $wordcloud->value,
                     // 'percent' => self::point_two_digits((($wordcloud->count_number / $total) * 100), 2)
-                    'percent' => 0
+                    'percent' => (float)self::point_two_digits(($wordcloud->value / $countNumberTotal), 2)
                 ];
             }
         }
-
+/*
         if ($data) {
 
             $data = array_values($data);
@@ -1013,7 +1002,7 @@ GROUP BY
                 "top50" => array_slice($data, 0, 50),
                 default => array_slice($data, 0, 100),
             };
-        }
+        }*/
 
         return $data;
     }
