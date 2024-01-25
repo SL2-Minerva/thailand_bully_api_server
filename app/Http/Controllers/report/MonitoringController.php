@@ -195,61 +195,45 @@ class MonitoringController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function dailyMessage($total_keywords,$sources,$keywords,$campaign)
+    private function dailyMessage($total_keywords, $sources, $keywords, $campaign)
     {
+        $data = [];
 
-        $items = $total_keywords->get();
-        $data = null;
+        $items = $total_keywords
+            ->get();
 
         foreach ($items as $item) {
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
             $keyword = self::matchKeywordName($keywords, $item->keyword_id);
-            if (isset($data[$keyword])) {
 
-                if (isset($data[$keyword]['value'][$date_format])) {
-                    $data[$keyword]['value'][$date_format]['total_at_date'] += 1;
-                } else {
-                    $data[$keyword]['value'][$date_format] = [
-                        "keyword_id" => $item->keyword_id,
-                        "keyword_name" => $keyword,
-                        "date_m" => $date_format,
-                        'total_at_date' => 1
-                    ];
-                }
+            $data[$keyword]['keyword_id'] = $item->keyword_id;
+            $data[$keyword]['keyword_name'] = $keyword;
+            $data[$keyword]['campaign_id'] = $campaign->id;
+            $data[$keyword]['campaign_name'] = $campaign->name;
+            $data[$keyword]['source_id'] = $item->source_id;
+            $data[$keyword]['source_name'] = self::matchSourceName($sources, $item->source_id);
 
-            } else {
-                $data[$keyword] = [
-                    "keyword_id" => $item->keyword_id,
-                    "keyword_name" => $keyword,
-                    "campaign_id" => $campaign->id,
-                    "campaign_name" => $campaign->name,
-                    "source_id" => $item->source_id,
-                    "source_name" => self::matchSourceName($sources, $item->source_id),
-                ];
+            if (!isset($data[$keyword]['value'][$date_format])) {
                 $data[$keyword]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
-                    "keyword_name" =>$keyword,
+                    'keyword_name' => $keyword,
                     'date_m' => $date_format,
-                    'total_at_date' => 1
+                    'total_at_date' => 0,
                 ];
             }
+
+            $data[$keyword]['value'][$date_format]['total_at_date'] += 1;
         }
 
+        $data = array_values($data);
 
-        if ($data) {
-            foreach ($data as $key => $item) {
-                if ($item) {
-                    $data[$key]['value'] = array_values($item['value']);
-                }
-            }
-        }
-
-        if ($data) {
-            $data = array_values($data);
+        foreach ($data as &$item) {
+            $item['value'] = array_values($item['value']);
         }
 
         return $data;
     }
+
 
     private function percentageOfMessages($start_date, $end_date, $total_keywords,$sources,$keywords,$campaign)
     {
