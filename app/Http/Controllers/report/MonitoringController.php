@@ -580,10 +580,20 @@ class MonitoringController extends Controller
                     }
                 }
 
+                if ($positiveCount == 0) {
+                    $positiveCount = strval(1);
+                }
+                if ($negativeCount == 0) {
+                    $negativeCount = strval(1);
+                }
+                if ($neutralCount == 0) {
+                    $neutralCount = strval(1);
+                }
                 // Create a result array for the current author
                 $messages['positive'] = strval($positiveCount);
                 $messages['negative'] = strval($negativeCount);
                 $messages['neutral'] = strval($neutralCount);
+                $messages['total_post'] = 0;
                 $messages["icon"] = "";
                 $messages["cover_image"] = "";
                 $messages["account_name"] = $messages['author'];
