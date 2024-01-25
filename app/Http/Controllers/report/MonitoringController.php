@@ -559,9 +559,10 @@ class MonitoringController extends Controller
 
 // Loop through each author's messages
             foreach ($raw as $messages) {
-                $positiveCount = 0;
-                $negativeCount = 0;
-                $neutralCount = 0;
+                $positiveCount = $messages["positive"];
+                $negativeCount = $messages["negative"];
+                $neutralCount = $messages["neutral"];
+                $totalSentiment = $messages["total_sentiment"];
 
                 // Loop through each message
                 foreach ($messages["classification"] as $classification) {
@@ -578,21 +579,23 @@ class MonitoringController extends Controller
                             break;
                         // Add more cases if needed
                     }
+                    $totalSentiment++;
                 }
 
-           /*     if ($positiveCount == 0) {
-                    $positiveCount = 1;
-                }
-                if ($negativeCount == 0) {
-                    $negativeCount = strval(1);
-                }
-                if ($neutralCount == 0) {
-                    $neutralCount = strval(1);
-                }*/
+                /*     if ($positiveCount == 0) {
+                         $positiveCount = 1;
+                     }
+                     if ($negativeCount == 0) {
+                         $negativeCount = strval(1);
+                     }
+                     if ($neutralCount == 0) {
+                         $neutralCount = strval(1);
+                     }*/
                 // Create a result array for the current author
-                $messages['positive'] = $positiveCount;
-                $messages['negative'] = $negativeCount;
-                $messages['neutral'] = $neutralCount;
+                $messages['positive'] = round(($positiveCount / $totalSentiment) * 100, 2);
+                $messages['negative'] = round(($negativeCount / $totalSentiment) * 100,2);
+                $messages['neutral'] = round(($neutralCount / $totalSentiment) * 100,2);
+                $messages['total_sentiment'] = $totalSentiment;
                 $messages["icon"] = "";
                 $messages["cover_image"] = "";
                 $messages["account_name"] = $messages['author'];
@@ -612,7 +615,7 @@ class MonitoringController extends Controller
         if ($limit == null || $limit == 0)
             $limit = 10;
 
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         $count = count($result);
         if (count($result) > $limit) {
@@ -748,36 +751,12 @@ class MonitoringController extends Controller
 
     public function influencerExport(Request $request)
     {
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         return Excel::download(new MonitoringExport($result, 'sentiment'), 'monitoring-sentiment-' . Carbon::now() . '.xlsx');
     }
 
-    private function rawMessageInfluencerCampaignCount($campaign_id, $start_date, $end_date)
-    {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-
-        $keywordIds = $keyword->pluck('id')->all();
-
-        $data = DB::select("SELECT
-    COUNT(DISTINCT m.author) AS total_authors
-FROM
-    tbl_messages m
-WHERE
-    m.keyword_id IN (" . implode(",", $keywordIds) . ")
-    AND ( m.message_type = 'Post' OR m.message_type = 'post' )
-    AND m.message_datetime BETWEEN '" . $start_date . " 00:00:00' AND '" . $end_date . " 23:59:59'
-    AND m.author IS NOT NULL");
-        return $data["0"]->total_authors;
-    }
-
-    private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date, $limit, $page)
+    private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date)
     {
         $keyword = Keyword::where('campaign_id', $campaign_id);
 
@@ -817,9 +796,6 @@ WHERE
                 if ($totalEngagement > 10) {
                     $messageId = $message->message_id;
                     $author = $message->author;
-                    if ($author==='วันนี้ก้าวไกลโกหกอะไร'){
-                        error_log(json_encode($message));
-                    }
 
                     // Increment post count for the author
                     if (!isset($authorPostCount[$author])) {
@@ -834,14 +810,31 @@ WHERE
                             'number_of_comments' => 0,
                             'number_of_shares' => 0,
                             'source_id' => 0,
+                            'negative' => 0,
+                            'positive' => 0,
+                            'neutral' => 0,
+                            'total_sentiment' => 0,
                             'number_of_reactions' => 0,
                             'message_datetime' => '',
                             'total_engagement' => 0,
                             'classification' => [],
-                            'total_post' => 0, // Initialize post count
+                            'total_post' => 0
                         ];
                     }
 
+                    switch ($message->classification_id) {
+                        case 1:
+                            $newGroupedData[$messageId]['positive'] = $newGroupedData[$messageId]['positive'] + 1;
+                            break;
+                        case 2:
+                            $newGroupedData[$messageId]['negative'] = $newGroupedData[$messageId]['negative'] + 1;
+                            break;
+                        case 3:
+                            $newGroupedData[$messageId]['neutral'] = $newGroupedData[$messageId]['neutral'] + 1;
+                            break;
+                    }
+
+                    $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
                     $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
                     $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
                     $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
@@ -870,6 +863,10 @@ WHERE
                     'number_of_comments' => 0,
                     'number_of_shares' => 0,
                     'number_of_reactions' => 0,
+                    'negative' => 0,
+                    'positive' => 0,
+                    'neutral' => 0,
+                    'total_sentiment' => 0,
                     'source_id' => 0,
                     'message_datetime' => '',
                     'total_engagement' => 0,
@@ -881,6 +878,10 @@ WHERE
             $groupedResults[$author]['number_of_comments'] += $messageData['number_of_comments'];
             $groupedResults[$author]['number_of_shares'] += $messageData['number_of_shares'];
             $groupedResults[$author]['number_of_reactions'] += $messageData['number_of_reactions'];
+            $groupedResults[$author]['negative'] += $messageData['negative'];
+            $groupedResults[$author]['neutral'] += $messageData['neutral'];
+            $groupedResults[$author]['positive'] += $messageData['positive'];
+            $groupedResults[$author]['total_sentiment'] += $messageData['total_sentiment'];
             $groupedResults[$author]['source_id'] = $messageData['source_id'];
 
             if ($messageData['message_datetime'] > $groupedResults[$author]['message_datetime']) {
