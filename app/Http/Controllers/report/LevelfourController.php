@@ -222,7 +222,7 @@ class LevelfourController extends Controller
         } else {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '')->limit(500);
+                ->where('reference_message_id', '')->limit(150);
         }
 
         if ($is_child) {
