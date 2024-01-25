@@ -69,172 +69,135 @@ class DashboardController extends Controller
         $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
         if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
+            $keyword->whereIn('id', $this->keyword_id);
         }
-
-        $keyword = $keyword->get();
 
         $keywordIds = $keyword->pluck('id')->all();
 
-        $total_keywords = DB::table('messages')
-            ->select([
-                'messages.keyword_id as keyword_id',
-                'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
-                /*'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'sources.name as source_name',*/
-            ])
-            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        $total_keywords = $this->getTotalKeywords($keywordIds, $this->start_date, $this->end_date, $this->source_id);
+        $total_keywords_previous = $this->getTotalKeywords($keywordIds, $this->start_date_previous, $this->end_date_previous, $this->source_id);
 
-        if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
-        }
+        $sources = $this->getSources();
+        $keywords = $this->getKeywords();
+        $campaign = $this->getCampaign();
 
-        $total_keywords_previous = DB::table('messages')
-            ->select([
-                'messages.keyword_id as keyword_id',
-                'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
-                /*'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'sources.name as source_name',*/
-            ])
-            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
-
-        if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
-        }
-
-        $sources = DB::table('sources')->where("status", "=", 1)->get();
-        $keywords = DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();
-        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
-        $data['daily_message'] = $this->dailyMessage($total_keywords,$sources,$keywords,$campaign);
-        $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
-        $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords,$sources,$keywords,$campaign);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous,$sources,$keywords,$campaign);
+        $data['daily_message'] = $this->dailyMessage($total_keywords, $sources, $keywords, $campaign);
+        $data['date_of_messages_current'] = $this->getDateRange($this->start_date, $this->end_date);
+        $data['date_of_messages_previous'] = $this->getDateRange($this->start_date_previous, $this->end_date_previous);
+        $data['percentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
+        $data['percentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous, $sources, $keywords, $campaign);
 
         return parent::handleRespond($data);
     }
 
-    private function dailyMessage($total_keywords,$sources,$keywords,$campaign)
+    private function getTotalKeywords($keywordIds, $startDate, $endDate, $sourceId = null)
     {
+        return DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'messages.source_id as source_id',
+                'messages.message_datetime as date_m',
+            ])
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', ["$startDate 00:00:00", "$endDate 23:59:59"])
+            ->when($sourceId, function ($query) use ($sourceId) {
+                return $query->where('source_id', $sourceId);
+            })
+            ->get();
+    }
 
-        $items = $total_keywords->get();
-        $data = null;
+    private function getSources()
+    {
+        return DB::table('sources')->where("status", "=", 1)->get();
+    }
 
-        foreach ($items as $item) {
+    private function getKeywords()
+    {
+        return DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();
+    }
+
+    private function getCampaign()
+    {
+        return DB::table('campaigns')->where('id', $this->campaign_id)->first();
+    }
+
+    private function dailyMessage($totalKeywords, $sources, $keywords, $campaign)
+    {
+        $data = [];
+
+        foreach ($totalKeywords as $item) {
             $keyword = self::matchKeywordName($keywords, $item->keyword_id);
-            $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
+            $dateFormat = Carbon::parse($item->date_m)->format('Y-m-d');
 
-            if (isset($data[$keyword])) {
-
-                if (isset($data[$keyword]['value'][$date_format])) {
-                    $data[$keyword]['value'][$date_format]['total_at_date'] += 1;
-                } else {
-                    $data[$keyword]['value'][$date_format] = [
-                        "keyword_id" => $item->keyword_id,
-                        "keyword_name" =>$keyword,
-                        "date_m" => $date_format,
-                        'total_at_date' => 1
-                    ];
-                }
-
-            } else {
+            if (!isset($data[$keyword])) {
                 $data[$keyword] = [
-                    "keyword_id" => $item->keyword_id,
-                    "keyword_name" => $keyword,
-                    "campaign_id" => $campaign->id,
-                    "campaign_name" => $campaign->name,
-                    "source_id" => $item->source_id,
-                    "source_name" => self::matchSourceName($sources, $item->source_id),
-                ];
-                $data[$keyword]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
                     'keyword_name' => $keyword,
-                    'date_m' => $date_format,
-                    'total_at_date' => 1
+                    'campaign_id' => $campaign->id,
+                    'campaign_name' => $campaign->name,
+                    'source_id' => $item->source_id,
+                    'source_name' => self::matchSourceName($sources, $item->source_id),
+                    'value' => [],
                 ];
             }
-        }
 
-
-        if ($data) {
-            foreach ($data as $key => $item) {
-                if ($item) {
-                    $data[$key]['value'] = array_values($item['value']);
-                }
+            if (!isset($data[$keyword]['value'][$dateFormat])) {
+                $data[$keyword]['value'][$dateFormat] = [
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $keyword,
+                    'date_m' => $dateFormat,
+                    'total_at_date' => 0,
+                ];
             }
+
+            $data[$keyword]['value'][$dateFormat]['total_at_date'] += 1;
         }
 
-        if ($data) {
-            $data = array_values($data);
+        foreach ($data as &$item) {
+            $item['value'] = array_values($item['value']);
         }
 
-        return $data;
+        return array_values($data);
     }
 
-    private function percentageOfMessages($start_date, $end_date, $total_keywords,$sources,$keywords,$campaign)
+    private function getDateRange($startDate, $endDate)
     {
+        return Carbon::createFromFormat('Y-m-d', $startDate)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $endDate)->format('d/m/Y');
+    }
 
-        $items = $total_keywords->get();
+    private function percentageOfMessages($startDate, $endDate, $totalKeywords, $sources, $keywords, $campaign)
+    {
+        $messageKeyword = [];
+        $messageTotal = 0;
 
-        $message_keyword = [];
-        $message_total = 0;
-
-        foreach ($items as $item) {
+        foreach ($totalKeywords as $item) {
             $keyword = self::matchKeywordName($keywords, $item->keyword_id);
-            if (isset($message_keyword[$keyword])) {
-                $message_keyword[$keyword] += 1;
-            } else {
-                $message_keyword[$keyword] = 1;
-            }
-
-            $message_total += 1;
+            $messageKeyword[$keyword] = ($messageKeyword[$keyword] ?? 0) + 1;
+            $messageTotal += 1;
         }
 
         $data = null;
 
-        foreach ($message_keyword as $keyword_id => $value) {
-            $percentage = 0;
-            if ($value && $message_total) {
-                $percentage = $message_total ? self::point_two_digits(($value / $message_total) * 100) : $message_total;
-            }
-            $data[$keyword_id]['value'][] = [
-                'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
+        foreach ($messageKeyword as $keywordId => $value) {
+            $percentage = $messageTotal ? self::point_two_digits(($value / $messageTotal) * 100) : $messageTotal;
+            $data[$keywordId]['value'][] = [
+                'date' => $this->getDateRange($startDate, $endDate),
                 'percentage' => $percentage,
             ];
-
         }
 
-        foreach ($items as $item) {
-            $keyword_id = $item->keyword_id;
-            $data[$keyword_id]['keyword_id'] = $keyword_id;
-            $data[$keyword_id]['keyword_name'] = self::matchKeywordName($keywords,$keyword_id);
-            $data[$keyword_id]['campaign_id'] = $campaign->id;
-            $data[$keyword_id]['campaign_name'] = $campaign->name;
-            $data[$keyword_id]['total'] = self::point_two_digits($message_total, 0);
+        foreach ($totalKeywords as $item) {
+            $keywordId = $item->keyword_id;
+            $data[$keywordId]['keyword_id'] = $keywordId;
+            $data[$keywordId]['keyword_name'] = self::matchKeywordName($keywords, $keywordId);
+            $data[$keywordId]['campaign_id'] = $campaign->id;
+            $data[$keywordId]['campaign_name'] = $campaign->name;
+            $data[$keywordId]['total'] = self::point_two_digits($messageTotal, 0);
         }
 
-
-        if ($data) {
-            return array_values($data);
-        }
-
-        return $data;
-
+        return $data ? array_values($data) : $data;
     }
+
 
     public function keyStats(Request $request)
     {
