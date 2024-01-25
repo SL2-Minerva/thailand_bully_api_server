@@ -964,10 +964,10 @@ GROUP BY
         $total = count($wordclouds);
 
         foreach ($wordclouds as $wordcloud) {
-            if (isset($data[$wordcloud->text])) {
+            /*if (isset($data[$wordcloud->text])) {
                 $data[$wordcloud->word]['total'] += $wordcloud->count_number;
-            } else {
-                $data[$wordcloud->text] = [
+            } else {*/
+                $data[] = [
                     'keyword' => $wordcloud->text,
                     'keyword_id' => $wordcloud->keyword_id,
                     'keyword_name' => self::matchKeywordName($keywords, $wordcloud->keyword_id),
@@ -975,7 +975,7 @@ GROUP BY
                     // 'percent' => self::point_two_digits((($wordcloud->count_number / $total) * 100), 2)
                     'percent' => (float)self::point_two_digits(($wordcloud->value / $countNumberTotal), 2)
                 ];
-            }
+            /*}*/
         }
 /*
         if ($data) {
