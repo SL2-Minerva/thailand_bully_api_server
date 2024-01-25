@@ -916,6 +916,9 @@ class DashboardController extends Controller
         //$select = $request->select ?? null;
         $keywords = self::findKeywords($campaign_id, $this->keyword_id);
         $limit = self::selectData($request->select);
+        if ($limit == 0) {
+            $limit = 100;
+        }
         $sourceQuery ="";
         $wordQuery = "";
         if ($request->platform_id) {
@@ -1038,6 +1041,9 @@ GROUP BY
         //$select = $request->select ?? null;
         $keywords = self::findKeywords($campaign_id, $this->keyword_id);
         $limit = self::selectData($request->select);
+        if ($limit == 0) {
+            $limit = 100;
+        }
         $sourceQuery ="";
         $wordQuery = "";
         if ($request->platform_id) {
@@ -1152,6 +1158,9 @@ GROUP BY
         }
 
         $limit = self::selectData($request->select);
+        if ($limit == 0) {
+            $limit = 100;
+        }
         $wordclouds = DB::select("SELECT message_id,author,keyword_id,source_id,
     word as text,
     SUM(count_number) AS value
