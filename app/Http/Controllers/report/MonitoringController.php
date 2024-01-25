@@ -593,7 +593,6 @@ class MonitoringController extends Controller
                 $messages['positive'] = $positiveCount;
                 $messages['negative'] = $negativeCount;
                 $messages['neutral'] = $neutralCount;
-                $messages['total_post'] = 0;
                 $messages["icon"] = "";
                 $messages["cover_image"] = "";
                 $messages["account_name"] = $messages['author'];
@@ -799,7 +798,7 @@ WHERE
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $data->whereIn('outer_messages.source_id', $source_ids);
         }*/
-        $rows = DB::select("SELECT m.source_id,
+        $rows = DB::select("SELECT m.id,m.source_id,
     m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
 FROM
     tbl_messages m
@@ -811,14 +810,27 @@ WHERE
     AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
         $newGroupedData = [];
 
+
         foreach ($rows as $message) {
             if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && $message->reference_message_id === "") {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
                 if ($totalEngagement > 10) {
                     $messageId = $message->message_id;
+                    $author = $message->author;
+                    if ($author==='วันนี้ก้าวไกลโกหกอะไร'){
+                        error_log(json_encode($message));
+                    }
+
+                    // Increment post count for the author
+                    if (!isset($authorPostCount[$author])) {
+                        $authorPostCount[$author] = 1;
+                    } else {
+                        $authorPostCount[$author]++;
+                    }
+
                     if (!isset($newGroupedData[$messageId])) {
                         $newGroupedData[$messageId] = [
-                            'author' => $message->author,
+                            'author' => $author,
                             'number_of_comments' => 0,
                             'number_of_shares' => 0,
                             'source_id' => 0,
@@ -826,6 +838,7 @@ WHERE
                             'message_datetime' => '',
                             'total_engagement' => 0,
                             'classification' => [],
+                            'total_post' => 0, // Initialize post count
                         ];
                     }
 
@@ -840,6 +853,7 @@ WHERE
                     $newGroupedData[$messageId]['source_id'] = $message->source_id;
 
                     $newGroupedData[$messageId]['total_engagement'] += $totalEngagement;
+                    $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
                 }
             } else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
                 if (isset($newGroupedData[$message->reference_message_id])) {
@@ -847,7 +861,6 @@ WHERE
                 }
             }
         }
-
 
         foreach ($newGroupedData as $messageData) {
             $author = $messageData['author'];
@@ -861,6 +874,7 @@ WHERE
                     'message_datetime' => '',
                     'total_engagement' => 0,
                     'classification' => [],
+                    'total_post' => 0, // Initialize post count
                 ];
             }
 
@@ -875,6 +889,7 @@ WHERE
 
             $groupedResults[$author]['total_engagement'] += $messageData['total_engagement'];
             $groupedResults[$author]['classification'] = array_merge($groupedResults[$author]['classification'], $messageData['classification']);
+            $groupedResults[$author]['total_post'] = $messageData['total_post'];
         }
 
 // Convert associative array to indexed array
