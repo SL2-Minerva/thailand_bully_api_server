@@ -65,10 +65,20 @@ class EngagementDashboardController extends Controller
     public function EngagementTrans(Request $request)
     {
 
+        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
+
+        $keyword = $keyword->get();
+
+        $keywordIds = $keyword->pluck('id')->all();
+
         $data = [
-            "engagement" => $this->engagement(),
-            "prcentage_of_engagement_current" => $this->percentageOfEngagement($this->start_date , $this->end_date),
-            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($this->start_date_previous , $this->end_date_previous)
+            "engagement" => $this->engagement($keywordIds),
+            "prcentage_of_engagement_current" => $this->percentageOfEngagement($keywordIds,$this->start_date , $this->end_date,$keyword),
+            "prcentage_of_engagement_previous" => $this->percentageOfEngagement($keywordIds,$this->start_date_previous , $this->end_date_previous,$keyword)
         ];
 
         return parent::handleRespond($data);
@@ -1758,33 +1768,24 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function percentageOfEngagement($start_date, $end_date)
+    private function percentageOfEngagement($keywordIds,$start_date, $end_date,$keyword)
     {
 
         $message_keyword = [];
         $message_total = 0;
         $data = null;
 
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-
-        $keywordIds = $keyword->pluck('id')->all();
         $totalKeyword = DB::table('messages')
             ->select([
                 DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
                 'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
+                /*'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
+                'campaigns.name AS campaign_name',*/
                 'messages.message_datetime as date_m',
             ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
@@ -1802,7 +1803,7 @@ class EngagementDashboardController extends Controller
                 $message_keyword[$item['keyword_id']]['total'] += $object->total_engagement;
             } else {
                 $message_keyword[$item['keyword_id']]['total'] = $object->total_engagement;
-                $message_keyword[$item['keyword_id']]['keyword_name'] = $item['keyword_name'];
+                $message_keyword[$item['keyword_id']]['keyword_name'] = self::matchKeywordName($keyword,$item['keyword_id']);
             }
 
             $message_total += $object->total_engagement;
@@ -1831,18 +1832,9 @@ class EngagementDashboardController extends Controller
 
     }
 
-    private function engagement()
+    private function engagement($keywordIds)
     {
         $data = null;
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-
-        $keywordIds = $keyword->pluck('id')->all();
         $totalKeyword = DB::table('messages')
             ->select([
                 DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
@@ -1887,7 +1879,7 @@ class EngagementDashboardController extends Controller
                 $data[$keyword_id] = [
                     "keyword_id" => $item->keyword_id,
                     "keyword_name" => self:: matchKeywordName($keywordName, $item->keyword_id),
-                    "campaign_id" => $campaign->name,
+                    "campaign_id" => $campaign->id,
                     "campaign_name" => $campaign->name,
                 ];
 

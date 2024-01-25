@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AuditLog;
 use App\Models\BaseModel;
+use App\Models\Keyword;
 use App\Models\Organization;
 use App\Models\Sources;
 use App\Models\UserOrganizationGroup;
@@ -256,6 +257,29 @@ class Controller extends BaseController
             }
         }
         return "";
+    }
+
+
+    protected function selectData($select)
+    {
+        return match ($select) {
+            "all" => 0,
+            "top20" => 20,
+            "top50" => 50,
+            "top100" => 100,
+            default => 10
+        };
+    }
+    protected function findKeywords($campaign_id,$keyword_id)
+    {
+
+        $keyword = Keyword::where('campaign_id', $campaign_id);
+
+        if ($keyword_id) {
+            $keyword = $keyword->whereIn('id', $keyword_id);
+        }
+
+        return $keyword->get();
     }
 
     protected function matchKeywordName($keyword, $keywordId)

@@ -299,17 +299,6 @@ class MonitoringController extends Controller
             ->get(['classifications.classification_type_id', 'classification_name']);
     }
 
-    private function selectData($select)
-    {
-        return match ($select) {
-            "all" => 0,
-            "top20" => 20,
-            "top50" => 50,
-            "top100" => 100,
-            default => 10
-        };
-    }
-
 
     public function topEngagementOfPost(Request $request)
     {
