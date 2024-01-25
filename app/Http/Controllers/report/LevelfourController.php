@@ -277,7 +277,7 @@ class LevelfourController extends Controller
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 100 : 0;
+            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement *10 : 0;
             $data_push = [
                 "id" => $item->message_id,
                 "label_name" => $item->author,
