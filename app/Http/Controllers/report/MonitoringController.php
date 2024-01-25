@@ -581,20 +581,9 @@ class MonitoringController extends Controller
                     }
                     $totalSentiment++;
                 }
-
-                /*     if ($positiveCount == 0) {
-                         $positiveCount = 1;
-                     }
-                     if ($negativeCount == 0) {
-                         $negativeCount = strval(1);
-                     }
-                     if ($neutralCount == 0) {
-                         $neutralCount = strval(1);
-                     }*/
-                // Create a result array for the current author
                 $messages['positive'] = round(($positiveCount / $totalSentiment) * 100, 2);
-                $messages['negative'] = round(($negativeCount / $totalSentiment) * 100,2);
-                $messages['neutral'] = round(($neutralCount / $totalSentiment) * 100,2);
+                $messages['negative'] = round(($negativeCount / $totalSentiment) * 100, 2);
+                $messages['neutral'] = round(($neutralCount / $totalSentiment) * 100, 2);
                 $messages['total_sentiment'] = $totalSentiment;
                 $messages["icon"] = "";
                 $messages["cover_image"] = "";
@@ -611,17 +600,19 @@ class MonitoringController extends Controller
     public function influencerPost(Request $request)
     {
         $limit = self::selectData($request->select);
-
+        $page = $request->page;
         if ($limit == null || $limit == 0)
             $limit = 10;
-
+        if ($page == null || $page == 0)
+            $page = 1;
         $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         $count = count($result);
         if (count($result) > $limit) {
-            $result = array_slice($result, 0, $limit);
+            $offset = $limit * ($page - 1);
+            $result = array_slice($result, $offset, $limit);
         }
-        return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => intval($request->limit), 'page' => intval($request->page)]);
+        return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => intval($limit), 'page' => intval($page)]);
     }
 
     /*
