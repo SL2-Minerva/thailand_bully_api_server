@@ -84,8 +84,8 @@ class DashboardController extends Controller
         $data['daily_message'] = $this->dailyMessage($total_keywords, $sources, $keywords, $campaign);
         $data['date_of_messages_current'] = $this->getDateRange($this->start_date, $this->end_date);
         $data['date_of_messages_previous'] = $this->getDateRange($this->start_date_previous, $this->end_date_previous);
-        $data['percentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
-        $data['percentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous, $sources, $keywords, $campaign);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous, $sources, $keywords, $campaign);
 
         return parent::handleRespond($data);
     }
