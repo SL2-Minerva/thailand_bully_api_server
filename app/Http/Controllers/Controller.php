@@ -248,7 +248,7 @@ class Controller extends BaseController
         return $data;
     }
 
-    protected function matchSource($source, $sourceId)
+    protected function matchSourceName($source, $sourceId)
     {
         foreach ($source as $item) {
             if ($item->id == $sourceId) {

@@ -143,17 +143,17 @@ class MonitoringController extends Controller
         $total_keywords = DB::table('messages')
             ->select([
                 'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
                 'messages.source_id as source_id',
-                'sources.name as source_name',
+                /*'sources.name as source_name',
+                'campaigns.name AS campaign_name',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',*/
                 'messages.message_datetime as date_m',
                 'messages.reference_message_id as reference_message_id',
             ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            //->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            /*->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
@@ -164,17 +164,17 @@ class MonitoringController extends Controller
         $total_keywords_previous = DB::table('messages')
             ->select([
                 'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
+                /*'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',
                 'campaigns.name AS campaign_name',
+                'sources.name as source_name',*/
                 'messages.source_id as source_id',
-                'sources.name as source_name',
                 'messages.message_datetime as date_m',
                 'messages.reference_message_id as reference_message_id',
             ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
 
@@ -197,34 +197,38 @@ class MonitoringController extends Controller
         $items = $total_keywords->get();
         $data = null;
 
+        $sources = DB::table('sources')->where("status", "=", 1)->get();
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get();
+        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
+
         foreach ($items as $item) {
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
+            $keyword = self::matchKeywordName($keywords, $item->keyword_id);
+            if (isset($data[$keyword])) {
 
-            if (isset($data[$item->keyword_name])) {
-
-                if (isset($data[$item->keyword_name]['value'][$date_format])) {
-                    $data[$item->keyword_name]['value'][$date_format]['total_at_date'] += 1;
+                if (isset($data[$keyword]['value'][$date_format])) {
+                    $data[$keyword]['value'][$date_format]['total_at_date'] += 1;
                 } else {
-                    $data[$item->keyword_name]['value'][$date_format] = [
+                    $data[$keyword]['value'][$date_format] = [
                         "keyword_id" => $item->keyword_id,
-                        "keyword_name" => $item->keyword_name,
+                        "keyword_name" => $keyword,
                         "date_m" => $date_format,
                         'total_at_date' => 1
                     ];
                 }
 
             } else {
-                $data[$item->keyword_name] = [
+                $data[$keyword] = [
                     "keyword_id" => $item->keyword_id,
-                    "keyword_name" => $item->keyword_name,
-                    "campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    "keyword_name" => $keyword,
+                    "campaign_id" => $campaign->id,
+                    "campaign_name" => $campaign->name,
                     "source_id" => $item->source_id,
-                    "source_name" => $item->source_name,
+                    "source_name" => self::matchSourceName($sources, $item->source_id),
                 ];
-                $data[$item->keyword_name]['value'][$date_format] = [
+                $data[$keyword]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
+                    "keyword_name" =>$keyword,
                     'date_m' => $date_format,
                     'total_at_date' => 1
                 ];
@@ -251,7 +255,6 @@ class MonitoringController extends Controller
     {
 
         $items = $total_keywords->get();
-        $data = null;
 
         $message_keyword = [];
         $message_total = 0;
@@ -281,15 +284,16 @@ class MonitoringController extends Controller
 
         }
 
+        $keywords = Keyword::where('campaign_id', $this->campaign_id)->get();
+        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
         foreach ($items as $item) {
             $keyword_id = $item->keyword_id;
             $data[$keyword_id]['keyword_id'] = $keyword_id;
-            $data[$keyword_id]['keyword_name'] = $item->keyword_name;
-            $data[$keyword_id]['campaign_id'] = $item->campaign_id;
-            $data[$keyword_id]['campaign_name'] = $item->campaign_name;
+            $data[$keyword_id]['keyword_name'] = self::matchKeywordName($keywords, $keyword_id);
+            $data[$keyword_id]['campaign_id'] = $campaign->id;
+            $data[$keyword_id]['campaign_name'] = $campaign->name;
             $data[$keyword_id]['total'] = self::point_two_digits($message_total, 0);
         }
-
 
         if ($data) {
             return array_values($data);
@@ -353,7 +357,7 @@ class MonitoringController extends Controller
                 "message_type" => $item->message_type,
                 "full_message" => $item->full_message,
                 "device" => $item->device,
-                "source_name" => parent::matchSource($source, $item->source_id),
+                "source_name" => parent::matchSourceName($source, $item->source_id),
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "total_engagement" => $item->total_engagement,
@@ -440,7 +444,7 @@ class MonitoringController extends Controller
                 "device" => $item->device,
                 //"source_name" => $item->source_name,
                 "source_id" => $item->source_id,
-                "source_name" => self::matchSource($source, $item->source_id),
+                "source_name" => self::matchSourceName($source, $item->source_id),
                 "keyword_name" => self::matchKeywordName($keywordName, $item->keyword_id),
                 /*"source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
@@ -588,7 +592,7 @@ class MonitoringController extends Controller
                 $messages["icon"] = "";
                 $messages["cover_image"] = "";
                 $messages["account_name"] = $messages['author'];
-                $messages["source_name"] = self::matchSource($source, $messages['source_id']);
+                $messages["source_name"] = self::matchSourceName($source, $messages['source_id']);
                 unset($messages["classification"]);
                 unset($messages["author"]);
                 $finalResults[] = $messages;
@@ -697,7 +701,7 @@ class MonitoringController extends Controller
                 "cover_image" => "",
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "source_name" => self::matchSource($source, $item->source_id),
+                "source_name" => self::matchSourceName($source, $item->source_id),
                 "source_id" => $item->source_id,
                 "link_message" => $item->link_message,
                 "parent" => $item->reference_message_id,
