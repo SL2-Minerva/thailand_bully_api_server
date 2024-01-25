@@ -222,7 +222,7 @@ class LevelfourController extends Controller
         } else {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '')->limit(100);
+                ->where('reference_message_id', '')->limit(200);
         }
 
         if ($is_child) {
@@ -277,7 +277,8 @@ class LevelfourController extends Controller
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement *10 : 0;
+            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement *5 : 0;
+            error_log($influent_rate);
             $data_push = [
                 "id" => $item->message_id,
                 "label_name" => $item->author,
