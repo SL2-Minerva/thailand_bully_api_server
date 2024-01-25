@@ -784,61 +784,61 @@ WHERE
         foreach ($rows as $message) {
             if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && $message->reference_message_id === "") {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
-                if ($totalEngagement > 10) {
-                    $messageId = $message->message_id;
-                    $author = $message->author;
+                //if ($totalEngagement > 10) {
+                $messageId = $message->message_id;
+                $author = $message->author;
 
-                    // Increment post count for the author
-                    if (!isset($authorPostCount[$author])) {
-                        $authorPostCount[$author] = 1;
-                    } else {
-                        $authorPostCount[$author]++;
-                    }
-
-                    if (!isset($newGroupedData[$messageId])) {
-                        $newGroupedData[$messageId] = [
-                            'author' => $author,
-                            'number_of_comments' => 0,
-                            'number_of_shares' => 0,
-                            'source_id' => 0,
-                            'negative' => 0,
-                            'positive' => 0,
-                            'neutral' => 0,
-                            'total_sentiment' => 0,
-                            'number_of_reactions' => 0,
-                            'message_datetime' => '',
-                            'total_engagement' => 0,
-                            'classification' => [],
-                            'total_post' => 0
-                        ];
-                    }
-
-                    switch ($message->classification_id) {
-                        case 1:
-                            $newGroupedData[$messageId]['positive'] = $newGroupedData[$messageId]['positive'] + 1;
-                            break;
-                        case 2:
-                            $newGroupedData[$messageId]['negative'] = $newGroupedData[$messageId]['negative'] + 1;
-                            break;
-                        case 3:
-                            $newGroupedData[$messageId]['neutral'] = $newGroupedData[$messageId]['neutral'] + 1;
-                            break;
-                    }
-
-                    $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
-                    $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
-                    $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
-                    $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
-
-                    if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
-                        $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
-                    }
-
-                    $newGroupedData[$messageId]['source_id'] = $message->source_id;
-
-                    $newGroupedData[$messageId]['total_engagement'] += $totalEngagement;
-                    $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
+                // Increment post count for the author
+                if (!isset($authorPostCount[$author])) {
+                    $authorPostCount[$author] = 1;
+                } else {
+                    $authorPostCount[$author]++;
                 }
+
+                if (!isset($newGroupedData[$messageId])) {
+                    $newGroupedData[$messageId] = [
+                        'author' => $author,
+                        'number_of_comments' => 0,
+                        'number_of_shares' => 0,
+                        'source_id' => 0,
+                        'negative' => 0,
+                        'positive' => 0,
+                        'neutral' => 0,
+                        'total_sentiment' => 0,
+                        'number_of_reactions' => 0,
+                        'message_datetime' => '',
+                        'total_engagement' => 0,
+                        'classification' => [],
+                        'total_post' => 0
+                    ];
+                }
+
+                switch ($message->classification_id) {
+                    case 1:
+                        $newGroupedData[$messageId]['positive'] = $newGroupedData[$messageId]['positive'] + 1;
+                        break;
+                    case 2:
+                        $newGroupedData[$messageId]['negative'] = $newGroupedData[$messageId]['negative'] + 1;
+                        break;
+                    case 3:
+                        $newGroupedData[$messageId]['neutral'] = $newGroupedData[$messageId]['neutral'] + 1;
+                        break;
+                }
+
+                $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
+                $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
+                $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
+                $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
+
+                if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
+                    $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
+                }
+
+                $newGroupedData[$messageId]['source_id'] = $message->source_id;
+
+                $newGroupedData[$messageId]['total_engagement'] += $totalEngagement;
+                $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
+                //   }
             } else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
                 if (isset($newGroupedData[$message->reference_message_id])) {
                     $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
