@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use DateTime;
+use function PHPUnit\Framework\returnArgument;
 
 class DashboardController extends Controller
 {
@@ -1019,45 +1020,41 @@ GROUP BY
         $sources = Sources::where('status', 1)->get();
 
         //SUM(number_of_shares + number_of_comments + number_of_reactions) as total')
-
+        $messageIds = [];
         foreach ($wordclouds as $wordcloud) {
+            $messageIds[]= $wordcloud->message_id;
             $data[] = [
                 'author' => $wordcloud->author,
                 'source_id' => $wordcloud->source_id,
                 'source_name' => self::matchSourceName($sources, $wordcloud->source_id),
                 'total_message' => $wordcloud->value,
                 'message_id' => $wordcloud->message_id,
-                'engagements' => 10/*$this->get_engagements($wordcloud->message_id)*/,
+                'engagements' =>0,
                 'date_count' => $wordcloud->date_count
             ];
         }
 
-        if ($data) {
-            $total_message = array_column($data, 'total_message');
-            $engagements = array_column($data, 'engagements');
-            $date_count = array_column($data, 'date_count');
 
-            array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
-
-            foreach ($data as $key => $datas) {
-                $data[$key]['engagements'] = self::point_two_digits($data[$key]['engagements'], 0);
-            }
-        }
-
-        return $data;
+        return $this->getEngagements($data,$messageIds);
     }
 
-    private function get_engagements($message_id)
+    private function getEngagements($data,$messageIds)
     {
-        $message = DB::table('messages')
-            ->where('message_id', $message_id)
-            ->select(DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
-            ->first()
-            ->total;
-
-        if ($message) {
-            return (int)$message;
+        $engagements =  DB::table('messages')
+            ->select("message_id",DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
+            ->whereIn('message_id', $messageIds)->groupBy('message_id')
+            ->get();
+        $result =[];
+        foreach ($data as $key => $value) {
+            foreach ($engagements as $engagement) {
+                if ($value['message_id'] == $engagement->message_id) {
+                    $data[$key]['engagements'] = intval($engagement->total);
+                    break;
+                }
+            }
+            $result = $data;
         }
+        return $result;
     }
 
     public function wordCloudsPosition(Request $request)
@@ -1112,7 +1109,9 @@ GROUP BY
     {
 
         $sources = Sources::where('status', 1)->get();
+        $messageIds = [];
         foreach ($wordclouds as $wordcloud) {
+            $messageIds[]= $wordcloud->message_id;
             $data[] = [
                 'author' => $wordcloud->author,
                 'source_id' => $wordcloud->source_id,
@@ -1120,22 +1119,10 @@ GROUP BY
                 'total_message' => $wordcloud->value,
                 'message_id' => $wordcloud->message_id,
                 'date_count' => $wordcloud->date_count,
-                'engagements' =>0// $this->get_engagements($wordcloud->message_id)
+                'engagements' => 0
             ];
         }
 
-       /* if ($data) {
-            $total_message = array_column($data, 'total_message');
-            $engagements = array_column($data, 'engagements');
-            $date_count = array_column($data, 'date_count');
-
-            array_multisort($total_message, SORT_DESC, $engagements, SORT_DESC, $data, $date_count, SORT_DESC, $data);
-
-            foreach ($data as $key => $datas) {
-                $data[$key]['engagements'] = self::point_two_digits($data[$key]['engagements'], 0);
-            }
-        }*/
-
-        return $data;
+        return $this->getEngagements($data,$messageIds);
     }
 }
