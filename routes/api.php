@@ -177,14 +177,6 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/list', [SourceController::class, 'index']);
         });
 
-        Route::group(['prefix' => 'dashboard-channel'], function () {
-            Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
-            Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
-            Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
-            Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
-            Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
-        });
-
         Route::get('/keywords', [KeywordController::class, 'keywords']);
 
         Route::group(['prefix' => 'dashboard-overall'], function () {
@@ -208,6 +200,27 @@ Route::group(['middleware' => ['api']], function () {
 
             // level-three
             Route::get('/level-three/', [LevethreeOverAllDashboardController::class, 'dailyMessageLevelThree']);
+        });
+
+        Route::group(['prefix' => 'dashboard-monitoring'], function () {
+            Route::get('daily-by', [MonitoringController::class, 'dailyBy']);
+            Route::get('top-engagement', [MonitoringController::class, 'topEngagementOfPost']);
+            Route::get('engagement-post', [MonitoringController::class, 'engagementOfPost']);
+            Route::get('post-detail', [MonitoringController::class, 'detailOfPost']);
+            Route::get('influencers/top', [MonitoringController::class, 'topInfluencerPost']);
+            Route::get('influencers', [MonitoringController::class, 'influencerPost']);
+            Route::get('engagements/export', [MonitoringController::class, 'engagementExport']);
+            Route::get('influencers/export', [MonitoringController::class, 'influencerExport']);
+            Route::get('influencers/author', [MonitoringController::class, 'influencerAuthor']);
+
+        });
+
+        Route::group(['prefix' => 'dashboard-channel'], function () {
+            Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
+            /*Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);*/
+            Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
+            Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
+            Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
         });
 
         Route::group(['prefix' => 'dashboard-voice'], function () {
@@ -247,20 +260,6 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
             Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
         });
-
-        Route::group(['prefix' => 'dashboard-monitoring'], function () {
-            Route::get('daily-by', [MonitoringController::class, 'dailyBy']);
-            Route::get('top-engagement', [MonitoringController::class, 'topEngagementOfPost']);
-            Route::get('engagement-post', [MonitoringController::class, 'engagementOfPost']);
-            Route::get('post-detail', [MonitoringController::class, 'detailOfPost']);
-            Route::get('influencers/top', [MonitoringController::class, 'topInfluencerPost']);
-            Route::get('influencers', [MonitoringController::class, 'influencerPost']);
-            Route::get('engagements/export', [MonitoringController::class, 'engagementExport']);
-            Route::get('influencers/export', [MonitoringController::class, 'influencerExport']);
-            Route::get('influencers/author', [MonitoringController::class, 'influencerAuthor']);
-
-        });
-
         Route::group(['prefix' => 'level-three-table'], function () {
             Route::get('/', [LevelThreeTableController::class, 'messageLevelThree']);
         });

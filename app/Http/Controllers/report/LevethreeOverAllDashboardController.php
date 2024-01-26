@@ -37,8 +37,8 @@ class LevethreeOverAllDashboardController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
+            $this->start_date_previous = $this->date_carbon($request->start_date_period);
+            $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
 
     }
@@ -54,40 +54,32 @@ class LevethreeOverAllDashboardController extends Controller
         $raw = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
-            ->orderBy('date_m', 'ASC')
-            ->offset($start)->limit($limit);
+            ->where('classification_type_id', 1);
 
-        $total = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
-            ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
 
         if ($request->message_id) {
             $raw->where('message_id', $request->message_id);
-            $total->where('message_id', $request->message_id);
+
         }
 
         if ($request->report_number === '1.2.002'
         ) {
 
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
-
             $raw->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
-            $total->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
         }
+
 
         if (isset($request->keyword_id)) {
             $raw->where('keyword_id', $request->keyword_id);
-            $total->where('keyword_id', $request->keyword_id);
         }
 
         if (isset($request->meesage_id)) {
             $raw->where('message_id', $request->meesage_id);
-            $total->where('message_id', $request->meesage_id);
         }
-
-        $items = $raw->get();
+            $total = $raw->count();
+            $items = $raw->orderBy('date_m', 'ASC')
+                ->offset($start)->limit($limit)->get();
 
         $parents = [];
         foreach ($items as $item) {
@@ -148,7 +140,7 @@ class LevethreeOverAllDashboardController extends Controller
         }
 
         $data['count'] = count($data['message']);
-        $data['total'] = $total->get()->count();
+        $data['total'] = $total->count();
 
         return parent::handleRespond($data);
     }

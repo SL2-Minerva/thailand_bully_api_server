@@ -259,6 +259,16 @@ class Controller extends BaseController
         return "";
     }
 
+    protected function matchSource($source, $sourceId)
+    {
+        foreach ($source as $item) {
+            if ($item->id == $sourceId) {
+                return $item;
+            }
+        }
+        return null;
+    }
+
 
     protected function selectData($select)
     {
@@ -270,6 +280,23 @@ class Controller extends BaseController
             default => 10
         };
     }
+
+    protected function getCampaign($campaign_id)
+    {
+        return DB::table('campaigns')->where('id', $campaign_id)->first();
+    }
+    protected function getAllSource()
+    {
+        $source_group = $this->organization_group->platform;
+        if ($this->user_login->is_admin) {
+            return Sources::where('status', 1)->get();
+        } else {
+            return Sources::where('status', 1)
+                ->whereIn('name', $source_group)
+                ->get();
+        }
+    }
+
     protected function findKeywords($campaign_id,$keyword_id)
     {
 
