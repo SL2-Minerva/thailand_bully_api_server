@@ -64,17 +64,18 @@ class VoiceDashboardController extends Controller
 
     public function PercentageOfMessage(Request $request)
     {
+        $keywords= $this->findKeywords($this->campaign_id, $this->keyword_id);
         $data = null;
-        $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
+        $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
+        $raw_previous = $this->raw_message($keywords, $this->start_date_previous, $this->end_date_previous);
 
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($raw, $this->start_date, $this->end_date);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($raw_previous, $this->start_date_previous, $this->end_date_previous);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($raw, $keywords,$this->start_date, $this->end_date);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($raw_previous, $keywords, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
 
-    private function percentageOfMessages($raw, $start_date, $end_date)
+    private function percentageOfMessages($raw,$keywords, $start_date, $end_date)
     {
 
         $items = $raw->get();
@@ -89,9 +90,9 @@ class VoiceDashboardController extends Controller
             } else {
                 $message_keywords[$item->keyword_id] = [
                     'keyword_id' => $item->keyword_id,
-                    'keyword_name' => $item->keyword_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
+                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                    /*'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,*/
                 ];
                 $message_keywords[$item->keyword_id]['total'] = 1;
             }
@@ -101,8 +102,8 @@ class VoiceDashboardController extends Controller
 
             $data[$keyword_id]['keyword_id'] = $message_keyword['keyword_id'];
             $data[$keyword_id]['keyword_name'] = $message_keyword['keyword_name'];
-            $data[$keyword_id]['campaign_id'] = $message_keyword['campaign_id'];
-            $data[$keyword_id]['campaign_name'] = $message_keyword['campaign_name'];
+            /*$data[$keyword_id]['campaign_id'] = $message_keyword['campaign_id'];
+            $data[$keyword_id]['campaign_name'] = $message_keyword['campaign_name'];*/
             $data[$keyword_id]['value'][] = [
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => self::point_two_digits(($message_keyword['total'] / $message_total ?? 1) * 100),

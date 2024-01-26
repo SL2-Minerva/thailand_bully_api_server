@@ -224,7 +224,7 @@ Route::group(['middleware' => ['api']], function () {
         });
 
         Route::group(['prefix' => 'dashboard-voice'], function () {
-            //Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
+            Route::get('/percentage-of-message', [VoiceDashboardController::class, 'PercentageOfMessage']);
             Route::get('/daily-message', [VoiceDashboardController::class, 'DailyMessage']);
             //Route::get('message-by', [VoiceDashboardController::class, 'messageBy']);
             Route::get('/number-of-account-period-over-period', [VoiceDashboardController::class, 'NumberOfAccountPeriodOverPeriod']);
