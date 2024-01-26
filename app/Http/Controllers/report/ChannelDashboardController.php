@@ -169,7 +169,6 @@ class ChannelDashboardController extends Controller
         $raw = $this->raw_message($keywords->pluck('id')->all(), $this->start_date, $this->end_date);
         $result = $raw->get();
 
-
         $data['channel_by_day'] = $this->ChannelByDayGroup($result, $sources, $keywords);
         $data['channel_by_time'] = $this->ChannelByTimeGroup($result, $sources, $keywords);
         $data['channel_by_device'] = $this->ChannelByDeviceGroup($result, $sources, $keywords);
@@ -194,33 +193,27 @@ class ChannelDashboardController extends Controller
         foreach ($sentiment as $item) {
             $data['labels'][] = $item->name;
         }
-        $data['value'] = null;
 
+        $data['value'] = [];
         foreach ($result2 as $item) {
             if ($item->classification_id > 3 && $item->classification_id < 10) {
                 $classification_name = self::matchClassificationName($classification, $item->classification_id);
                 $index_label = array_search($classification_name, $data['labels']);
-
-                if (isset($data['value'][$item->source_id])) {
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
-                } else {
+                if (!isset($data['value'][$item->source_id])) {
                     $data['value'][$item->source_id] = [
                         'id' => $item->source_id,
-                        'name' => self::matchKeywordName($keywords, $item->keyword_id),
-                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                         'source_name' => self::matchSourceName($sources, $item->source_id),
                         'classification_name' => $classification_name,
                         'classification_id' => $item->classification_id,
                         'source_id' => $item->source_id,
                         'data' => [0, 0, 0, 0, 0, 0]
                     ];
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
                 }
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
             }
-
-            if (isset($data['value'])) {
-                $data['value'] = array_values($data['value']);
-            }
+        }
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
         }
         return $data;
     }
@@ -236,28 +229,21 @@ class ChannelDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
+        $data['value'] = [];
         foreach ($result2 as $item) {
-
             if ($item->classification_id > 9) {
                 $classification_name = self::matchClassificationName($classification, $item->classification_id);
                 $index_label = array_search($classification_name, $data['labels']);
-
-                if (isset($data['value'][$item->source_id])) {
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
-                } else {
+                if (!isset($data['value'][$item->source_id])) {
                     $data['value'][$item->source_id] = [
                         'id' => $item->source_id,
-                        'name' => self::matchKeywordName($keywords, $item->keyword_id),
-                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
-                        'source_name' => self::matchSourceName($sources, $item->source_id),
                         'classification_name' => $classification_name,
                         'classification_id' => $item->classification_id,
                         'source_id' => $item->source_id,
                         'data' => [0, 0, 0, 0]
                     ];
-
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
                 }
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
             }
         }
 
@@ -281,29 +267,22 @@ class ChannelDashboardController extends Controller
             "Negative",
         ];
 
-        $data['value'] = null;
+        $data['value'] = [];
         foreach ($raw as $item) {
             if ($item->classification_id < 4) {
                 $classification_name = self::matchClassificationName($classification, $item->classification_id);
                 $index_label = array_search($classification_name, $data['labels']);
-                if (isset($data['value'][$item->source_id])) {
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
-                } else {
+                if (!isset($data['value'][$item->source_id])) {
                     $data['value'][$item->source_id] = [
                         'id' => $item->source_id,
-                        'name' => self::matchKeywordName($keywords, $item->keyword_id),
-                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
-                        'source_name' => self::matchSourceName($sources, $item->source_id),
                         'classification_name' => $classification_name,
                         'classification_id' => $item->classification_id,
                         'source_id' => $item->source_id,
-                        /*'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,*/
                         'data' => [0, 0, 0]
                     ];
 
-                    $data['value'][$item->source_id]['data'][$index_label] += 1;
                 }
+                $data['value'][$item->source_id]['data'][$index_label] += 1;
             }
         }
 
@@ -313,7 +292,6 @@ class ChannelDashboardController extends Controller
         }
 
         return $data;
-
     }
 
     private function ChannelByDayGroup($raw, $sources, $keywords)
@@ -328,15 +306,13 @@ class ChannelDashboardController extends Controller
             "Sun"
         ];
 
-        $data['value'] = null;
+        $data['value'] = [];
         foreach ($raw as $item) {
 
             $day_name = Carbon::parse($item->date_m)->format('D');
             $index_label = array_search($day_name, $data['labels']);
 
-            if (isset($data['value'][$item->source_id])) {
-                $data['value'][$item->source_id]['data'][$index_label] += 1;
-            } else {
+            if (!isset($data['value'][$item->source_id])) {
 
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
@@ -346,10 +322,8 @@ class ChannelDashboardController extends Controller
                     'keyword_name' => self::matchSourceName($sources, $item->source_id),
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
-
-                $data['value'][$item->source_id]['data'][$index_label] += 1;
             }
-
+            $data['value'][$item->source_id]['data'][$index_label] += 1;
         }
 
         if (isset($data['value'])) {
@@ -368,11 +342,9 @@ class ChannelDashboardController extends Controller
             "After 6 PM"
         ];
 
-        $data['value'] = null;
+        $data['value'] = [];
 
         foreach ($raw as $item) {
-
-
             $sixAM = Carbon::parse("06:00:00");
             $time = Carbon::parse($item->date_m)->format('H:i:s');
             $index_label = 3;
