@@ -79,7 +79,7 @@ class DashboardController extends Controller
 
         $sources = $this->getSources();
         $keywords = $this->getKeywords();
-        $campaign = $this->getCampaign();
+        $campaign = $this->getCampaign($this->campaign_id);
 
         $data['daily_message'] = $this->dailyMessage($total_keywords, $sources, $keywords, $campaign);
         $data['date_of_messages_current'] = $this->getDateRange($this->start_date, $this->end_date);
@@ -114,11 +114,6 @@ class DashboardController extends Controller
     private function getKeywords()
     {
         return DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();
-    }
-
-    private function getCampaign()
-    {
-        return DB::table('campaigns')->where('id', $this->campaign_id)->first();
     }
 
     private function dailyMessage($totalKeywords, $sources, $keywords, $campaign)
@@ -674,7 +669,7 @@ class DashboardController extends Controller
         $data = null;
 
         $keyword = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $campaign = $this->getCampaign();
+        $campaign = $this->getCampaign($this->campaign_id);
         $keywordIds = $keyword->pluck('id')->all();
 
         $total_keywords = DB::table('messages')

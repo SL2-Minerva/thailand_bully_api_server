@@ -96,6 +96,7 @@ class ChannelDashboardController extends Controller
                 // If date_m does not exist, add it to the value array
                 $dataM[$sourceId]['value'][] = [
                     'keyword_id' => $message->keyword_id,
+                    'keyword_name' => $message->keyword_id,
                     'date_m' => $message->date_m,
                     'total_at_date' => $message->total_at_date,
                 ];

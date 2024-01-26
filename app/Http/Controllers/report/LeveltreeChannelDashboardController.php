@@ -53,17 +53,17 @@ class LeveltreeChannelDashboardController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
+        $raw = DB::table('message_results')
+            //->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1])
+            ->whereIn('classification_type_id',1)
             ->orderBy('date_m', 'ASC')
             ->offset($start)->limit($limit);
 
-        $total = DB::table('message_result_full_data')
+      /*  $total = DB::table('message_result_full_data')
             ->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('classification_type_id', [1]);
+            ->whereIn('classification_type_id', [1]);*/
 
         if ($request->report_number === '3.2.002'
         ) {
@@ -71,13 +71,13 @@ class LeveltreeChannelDashboardController extends Controller
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
 
             $raw->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
-            $total->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
+            //$total->whereBetween('date_m', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
         }
 
         if ($request->report_number === '3.2.003') {
 
             $raw->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
-            $total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
+            //$total->whereRaw('DATE_FORMAT(date_m, "%a") = ?', [$request->label]);
 
         }
 
