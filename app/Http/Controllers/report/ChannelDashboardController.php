@@ -167,13 +167,13 @@ class ChannelDashboardController extends Controller
         $sources = self::getAllSource();
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $raw = $this->raw_message($keywords->pluck('id')->all(), $this->start_date, $this->end_date);
-        /*$result = $raw->get();
+        $result = $raw->get();
 
 
         $data['channel_by_day'] = $this->ChannelByDayGroup($result, $sources, $keywords);
         $data['channel_by_time'] = $this->ChannelByTimeGroup($result, $sources, $keywords);
         $data['channel_by_device'] = $this->ChannelByDeviceGroup($result, $sources, $keywords);
-        $data['channel_by_account'] = $this->ChannelByAccountGroup($result, $sources, $keywords);*/
+        $data['channel_by_account'] = $this->ChannelByAccountGroup($result, $sources, $keywords);
 
         $raw2 = $this->raw_message2($keywords->pluck('id')->all(), $this->start_date, $this->end_date);
         $result2 = $raw2->get();
@@ -214,12 +214,9 @@ class ChannelDashboardController extends Controller
                         'source_id' => $item->source_id,
                         'data' => [0, 0, 0, 0, 0, 0]
                     ];
-
                     $data['value'][$item->source_id]['data'][$index_label] += 1;
                 }
-
             }
-
 
             if (isset($data['value'])) {
                 $data['value'] = array_values($data['value']);
@@ -249,15 +246,6 @@ class ChannelDashboardController extends Controller
                     $data['value'][$item->source_id]['data'][$index_label] += 1;
                 } else {
                     $data['value'][$item->source_id] = [
-                        /*'id' => $item->source_id,
-                        'name' => $item->keyword_name,
-                        'keyword_name' => $item->keyword_name,
-                        'source_name' => $this->source_name($item->source_id),
-                        'classification_name' => $item->classification_name,
-                        'classification_id' => $item->classification_id,
-                        'source_id' => $item->source_id,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,*/
                         'id' => $item->source_id,
                         'name' => self::matchKeywordName($keywords, $item->keyword_id),
                         'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
@@ -265,8 +253,6 @@ class ChannelDashboardController extends Controller
                         'classification_name' => $classification_name,
                         'classification_id' => $item->classification_id,
                         'source_id' => $item->source_id,
-                        /*'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,*/
                         'data' => [0, 0, 0, 0]
                     ];
 
@@ -297,23 +283,11 @@ class ChannelDashboardController extends Controller
 
         $data['value'] = null;
         foreach ($raw as $item) {
-            $classification_name = self::matchClassificationName($classification, $item->classification_id);
             if ($item->classification_id < 4) {
-                //if (isset($data['labels'][$classification_name])) {
+                $classification_name = self::matchClassificationName($classification, $item->classification_id);
                 $index_label = array_search($classification_name, $data['labels']);
-
                 if (isset($data['value'][$item->source_id])) {
-                    if ($classification_name === 'Positive') {
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
-                    }
-
-                    if ($classification_name === 'Negative') {
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
-                    }
-
-                    if ($classification_name === 'Neutral') {
-                        $data['value'][$item->source_id]['data'][$index_label] += 1;
-                    }
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
                 } else {
                     $data['value'][$item->source_id] = [
                         'id' => $item->source_id,
