@@ -63,10 +63,6 @@ class ChannelDashboardController extends Controller
 
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
 
-        // if (!$this->user_login->is_admin) {
-        //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-        //     $raw->where('source_id', $source_ids);
-        // }
         $raw = DB::table('messages')
             ->select([
                 'messages.keyword_id as keyword_id',
@@ -80,7 +76,7 @@ class ChannelDashboardController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
-        $data['daily_message'] = self::DailyChannelGroup($raw,$keywords);
+        $data['daily_message'] = self::DailyChannelGroup($raw, $keywords);
         $data['prcentage_of_messages_current'] = $this->PercentageToCal($keywords, $this->start_date, $this->end_date);
         $data['prcentage_of_messages_previous'] = $this->PercentageToCal($keywords, $this->start_date_previous, $this->end_date_previous);
 
@@ -88,7 +84,7 @@ class ChannelDashboardController extends Controller
 
     }
 
-    public function DailyChannelGroup($raw,$keywords)
+    public function DailyChannelGroup($raw, $keywords)
     {
         $sources = self::getAllSource();
         $items = $raw->get();
@@ -100,9 +96,7 @@ class ChannelDashboardController extends Controller
             if (!isset($data[$item->source_id])) {
                 $data[$item->source_id] = [
                     "source_id" => $item->source_id,
-                    "source_name" => self::matchSourceName($sources,$item->source_id),
-                    /*"campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,*/
+                    "source_name" => self::matchSourceName($sources, $item->source_id),
                     "value" => []
                 ];
             }
@@ -113,7 +107,7 @@ class ChannelDashboardController extends Controller
             if ($valueIndex === false) {
                 $data[$item->source_id]['value'][] = [
                     'keyword_id' => $item->keyword_id,
-                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                    'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                     'date_m' => $date_format,
                     'total_at_date' => 1 // Initialize count for this date
                 ];
@@ -833,10 +827,10 @@ class ChannelDashboardController extends Controller
             $result->where('source_id', $this->source_id);
         }
 
-        $result->whereIn('messages.keyword_id', $keywordIds)
-            ->whereBetween('messages.message_datetime', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
-            ->groupBy('messages.source_id')
-            ->select('messages.source_id', DB::raw('COUNT(*) as total_messages'));
+        $result->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
+            ->groupBy('source_id')
+            ->select('source_id', DB::raw('COUNT(*) as total_messages'));
 
         return $result->get();
     }
@@ -885,13 +879,12 @@ class ChannelDashboardController extends Controller
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
 
         $keywordIds = $keywords->pluck('id')->all();
-        $campaignId = $this->campaign_id;
         $data = null;
 
         $data['sentiment_score'] = $this->totalFromMessageResultSemetic($keywordIds, $this->start_date, $this->end_date, "current period", "current_period");
         $data['sentiment_score_previous'] = $this->totalFromMessageResultSemetic($keywordIds, $this->start_date_previous, $this->end_date_previous, "previous period", "previous_period");
-        $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
-        $data['sentiment_by_level'] = $this->SentimentLevelGroup($campaignId, $keywordIds, $sources, $this->start_date, $this->end_date);
+        $data['channel_by_sentiment'] = $this->ChannelBySentiment2Group($keywordIds, $sources, $this->start_date, $this->end_date);
+        $data['sentiment_by_level'] = $this->SentimentLevelGroup($keywordIds, $sources, $this->start_date, $this->end_date);
 
         return parent::handleRespond($data);
     }
@@ -899,13 +892,6 @@ class ChannelDashboardController extends Controller
 
     private function ChannelBySentiment2Group($keywordIds, $sources, $start_date, $end_date)
     {
-        /*$sources = self::getAllSource();
-
-        $sourceIds = $sources->pluck('id')->all();*/
-
-        /*if (!$this->user_login->is_admin) {
-            $sourceIds = $source_id->whereIn('name', $this->organization_group->platform);
-        }*/
 
         $channel_message_all = $this->total_message_by_source($keywordIds, $start_date, $end_date);
 
@@ -927,48 +913,31 @@ class ChannelDashboardController extends Controller
         return $data;
     }
 
-    public function SentimentLevelGroup($campaignId, $keywordIds, $sources, $start_date, $end_date)
+    public function SentimentLevelGroup($keywordIds, $sources, $start_date, $end_date)
     {
         if ($this->source_id !== 'all') {
-            $sources = $this->source_id;
+            $sourcesIds = $this->source_id;
         }
 
         if ($this->source_id == "") {
-            $source_id = Sources::where('status', 1)->get();
-            $sourceIds = $source_id->pluck('id')->all();
-            $sources = implode(',', $sourceIds);
+            $sourcesIds = $sources->pluck('id')->implode(',');
         }
 
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        if ($keyword->get()) {
-            $keyword = $keyword->get();
-            $keywordIds = $keyword->pluck('id')->all();
-            $keywords = implode(',', $keywordIds);
-        }
+        $keywordIdsString = implode(',', $keywordIds);
 
         $query = "SELECT
-            s.id  as source_id,
-            s.name as source_name,
-            SUM(CASE WHEN c.name = 'Positive' THEN 1 ELSE 0 END) AS positive,
-            SUM(CASE WHEN c.name = 'Negative' THEN 1 ELSE 0 END) AS negative,
-            SUM(CASE WHEN c.name = 'Neutral' THEN 1 ELSE 0 END) AS neutral
+            m.source_id  as source_id,
+
+            SUM(CASE WHEN mr.classification_id = 1 THEN 1 ELSE 0 END) AS positive,
+            SUM(CASE WHEN mr.classification_id = 2 THEN 1 ELSE 0 END) AS negative,
+            SUM(CASE WHEN mr.classification_id = 3 THEN 1 ELSE 0 END) AS neutral
         FROM
             tbl_messages m
-            LEFT JOIN tbl_keywords k ON k.id = m.keyword_id
             LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
-            LEFT JOIN tbl_classifications c ON c.id = mr.classification_id
-            LEFT JOIN tbl_sources s ON m.source_id = s.id
-        WHERE
-            k.campaign_id = 3
-            AND s.id IN ($sources)
-            AND k.id IN ($keywords)
+        WHERE m.source_id IN ($sourcesIds)
+            AND m.keyword_id IN ($keywordIdsString)
             AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
-        GROUP BY s.id;";
+        GROUP BY m.source_id;";
 
         $data = DB::select($query);
 
@@ -989,7 +958,7 @@ class ChannelDashboardController extends Controller
             $neutral = intval($item->neutral);
             $total = $positive + $negative + $neutral;
             $i['source_id'] = $item->source_id;
-            $i['source_name'] = $item->source_name;
+            $i['source_name'] = self::matchSourceName($sources, $item->source_id);
             $i['total'] = $total;
             $i['positive_total'] = $positive;
             $i['negative_total'] = $negative;
@@ -1043,7 +1012,7 @@ class ChannelDashboardController extends Controller
             $engagement->where('source_id', $this->source_id);
         }
 
-        $engagement = $engagement->pluck('count', 'source_is');
+        $engagement = $engagement->pluck('count', 'source_id');
 
         $data['value'][$value_name]['keyword_name'] = $keyword_name;
         foreach ($engagement as $source_id => $count) {
