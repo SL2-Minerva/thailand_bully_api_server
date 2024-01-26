@@ -497,30 +497,28 @@ class EngagementDashboardController extends Controller
 
     public function EngagementTypeBy(Request $request)
     {
-        $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $raw = $this->raw_message($keywords, $this->start_date, $this->end_date)->get();
+        $raw_previous = $this->raw_message($keywords, $this->start_date_previous, $this->end_date_previous)->get();
         // $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond([
-            "EngagementType" => $this->EngagementType($raw, $request, true),
-            "EngagementByDayKey" => $this->EngagementByDayKey($raw, $request, true),
-            "EngagementByTimeKey" => $this->EngagementByTimeKey($raw, $request, true),
-            "EngagementByDeviceKey" => $this->EngagementByDeviceKey($raw, $request, true),
-            "EngagementChannelKey" => $this->EngagementChannelKey($raw, $request, true),
-            "EngagementByAccountKey" => $this->EngagementByAccountKey($raw, $request, true),
+            "EngagementType" => $this->EngagementType($raw, $raw_previous, true),
+            "EngagementByDayKey" => $this->EngagementByDayKey($raw, true),
+            "EngagementByTimeKey" => $this->EngagementByTimeKey($raw, true),
+            "EngagementByDeviceKey" => $this->EngagementByDeviceKey($raw, true),
+            "EngagementChannelKey" => $this->EngagementChannelKey($raw, true),
+            "EngagementByAccountKey" => $this->EngagementByAccountKey($raw, true),
         ]);
     }
 
 
     //todo maybe percentage is wrong
-    public function EngagementType($raw, Request $request, $only_data = false)
+    public function EngagementType($items, $items_previous, $only_data = false)
     {
         $data = null;
-        // $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
 
-        $items = $raw->get();
-        $items_previous = $raw_previous->get();
-
+        $sources = self::getAllSource();
 
         // find percentage of engagement
 
@@ -577,21 +575,21 @@ class EngagementDashboardController extends Controller
 
             $shared = [
                 "source_id" => $item->source_id,
-                "source_name" => $item->source_name,
+                "source_name" => self::matchSourceName($sources, $item->source_id),
                 "date_m" => $date_m,
                 "total_at_date" => $item->number_of_shares,
             ];
 
             $comment = [
                 "source_id" => $item->source_id,
-                "source_name" => $item->source_name,
+                "source_name" => self::matchSourceName($sources, $item->source_id),
                 "date_m" => $date_m,
                 "total_at_date" => $item->number_of_comments,
             ];
 
             $reactions = [
                 "source_id" => $item->source_id,
-                "source_name" => $item->source_name,
+                "source_name" => self::matchSourceName($sources, $item->source_id),
                 "date_m" => $date_m,
                 "total_at_date" => $item->number_of_reactions,
             ];
@@ -631,24 +629,24 @@ class EngagementDashboardController extends Controller
                 $data['engagement'][1] = [
                     "id" => 1,
                     "name" => 'Share',
-                    "campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
                 $data['engagement'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
                 $data['engagement'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
@@ -663,24 +661,24 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_current'][1] = [
                     "id" => 1,
                     "name" => 'Share',
-                    "campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
                 $data['prcentage_of_engagement_current'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
                 $data['prcentage_of_engagement_current'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
@@ -688,24 +686,24 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_previous'][1] = [
                     "id" => 1,
                     "name" => 'Share',
-                    "campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
                 $data['prcentage_of_engagement_previous'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
 
                 $data['prcentage_of_engagement_previous'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
             }
@@ -768,10 +766,10 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementByDayKey($raw, Request $request, $only_data = false)
+    public function EngagementByDayKey($items, $only_data = false)
     {
         $data = null;
-        $items = $raw->get();
+        //$items = $raw->get();
         $total_engaement = 0;
 
         $data['labels'] = [
@@ -788,13 +786,7 @@ class EngagementDashboardController extends Controller
             $day_name = Carbon::parse($item->date_m)->format('D');
             $index_label = array_search($day_name, $data['labels']);
 
-            if (isset($data['value'][0])) {
-
-                $data['value'][0]['data'][$index_label] += $item->number_of_shares;
-                $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
-
-            } else {
+            if (!isset($data['value'][0])) {
                 $data['value'][0] = [
                     'id' => 1,
                     'keyword_name' => 'Share',
@@ -814,10 +806,10 @@ class EngagementDashboardController extends Controller
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
 
-                $data['value'][0]['data'][$index_label] += $item->number_of_shares;
-                $data['value'][1]['data'][$index_label] += $item->number_of_comments;
-                $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
             }
+            $data['value'][0]['data'][$index_label] += $item->number_of_shares;
+            $data['value'][1]['data'][$index_label] += $item->number_of_comments;
+            $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
         }
 
 
@@ -837,7 +829,7 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementByTimeKey($raw, Request $request, $only_data = false)
+    public function EngagementByTimeKey($items, $only_data = false)
     {
 
         $data['labels'] = [
@@ -847,7 +839,6 @@ class EngagementDashboardController extends Controller
             "After 6 PM"
         ];
 
-        $items = $raw->get();
 
         foreach ($items as $item) {
             $sixAM = Carbon::parse("06:00:00");
@@ -883,24 +874,24 @@ class EngagementDashboardController extends Controller
                 $data['value'][1] = [
                     "id" => 1,
                     "keyword_name" => 'Share',
-                    "campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0]
                 ];
 
                 $data['value'][2] = [
                     "id" => 2,
                     "name" => 'Comment',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0]
                 ];
 
                 $data['value'][3] = [
                     "id" => 3,
                     "keyword_name" => 'Reactions',
-                    "campaign_id" => $this->campaign_id,
-                    "campaign_name" => $item->campaign_name,
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0]
                 ];
             }
@@ -919,7 +910,7 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementByDeviceKey($raw, Request $request, $only_data = false)
+    public function EngagementByDeviceKey($items, $only_data = false)
     {
 
 
@@ -928,8 +919,6 @@ class EngagementDashboardController extends Controller
             "Iphone",
             "Web App",
         ];
-
-        $items = $raw->get();
 
         foreach ($items as $item) {
             $index_label = null;
@@ -948,44 +937,36 @@ class EngagementDashboardController extends Controller
 
             if ($index_label != null || $index_label != '') {
 
-                if (isset($data['value'])) {
-
-                    $data['value'][1]['data'][$index_label] += $item->number_of_shares;
-                    $data['value'][2]['data'][$index_label] += $item->number_of_comments;
-                    $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
-
-
-                } else {
+                if (!isset($data['value'])) {
 
                     $data['value'][1] = [
                         "id" => 1,
                         "keyword_name" => 'Share',
-                        "campaign_id" => $item->campaign_id,
-                        "campaign_name" => $item->campaign_name,
+                        /*"campaign_id" => $item->campaign_id,
+                        "campaign_name" => $item->campaign_name,*/
                         'data' => [0, 0, 0]
                     ];
 
                     $data['value'][2] = [
                         "id" => 2,
                         "keyword_name" => 'Comment',
-                        "campaign_id" => $this->campaign_id,
-                        "campaign_name" => $item->campaign_name,
+                        /*"campaign_id" => $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,*/
                         'data' => [0, 0, 0]
                     ];
 
                     $data['value'][3] = [
                         "id" => 3,
                         "keyword_name" => 'Reactions',
-                        "campaign_id" => $this->campaign_id,
-                        "campaign_name" => $item->campaign_name,
+                        /*"campaign_id" => $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,*/
                         'data' => [0, 0, 0]
                     ];
 
-                    $data['value'][1]['data'][$index_label] += $item->number_of_shares;
-                    $data['value'][2]['data'][$index_label] += $item->number_of_comments;
-                    $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
-
                 }
+                $data['value'][1]['data'][$index_label] += $item->number_of_shares;
+                $data['value'][2]['data'][$index_label] += $item->number_of_comments;
+                $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
             }
 
         }
@@ -1003,61 +984,60 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementByAccountKey($raw, Request $request, $only_data = false)
+    public function EngagementByAccountKey($infulencers, $only_data = false)
     {
         $data['labels'] = [
             "Infulencer",
             "Follower",
         ];
 
-        $infulencers = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
-        $infulencers = $infulencers->where('reference_message_id', '')->get();
+        /*$infulencers = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
+        $infulencers = $infulencers->where('reference_message_id', '')->get();*/
 
 
         foreach ($infulencers as $infulencer) {
+            if ($infulencer->reference_message_id == "") {
+                if ($infulencer) {
+                    if (isset($data['value'][1]['data'][0])) {
+                        $data['value'][1]['data'][0] += $infulencer->number_of_shares;
+                        $data['value'][2]['data'][0] += $infulencer->number_of_comments;
+                        $data['value'][3]['data'][0] += $infulencer->number_of_reactions;
+                    } else {
+                        $data['value'][1] = [
+                            'id' => 1,
+                            "keyword_name" => "Share",
+                            "data" => [$infulencer->number_of_shares, 0]
+                        ];
 
-            if ($infulencer) {
+                        $data['value'][2] = [
+                            'id' => 2,
+                            "keyword_name" => "Comment",
+                            "data" => [$infulencer->number_of_comments, 0]
+                        ];
 
-                if (isset($data['value'][1]['data'][0])) {
-                    $data['value'][1]['data'][0] += $infulencer->number_of_shares;
-                    $data['value'][2]['data'][0] += $infulencer->number_of_comments;
-                    $data['value'][3]['data'][0] += $infulencer->number_of_reactions;
-                } else {
-                    $data['value'][1] = [
-                        'id' => 1,
-                        "keyword_name" => "Share",
-                        "data" => [$infulencer->number_of_shares, 0]
-                    ];
+                        $data['value'][3] = [
+                            'id' => 3,
+                            "keyword_name" => "Reaction",
+                            "data" => [$infulencer->number_of_reactions, 0]
+                        ];
 
-                    $data['value'][2] = [
-                        'id' => 2,
-                        "keyword_name" => "Comment",
-                        "data" => [$infulencer->number_of_comments, 0]
-                    ];
-
-                    $data['value'][3] = [
-                        'id' => 3,
-                        "keyword_name" => "Reaction",
-                        "data" => [$infulencer->number_of_reactions, 0]
-                    ];
-
+                    }
                 }
             }
-
         }
 
-        $followers = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
-        $followers = $followers->where('reference_message_id', '!=', '')->get();
+        /*        $followers = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
+                $followers = $followers->where('reference_message_id', '!=', '')->get();*/
 
 
-        foreach ($followers as $follower) {
-
-            if (isset($data['value'][1]['data'][0])) {
-                $data['value'][1]['data'][1] += $follower->number_of_shares;
-                $data['value'][2]['data'][1] += $follower->number_of_comments;
-                $data['value'][3]['data'][1] += $follower->number_of_reactions;
+        foreach ($infulencers as $follower) {
+            if ($follower->reference_message_id != "") {
+                if (isset($data['value'][1]['data'][0])) {
+                    $data['value'][1]['data'][1] += $follower->number_of_shares;
+                    $data['value'][2]['data'][1] += $follower->number_of_comments;
+                    $data['value'][3]['data'][1] += $follower->number_of_reactions;
+                }
             }
-
         }
 
         if (isset($data['value']) && $data['value']) {
@@ -1072,14 +1052,16 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementChannelKey($raw, Request $request, $only_data = false)
+    public function EngagementChannelKey($items, $only_data = false)
     {
 
+        $sources = self::getAllSource();
         $data = $this->listSource();
-        $items = $raw->get();
+        //$items = $raw->get();
 
         foreach ($items as $item) {
-            $index_label = array_search($item->source_name, $data['labels']);
+            $sourceName = self::matchSourceName($sources, $item->source_id);
+            $index_label = array_search($sourceName, $data['labels']);
 
             if (isset($data['value'][1])) {
                 $data['value'][1]['data'][$index_label] += $item->number_of_shares;
@@ -1121,20 +1103,22 @@ class EngagementDashboardController extends Controller
         if ($only_data) {
             return $data;
         }
+        return parent::handleRespond($data);
     }
 
 
     public function EngagementComparisonBy(Request $request)
     {
-        $raw = $this->raw_message($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_previous = $this->raw_message($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
-
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $raw = $this->raw_message($keywords, $this->start_date, $this->end_date)->get();
+        $raw_previous = $this->raw_message($keywords, $this->start_date_previous, $this->end_date_previous)->get();
+        $sources = self::getAllSource();
         return parent::handleRespond([
             "EngagementComparison" => $this->EngagementComparison($request, true),
-            "EngagementPeriodPlarform" => $this->EngagementPeriodPlarform($raw, $raw_previous, $request, true),
+            "EngagementPeriodPlarform" => $this->EngagementPeriodPlarform($raw, $raw_previous, $sources, true),
             "EngagementPeriodSentiment" => $this->EngagementPeriodSentiment($request, true),
-            "EngagementTypeComparison" => $this->EngagementTypeComparison($raw, $raw_previous, $request, true),
-            "EngagementActionComparison" => $this->EngagementActionComparison($raw, $request, true),
+            "EngagementTypeComparison" => $this->EngagementTypeComparison($raw, $raw_previous, $sources,  true),
+            "EngagementActionComparison" => $this->EngagementActionComparison($raw, true),
         ]);
     }
 
@@ -1216,13 +1200,10 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementPeriodPlarform($raw_current, $raw_previous, Request $request, $only_data = false)
+    public function EngagementPeriodPlarform($raw_current, $items_previous,$sources, $only_data = false)
     {
 
         $data = $this->listSource();
-
-        $items_current = $raw_current->get();
-        $items_previous = $raw_previous->get();
 
         $current_share = [];
         $previous_share = [];
@@ -1235,7 +1216,7 @@ class EngagementDashboardController extends Controller
 
         $debug = null;
 
-        foreach ($items_current as $item) {
+        foreach ($raw_current as $item) {
             $index_label = array_search($item->source_name, $data['labels']);
 
             if (isset($data['value'][2])) {
@@ -1487,12 +1468,10 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementTypeComparison($raw_current, $raw_previous, Request $request, $only_data = false)
+    public function EngagementTypeComparison($items_current, $items_previous, $sources,  $only_data = false)
     {
         $data = [];
 
-        $items_current = $raw_current->get();
-        $items_previous = $raw_previous->get();
 
         $current = null;
         $previous = null;
@@ -1580,10 +1559,9 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementActionComparison($raw, Request $request, $only_data = false)
+    public function EngagementActionComparison($engagement_actions, $only_data = false)
     {
 
-        $engagement_actions = $raw->get();
 
 
         $percentages = null;
@@ -1964,27 +1942,19 @@ class EngagementDashboardController extends Controller
         $data = DB::table('messages')
             ->select([
                 'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
                 'messages.source_id as source_id',
-                'sources.name as source_name',
                 'messages.message_datetime as date_m',
                 'messages.device as device',
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_reactions as number_of_reactions',
                 'messages.number_of_shares as number_of_shares',
-                'classifications.name as classification_name',
                 'message_results.classification_id as classification_id',
             ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
+            ->whereIn('message_results.classification_id', ['1', '2', '3']);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
