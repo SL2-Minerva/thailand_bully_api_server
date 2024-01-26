@@ -239,6 +239,7 @@ class ChannelDashboardController extends Controller
                         'id' => $item->source_id,
                         'classification_name' => $classification_name,
                         'classification_id' => $item->classification_id,
+                        'source_name' => self::matchSourceName($sources, $item->source_id),
                         'source_id' => $item->source_id,
                         'data' => [0, 0, 0, 0]
                     ];
@@ -275,6 +276,7 @@ class ChannelDashboardController extends Controller
                 if (!isset($data['value'][$item->source_id])) {
                     $data['value'][$item->source_id] = [
                         'id' => $item->source_id,
+                        'source_name' => self::matchSourceName($sources, $item->source_id),
                         'classification_name' => $classification_name,
                         'classification_id' => $item->classification_id,
                         'source_id' => $item->source_id,
