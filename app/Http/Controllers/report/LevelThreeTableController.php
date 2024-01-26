@@ -64,10 +64,15 @@ class LevelThreeTableController extends Controller
         //$keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
         $source = $this->getAllSource();
 
-        $page = $request->page ?? null;
-        $limit = $request->limit ?? 10;
-        $start = $page === null || $page === 1 ? null : $page * $limit;
-        $start = $start === 1 ? null : $start;
+        $limit = $request->limit;
+        $page = $request->page;
+        if ($page == null || $page == 0)
+            $page = 1;
+        if ($limit == null || $limit == 0)
+            $limit = 10;
+        $offset = $limit * ($page - 1);
+        /*$start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;*/
         $data = null;
 
         $label = str_replace("+", " ", $request->label);
@@ -382,7 +387,7 @@ class LevelThreeTableController extends Controller
             }
 
             //$total->where('classifications.name', '=', $label);
-            $raw->where('classifications.name', '=', $label);
+            //$raw->where('classifications.name', '=', $label);
         }
 
         if ($request->report_number === '3.2.008' ||
@@ -398,9 +403,16 @@ class LevelThreeTableController extends Controller
             } else if ($label === 'Violence') {
                 $label = 'Violence';
             }
-
-            $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, [$label]);
-            $total = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, [$label]);
+            /*$classificationIds = DB::table('classifications')
+                ->select('classifications.id')
+                ->where('classifications.name', '=', $label)
+                ->get()
+                ->pluck('id')
+                ->all();
+            error_log($label);*/
+            $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, $label);
+            //error_log($raw->toSql());
+            //$total = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, [$label]);
 
         }
 
@@ -415,7 +427,7 @@ class LevelThreeTableController extends Controller
 
         ) {
             // dd($raw->get());
-        //    $raw->where('sources.name', $Llabel);
+            //    $raw->where('sources.name', $Llabel);
             //$total->where('sources.name', $Llabel);
         }
 
@@ -471,7 +483,8 @@ class LevelThreeTableController extends Controller
         }
 
         $total = $raw->count();
-        $items = $raw->offset($start)->limit($limit)->get();
+        $items = $raw->offset($offset)->limit($limit)->get();
+        error_log($raw->toSql());
         // $items = $raw->get();
 
         // $parents = [];
@@ -552,7 +565,7 @@ class LevelThreeTableController extends Controller
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
-    private function raw_message_classification(Request $request, $campaign_id, $start_date, $end_date, $classification_name = null)
+    private function raw_message_classification(Request $request, $campaign_id, $start_date, $end_date, $classification = null)
     {
         $keyword = Keyword::where('campaign_id', $campaign_id);
 
@@ -564,7 +577,9 @@ class LevelThreeTableController extends Controller
         $keywordIds = $keyword->pluck('id')->all();
 
         $Llabel = str_replace("+", " ", $request->Llabel);
-        $label = str_replace("+", " ", $request->label);
+        if ($classification === null) {
+            $classification = str_replace("+", " ", $request->label);
+        }
 
         $data = DB::table('messages')
             ->select([
@@ -583,30 +598,17 @@ class LevelThreeTableController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-
-                /*'campaigns.name AS campaign_name',*/
-                /*'keywords.campaign_id AS campaign_id',
-                'keywords.name AS keyword_name',*/
                 'message_results.classification_type_id',
                 'message_results.classification_id',
-
-                /*'sources.name AS source_name',*/
                 'messages.created_at AS created_at',
-                /*                'classifications.color AS classification_color',
-                                'classifications.name AS classification_name',*/
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
 
             ])
-            //->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            //->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            //->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
-            //->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-        // ->orderByDesc('total_engagement');
 
         if ($this->source_id) {
             $data->where('messages.source_id', $this->source_id);
@@ -632,15 +634,15 @@ class LevelThreeTableController extends Controller
         }
 
         //error_log($classification_name);
-        if ($classification_name) {
-            $classification_name = DB::table("classifications")
-                ->select("classifications.id")
-                ->whereIn('classifications.name', $classification_name)
+      /*  if ($classification) {
+            $classificationId = DB::table("classifications")
+                ->select("id")
+                ->where('name', $classification)
                 ->get()
                 ->pluck('id')
                 ->all();
-            $data->whereIn('message_results.classification_id', $classification_name);
-        }
+            $data->where('message_results.classification_id', $classificationId);
+        }*/
 
         // if ($this->source_id) {
         //     $data->where('source_id', $this->source_id);
@@ -686,15 +688,15 @@ class LevelThreeTableController extends Controller
 
             ) {
 
-                if ($label === 'Hate Speech') {
-                    $label = 8;
-                } else if ($label === 'No Bully') {
-                    $label = 4;
-                } else if ($label === 'Violence') {
-                    $label = 9;
+                if ($classification === 'Hate Speech') {
+                    $classification = 8;
+                } else if ($classification === 'No Bully') {
+                    $classification = 4;
+                } else if ($classification === 'Violence') {
+                    $classification = 9;
                 }
 
-                $data->where('message_results.classification_id', $label);
+                $data->where('message_results.classification_id', $classification);
             } else {
                 $data->whereIn('message_results.classification_id', ['1', '2', '3']);
             }
@@ -732,28 +734,6 @@ class LevelThreeTableController extends Controller
 
             $data->where('message_results.classification_id', '=', $Llabel);
         }
-
-        // if ($request->report_number === '6.2.002'
-        //     // $request->report_number === '5.2.003' ||
-        //     // $request->report_number === '5.2.004' ||
-        //     // $request->report_number === '5.2.005' ||
-        //     // $request->report_number === '5.2.006' ||
-        //     // $request->report_number === '5.2.007'
-        //     // $request->report_number === '5.2.008' ||
-        //     // $request->report_number === '5.2.009'
-        // ) {
-        //     $data->where('classifications.name', $Llabel);
-        //     // $data->where('classification_name', $Llabel);
-        //     dd($data->get());
-        // }
-
-        // if ($request->report_number === '5.2.008' ||
-        //     $request->report_number === '5.2.009'
-        // ) {
-        //     $data->whereIn('classifications.classification_type_id', [1 ,2, 3]);
-
-        //     return $this->classifacation_multiple($request, $data);
-        // }
 
         return $data;
     }

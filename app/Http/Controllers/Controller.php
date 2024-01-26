@@ -285,6 +285,7 @@ class Controller extends BaseController
     {
         return DB::table('campaigns')->where('id', $campaign_id)->first();
     }
+
     protected function getAllSource()
     {
         $source_group = $this->organization_group->platform;
@@ -297,7 +298,7 @@ class Controller extends BaseController
         }
     }
 
-    protected function findKeywords($campaign_id,$keyword_id)
+    protected function findKeywords($campaign_id, $keyword_id)
     {
 
         $keyword = Keyword::where('campaign_id', $campaign_id);
