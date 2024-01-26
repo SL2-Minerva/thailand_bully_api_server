@@ -1016,6 +1016,7 @@ GROUP BY
 
         //SUM(number_of_shares + number_of_comments + number_of_reactions) as total')
         $messageIds = [];
+        $data = [];
         foreach ($wordclouds as $wordcloud) {
             $messageIds[]= $wordcloud->message_id;
             $data[] = [
