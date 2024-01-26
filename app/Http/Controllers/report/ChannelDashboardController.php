@@ -67,47 +67,73 @@ class ChannelDashboardController extends Controller
         //     $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
         //     $raw->where('source_id', $source_ids);
         // }
-
-
-        //$sources = self::getAllSource();
-        $messages = DB::table('messages')->select('keyword_id', DB::raw("DATE(message_datetime) AS date_m"), DB::raw('COUNT(*) as total_at_date'))
+        $raw = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'messages.source_id as source_id',
+                'messages.message_datetime as date_m',
+            ])
             ->whereIn('keyword_id', $keywords->pluck('id')->all())
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->groupBy('keyword_id', 'date_m')
-            ->orderBy('date_m')
-            ->orderBy('keyword_id')
-            ->get();
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
-        $dataM = [];
-        foreach ($messages as $message) {
-            $keywordId = $message->keyword_id;
-            $dateM = $message->date_m;
-
-            // Check if keyword_id exists
-            if (!isset($dataM[$keywordId])) {
-                $dataM[$keywordId] = [
-                    'keyword_id' => $keywordId,
-                    'keyword_name' => self::matchKeywordName($keywords, $keywordId), // Fetch keyword name from somewhere
-                    /*'campaign_id' => $this->getCampaignId($keywordId), // Fetch campaign id from somewhere
-                    'campaign_name' => $this->getCampaignName($keywordId), // Fetch campaign name from somewhere*/
-                ];
-            }
-            $dataM[$keywordId]['value'][] = [
-                'keyword_id' => $keywordId,
-                'date_m' => $dateM,
-                'keyword_name' => self::matchKeywordName($keywords, $keywordId),
-                'total_at_date' => $message->total_at_date,
-            ];
-
+        if ($this->source_id) {
+            $raw->where('source_id', $this->source_id);
         }
 
-        $data['daily_message'] = array_values($dataM);
+        $data['daily_message'] = self::DailyChannelGroup($raw,$keywords);
         $data['prcentage_of_messages_current'] = $this->PercentageToCal($keywords, $this->start_date, $this->end_date);
         $data['prcentage_of_messages_previous'] = $this->PercentageToCal($keywords, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
 
     }
+
+    public function DailyChannelGroup($raw,$keywords)
+    {
+        $sources = self::getAllSource();
+        $items = $raw->get();
+        $data = [];
+
+        foreach ($items as $item) {
+            $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
+
+            if (!isset($data[$item->source_id])) {
+                $data[$item->source_id] = [
+                    "source_id" => $item->source_id,
+                    "source_name" => self::matchSourceName($sources,$item->source_id),
+                    /*"campaign_id" => $item->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
+                    "value" => []
+                ];
+            }
+
+            // Find or create the value entry for the date
+            $valueIndex = array_search($date_format, array_column($data[$item->source_id]['value'], 'date_m'));
+
+            if ($valueIndex === false) {
+                $data[$item->source_id]['value'][] = [
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                    'date_m' => $date_format,
+                    'total_at_date' => 1 // Initialize count for this date
+                ];
+            } else {
+                // Increment the count for this date
+                $data[$item->source_id]['value'][$valueIndex]['total_at_date']++;
+            }
+        }
+
+        // Resetting keys to numeric
+        $data = array_values($data);
+
+        // Resetting keys of value arrays
+        foreach ($data as &$item) {
+            $item['value'] = array_values($item['value']);
+        }
+
+        return $data;
+    }
+
 
     private function PercentageToCal($keyword, $start_date, $end_date)
     {
