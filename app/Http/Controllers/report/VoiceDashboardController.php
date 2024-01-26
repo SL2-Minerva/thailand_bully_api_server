@@ -64,18 +64,18 @@ class VoiceDashboardController extends Controller
 
     public function PercentageOfMessage(Request $request)
     {
-        $keywords= $this->findKeywords($this->campaign_id, $this->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $data = null;
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
         $raw_previous = $this->raw_message($keywords, $this->start_date_previous, $this->end_date_previous);
 
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($raw, $keywords,$this->start_date, $this->end_date);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($raw, $keywords, $this->start_date, $this->end_date);
         $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($raw_previous, $keywords, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
 
-    private function percentageOfMessages($raw,$keywords, $start_date, $end_date)
+    private function percentageOfMessages($raw, $keywords, $start_date, $end_date)
     {
 
         $items = $raw->get();
@@ -90,7 +90,7 @@ class VoiceDashboardController extends Controller
             } else {
                 $message_keywords[$item->keyword_id] = [
                     'keyword_id' => $item->keyword_id,
-                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                    'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                     /*'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,*/
                 ];
@@ -1202,43 +1202,42 @@ class VoiceDashboardController extends Controller
     {
 
 
-        $classification_one = [
-            '1', '2', '3'
-        ];
-
-        $classification_two = [
-            '4', '5', '6', '7', '8', '9'
-        ];
-
-        $classification_tree = [
-            '10', '11', '12', '13'
-        ];
-
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
-        $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
+        //$raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
 
-        $raw_classification_one = $this->raw_message_classification($keywords, $this->start_date, $this->end_date, $classification_one);
-        $raw_classification_two = $this->raw_message_classification($keywords, $this->start_date, $this->end_date, $classification_two);
-        $raw_classification_tree = $this->raw_message_classification($keywords, $this->start_date, $this->end_date, $classification_tree);
-
-        $data['keywordChannel'] = $this->getKeywordChannel($raw, $keywords, $sources);
-        $data['keywordSentiment'] = $this->getKeywordSentiment($raw_classification_one, $keywords);
-        $data['keywordBullyLevel'] = $this->getKeywordBullyLevel($raw_classification_tree, $keywords);
-        $data['keywordBullyType'] = $this->getKeywordBullyType($raw_classification_two, $keywords);
+        $raw_classification = $this->raw_message_classification($keywords, $this->start_date, $this->end_date)->get();
+        /*        $raw_classification_two = $this->raw_message_classification($keywords, $this->start_date, $this->end_date);
+                $raw_classification_tree = $this->raw_message_classification($keywords, $this->start_date, $this->end_date);*/
+        $items1 = [];
+        $items2 = [];
+        $items3 = [];
+        foreach ($raw_classification as $item) {
+            if ($item->classification_id < 4) {
+                $items1[] = $item;
+            } else if ($item->classification_id > 9) {
+                $items3[] = $item;
+            } else {
+                $items2[] = $item;
+            }
+        }
+        $data['keywordChannel'] = $this->getKeywordChannel($raw_classification, $keywords, $sources);
+        $data['keywordSentiment'] = $this->getKeywordSentiment($items1, $keywords);
+        $data['keywordBullyLevel'] = $this->getKeywordBullyLevel($items3, $keywords);
+        $data['keywordBullyType'] = $this->getKeywordBullyType($items2, $keywords);
 
         return parent::handleRespond($data);
 
     }
 
-    private function getKeywordChannel($raw, $sources, $keywords)
+    private function getKeywordChannel($items, $sources, $keywords)
     {
 
         $data = parent::listSource();
         // $raw = $conditions['raw'] ?? null;
         $meesage_total = 0;
 
-        $items = $raw->get();
+
         if ($items) {
             foreach ($items as $item) {
                 $SourceName = self::matchSourceName($sources, $item->source_id);
@@ -1276,7 +1275,6 @@ class VoiceDashboardController extends Controller
     private function getKeywordSentiment($raw, $keywords)
     {
         $data = null;
-        $items = $raw->get();
 
         $sentiments = Classification::where('classification_type_id', 1)->get();
         $message_total = 0;
@@ -1285,28 +1283,24 @@ class VoiceDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
-        if ($items) {
-            foreach ($items as $item) {
-                $classificationName = self::matchClassificationName($sentiments, $item->classification_id);
-                $index_label = array_search($classificationName, $data['labels']);
-                $message_total += 1;
-                if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                    $data['value'][$item->keyword_id]['total'] += 1;
-                } else {
-                    $data['value'][$item->keyword_id] = [
-                        'id' => $item->keyword_id,
-                        'keyword_id' => $item->keyword_id,
-                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
-                        'data' => [0, 0, 0],
-                        'total' => 0
-                    ];
+        foreach ($raw as $item) {
+            $classificationName = self::matchClassificationName($sentiments, $item->classification_id);
+            $index_label = array_search($classificationName, $data['labels']);
+            $message_total += 1;
+            if (!isset($data['value'][$item->keyword_id])) {
+                $data['value'][$item->keyword_id] = [
+                    'id' => $item->keyword_id,
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+                    'data' => [0, 0, 0],
+                    'total' => 0
+                ];
 
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                    $data['value'][$item->keyword_id]['total'] += 1;
-                }
             }
+            $data['value'][$item->keyword_id]['data'][$index_label] += 1;
+            $data['value'][$item->keyword_id]['total'] += 1;
         }
+
 
         if (isset($data['value'])) {
             // $data['value'] = array_values($data['value']);
@@ -1331,10 +1325,9 @@ class VoiceDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
-        $items = $raw->get();
 
-        foreach ($items as $item) {
-            $classificationName = self::matchClassificationName($item->classificatio_id, $item->classification_id);
+        foreach ($raw as $item) {
+            $classificationName = self::matchClassificationName($levels, $item->classification_id);
             $index_label = array_search($classificationName, $data['labels']);
             $message_total += 1;
             if (isset($data['value'][$item->keyword_id])) {
@@ -1377,10 +1370,8 @@ class VoiceDashboardController extends Controller
             $data['labels'][] = $item->name;
         }
 
-        $items = $raw->get();
-
-        foreach ($items as $item) {
-            $classificationName = self::matchClassificationName($item->classificatio_id, $item->classification_id);
+        foreach ($raw as $item) {
+            $classificationName = self::matchClassificationName($levels, $item->classification_id);
             $index_label = array_search($classificationName, $data['labels']);
             $message_total += 1;
             if (isset($data['value'][$item->keyword_id])) {
@@ -1451,7 +1442,7 @@ class VoiceDashboardController extends Controller
         return $data;
     }
 
-    private function raw_message_classification($keywords, $start_date, $end_date, $classification_type_ids)
+    private function raw_message_classification($keywords, $start_date, $end_date)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -1490,8 +1481,8 @@ class VoiceDashboardController extends Controller
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('message_results.classification_type_id', $classification_type_ids);
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+        //->whereIn('message_results.classification_type_id', $classification_type_ids);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
