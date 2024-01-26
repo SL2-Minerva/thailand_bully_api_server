@@ -164,23 +164,185 @@ class ChannelDashboardController extends Controller
     public function channelBy()
     {
         $data = null;
+        $sources = self::getAllSource();
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $raw = $this->raw_message($keywords->pluck('id')->all(), $this->start_date, $this->end_date);
-        $result = $raw->get();
-        $sources = self::getAllSource();
+        /*$result = $raw->get();
 
-        $data['channel_by_day'] = $this->ChannelByDayGroup($result,$sources,$keywords);
-        $data['channel_by_time'] = $this->ChannelByTimeGroup($result,$sources,$keywords);
-        $data['channel_by_device'] = $this->ChannelByDeviceGroup($result,$sources,$keywords);
-        $data['channel_by_account'] = $this->ChannelByAccountGroup($result, $sources, $keywords);
-        /*$data['channel_by_sentiment'] = $this->ChannelBySentimentGroup($raw);
-        $data['channel_by_level'] = $this->ChannelBullyLevelGroup($raw);
-        $data['channel_by_bully_type'] = $this->ChannelBullyTypeGroup($raw);*/
+
+        $data['channel_by_day'] = $this->ChannelByDayGroup($result, $sources, $keywords);
+        $data['channel_by_time'] = $this->ChannelByTimeGroup($result, $sources, $keywords);
+        $data['channel_by_device'] = $this->ChannelByDeviceGroup($result, $sources, $keywords);
+        $data['channel_by_account'] = $this->ChannelByAccountGroup($result, $sources, $keywords);*/
+
+        $raw2 = $this->raw_message2($keywords->pluck('id')->all(), $this->start_date, $this->end_date);
+        $result2 = $raw2->get();
+        $classification = self::getClassificationMaster();
+        $data['channel_by_sentiment'] = $this->ChannelBySentimentGroup($result2, $sources, $keywords, $classification);
+        $data['channel_by_level'] = $this->ChannelBullyLevelGroup($result2, $sources, $keywords, $classification);
+        $data['channel_by_bully_type'] = $this->ChannelBullyTypeGroup($result2, $sources, $keywords, $classification);
 
         return parent::handleRespond($data);
     }
 
-    private function ChannelByDayGroup($raw,$sources,$keywords)
+
+    public function ChannelBullyTypeGroup($result2, $sources, $keywords, $classification)
+    {
+        $sentiment = Classification::where('classification_type_id', 2)->get();
+        $data['labels'] = [];
+
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
+        }
+        $data['value'] = null;
+
+        foreach ($result2 as $item) {
+            if ($item->classification_id > 3 && $item->classification_id < 10) {
+                $classification_name = self::matchClassificationName($classification, $item->classification_id);
+                $index_label = array_search($classification_name, $data['labels']);
+
+                if (isset($data['value'][$item->source_id])) {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->source_id] = [
+                        'id' => $item->source_id,
+                        'name' => self::matchKeywordName($keywords, $item->keyword_id),
+                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+                        'source_name' => self::matchSourceName($sources, $item->source_id),
+                        'classification_name' => $classification_name,
+                        'classification_id' => $item->classification_id,
+                        'source_id' => $item->source_id,
+                        'data' => [0, 0, 0, 0, 0, 0]
+                    ];
+
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
+
+            }
+
+
+            if (isset($data['value'])) {
+                $data['value'] = array_values($data['value']);
+            }
+        }
+        return $data;
+    }
+
+
+    public function ChannelBullyLevelGroup($result2, $sources, $keywords, $classification)
+    {
+
+        $sentiment = Classification::where('classification_type_id', 3)->get();
+        $data['labels'] = [];
+
+        foreach ($sentiment as $item) {
+            $data['labels'][] = $item->name;
+        }
+
+        foreach ($result2 as $item) {
+
+            if ($item->classification_id > 9) {
+                $classification_name = self::matchClassificationName($classification, $item->classification_id);
+                $index_label = array_search($classification_name, $data['labels']);
+
+                if (isset($data['value'][$item->source_id])) {
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                } else {
+                    $data['value'][$item->source_id] = [
+                        /*'id' => $item->source_id,
+                        'name' => $item->keyword_name,
+                        'keyword_name' => $item->keyword_name,
+                        'source_name' => $this->source_name($item->source_id),
+                        'classification_name' => $item->classification_name,
+                        'classification_id' => $item->classification_id,
+                        'source_id' => $item->source_id,
+                        'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,*/
+                        'id' => $item->source_id,
+                        'name' => self::matchKeywordName($keywords, $item->keyword_id),
+                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+                        'source_name' => self::matchSourceName($sources, $item->source_id),
+                        'classification_name' => $classification_name,
+                        'classification_id' => $item->classification_id,
+                        'source_id' => $item->source_id,
+                        /*'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,*/
+                        'data' => [0, 0, 0, 0]
+                    ];
+
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
+            }
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+    }
+
+    public function ChannelBySentimentGroup($raw, $sources, $keywords, $classification)
+    {
+
+        // $sentiment = Classification::where('classification_type_id', 1)->get();
+        // $data['labels'] = [];
+
+        $data['labels'] = [
+            "Positive",
+            "Neutral",
+            "Negative",
+        ];
+
+        $data['value'] = null;
+        foreach ($raw as $item) {
+            $classification_name = self::matchClassificationName($classification, $item->classification_id);
+            if ($item->classification_id < 4) {
+                //if (isset($data['labels'][$classification_name])) {
+                $index_label = array_search($classification_name, $data['labels']);
+
+                if (isset($data['value'][$item->source_id])) {
+                    if ($classification_name === 'Positive') {
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    }
+
+                    if ($classification_name === 'Negative') {
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    }
+
+                    if ($classification_name === 'Neutral') {
+                        $data['value'][$item->source_id]['data'][$index_label] += 1;
+                    }
+                } else {
+                    $data['value'][$item->source_id] = [
+                        'id' => $item->source_id,
+                        'name' => self::matchKeywordName($keywords, $item->keyword_id),
+                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+                        'source_name' => self::matchSourceName($sources, $item->source_id),
+                        'classification_name' => $classification_name,
+                        'classification_id' => $item->classification_id,
+                        'source_id' => $item->source_id,
+                        /*'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,*/
+                        'data' => [0, 0, 0]
+                    ];
+
+                    $data['value'][$item->source_id]['data'][$index_label] += 1;
+                }
+            }
+        }
+
+
+        if (isset($data['value'])) {
+            $data['value'] = array_values($data['value']);
+        }
+
+        return $data;
+
+    }
+
+    private function ChannelByDayGroup($raw, $sources, $keywords)
     {
         $data['labels'] = [
             "Mon",
@@ -204,12 +366,10 @@ class ChannelDashboardController extends Controller
 
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
-                    'name' => self::matchSourceName($sources,$item->source_id),
-                    'source_id' =>$item->source_id,
-                    'source_name' => self::matchSourceName($sources,$item->source_id),
-                    'keyword_name' => self::matchSourceName($sources,$item->source_id),
-                    /*'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,*/
+                    'name' => self::matchSourceName($sources, $item->source_id),
+                    'source_id' => $item->source_id,
+                    'source_name' => self::matchSourceName($sources, $item->source_id),
+                    'keyword_name' => self::matchSourceName($sources, $item->source_id),
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
 
@@ -225,7 +385,7 @@ class ChannelDashboardController extends Controller
         return $data;
     }
 
-    public function ChannelByTimeGroup($raw,$sources,$keywords)
+    public function ChannelByTimeGroup($raw, $sources, $keywords)
     {
         $data['labels'] = [
             "Before 6 AM",
@@ -264,13 +424,9 @@ class ChannelDashboardController extends Controller
             } else {
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
-                    'source_name' => self::matchSourceName($sources,$item->source_id),
+                    'source_name' => self::matchSourceName($sources, $item->source_id),
                     'source_id' => $item->source_id,
-                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
-                    /*'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,*/
-                    /*'source_id' => $item->source_id,*/
-                    /*'source_name' => $item->source_name,*/
+                    'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                     'data' => [0, 0, 0, 0]
                 ];
 
@@ -288,7 +444,7 @@ class ChannelDashboardController extends Controller
     }
 
 
-    public function ChannelByDeviceGroup($raw,$sources,$keywords)
+    public function ChannelByDeviceGroup($raw, $sources, $keywords)
     {
         $data['labels'] = [
             "Android",
@@ -321,14 +477,8 @@ class ChannelDashboardController extends Controller
                     $data['value'][$item->source_id] = [
                         'id' => $item->keyword_id,
                         'source_id' => $item->source_id,
-                        'source_name' => self::matchSourceName($sources,$item->source_id),
-                        'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
-
-                        /*'keyword_name' => $item->keyword_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
-                        'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,*/
+                        'source_name' => self::matchSourceName($sources, $item->source_id),
+                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                         'data' => [0, 0, 0]
                     ];
 
@@ -347,53 +497,12 @@ class ChannelDashboardController extends Controller
 
     }
 
-    public function ChannelByAccountGroup($result,$sources, $keywords)
+    public function ChannelByAccountGroup($result, $sources, $keywords)
     {
         $data['labels'] = [
             "Infulencer",
             "Follower",
         ];
-
-        /*$raw_child = DB::table('messages')
-            ->select([
-                'messages.keyword_id as keyword_id',
-                'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
-                'messages.device as device',
-            ])
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->where('reference_message_id', '!=', '');
-
-        $raw_root = DB::table('messages')
-            ->select([
-                'messages.keyword_id as keyword_id',
-                'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
-                'messages.device as device',
-            ])
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->where('reference_message_id', '');*/
-
-        /*if ($this->source_id) {
-            $raw_child->where('source_id', $this->source_id);
-            $raw_root->where('source_id', $this->source_id);
-        }
-
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw_child->whereIn('source_id', $source_ids);
-            $raw_root->whereIn('source_id', $source_ids);
-        }*/
-
-        /*$soures = parent::listSource();
-
-        if ($this->source_id) {
-            $raw_child->where('source_id', $this->source_id);
-            $raw_root->where('source_id', $this->source_id);
-        }*/
 
         $soures = parent::listSource();
 
@@ -410,7 +519,7 @@ class ChannelDashboardController extends Controller
             $sources_name = self::matchSourceName($sources, $item->source_id);
             if ($item->reference_message_id == "") {
                 $data['value'][$sources_name]['data'][0] += 1;
-            }else{
+            } else {
                 $data['value'][$sources_name]['data'][1] += 1;
             }
         }
@@ -705,11 +814,7 @@ class ChannelDashboardController extends Controller
         ];
 
         $engagement = DB::table('messages')
-            //->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            //->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            //->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
             ->whereIn('messages.keyword_id', $keywordIds)
-            //->where('keywords.campaign_id', $campaignId)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.source_id')
             ->select([
@@ -733,46 +838,11 @@ class ChannelDashboardController extends Controller
         return $data;
     }
 
-    public function ChannelBySentiment2(Request $request)
-    {
-        $data = null;
-        $source_id = Sources::where('status', 1)->get();
-        if (!$this->user_login->is_admin) {
-            $source_id = $source_id->whereIn('name', $this->organization_group->platform);
-        }
-
-        $channal_message_all = $this->total_message_by_source_id($this->start_date, $this->end_date, "all");
-
-        $data["all"] = [
-            "keyword_name" => "All",
-            "total_value" => $channal_message_all,
-        ];
-        foreach ($source_id as $item) {
-
-            $channal_message = $this->total_message_by_source_id($this->start_date, $this->end_date, $item->id);
-            $data[$item->name] = [
-                "keyword_name" => $item->name,
-                "total_value" => $channal_message,
-            ];
-        }
-
-        if (!$data) {
-            return parent::handleNotFound($data);
-        }
-
-        return parent::handleRespond(array_values($data));
-    }
-
 
     private function countChannelTable($keywordIds, $start_date, $end_date, $source_id = null)
     {
         $data = DB::table('messages')
             ->select([
-                /*
-                'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'sources.name as source_name',*/
                 'messages.source_id as source_id',
                 'messages.keyword_id as keyword_id',
                 'messages.message_datetime as date_m',
@@ -780,9 +850,6 @@ class ChannelDashboardController extends Controller
                 'messages.reference_message_id as reference_message_id',
                 'messages.author as author',
             ])
-            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
@@ -803,41 +870,12 @@ class ChannelDashboardController extends Controller
         return $data->count();
     }
 
-
-    // private function totalFromMessageResultSemetic($table, $start_date, $end_date, $keyword_name, $value_name)
-    // {
-    //     $raw = $this->raw_message($this->campaign_id, $start_date, $end_date);
-
-    //     $source_id = Sources::where('status', 1)->get();
-    //     foreach ($source_id as $source_id) {
-    //         $data['labels'][] = $source_id->name;
-    //     }
-
-    //     foreach ($raw->get() as $item) {
-    //         $source_name = $item->source_name;
-    //         $index_label = array_search($source_name, $data['labels']);
-
-    //         if (isset($data['value'][$value_name])) {
-    //             $data['value'][$value_name]['data'][$index_label] += 1;
-    //         } else {
-    //             $data['value'][$value_name] = [
-    //                 'id' => $item->keyword_id,
-    //                 'keyword_name' => $keyword_name,
-    //                 'data' => [0, 0, 0, 0, 0, 0]
-    //             ];
-
-    //             $data['value'][$value_name]['data'][$index_label] += 1;
-    //         }
-    //     }
-
-    //     return $data;
-    // }
-
     private function source_name($source_id_id)
     {
         $source_id = Sources::where('id', $source_id_id)->first();
         return $source_id->name;
     }
+
     private function raw_messageTotal($keywordIds, $start_date, $end_date)
     {
         $data = DB::table('messages')
@@ -848,20 +886,8 @@ class ChannelDashboardController extends Controller
                 'messages.message_datetime as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
-
-                /*'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'sources.name as source_name',*/
-                /*
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_reactions as number_of_reactions',
-                'messages.number_of_shares as number_of_shares',*/
                 DB::raw('count(id) as total_messages'),
             ])
-            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
@@ -888,20 +914,37 @@ class ChannelDashboardController extends Controller
                 'messages.message_datetime as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
-
-                /*'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'sources.name as source_name',*/
-                /*
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_reactions as number_of_reactions',
-                'messages.number_of_shares as number_of_shares',*/
             ])
-            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+
+        return $data;
+    }
+
+    private function raw_message2($keywordIds, $start_date, $end_date)
+    {
+        $data = DB::table('messages')
+            ->select([
+                'messages.id as id',
+                'messages.keyword_id as keyword_id',
+                'messages.source_id as source_id',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'messages.reference_message_id as reference_message_id',
+                'message_results.classification_id as classification_id',
+            ])
+            ->whereIn('keyword_id', $keywordIds)
+            ->join('message_results', 'messages.id', '=', 'message_results.message_id')
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
