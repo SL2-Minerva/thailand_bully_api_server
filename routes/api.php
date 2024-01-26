@@ -217,7 +217,7 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'dashboard-channel'], function () {
             Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);
-            /*Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);*/
+            Route::get('channel-by', [ChannelDashboardController::class, 'channelBy']);
             Route::get('engagement-by', [ChannelDashboardController::class, 'engagementBy']);
             Route::get('sentiment-by', [ChannelDashboardController::class, 'sentimentBy']);
             Route::get('/level-three/', [LeveltreeChannelDashboardController::class, 'dailyMessageLevelThree']);
