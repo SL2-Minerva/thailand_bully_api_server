@@ -894,7 +894,6 @@ class ChannelDashboardController extends Controller
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_reactions as number_of_reactions',
                 'messages.number_of_shares as number_of_shares',*/
-                DB::raw('count(id) as total_messages'),
             ])
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
