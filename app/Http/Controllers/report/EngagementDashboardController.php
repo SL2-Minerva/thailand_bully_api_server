@@ -91,16 +91,14 @@ class EngagementDashboardController extends Controller
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $sources = self::getAllSource();
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
-        error_log($raw->toSql());
         $result = $raw->get();
-        error_log(count($result));
         return parent::handleRespond([
             "EngagementByDay" => $this->EngagementByDay($result, $keywords, true),
             "EngagementByTime" => $this->EngagementByTime($result, $keywords, true),
             "EngagementByDevice" => $this->EngagementByDevice($result, $keywords, $sources, true),
             "EngagementByAccount" => $this->EngagementByAccount($result, $keywords, true),
-            //"EngagementChannel" => $this->EngagementChannel($result, $keywords,$sources, true),
-            "keywordByEngagementType" => $this->keywordByEngagementType($result, $keywords,$sources, true),
+            "EngagementChannel" => $this->EngagementChannel($result, $keywords, $sources, true),
+            "keywordByEngagementType" => $this->keywordByEngagementType($result, $keywords, $sources, true),
         ]);
     }
 
@@ -328,7 +326,7 @@ class EngagementDashboardController extends Controller
                 if (!isset($data['value'][$follower->keyword_id])) {
                     $data['value'][$follower->keyword_id] = [
                         'id' => $follower->keyword_id,
-                        'keyword_name' => self::matchKeywordName($keywords,$follower->keyword_id),
+                        'keyword_name' => self::matchKeywordName($keywords, $follower->keyword_id),
                         /*'campaign_id' => $follower->campaign_id,
                         'campaign_name' => $follower->campaign_name,*/
                         'data' => [0, 0]
@@ -351,51 +349,51 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function EngagementChannel($result, $keywords,$sources, $only_data = false)
+    public function EngagementChannel($result, $keywords, $sources, $only_data = false)
     {
-        /* $data = parent::listSource();
-         $keyword = Keyword::where('campaign_id', $this->campaign_id);
+        $data = parent::listSource();
+        /*    $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
-         if ($this->keyword_id) {
-             $keyword = $keyword->whereIn('id', $this->keyword_id);
-         }
+        if ($this->keyword_id) {
+            $keyword = $keyword->whereIn('id', $this->keyword_id);
+        }
 
-         $keyword = $keyword->get();
+        $keyword = $keyword->get();
 
-         $keywordIds = $keyword->pluck('id')->all();
-         $totalKeyword = DB::table('messages')
-             ->select([
-                 DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
-                 'messages.keyword_id as keyword_id',
-                 'keywords.name as keyword_name',
-                 'keywords.campaign_id AS campaign_id',
-                 'campaigns.name AS campaign_name',
-                 'messages.device AS device',
-                 'messages.message_datetime as date_m',
-                 'messages.source_id as source_id',
-                 'sources.name as source_name',
-             ])
-             ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-             ->whereIn('keyword_id', $keywordIds)
-             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        $keywordIds = $keyword->pluck('id')->all();
+        $totalKeyword = DB::table('messages')
+            ->select([
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                'messages.keyword_id as keyword_id',
+                'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'messages.device AS device',
+                'messages.message_datetime as date_m',
+                'messages.source_id as source_id',
+                'sources.name as source_name',
+            ])
+            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
-         if ($this->source_id) {
-             $totalKeyword->where('source_id', $this->source_id);
-         }
+        if ($this->source_id) {
+            $totalKeyword->where('source_id', $this->source_id);
+        }
 
-         $totalKeyword = $totalKeyword->groupBy('keyword_id', 'source_id')->get();*/
+        $totalKeyword = $totalKeyword->groupBy('keyword_id', 'source_id')->get();*/
 
         foreach ($result as $item) {
-            $sourceName =self::matchSourceName($sources, $item->source_id);
-            $index_label = array_search($sourceName, $keywords['labels']);
+            $sourceName = self::matchSourceName($sources, $item->source_id);
+            $index_label = array_search($sourceName, $data['labels']);
 
             if (!isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
-                    'name' => $item->keyword_name,
-                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                    'name' => self::matchKeywordName($keywords, $item->keyword_id),
+                    'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                     /*'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,*/
                 ];
@@ -419,46 +417,46 @@ class EngagementDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function keywordByEngagementType($items, $keywords,$sources,$only_data = false)
+    public function keywordByEngagementType($items, $keywords, $sources, $only_data = false)
     {
 
         $data['labels'] = ["Share of Voice", "Comments", "Reaction"];
         // $items = $raw->get();
-/*
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+        /*
+                $keyword = Keyword::where('campaign_id', $this->campaign_id);
 
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
+                if ($this->keyword_id) {
+                    $keyword = $keyword->whereIn('id', $this->keyword_id);
+                }
 
-        $keyword = $keyword->get();
+                $keyword = $keyword->get();
 
-        $keywordIds = $keyword->pluck('id')->all();
-        $totalKeyword = DB::table('messages')
-            ->select([
-                DB::raw('SUM(number_of_shares) as number_of_shares'),
-                DB::raw('SUM(number_of_comments) as number_of_comments'),
-                DB::raw('SUM(number_of_reactions) as number_of_reactions'),
-                'messages.keyword_id as keyword_id',
-                'keywords.name as keyword_name',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'messages.device AS device',
-                'messages.message_datetime as date_m',
-                'messages.source_id as source_id',
-                'sources.name as source_name',
-            ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+                $keywordIds = $keyword->pluck('id')->all();
+                $totalKeyword = DB::table('messages')
+                    ->select([
+                        DB::raw('SUM(number_of_shares) as number_of_shares'),
+                        DB::raw('SUM(number_of_comments) as number_of_comments'),
+                        DB::raw('SUM(number_of_reactions) as number_of_reactions'),
+                        'messages.keyword_id as keyword_id',
+                        'keywords.name as keyword_name',
+                        'keywords.campaign_id AS campaign_id',
+                        'campaigns.name AS campaign_name',
+                        'messages.device AS device',
+                        'messages.message_datetime as date_m',
+                        'messages.source_id as source_id',
+                        'sources.name as source_name',
+                    ])
+                    ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+                    ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+                    ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
+                    ->whereIn('keyword_id', $keywordIds)
+                    ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
-        if ($this->source_id) {
-            $totalKeyword->where('source_id', $this->source_id);
-        }
+                if ($this->source_id) {
+                    $totalKeyword->where('source_id', $this->source_id);
+                }
 
-        $totalKeyword = $totalKeyword->groupBy('keyword_id')->get();*/
+                $totalKeyword = $totalKeyword->groupBy('keyword_id')->get();*/
 
         foreach ($items as $item) {
             // if (isset($data['value'][$item->keyword_id])) {
@@ -468,8 +466,8 @@ class EngagementDashboardController extends Controller
             // } else {
             $data['value'][$item->keyword_id] = [
                 'id' => $item->keyword_id,
-                'name' => self::matchKeywordName($keywords,$item->keyword_id),
-                'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                'name' => self::matchKeywordName($keywords, $item->keyword_id),
+                'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                 /*'campaign_id' => $item->campaign_id,
                 'campaign_name' => $item->campaign_name,*/
             ];
@@ -1142,7 +1140,7 @@ class EngagementDashboardController extends Controller
 
     public function EngagementComparisonByAccount(Request $request)
     {
-        $keyword =self::findKeywords($this->campaign_id, $this->keyword_id);
+        $keyword = self::findKeywords($this->campaign_id, $this->keyword_id);
         $raw = $this->raw_message($keyword, $this->start_date, $this->end_date);
         $raw_previous = $this->raw_message($keyword, $this->start_date_previous, $this->end_date_previous);
 
