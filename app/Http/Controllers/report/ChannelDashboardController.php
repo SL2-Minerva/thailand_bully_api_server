@@ -134,7 +134,7 @@ class ChannelDashboardController extends Controller
         $keywordIds = $keyword->pluck('id')->all();
         $sources = self::getAllSource();
         $data = null;
-        $percentage_of_channel = $this->raw_message($keywordIds, $start_date, $end_date)->groupBy('source_id');
+        $percentage_of_channel = $this->raw_messageTotal($keywordIds, $start_date, $end_date)->groupBy('source_id');
         $channel_message_total = $this->countChannelTable($keywordIds, $start_date, $end_date);
 
         foreach ($percentage_of_channel->get() as $channel) {
@@ -835,6 +835,45 @@ class ChannelDashboardController extends Controller
         $source_id = Sources::where('id', $source_id_id)->first();
         return $source_id->name;
     }
+    private function raw_messageTotal($keywordIds, $start_date, $end_date)
+    {
+        $data = DB::table('messages')
+            ->select([
+                'messages.id as id',
+                'messages.keyword_id as keyword_id',
+                'messages.source_id as source_id',
+                'messages.message_datetime as date_m',
+                'messages.device as device',
+                'messages.reference_message_id as reference_message_id',
+
+                /*'keywords.name as keyword_name',
+                'keywords.campaign_id AS campaign_id',
+                'campaigns.name AS campaign_name',
+                'sources.name as source_name',*/
+                /*
+                'messages.number_of_comments as number_of_comments',
+                'messages.number_of_reactions as number_of_reactions',
+                'messages.number_of_shares as number_of_shares',*/
+                DB::raw('count(id) as total_messages'),
+            ])
+            /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
+            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
+            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
+            ->whereIn('keyword_id', $keywordIds)
+            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
+
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $data->whereIn('source_id', $source_ids);
+        }
+
+        return $data;
+    }
 
     private function raw_message($keywordIds, $start_date, $end_date)
     {
@@ -855,7 +894,7 @@ class ChannelDashboardController extends Controller
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_reactions as number_of_reactions',
                 'messages.number_of_shares as number_of_shares',*/
-              //  DB::raw('count(id) as total_messages'),
+                DB::raw('count(id) as total_messages'),
             ])
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
