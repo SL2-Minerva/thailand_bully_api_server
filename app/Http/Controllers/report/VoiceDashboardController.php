@@ -1334,7 +1334,7 @@ class VoiceDashboardController extends Controller
         $items = $raw->get();
 
         foreach ($items as $item) {
-            $classificationName = self::matchClassificationName($levels, $item->classification_id);
+            $classificationName = self::matchClassificationName($item->classificatio_id, $item->classification_id);
             $index_label = array_search($classificationName, $data['labels']);
             $message_total += 1;
             if (isset($data['value'][$item->keyword_id])) {
@@ -1380,7 +1380,7 @@ class VoiceDashboardController extends Controller
         $items = $raw->get();
 
         foreach ($items as $item) {
-            $classificationName = self::matchClassificationName($levels, $item->classification_id);
+            $classificationName = self::matchClassificationName($item->classificatio_id, $item->classification_id);
             $index_label = array_search($classificationName, $data['labels']);
             $message_total += 1;
             if (isset($data['value'][$item->keyword_id])) {
