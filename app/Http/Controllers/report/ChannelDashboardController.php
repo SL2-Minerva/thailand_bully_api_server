@@ -207,7 +207,7 @@ class ChannelDashboardController extends Controller
                     'name' => self::matchSourceName($sources,$item->source_id),
                     'source_id' =>$item->source_id,
                     'source_name' => self::matchSourceName($sources,$item->source_id),
-                    'keyword_name' => self::matchSourceName($keywords,$item->keyword_id),
+                    'keyword_name' => self::matchSourceName($sources,$item->source_id),
                     /*'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0, 0, 0, 0]
