@@ -441,7 +441,7 @@ class VoiceDashboardController extends Controller
     {
 
 
-        $items = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date, ['1', '2', '3']);
+        $items = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date);
         $items = $items->get();
         $labels = [
             "Positive",
@@ -455,9 +455,7 @@ class VoiceDashboardController extends Controller
                 $classificationName = self::matchClassificationName($classifications, $item->classification_id);
                 $index_label = array_search($classificationName, $labels);
 
-                if (isset($data['value'][$item->keyword_id])) {
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
-                } else {
+                if (!isset($data['value'][$item->keyword_id])) {
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,
                         'keyword_name' => $item->keyword_name,
@@ -466,8 +464,8 @@ class VoiceDashboardController extends Controller
                         'data' => [0, 0, 0]
                     ];
 
-                    $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                 }
+                $data['value'][$item->keyword_id]['data'][$index_label] += 1;
             }
         }
 
@@ -701,56 +699,40 @@ class VoiceDashboardController extends Controller
         return parent::handleRespond($this->factoryNumberOfAccountPeriodOverPeriod('PeriodOverPeriod'));
     }
 
-    public function DayTimeComparison($raw, Request $request, $only_Data = false)
+    public function DayTimeComparison($raw, $sources, $only_Data = false)
     {
-        $data = null;
-        $items = $raw->get();
+        $data = [];
 
-        foreach ($items as $item) {
+        // Initialize data structure
+        foreach ($raw as $item) {
             $date_h = (int)Carbon::parse($item->date_m)->format('H');
             $date_d = Carbon::parse($item->date_m)->format('D');
 
-            if (isset($data[$date_d])) {
-                if (isset($data[$date_d]["data"][$date_h])) {
-                    $data[$date_d]["data"][$date_h] += 1;
-                } else {
-                    $data[$date_d]["data"][$date_h] = 1;
-                }
-            } else {
+            if (!isset($data[$date_d])) {
                 $data[$date_d] = [
                     "name" => $date_d,
+                    "data" => array_fill(0, 24, 0) // Initialize array with 24 elements, all set to 0
                 ];
-
-                for ($i = 0; $i < 24; $i++) {
-                    $data[$date_d]["data"][$i] = 0;
-                }
-
-
-                if (isset($data[$date_d]["data"][$date_h])) {
-                    $data[$date_d]["data"][$date_h] += 1;
-                } else {
-                    $data[$date_d]["data"][$date_h] = 1;
-                }
-
-            }
-        }
-
-
-        if ($data) {
-
-            foreach ($data as $key => $value) {
-                $data[$key]["data"] = array_values($value["data"]);
             }
 
-            $data = array_values($data);
+            // Update data
+            $data[$date_d]["data"][$date_h] += 1;
         }
 
+        // Convert arrays to indexed arrays
+        foreach ($data as &$value) {
+            $value["data"] = array_values($value["data"]);
+        }
+
+        $data = array_values($data);
 
         if ($only_Data) {
             return $data;
         }
+
         return parent::handleRespond($data);
     }
+
 
     public function DayTimeSentiment($raw, $classifications, $only_Data = false)
     {
@@ -828,99 +810,52 @@ class VoiceDashboardController extends Controller
         $data = null;
         $items = $raw->get();
 
+        // Initialize data structure
+        foreach ($classifications as $classification) {
+            $data['day_value'][$classification->name] = [
+                "name" => $classification->name,
+                "data" => array_fill(0, 7, 0) // Initialize array with 7 elements, all set to 0
+            ];
+
+            $data['time_value'][$classification->name] = [
+                "name" => $classification->name,
+                "data" => array_fill(0, 25, 0) // Initialize array with 25 elements, all set to 0
+            ];
+        }
+
+        // Process items
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             $date_h = (int)Carbon::parse($item->date_m)->format('H');
             $classificationName = self::matchClassificationName($classifications, $item->classification_id);
-            if (isset($data['day_value'][$classificationName])) {
-                if ($date_d == "Mon") {
-                    $data['day_value'][$classificationName]["data"][0] += 1;
-                } else if ($date_d == "Tue") {
-                    $data['day_value'][$classificationName]["data"][1] += 1;
-                } else if ($date_d == "Wed") {
-                    $data['day_value'][$classificationName]["data"][2] += 1;
-                } else if ($date_d == "Thu") {
-                    $data['day_value'][$classificationName]["data"][3] += 1;
-                } else if ($date_d == "Fri") {
-                    $data['day_value'][$classificationName]["data"][4] += 1;
-                } else if ($date_d == "Sat") {
-                    $data['day_value'][$classificationName]["data"][5] += 1;
-                } else if ($date_d == "Sun") {
-                    $data['day_value'][$classificationName]["data"][6] += 1;
-                }
 
-                if (isset($data['time_value'][$classificationName]["data"][$date_h])) {
-                    $data['time_value'][$classificationName]["data"][$date_h] += 1;
-                } else {
-                    $data['time_value'][$classificationName]["data"][$date_h] = 1;
-                }
+            // Update day_value data
+            $data['day_value'][$classificationName]["data"][date('N', strtotime($date_d)) - 1] += 1;
 
-            } else {
-                $data['day_value'][$classificationName] = [
-                    "name" => $classificationName,
-                ];
-
-                $data['time_value'][$classificationName] = [
-                    "name" => $classificationName,
-                ];
-
-                for ($i = 0; $i < 7; $i++) {
-                    $data['day_value'][$classificationName]["data"][$i] = 0;
-                }
-
-                for ($i = 0; $i < 25; $i++) {
-                    $data['time_value'][$classificationName]["data"][$i] = 0;
-                }
-
-                if ($date_d == "Mon") {
-                    $data['day_value'][$classificationName]["data"][0] += 1;
-                } else if ($date_d == "Tue") {
-                    $data['day_value'][$classificationName]["data"][1] += 1;
-                } else if ($date_d == "Wed") {
-                    $data['day_value'][$classificationName]["data"][2] += 1;
-                } else if ($date_d == "Thu") {
-                    $data['day_value'][$classificationName]["data"][3] += 1;
-                } else if ($date_d == "Fri") {
-                    $data['day_value'][$classificationName]["data"][4] += 1;
-                } else if ($date_d == "Sat") {
-                    $data['day_value'][$classificationName]["data"][5] += 1;
-                } else if ($date_d == "Sun") {
-                    $data['day_value'][$classificationName]["data"][6] += 1;
-                }
-
-
-                if (isset($data['time_value'][$classificationName]["data"][$date_h])) {
-                    $data['time_value'][$classificationName]["data"][$date_h] += 1;
-                } else {
-                    $data['time_value'][$classificationName]["data"][$date_h] = 1;
-                }
-
-
-            }
+            // Update time_value data
+            $data['time_value'][$classificationName]["data"][$date_h] += 1;
         }
 
+        // Convert arrays to indexed arrays
+        $data['day_value'] = array_values($data['day_value']);
+        $data['time_value'] = array_values($data['time_value']);
 
-        if ($data) {
-            foreach ($data as $key => $value) {
-                $data[$key] = array_values($value);
-            }
+        foreach ($data['day_value'] as &$value) {
+            $value['data'] = array_values($value['data']);
+        }
 
-            foreach ($data['day_value'] as $key => $value) {
-                $data['day_value'][$key]["data"] = array_values($value["data"]);
-            }
-
-            foreach ($data['time_value'] as $key => $value) {
-                $data['time_value'][$key]["data"] = array_values($value["data"]);
-            }
+        foreach ($data['time_value'] as &$value) {
+            $value['data'] = array_values($value['data']);
         }
 
         if ($only_Data) {
             return $data;
         }
 
-
         return parent::handleRespond($data);
     }
+
+
 
     public function DayTimeType($raw, $classifications, $only_Data = false)
     {
@@ -999,26 +934,29 @@ class VoiceDashboardController extends Controller
     public function DayTimeBy(Request $request)
     {
 
-        $classification_one = [
-            '1', '2', '3'
-        ];
-
-        $classification_two = [
-            '4', '5', '6', '7', '8', '9'
-        ];
-
-        $classification_tree = [
-            '10', '11', '12', '13'
-        ];
-
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
-        $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
+        $sources = $this->getAllSource();
+        //$raw_classification = $this->raw_message_classification($keywords, $this->start_date, $this->end_date)->get();
+        /* $items1 = [];
+         $items2 = [];
+         $items3 = [];
+         foreach ($raw_classification as $item) {
+             if ($item->classification_id < 4) {
+                 $items1[] = $item;
+             } else if ($item->classification_id > 9) {
+                 $items3[] = $item;
+             } else {
+                 $items2[] = $item;
+             }
+         }*/
+
         $classifications = self::getClassificationMaster();
+        $raw = $this->raw_message($keywords, $this->start_date, $this->end_date)->get();
         $data = [
-            'DayTimeComparison' => $this->DayTimeComparison($raw, $request, true),
-            //'DayTimeSentiment' => $this->DayTimeSentiment($this->raw_message_classification($keywords, $this->start_date, $this->end_date, $classification_one), $classifications, true),
-            /*'DayTimeLevel' => $this->DayTimeLevel($this->raw_message_classification($keywords, $this->start_date, $this->end_date, $classification_tree), $classifications, true),
-            'DayTimeType' => $this->DayTimeType($this->raw_message_classification($keywords, $this->start_date, $this->end_date, $classification_two), $classifications, true),*/
+            'DayTimeComparison' => $this->DayTimeComparison($raw, $sources, true),
+            //'DayTimeSentiment' => $this->DayTimeSentiment($items1, $classifications, true),
+            //'DayTimeLevel' => $this->DayTimeLevel($items3, $classifications, true),
+            //'DayTimeType' => $this->DayTimeType($items2, $classifications, true),*/
         ];
 
         return parent::handleRespond($data);
@@ -1204,11 +1142,7 @@ class VoiceDashboardController extends Controller
 
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
-        //$raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
-
         $raw_classification = $this->raw_message_classification($keywords, $this->start_date, $this->end_date)->get();
-        /*        $raw_classification_two = $this->raw_message_classification($keywords, $this->start_date, $this->end_date);
-                $raw_classification_tree = $this->raw_message_classification($keywords, $this->start_date, $this->end_date);*/
         $items1 = [];
         $items2 = [];
         $items3 = [];
@@ -1221,6 +1155,7 @@ class VoiceDashboardController extends Controller
                 $items2[] = $item;
             }
         }
+
         $data['keywordChannel'] = $this->getKeywordChannel($raw_classification, $keywords, $sources);
         $data['keywordSentiment'] = $this->getKeywordSentiment($items1, $keywords);
         $data['keywordBullyLevel'] = $this->getKeywordBullyLevel($items3, $keywords);
