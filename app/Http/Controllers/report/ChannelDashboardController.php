@@ -263,7 +263,8 @@ class ChannelDashboardController extends Controller
             } else {
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
-                    'name' => self::matchSourceName($sources,$item->source_id),
+                    'source_name' => self::matchSourceName($sources,$item->source_id),
+                    'source_id' => $item->source_id,
                     'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
                     /*'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,*/
@@ -318,8 +319,8 @@ class ChannelDashboardController extends Controller
                 } else {
                     $data['value'][$item->source_id] = [
                         'id' => $item->keyword_id,
-
-                        'name' => self::matchSourceName($sources,$item->source_id),
+                        'source_id' => $item->source_id,
+                        'source_name' => self::matchSourceName($sources,$item->source_id),
                         'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
 
                         /*'keyword_name' => $item->keyword_name,
