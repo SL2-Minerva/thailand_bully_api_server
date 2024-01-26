@@ -205,7 +205,7 @@ class ChannelDashboardController extends Controller
                 $data['value'][$item->source_id] = [
                     'id' => $item->source_id,
                     'name' => self::matchSourceName($sources,$item->source_id),
-                    'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),
+                    /*'keyword_name' => self::matchKeywordName($keywords,$item->keyword_id),*/
                     /*'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0, 0, 0, 0]
@@ -403,6 +403,7 @@ class ChannelDashboardController extends Controller
         }
 
         foreach ($result as $key => $item) {
+            //error_log($item->reference_message_id);
             $sources_name = self::matchSourceName($sources, $item->source_id);
             if ($item->reference_message_id == "") {
                 $data['value'][$sources_name]['data'][0] += 1;
@@ -854,7 +855,7 @@ class ChannelDashboardController extends Controller
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_reactions as number_of_reactions',
                 'messages.number_of_shares as number_of_shares',*/
-                DB::raw('count(id) as total_messages'),
+              //  DB::raw('count(id) as total_messages'),
             ])
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
