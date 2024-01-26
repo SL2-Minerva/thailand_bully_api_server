@@ -90,20 +90,15 @@ class ChannelDashboardController extends Controller
                     'keyword_name' => self::matchKeywordName($keywords, $keywordId), // Fetch keyword name from somewhere
                     /*'campaign_id' => $this->getCampaignId($keywordId), // Fetch campaign id from somewhere
                     'campaign_name' => $this->getCampaignName($keywordId), // Fetch campaign name from somewhere*/
-                    'value' => [[
-                        'keyword_id' => $keywordId,
-                        'date_m' => $dateM,
-                        'total_at_date' => $message->total_at_date,
-                    ]]
-                ];
-            } else {
-                $dataM[$keywordId]['value'][] = [
-                    'keyword_id' => $keywordId,
-                    'date_m' => $dateM,
-                    'keyword_name' => self::matchKeywordName($keywords, $keywordId),
-                    'total_at_date' => $message->total_at_date,
                 ];
             }
+            $dataM[$keywordId]['value'][] = [
+                'keyword_id' => $keywordId,
+                'date_m' => $dateM,
+                'keyword_name' => self::matchKeywordName($keywords, $keywordId),
+                'total_at_date' => $message->total_at_date,
+            ];
+
         }
 
         $data['daily_message'] = array_values($dataM);
