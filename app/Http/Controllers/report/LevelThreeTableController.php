@@ -58,10 +58,11 @@ class LevelThreeTableController extends Controller
     public function messageLevelThree(Request $request)
     {
 
-        $classificationTypes = self::getClassificationJoinTypeMaster();
-        $classification = self::getClassificationMaster();
-        $keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
-        $source = DB::table('sources')->get();
+        /*$classificationTypes = self::getClassificationJoinTypeMaster();
+        $classification = self::getClassificationMaster();*/
+
+        //$keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
+        $source = $this->getAllSource();
 
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -328,7 +329,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.007' ||
             $request->report_number === '6.2.017'
         ) {
-            $raw->where('sources.name', $label);
+            //$raw->where('sources.name', $label);
             //$total->where('sources.name', $label);
 
             if ($request->report_number === '4.2.017') {
@@ -414,7 +415,7 @@ class LevelThreeTableController extends Controller
 
         ) {
             // dd($raw->get());
-            $raw->where('sources.name', $Llabel);
+        //    $raw->where('sources.name', $Llabel);
             //$total->where('sources.name', $Llabel);
         }
 
@@ -437,7 +438,7 @@ class LevelThreeTableController extends Controller
             //         ->havingRaw('total_engagement > ?', [0]);
             // }
 
-            $raw->where('sources.name', $label);
+            $raw->where('sources_id', $label);
 
         }
 
@@ -603,12 +604,12 @@ class LevelThreeTableController extends Controller
             //->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             //->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->whereIn('keyword_id', $keywordIds)
+            ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
         // ->orderByDesc('total_engagement');
 
         if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
+            $data->where('messages.source_id', $this->source_id);
         }
 
         if ($request->sort && $request->field) {
@@ -978,24 +979,24 @@ class LevelThreeTableController extends Controller
             tbl_messages.number_of_comments as number_of_comments,
             tbl_messages.number_of_shares as number_of_shares,
             tbl_messages.number_of_reactions as number_of_reactions,
-            tbl_keywords.campaign_id AS campaign_id,
+            /*tbl_keywords.campaign_id AS campaign_id,
             tbl_campaigns.name AS campaign_name,
-            tbl_keywords.name as keyword_name,
+            tbl_keywords.name as keyword_name,*/
             tbl_message_results.classification_type_id,
             tbl_message_results.classification_id,
             tbl_classifications.name as classification_name,
             tbl_classifications.color as classification_color,
             tbl_messages.created_at as created_at,
-            tbl_sources.name as source_name
+            /*tbl_sources.name as source_name*/
         FROM
             tbl_messages
-            JOIN tbl_keywords ON tbl_messages.keyword_id = tbl_keywords.id
+            /*JOIN tbl_keywords ON tbl_messages.keyword_id = tbl_keywords.id
             JOIN tbl_sources ON tbl_messages.source_id = tbl_sources.id
-            JOIN tbl_campaigns ON tbl_keywords.campaign_id = tbl_campaigns.id
+            JOIN tbl_campaigns ON tbl_keywords.campaign_id = tbl_campaigns.id*/
             JOIN tbl_message_results ON tbl_message_results.message_id = tbl_messages.id
-            JOIN tbl_classifications ON tbl_message_results.classification_id = tbl_classifications.id
+            /*JOIN tbl_classifications ON tbl_message_results.classification_id = tbl_classifications.id*/
         WHERE
-            tbl_keywords.campaign_id = $campaign_id AND tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
+            /*tbl_keywords.campaign_id = $campaign_id AND */tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
 
         if ($this->source_id) {
             $rawQuery .= " AND tbl_messages.source_id = " . $this->source_id;
@@ -1012,7 +1013,7 @@ class LevelThreeTableController extends Controller
                 }
             }
         }
-        //todo
+        $sources = $this->getAllSource();
         $anylsys = [];
 
         foreach ($raw as $item) {
@@ -1036,7 +1037,7 @@ class LevelThreeTableController extends Controller
             $anylsys[$item->message_id]["source_id"] = $item->source_id;
             // $anylsys[$item->message_id]["bully_level"] = $item->classification_name;
             // $anylsys[$item->message_id]["bully_type"] = $item->classification_id;
-            $anylsys[$item->message_id]["channel"] = $item->source_name;
+            $anylsys[$item->message_id]["channel"] = self::matchSourceName($sources, $item->source_id);
             $anylsys[$item->message_id]["link_message"] = $item->link_message;
             $anylsys[$item->message_id]["engagement"] = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             $anylsys[$item->message_id]["parent"] = $parent;

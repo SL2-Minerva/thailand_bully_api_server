@@ -51,8 +51,8 @@ class LevethreeOverAllDashboardController extends Controller
         $start = $start === 1 ? null : $start;
         $data = null;
 
-        $raw = DB::table('message_result_full_data')
-            ->where('campaign_id', $this->campaign_id)
+        $raw = DB::table('message_results')
+            //->where('campaign_id', $this->campaign_id)
             ->whereBetween('date_m', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->where('classification_type_id', 1);
 
@@ -77,9 +77,9 @@ class LevethreeOverAllDashboardController extends Controller
         if (isset($request->meesage_id)) {
             $raw->where('message_id', $request->meesage_id);
         }
-            $total = $raw->count();
-            $items = $raw->orderBy('date_m', 'ASC')
-                ->offset($start)->limit($limit)->get();
+        $total = $raw->count();
+        $items = $raw->orderBy('date_m', 'ASC')
+            ->offset($start)->limit($limit)->get();
 
         $parents = [];
         foreach ($items as $item) {
@@ -140,7 +140,7 @@ class LevethreeOverAllDashboardController extends Controller
         }
 
         $data['count'] = count($data['message']);
-        $data['total'] = $total->count();
+        $data['total'] = $total;
 
         return parent::handleRespond($data);
     }

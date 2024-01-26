@@ -100,6 +100,7 @@ class ChannelDashboardController extends Controller
                 $dataM[$keywordId]['value'][] = [
                     'keyword_id' => $keywordId,
                     'date_m' => $dateM,
+                    'keyword_name' => self::matchKeywordName($keywords, $keywordId),
                     'total_at_date' => $message->total_at_date,
                 ];
             }
