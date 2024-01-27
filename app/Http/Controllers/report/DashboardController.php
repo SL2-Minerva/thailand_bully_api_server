@@ -179,11 +179,7 @@ class DashboardController extends Controller
                 'date' => $this->getDateRange($startDate, $endDate),
                 'percentage' => $percentage,
             ];
-        }
-
-        foreach ($totalKeywords as $item) {
-            $keywordId = $item->keyword_id;
-            $data[$keywordId]['keyword_id'] = $keywordId;
+            $data[$keywordId]['keyword_id'] = $item->keyword_id;
             $data[$keywordId]['keyword_name'] = self::matchKeywordName($keywords, $keywordId);
             $data[$keywordId]['campaign_id'] = $campaign->id;
             $data[$keywordId]['campaign_name'] = $campaign->name;
