@@ -167,26 +167,35 @@ class DashboardController extends Controller
 
         foreach ($totalKeywords as $item) {
             $keyword = self::matchKeywordName($keywords, $item->keyword_id);
-            $messageKeyword[$keyword] = ($messageKeyword[$keyword] ?? 0) + 1;
+            if (!isset($messageKeyword[$keyword])) {
+                $messageKeyword[$keyword] = [
+                    'keyword_id' => $item->keyword_id,
+                    'keyword_name' => $keyword,
+                    'count' => 0
+                ];
+            }
+            $messageKeyword[$keyword]['count'] += 1;
             $messageTotal += 1;
         }
 
-        $data = null;
+        $data = [];
 
-        foreach ($messageKeyword as $keywordId => $value) {
-            $percentage = $messageTotal ? self::point_two_digits(($value / $messageTotal) * 100) : $messageTotal;
-            $data[$keywordId]['value'][] = [
-                'date' => $this->getDateRange($startDate, $endDate),
-                'percentage' => $percentage,
+        foreach ($messageKeyword as $keyword => $value) {
+            $percentage = $messageTotal ? self::point_two_digits(($value['count'] / $messageTotal) * 100) : $messageTotal;
+            $data[] = [
+                'keyword_id' => $value['keyword_id'],
+                'keyword_name' => $value['keyword_name'],
+                'value' => [
+                    [
+                        'date' => $this->getDateRange($startDate, $endDate),
+                        'percentage' => $percentage,
+                    ]
+                ],
+                'total' => self::point_two_digits($messageTotal, 0)
             ];
-            $data[$keywordId]['keyword_id'] = $item->keyword_id;
-            $data[$keywordId]['keyword_name'] = self::matchKeywordName($keywords, $keywordId);
-            $data[$keywordId]['campaign_id'] = $campaign->id;
-            $data[$keywordId]['campaign_name'] = $campaign->name;
-            $data[$keywordId]['total'] = self::point_two_digits($messageTotal, 0);
         }
 
-        return $data ? array_values($data) : $data;
+        return $data;
     }
 
 
