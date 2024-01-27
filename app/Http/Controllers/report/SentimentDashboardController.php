@@ -629,10 +629,9 @@ class SentimentDashboardController extends Controller
 
     public function periodAndComparison(Request $request)
     {
-        /*$raw_current = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_previous = $this->raw_message_classification_one($this->campaign_id, $this->start_date_previous, $this->end_date_previous);*/
 
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $sources = $this->getAllSource();
 
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
@@ -642,7 +641,7 @@ class SentimentDashboardController extends Controller
 
         return parent::handleRespond([
             "PeriodOverPeriod" => $this->PeriodOverPeriod($resultCurrent, $resultPrevious, true),
-            //"ComparisonByChannel" => $this->ComparisonByChannel($resultCurrent, $resultPrevious, true),
+            "ComparisonByChannel" => $this->ComparisonByChannel($resultCurrent, $resultPrevious, $sources, true),
             "ComparisonByEngagementType" => $this->ComparisonByEngagementType($resultCurrent, $resultPrevious, true),
         ]);
     }
@@ -725,13 +724,13 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function ComparisonByChannel($resultCurrent, $resultPrevious, $only_data = false)
+    public function ComparisonByChannel($resultCurrent, $resultPrevious, $sources, $only_data = false)
     {
 
         $data = parent::listSource();
 
-        $analysis_current = $resultCurrent;
-        $analysis_previous = $resultPrevious;
+        $analysis_current = $this->factoryComparisonByChangel($resultCurrent, $sources);
+        $analysis_previous = $this->factoryComparisonByChangel($resultPrevious, $sources);
 
 
         $data['value'][0] = [
@@ -760,9 +759,9 @@ class SentimentDashboardController extends Controller
             $analysis_previous_negative = 0;
 
             if (isset($analysis_previous[$index])) {
-                $analysis_previous_position = $analysis_previous[$index]->positive;
-                $analysis_previous_neutral = $analysis_previous[$index]->neutral;
-                $analysis_previous_negative = $analysis_previous[$index]->negative;
+                $analysis_previous_position = $analysis_previous[$index]['positive'];
+                $analysis_previous_neutral = $analysis_previous[$index]['neutral'];
+                $analysis_previous_negative = $analysis_previous[$index]['negative'];
             }
 
             $index_label = array_search($value['source_name'], $data['labels']);
@@ -790,54 +789,29 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function factoryComparisonByChangel($start_date, $end_data)
+    private function factoryComparisonByChangel($items, $sources)
     {
-        $raw_current = $this->raw_message_classification_one($this->campaign_id, $start_date, $end_data);
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw_current->whereIn('source_id', $source_ids);
-        }
-
-        $items = $raw_current->get();
-
-
         $analysis = [];
         foreach ($items as $item) {
 
 
-            if (isset($analysis[$item->source_id])) {
-
-                $analysis[$item->source_id]['total'] += 1;
-
-                if ($item->classification_name == 'Positive') {
-                    $analysis[$item->source_id]['positive'] += 1;
-                } else if ($item->classification_name == 'Neutral') {
-                    $analysis[$item->source_id]['neutral'] += 1;
-                } else if ($item->classification_name == 'Negative') {
-                    $analysis[$item->source_id]['negative'] += 1;
-                }
-
-
-            } else {
+            if (!isset($analysis[$item->source_id])) {
                 $analysis[$item->source_id] = [
-                    "source_name" => $item->source_name,
+                    "source_name" => $this->matchSourceName($sources, $item->source_id),
                     "total" => 0,
                     "positive" => 0,
                     "neutral" => 0,
                     "negative" => 0,
                 ];
 
-                $analysis[$item->source_id]['total'] += 1;
-
-                if ($item->classification_name == 'Positive') {
-                    $analysis[$item->source_id]['positive'] += 1;
-                } else if ($item->classification_name == 'Neutral') {
-                    $analysis[$item->source_id]['neutral'] += 1;
-                } else if ($item->classification_name == 'Negative') {
-                    $analysis[$item->source_id]['negative'] += 1;
-                }
-
+            }
+            $analysis[$item->source_id]['total'] += 1;
+            if ($item->classification_id == 1) {
+                $analysis[$item->source_id]['positive'] += 1;
+            } else if ($item->classification_id == 3) {
+                $analysis[$item->source_id]['neutral'] += 1;
+            } else if ($item->classification_id == 2) {
+                $analysis[$item->source_id]['negative'] += 1;
             }
         }
 
@@ -1273,14 +1247,14 @@ class SentimentDashboardController extends Controller
     public function SummaryBy(Request $request)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $sources =$this->getAllSource();
+        $sources = $this->getAllSource();
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         return parent::handleRespond([
             "SummaryScoreAccount" => $this->SummaryScoreAccount($resultCurrent, true),
-            "SummaryScoreChannel" => $this->SummaryScoreChannel($resultCurrent,$sources, true),
-            "SummaryKeyword" => $this->SummaryKeyword($resultCurrent, $keywords,true),
+            "SummaryScoreChannel" => $this->SummaryScoreChannel($resultCurrent, $sources, true),
+            "SummaryKeyword" => $this->SummaryKeyword($resultCurrent, $keywords, true),
         ]);
     }
 
@@ -1429,10 +1403,10 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SummaryKeyword($items,$keywords, $only_data = false)
+    public function SummaryKeyword($items, $keywords, $only_data = false)
     {
 
-        $analysis_current = $this->factorySentimentScore($items,$keywords);
+        $analysis_current = $this->factorySentimentScore($items, $keywords);
 
         $data = [];
 
@@ -1536,11 +1510,11 @@ class SentimentDashboardController extends Controller
                 'messages.message_type',
                 'messages.device as device',
                 'message_results.classification_id',
-                /*'messages.full_message as full_message',*//*
                 'messages.number_of_views as number_of_views',
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_shares as number_of_shares',
                 'messages.number_of_reactions as number_of_reactions',
+                /*'messages.full_message as full_message',*//*
                 'keywords.campaign_id AS campaign_id',
                 'campaigns.name AS campaign_name',
                 'keywords.name as keyword_name',
