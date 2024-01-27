@@ -633,15 +633,15 @@ class LevelThreeTableController extends Controller
         }
 
         //error_log($classification_name);
-      /*  if ($classification) {
-            $classificationId = DB::table("classifications")
-                ->select("id")
-                ->where('name', $classification)
-                ->get()
-                ->pluck('id')
-                ->all();
-            $data->where('message_results.classification_id', $classificationId);
-        }*/
+        /*  if ($classification) {
+              $classificationId = DB::table("classifications")
+                  ->select("id")
+                  ->where('name', $classification)
+                  ->get()
+                  ->pluck('id')
+                  ->all();
+              $data->where('message_results.classification_id', $classificationId);
+          }*/
 
         // if ($this->source_id) {
         //     $data->where('source_id', $this->source_id);
@@ -723,13 +723,34 @@ class LevelThreeTableController extends Controller
             // $request->report_number === '5.2.008' ||
             // $request->report_number === '5.2.009'
         ) {
-            if ($Llabel === 'Hate Speech') {
-                $Llabel = 8;
+            if ($Llabel === 'Positive') {
+                $Llabel = 1;
+            } else if ($Llabel === 'Neutral') {
+                $Llabel = 3;
+            } else if ($Llabel === 'Negative') {
+                $Llabel = 2;
             } else if ($Llabel === 'No Bully') {
                 $Llabel = 4;
+            } else if ($Llabel === 'Gossip') {
+                $Llabel = 5;
+            } else if ($Llabel === 'Harassment') {
+                $Llabel = 6;
+            } else if ($Llabel === 'Exclusion') {
+                $Llabel = 7;
+            } else if ($Llabel === 'Hate Speech') {
+                $Llabel = 8;
             } else if ($Llabel === 'Violence') {
                 $Llabel = 9;
+            } else if ($Llabel === 'Level 0') {
+                $Llabel = 10;
+            } else if ($Llabel === 'Level 1') {
+                $Llabel = 11;
+            } else if ($Llabel === 'Level 2') {
+                $Llabel = 12;
+            } else if ($Llabel === 'Level 3') {
+                $Llabel = 13;
             }
+
 
             $data->where('message_results.classification_id', '=', $Llabel);
         }
@@ -786,24 +807,13 @@ class LevelThreeTableController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name AS keyword_name',
-                'classifications.classification_type_id',
                 'message_results.classification_id',
-                'classifications.color AS classification_color',
-                'sources.name AS source_name',
                 'messages.created_at AS created_at',
-                'classifications.name AS classification_name',
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement')
             ])
-            ->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->join('sources', 'messages.source_id', '=', 'sources.id')
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
@@ -833,19 +843,12 @@ class LevelThreeTableController extends Controller
                     $field_table = "messages.device";
                     break;
                 case 'source' :
-                    $field_table = "sources.name";
+                    $field_table = "sources_id";
                     break;
-                case 'engagement' :
-                    $field_table = "total_engagement";
-                    break;
+                case 'sentiment':
+                case 'engagement':
                 case 'bully_type' :
-                    $field_table = "classifications.name";
-                    break;
-                case 'sentiment' :
-                    $field_table = "classifications.name";
-                    break;
-                case 'engagement' :
-                    $field_table = "classifications.name";
+                    $field_table = "classifications_id";
                     break;
                 default :
                     $field_table = "total_engagement";
@@ -880,8 +883,8 @@ class LevelThreeTableController extends Controller
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                "channel" => $item->source_name,
-                "source_name" => $item->source_name,
+                /*"channel" => $item->source_name,
+                "source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
