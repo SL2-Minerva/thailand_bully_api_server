@@ -186,11 +186,11 @@ class MonitoringController extends Controller
         $sources = DB::table('sources')->where("status", "=", 1)->get();
         $keywords = DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();
         $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
-        $data['daily_message'] = $this->dailyMessage($total_keywords,$sources,$keywords,$campaign);
+        $data['daily_message'] = $this->dailyMessage($total_keywords, $sources, $keywords, $campaign);
         $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
         $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords,$sources,$keywords,$campaign);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous,$sources,$keywords,$campaign);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous, $sources, $keywords, $campaign);
 
         return parent::handleRespond($data);
     }
@@ -235,7 +235,7 @@ class MonitoringController extends Controller
     }
 
 
-    private function percentageOfMessages($start_date, $end_date, $total_keywords,$sources,$keywords,$campaign)
+    private function percentageOfMessages($start_date, $end_date, $total_keywords, $sources, $keywords, $campaign)
     {
 
         $items = $total_keywords->get();
@@ -733,20 +733,23 @@ class MonitoringController extends Controller
         $keywordIds = $keyword->pluck('id')->all();
 
 
-        /*if ($this->source_id) {
-            $data->where('outer_messages.source_id', $this->source_id);
+        $sourceQuery = "";
+        if ($this->source_id) {
+            $sourceQuery = "m.source_id = $this->source_id AND ";
         }
-        */
-        /*if (!$this->user_login->is_admin) {
+
+        if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $data->whereIn('outer_messages.source_id', $source_ids);
-        }*/
+            $sourceQuery = "m.source_id IN (" . implode(",", $source_ids) . ") AND ";
+        }
+
         $rows = DB::select("SELECT m.id,m.source_id,
     m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
 FROM
     tbl_messages m
     LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
 WHERE
+    $sourceQuery
     keyword_id IN (" . implode(",", $keywordIds) . ")
     AND author != ''
    AND mr.classification_type_id=1

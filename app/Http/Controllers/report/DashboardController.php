@@ -328,8 +328,10 @@ class DashboardController extends Controller
     public function sentimentScore(Request $request)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+
         $result = $this->findSentiment($keywords, $this->start_date, $this->end_date, $this->source_id);
         $current = self::parseSentiment($result);
+
         $result = $this->findSentiment($keywords, $this->start_date_previous, $this->end_date_previous, $this->source_id);
         $previous = self::parseSentiment($result);
 
@@ -350,6 +352,11 @@ class DashboardController extends Controller
             $convert_id = implode(',', $keywords->pluck('id')->all());
         }
 
+        $sourceQuery = "";
+        if ($source_id) {
+            $sourceQuery = "m.source_id = $source_id AND ";
+        }
+
         $results = DB::select(DB::raw("SELECT
             COUNT(*) AS total_count,
             SUM(CASE WHEN mr.classification_id = '1' THEN 1 ELSE 0 END) AS positive,
@@ -360,12 +367,10 @@ class DashboardController extends Controller
         FROM
             tbl_messages m
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
-        WHERE
+        WHERE $sourceQuery
             m.keyword_id IN ($convert_id) AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
         /*AND c.name IN ('Positive', 'Negative', 'Neutral')*/
         return $results;
-
-
     }
 
     function parseSentiment($results)
@@ -909,16 +914,16 @@ class DashboardController extends Controller
         if ($limit == 0) {
             $limit = 100;
         }
-        $sourceQuery ="";
+        $sourceQuery = "";
         $wordQuery = "";
         if ($request->platform_id) {
             $this->source_id = $request->platform_id;
-            $sourceQuery="source_id = ".$this->source_id." and ";
+            $sourceQuery = "source_id = " . $this->source_id . " and ";
         }
 
-/*        if ($request->word) {
-            $wordQuery="word Like '%".$request->word."%' and ";
-        }*/
+        /*        if ($request->word) {
+                    $wordQuery="word Like '%".$request->word."%' and ";
+                }*/
 
         $wordclouds = DB::select("SELECT message_id,author,keyword_id,source_id,
     word as text,
@@ -951,25 +956,25 @@ GROUP BY
         $data['word_clouds'] = $wordclouds;//self::wordCloudsMessage($this->wordCloudsData($wordclouds), $select);
         $data['word_total'] = self::point_two_digits($count_number);
         $data['total'] = count($wordclouds);
-        $data['word_clouds_table'] = $this->wordCloudsMessageTable($keywords, $wordclouds,$count_number);
+        $data['word_clouds_table'] = $this->wordCloudsMessageTable($keywords, $wordclouds, $count_number);
         /**/
 
 
         return parent::handleRespond($data);
     }
 
-    private function wordCloudsMessageTable($keywords, $wordclouds,$countNumberTotal)
+    private function wordCloudsMessageTable($keywords, $wordclouds, $countNumberTotal)
     {
 
         $data = null;
         foreach ($wordclouds as $wordcloud) {
-                $data[] = [
-                    'keyword' => $wordcloud->text,
-                    'keyword_id' => $wordcloud->keyword_id,
-                    'keyword_name' => self::matchKeywordName($keywords, $wordcloud->keyword_id),
-                    'total' => $wordcloud->value,
-                    'percent' => (float)self::point_two_digits(($wordcloud->value / $countNumberTotal), 2)
-                ];
+            $data[] = [
+                'keyword' => $wordcloud->text,
+                'keyword_id' => $wordcloud->keyword_id,
+                'keyword_name' => self::matchKeywordName($keywords, $wordcloud->keyword_id),
+                'total' => $wordcloud->value,
+                'percent' => (float)self::point_two_digits(($wordcloud->value / $countNumberTotal), 2)
+            ];
         }
         return $data;
     }
@@ -985,15 +990,15 @@ GROUP BY
         if ($limit == 0) {
             $limit = 100;
         }
-        $sourceQuery ="";
+        $sourceQuery = "";
         $wordQuery = "";
         if ($request->platform_id) {
             $this->source_id = $request->platform_id;
-            $sourceQuery="source_id = ".$this->source_id." and ";
+            $sourceQuery = "source_id = " . $this->source_id . " and ";
         }
 
         if ($request->word) {
-            $wordQuery="word Like '%".$request->word."%' and ";
+            $wordQuery = "word Like '%" . $request->word . "%' and ";
         }
 
         $wordclouds = DB::select("SELECT message_id,author,keyword_id,source_id,date_count,
@@ -1023,29 +1028,29 @@ GROUP BY
         $messageIds = [];
         $data = [];
         foreach ($wordclouds as $wordcloud) {
-            $messageIds[]= $wordcloud->message_id;
+            $messageIds[] = $wordcloud->message_id;
             $data[] = [
                 'author' => $wordcloud->author,
                 'source_id' => $wordcloud->source_id,
                 'source_name' => self::matchSourceName($sources, $wordcloud->source_id),
                 'total_message' => $wordcloud->value,
                 'message_id' => $wordcloud->message_id,
-                'engagements' =>0,
+                'engagements' => 0,
                 'date_count' => $wordcloud->date_count
             ];
         }
 
 
-        return $this->getEngagements($data,$messageIds);
+        return $this->getEngagements($data, $messageIds);
     }
 
-    private function getEngagements($data,$messageIds)
+    private function getEngagements($data, $messageIds)
     {
-        $engagements =  DB::table('messages')
-            ->select("message_id",DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
+        $engagements = DB::table('messages')
+            ->select("message_id", DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
             ->whereIn('message_id', $messageIds)->groupBy('message_id')
             ->get();
-        $result =[];
+        $result = [];
         foreach ($data as $key => $value) {
             foreach ($engagements as $engagement) {
                 if ($value['message_id'] == $engagement->message_id) {
@@ -1070,7 +1075,7 @@ GROUP BY
         $select = $request->select ?? null;
         $keywords = self::findKeywords($campaign_id, $this->keyword_id);
         $classificationQuery = "";
-        $sourceQuery="";
+        $sourceQuery = "";
         if ($request->sentiment_type) {
             $classificationQuery = "classification_id = 1 and ";
             if ($request->sentiment_type !== 'positive') {
@@ -1079,7 +1084,7 @@ GROUP BY
         }
         if ($request->platform_id) {
             $this->source_id = $request->platform_id;
-            $sourceQuery="source_id = ".$this->source_id." and ";
+            $sourceQuery = "source_id = " . $this->source_id . " and ";
         }
 
         $limit = self::selectData($request->select);
@@ -1099,7 +1104,7 @@ keyword_id IN (" . implode(",", $keywords->pluck('id')->toArray()) . ") AND
 GROUP BY
     text ORDER BY value desc limit $limit;");
 
-        $data['word_clouds_position'] =$wordclouds;//ฝฝ self::wordCloudsMessage($this->wordCloudsData($wordclouds), $select);
+        $data['word_clouds_position'] = $wordclouds;//ฝฝ self::wordCloudsMessage($this->wordCloudsData($wordclouds), $select);
         $data['wordCloudBySentimentType'] = $this->WordCloudBySentimentType($wordclouds);
         //        $data['total'] = $this->wordCloudBySentimentType($request, true);
 
@@ -1112,7 +1117,7 @@ GROUP BY
         $sources = Sources::where('status', 1)->get();
         $messageIds = [];
         foreach ($wordclouds as $wordcloud) {
-            $messageIds[]= $wordcloud->message_id;
+            $messageIds[] = $wordcloud->message_id;
             $data[] = [
                 'author' => $wordcloud->author,
                 'source_id' => $wordcloud->source_id,
@@ -1124,6 +1129,6 @@ GROUP BY
             ];
         }
 
-        return $this->getEngagements($data,$messageIds);
+        return $this->getEngagements($data, $messageIds);
     }
 }

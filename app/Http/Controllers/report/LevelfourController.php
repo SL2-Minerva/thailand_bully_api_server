@@ -196,7 +196,7 @@ class LevelfourController extends Controller
         return $data;
     }
 
-    private function getNode($keywords, $message_id, $is_child, $type, $messageId)
+    private function getNode($keywords, $message_id, $is_child, $type, $parentMessageIds)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -205,7 +205,7 @@ class LevelfourController extends Controller
             $raw = $this->message()
                 ->where('message_results.classification_type_id', $type)
                 //->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-                ->where('messages.reference_message_id', $messageId);
+                ->whereIn('messages.reference_message_id', $parentMessageIds);
         } else {
             if ($message_id) {
                 $raw = $this->message();
