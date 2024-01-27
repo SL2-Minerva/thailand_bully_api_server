@@ -452,9 +452,10 @@ class LevelThreeTableController extends Controller
             //     $raw->addSelect([DB::raw('number_of_reactions + number_of_comments + number_of_reactions as total_engagement')])
             //         ->havingRaw('total_engagement > ?', [0]);
             // }
-
-            $raw->where('sources_id', $label);
-
+            $sourceId = Sources::where('id', $this->source_id)->first();
+            if ($sourceId) {
+                $raw->where('messages.source_id', $sourceId->id);
+            }
         }
 
         // Last
@@ -624,7 +625,6 @@ class LevelThreeTableController extends Controller
                 'date' => "messages.message_datetime",
                 'device' => "messages.device",
                 'source' => "messages.sources_id",
-                'engagement' => "total_engagement",
                 'bully_type', 'sentiment' => "message_results.classification_id",
                 default => "total_engagement",
             };
