@@ -59,25 +59,37 @@ class SentimentDashboardController extends Controller
         }
     }
 
-    public function sentimentBy(Request $request)
+    public function SentimentBy(Request $request)
     {
-        $raw = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        // $raw = $raw->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $data = null;
+        $classifications = self::getClassificationMaster();
+        $sources = $this->getAllSource();
+
+        $resultCurrent = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+
+        $resultPrevious = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+
+        /* $results = $this->raw_message_classification($keywords, null, [2,3])
+             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);*/
 
         return parent::handleRespond([
-            "SentimentByDay" => $this->SentimentByDay($raw, true),
-            "SentimentByTime" => $this->SentimentByTime($raw, true),
-            "SentimentByDevice" => $this->SentimentByDevice($raw, true),
-            "SentimentByAccount" => $this->SentimentByAccount($raw, true),
-            "SentimentByChannel" => $this->SentimentByChannel($raw, true),
-            "SentimentBullyLevel" => $this->SentimentBullyLevel($request, true),
-            "SentimentBullyType" => $this->SentimentBullyType($raw, true),
-            "SentimentScore" => $this->SentimentScore($raw, true),
-            "sentimentComparison" => $this->SentimentComparison(true),
+            "SentimentByDay" => $this->SentimentByDay($resultCurrent, $classifications, true),
+            "SentimentByTime" => $this->SentimentByTime($resultCurrent, $classifications, true),
+            "SentimentByDevice" => $this->SentimentByDevice($resultCurrent, $classifications, $sources, true),
+            "SentimentByAccount" => $this->SentimentByAccount($resultCurrent, $classifications, true),
+            "SentimentByChannel" => $this->SentimentByChannel($resultCurrent, $classifications, $sources, true),
+
+            /*"SentimentBullyType" => $this->SentimentBullyType($results, true),
+            "SentimentBullyLevel" => $this->SentimentBullyLevel($results, true),*/
+            "SentimentScore" => $this->SentimentScore($resultCurrent, $resultPrevious, $keywords, true),
+            "SentimentComparison" => $this->SentimentComparisonData($resultCurrent, $resultPrevious, $keywords),
         ]);
     }
 
-    public function DailySeniment(Request $request)
+    public function DailySentiment(Request $request)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $data = null;
@@ -210,7 +222,7 @@ class SentimentDashboardController extends Controller
         return $data;
     }
 
-    public function SentimentByDay($raw, $only_data = false)
+    public function SentimentByDay($items, $classifications, $only_data = false)
     {
 
         $data['labels'] = [
@@ -223,7 +235,6 @@ class SentimentDashboardController extends Controller
             "Sun"
         ];
 
-        $items = $raw->get();
         foreach ($items as $item) {
             $day_name = Carbon::parse($item->date_m)->format('D');
             $index_label = array_search($day_name, $data['labels']);
@@ -233,9 +244,9 @@ class SentimentDashboardController extends Controller
             } else {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
+                    'keyword_name' => $this->matchClassificationName($classifications, $item->classification_id),
+                    /*'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
                 $data['value'][$item->classification_id]['data'][$index_label] = 1;
@@ -255,7 +266,7 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SentimentByTime($raw, $only_data = false)
+    public function SentimentByTime($items, $classifications, $only_data = false)
     {
 
         $data['labels'] = [
@@ -265,7 +276,6 @@ class SentimentDashboardController extends Controller
             "After 6 PM"
         ];
 
-        $items = $raw->get();
         foreach ($items as $item) {
 
             $sixAM = Carbon::parse("06:00:00");
@@ -289,21 +299,17 @@ class SentimentDashboardController extends Controller
             }
 
 
-            if (isset($data['value'][$item->classification_id])) {
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
-
-
-            } else {
+            if (!isset($data['value'][$item->classification_id])) {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
+                    'keyword_name' => $this->matchClassificationName($classifications, $item->classification_id),
+                    /*'campaign_id' => $item->campaign_id,
+                    'campaign_name' => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0]
                 ];
 
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
             }
+            $data['value'][$item->classification_id]['data'][$index_label] += 1;
 
         }
 
@@ -318,7 +324,7 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SentimentByDevice($raw, $only_data = false)
+    public function SentimentByDevice($items, $classifications, $sources, $only_data = false)
     {
 
         $data['labels'] = [
@@ -327,8 +333,6 @@ class SentimentDashboardController extends Controller
             "Web App",
         ];
 
-
-        $items = $raw->get();
 
         $check = [];
 
@@ -359,11 +363,11 @@ class SentimentDashboardController extends Controller
                 } else {
                     $data['value'][$item->classification_id] = [
                         'id' => $item->classification_id,
-                        'keyword_name' => $item->classification_name,
-                        'campaign_id' => $item->campaign_id,
-                        'campaign_name' => $item->campaign_name,
+                        'keyword_name' => $this->matchClassificationName($classifications, $item->classification_id),
+                        /*'campaign_id' => $item->campaign_id,
+                        'campaign_name' => $item->campaign_name,*/
                         'source_id' => $item->source_id,
-                        'source_name' => $item->source_name,
+                        'source_name' => $this->matchSourceName($sources, $item->source_id),
                         'data' => [0, 0, 0]
                     ];
 
@@ -385,7 +389,7 @@ class SentimentDashboardController extends Controller
 
     }
 
-    public function SentimentByAccount($raw, $only_data = false)
+    public function SentimentByAccount($infulencers, $classifications, $only_data = false)
     {
 
         $data['labels'] = [
@@ -393,45 +397,32 @@ class SentimentDashboardController extends Controller
             "Follower",
         ];
 
-        $raw = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date)
-            ->where('reference_message_id', '');
-        $infulencers = $raw->get();
-
         foreach ($infulencers as $infulencer) {
-            if (isset($data['value'][$infulencer->classification_id]['data'][0])) {
+            if ($infulencer->reference_message_id == "") {
+                if (!isset($data['value'][$infulencer->classification_id]['data'][0])) {
+                    $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
+                    $data['value'][$infulencer->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $infulencer->classification_id);
+                    $data['value'][$infulencer->classification_id]['data'][0] = 0;
+
+                }
                 if (!$infulencer->reference_message_id) {
                     $data['value'][$infulencer->classification_id]['data'][0] += 1;
                 }
             } else {
-                $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
-                $data['value'][$infulencer->classification_id]['keyword_name'] = $infulencer->keyword_name;
-                $data['value'][$infulencer->classification_id]['data'][0] = 0;
+                if (isset($data['value'][$infulencer->classification_id]['data'][1])) {
+                    if ($infulencer->reference_message_id) {
+                        $data['value'][$infulencer->classification_id]['data'][1] += 1;
+                    }
+                } else {
+                    $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
+                    $data['value'][$infulencer->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $infulencer->classification_id);
+                    $data['value'][$infulencer->classification_id]['data'][1] = 0;
 
-                if (!$infulencer->reference_message_id) {
-                    $data['value'][$infulencer->classification_id]['data'][0] += 1;
-                }
-
-            }
-        }
-
-        $follower_raw = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        $followers = $follower_raw->where('reference_message_id', '!=', '')->get();
-
-        foreach ($followers as $follower) {
-            if (isset($data['value'][$follower->classification_id]['data'][1])) {
-                if ($follower->reference_message_id) {
-                    $data['value'][$follower->classification_id]['data'][1] += 1;
-                }
-            } else {
-                $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
-                $data['value'][$follower->classification_id]['keyword_name'] = $follower->classification_name;
-                $data['value'][$follower->classification_id]['data'][1] = 0;
-
-                if ($follower->reference_message_id) {
-                    $data['value'][$follower->classification_id]['data'][1] += 1;
+                    if ($infulencer->reference_message_id) {
+                        $data['value'][$infulencer->classification_id]['data'][1] += 1;
+                    }
                 }
             }
-
         }
 
         if (isset($data['value'])) {
@@ -444,27 +435,25 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SentimentByChannel($raw, $only_data = false)
+    public function SentimentByChannel($items, $classifications, $sources, $only_data = false)
     {
         $data = parent::listSource();
-        $items = $raw->get();
 
         foreach ($items as $item) {
-            $index_label = array_search($item->source_name, $data['labels']);
-            if (isset($data['value'][$item->classification_id])) {
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
-            } else {
+            $sourceName = $this->matchSourceName($sources, $item->source_id);
+            $index_label = array_search($sourceName, $data['labels']);
+            if (!isset($data['value'][$item->classification_id])) {
                 $data['value'][$item->classification_id] = [
                     'id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
+                    'keyword_name' => $this->matchClassificationName($classifications, $item->classification_id),
                 ];
 
                 for ($i = 0; $i <= count($data['labels']); $i++) {
                     $data['value'][$item->classification_id]['data'][] = 0;
                 }
 
-                $data['value'][$item->classification_id]['data'][$index_label] += 1;
             }
+            $data['value'][$item->classification_id]['data'][$index_label] += 1;
         }
 
         if (isset($data['value'])) {
@@ -981,13 +970,6 @@ class SentimentDashboardController extends Controller
 
             if (isset($analysis[$item->keyword_id])) {
                 $analysis[$item->keyword_id]['total'] += 1;
-                if ($item->classification_id === 1) {
-                    $analysis[$item->keyword_id]['positive'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis[$item->keyword_id]['negative'] += 1;
-                } else if ($item->classification_id === 3) {
-                    $analysis[$item->keyword_id]['neutral'] += 1;
-                }
             } else {
                 $analysis[$item->keyword_id] = [
                     'total' => 1,
@@ -996,13 +978,13 @@ class SentimentDashboardController extends Controller
                     'neutral' => 0,
                     'negative' => 0,
                 ];
-                if ($item->classification_id === 1) {
-                    $analysis[$item->keyword_id]['positive'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis[$item->keyword_id]['negative'] += 1;
-                } else if ($item->classification_id === 3) {
-                    $analysis[$item->keyword_id]['neutral'] += 1;
-                }
+            }
+            if ($item->classification_id === 1) {
+                $analysis[$item->keyword_id]['positive'] += 1;
+            } else if ($item->classification_id === 2) {
+                $analysis[$item->keyword_id]['negative'] += 1;
+            } else if ($item->classification_id === 3) {
+                $analysis[$item->keyword_id]['neutral'] += 1;
             }
 
         }
@@ -1029,12 +1011,12 @@ class SentimentDashboardController extends Controller
         return $results;
     }
 
-    public function SentimentScore($raw, $only_data = false)
+    public function SentimentScore($resultCurrent, $resultPrevious, $keywords, $only_data = false)
     {
         $data = ['senitment_score_data' => [], 'senitment_score_percentage' => []];
 
-        $analysis_current = $this->factorySentimentScore($this->start_date, $this->end_date);
-        $analysis_previous = $this->factorySentimentScore($this->start_date_previous, $this->end_date_previous);
+        $analysis_current = $this->factorySentimentScore($resultCurrent, $keywords);
+        $analysis_previous = $this->factorySentimentScore($resultPrevious, $keywords);
 
 
         foreach ($analysis_current as $keyword_id => $item) {
@@ -1170,7 +1152,7 @@ class SentimentDashboardController extends Controller
         return $analysis;
     }
 
-    public function SentimentComparison($only_data = false)
+    public function SentimentComparison()
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
 
@@ -1178,6 +1160,13 @@ class SentimentDashboardController extends Controller
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
         $resultPrevious = $this->raw_message_classification($keywords, 1, null)
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+        $data = self::SentimentComparisonData($resultCurrent, $resultPrevious, $keywords);
+
+        return parent::handleRespond($data);
+    }
+
+    public function SentimentComparisonData($resultCurrent, $resultPrevious, $keywords)
+    {
 
         $analysis_current = $this->factorySentimentComparison($resultCurrent, $keywords);
         $analysis_previous = $this->factorySentimentComparison($resultPrevious, $keywords);
@@ -1237,11 +1226,8 @@ class SentimentDashboardController extends Controller
             });
         }
 
-        if ($only_data) {
-            return $data;
-        }
+        return $data;
 
-        return parent::handleRespond($data);
     }
 
     public function SummaryBy(Request $request)
@@ -1548,60 +1534,4 @@ class SentimentDashboardController extends Controller
         return $data;
     }
 
-    private function raw_message_classification_one($campaign_id, $start_date, $end_date)
-    {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
-
-        $data = DB::table('messages')
-            ->select([
-                'messages.message_id as message_id',
-                'messages.reference_message_id as reference_message_id',
-                'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
-                'messages.author as author',
-                'messages.source_id as source_id',
-                'messages.full_message as full_message',
-                'messages.message_type',
-                'messages.device as device',
-                'messages.number_of_views as number_of_views',
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_shares as number_of_shares',
-                'messages.number_of_reactions as number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name as keyword_name',
-                'classifications.classification_type_id',
-                'message_results.classification_id',
-                'classifications.name as classification_name',
-                'classifications.color as classification_color',
-                'sources.name as source_name',
-                'messages.created_at as created_at'
-            ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
-
-        if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $data->whereIn('source_id', $source_ids);
-        }
-
-        return $data;
-    }
 }
