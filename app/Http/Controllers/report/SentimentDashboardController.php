@@ -385,51 +385,36 @@ class SentimentDashboardController extends Controller
 
     }
 
-    public function SentimentByAccount($infulencers, $classifications, $only_data = false)
+    public function SentimentByAccount($influencers, $classifications, $only_data = false)
     {
+        $data['labels'] = ["Influencer", "Follower"];
+        $data['value'] = [];
 
-        $data['labels'] = [
-            "Infulencer",
-            "Follower",
-        ];
+        foreach ($influencers as $influencer) {
+            $classification_id = $influencer->classification_id;
+            $keyword_name = $this->matchClassificationName($classifications, $classification_id);
+            $index = ($influencer->reference_message_id == "") ? 0 : 1;
 
-        foreach ($infulencers as $infulencer) {
-            if ($infulencer->reference_message_id == "") {
-                if (!isset($data['value'][$infulencer->classification_id]['data'][0])) {
-                    $data['value'][$infulencer->classification_id]['id'] = $infulencer->keyword_id;
-                    $data['value'][$infulencer->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $infulencer->classification_id);
-                    $data['value'][$infulencer->classification_id]['data'][0] = 0;
-
-                }
-                if (!$infulencer->reference_message_id) {
-                    $data['value'][$infulencer->classification_id]['data'][0] += 1;
-                }
-            } else {
-                if (isset($data['value'][$infulencer->classification_id]['data'][1])) {
-                    if ($infulencer->reference_message_id) {
-                        $data['value'][$infulencer->classification_id]['data'][1] += 1;
-                    }
-                } else {
-                    $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
-                    $data['value'][$infulencer->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $infulencer->classification_id);
-                    $data['value'][$infulencer->classification_id]['data'][1] = 0;
-
-                    if ($infulencer->reference_message_id) {
-                        $data['value'][$infulencer->classification_id]['data'][1] += 1;
-                    }
-                }
+            if (!isset($data['value'][$classification_id])) {
+                $data['value'][$classification_id] = [
+                    'id' => $classification_id,
+                    'keyword_name' => $keyword_name,
+                    'data' => [0, 0]
+                ];
             }
+
+            $data['value'][$classification_id]['data'][$index]++;
         }
 
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
+        $data['value'] = array_values($data['value']);
 
         if ($only_data) {
             return $data;
         }
+
         return parent::handleRespond($data);
     }
+
 
     public function SentimentByChannel($items, $classifications, $sources, $only_data = false)
     {
