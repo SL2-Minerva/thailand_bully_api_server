@@ -245,9 +245,9 @@ Route::group(['middleware' => ['api']], function () {
 
         Route::group(['prefix' => 'dashboard-sentiment'], function () {
             Route::get('/sentiment-daily', [SentimentDashboardController::class, 'DailySeniment']);
-            Route::get('/sentiment-by', [SentimentDashboardController::class, 'sentimentBy']);
+            //Route::get('/sentiment-by', [SentimentDashboardController::class, 'sentimentBy']);
             Route::get('/sentiment-comparison', [SentimentDashboardController::class, 'SentimentComparison']);
-            Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
+            //Route::get('/period-and-comparison', [SentimentDashboardController::class, 'periodAndComparison']);
             Route::get('/summary-by', [SentimentDashboardController::class, 'SummaryBy']);
             Route::get('/level-three/', [LevelThreeSentimentDashboardController::class, 'report']);
         });

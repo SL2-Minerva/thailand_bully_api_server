@@ -54,8 +54,8 @@ class SentimentDashboardController extends Controller
         }
 
         if ($request->period === 'customrange') {
-            $this->start_date_previous =  $this->date_carbon($request->start_date_period);
-            $this->end_date_previous =  $this->date_carbon($request->end_date_period);
+            $this->start_date_previous = $this->date_carbon($request->start_date_period);
+            $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
     }
 
@@ -73,105 +73,60 @@ class SentimentDashboardController extends Controller
             "SentimentBullyLevel" => $this->SentimentBullyLevel($request, true),
             "SentimentBullyType" => $this->SentimentBullyType($raw, true),
             "SentimentScore" => $this->SentimentScore($raw, true),
-            "sentimentComparison" => $this->SentimentComparison($raw, true),
+            "sentimentComparison" => $this->SentimentComparison(true),
         ]);
     }
 
     public function DailySeniment(Request $request)
     {
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $data = null;
-        $raw_current = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date);
+        $classifications = self::getClassificationMaster();
 
-        $data['sentiment'] = $this->sentiment($raw_current);
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous);
+
+        $resultCurrent = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+        $resultPrevious = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+
+        error_log(count($resultCurrent));
+        error_log(count($resultPrevious));
+        $data['sentiment'] = $this->sentiment($resultCurrent, $classifications);
+        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($resultCurrent, $classifications, $this->start_date, $this->end_date);
+        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($resultPrevious, $classifications, $this->start_date_previous, $this->end_date_previous);
 
         return parent::handleRespond($data);
     }
 
 
-    private function percentageOfMessages($start_date, $end_date)
+    private function percentageOfMessages($raw_current, $classifications, $start_date, $end_date)
     {
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
-
-        $data = DB::table('messages')
-            ->select([
-                'messages.message_id as message_id',
-                'messages.reference_message_id as reference_message_id',
-                'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
-                'messages.author as author',
-                'messages.source_id as source_id',
-                'messages.full_message as full_message',
-                'messages.message_type',
-                'messages.device as device',
-                'messages.number_of_views as number_of_views',
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_shares as number_of_shares',
-                'messages.number_of_reactions as number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name as keyword_name',
-                'classifications.classification_type_id',
-                'message_results.classification_id',
-                'classifications.name as classification_name',
-                'classifications.color as classification_color',
-                'sources.name as source_name',
-                'messages.created_at as created_at'
-            ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
-
-        if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $data->whereIn('source_id', $source_ids);
-        }
-
-        $items = $data->get();
-
         $data = null;
-        if ($items->count() <= 0) return null;
+        if ($raw_current->count() <= 0) return null;
 
         $message_keyword = [];
         $message_total = 0;
 
 
-        foreach ($items as $object) {
-            $item = (array)$object;
+        foreach ($raw_current as $item) {
+            //$item = (array)$object;
 
-            if (!isset($data[$item['classification_id']])) {
+            if (!isset($data[$item->classification_id])) {
 
-                $data[$item['classification_id']] = [
-                    'keyword_id' => $item['classification_id'],
-                    'keyword_name' => $item['classification_name'],
+                $data[$item->classification_id] = [
+                    'keyword_id' => $item->classification_id,
+                    'keyword_name' => self::matchClassificationName($classifications, $item->classification_id)/*,
                     'campaign_id' => $item['campaign_id'],
-                    'campaign_name' => $item['campaign_name'],
+                    'campaign_name' => $item['campaign_name'],*/
                 ];
             }
 
-            if (isset($message_keyword[$item['classification_id']])) {
+            if (isset($message_keyword[$item->classification_id])) {
 
-                $message_keyword[$item['classification_id']] += 1;
+                $message_keyword[$item->classification_id] += 1;
             } else {
 
-                $message_keyword[$item['classification_id']] = 1;
+                $message_keyword[$item->classification_id] = 1;
             }
 
             $message_total += 1;
@@ -201,7 +156,7 @@ class SentimentDashboardController extends Controller
 
     }
 
-    private function sentiment($raw, $only_data = false)
+    private function sentiment($raw, $classifications)
     {
         $labels = [
             "Positive",
@@ -209,15 +164,14 @@ class SentimentDashboardController extends Controller
             "Negative"
         ];
 
-        $raw->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
-        $items = $raw->get();
 
         $data = null;
-        if ($items->count() <= 0) return null;
+        if (count($raw) <= 0) return null;
 
-        foreach ($items as $item) {
+        foreach ($raw as $item) {
             $date_m = Carbon::parse($item->date_m)->format('Y-m-d');
-            $index_label = array_search($item->classification_name, $labels);
+            $classificationName = self::matchClassificationName($classifications, $item->classification_id);
+            $index_label = array_search($classificationName, $labels);
 
             if (isset($data[$index_label])) {
                 if (isset($data[$index_label]['value'][$date_m])) {
@@ -233,9 +187,7 @@ class SentimentDashboardController extends Controller
             } else {
                 $data[$index_label] = [
                     'keyword_id' => $item->classification_id,
-                    'keyword_name' => $item->classification_name,
-                    'campaign_id' => $item->campaign_id,
-                    'campaign_name' => $item->campaign_name,
+                    'keyword_name' => $classificationName,
                     'value' => []
                 ];
 
@@ -559,9 +511,9 @@ class SentimentDashboardController extends Controller
                 'data' => [0, 0, 0, 0]
             ],
         ];
-
-        $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date);
-        $raw = $raw->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral', 'Level 0', 'Level 1', 'Level 2', 'Level 3']);
+        $classification = Classification::whereIn('classification_type_id', [1, 2])->get();
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $raw = $this->raw_message_classification($keywords, null, [1, 2], $this->start_date, $this->end_date);
         $items = $raw->get();
 
 
@@ -569,7 +521,7 @@ class SentimentDashboardController extends Controller
 
         foreach ($items as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
 
@@ -582,7 +534,7 @@ class SentimentDashboardController extends Controller
             if ($anylsy[1] === 'Neutral') {
                 $index_data = 1;
             }
-            
+
 
             $index_label = array_search($anylsy[3], $data['labels']);
             $data['value'][$index_data]['data'][$index_label] += 1;
@@ -677,13 +629,21 @@ class SentimentDashboardController extends Controller
 
     public function periodAndComparison(Request $request)
     {
-        $raw_current = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_previous = $this->raw_message_classification_one($this->campaign_id, $this->start_date_previous, $this->end_date_previous);
-        
+        /*$raw_current = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
+        $raw_previous = $this->raw_message_classification_one($this->campaign_id, $this->start_date_previous, $this->end_date_previous);*/
+
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+
+        $resultCurrent = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+        $resultPrevious = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+
+
         return parent::handleRespond([
-            "PeriodOverPeriod" => $this->PeriodOverPeriod($raw_current, $raw_previous, true),
-            "ComparisonByChannel" => $this->ComparisonByChannel($request, true),
-            "ComparisonByEngagementType" => $this->ComparisonByEngagementType($request, true),
+            "PeriodOverPeriod" => $this->PeriodOverPeriod($resultCurrent, $resultPrevious, true),
+            //"ComparisonByChannel" => $this->ComparisonByChannel($resultCurrent, $resultPrevious, true),
+            "ComparisonByEngagementType" => $this->ComparisonByEngagementType($resultCurrent, $resultPrevious, true),
         ]);
     }
 
@@ -699,16 +659,16 @@ class SentimentDashboardController extends Controller
         $total_comment_current = 0;
         $total_reactions_current = 0;
 
-        foreach ($raw_current->get() as $item) {
-            if ($item->classification_name === 'Positive') {
+        foreach ($raw_current as $item) {
+            if ($item->classification_id == 1) {
                 $total_share_current += 1;
             }
 
-            if ($item->classification_name === 'Neutral') {
+            if ($item->classification_id == 3) {
                 $total_comment_current += 1;
             }
 
-            if ($item->classification_name === 'Negative') {
+            if ($item->classification_id == 2) {
                 $total_reactions_current += 1;
             }
         }
@@ -717,16 +677,16 @@ class SentimentDashboardController extends Controller
         $total_comment_previous = 0;
         $total_reactions_previous = 0;
 
-        foreach ($raw_previous->get() as $item) {
-            if ($item->classification_name === 'Positive') {
+        foreach ($raw_previous as $item) {
+            if ($item->classification_id == 1) {
                 $total_share_previous += 1;
             }
 
-            if ($item->classification_name === 'Neutral') {
+            if ($item->classification_id == 3) {
                 $total_comment_previous += 1;
             }
 
-            if ($item->classification_name === 'Negative') {
+            if ($item->classification_id == 2) {
                 $total_reactions_previous += 1;
             }
         }
@@ -765,13 +725,13 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function ComparisonByChannel(Request $request, $only_data = false)
+    public function ComparisonByChannel($resultCurrent, $resultPrevious, $only_data = false)
     {
 
         $data = parent::listSource();
 
-        $analysis_current = $this->factoryComparisonByChangel($this->start_date, $this->end_date);
-        $analysis_previous = $this->factoryComparisonByChangel($this->start_date_previous, $this->end_date_previous);
+        $analysis_current = $resultCurrent;
+        $analysis_previous = $resultPrevious;
 
 
         $data['value'][0] = [
@@ -800,9 +760,9 @@ class SentimentDashboardController extends Controller
             $analysis_previous_negative = 0;
 
             if (isset($analysis_previous[$index])) {
-                $analysis_previous_position = $analysis_previous[$index]['positive'];
-                $analysis_previous_neutral = $analysis_previous[$index]['neutral'];
-                $analysis_previous_negative = $analysis_previous[$index]['negative'];
+                $analysis_previous_position = $analysis_previous[$index]->positive;
+                $analysis_previous_neutral = $analysis_previous[$index]->neutral;
+                $analysis_previous_negative = $analysis_previous[$index]->negative;
             }
 
             $index_label = array_search($value['source_name'], $data['labels']);
@@ -886,12 +846,10 @@ class SentimentDashboardController extends Controller
     }
 
 
-    public function ComparisonByEngagementType(Request $request, $only_data = false)
+    public function ComparisonByEngagementType($resultCurrent, $resultPrevious, $only_data = false)
     {
-
-
-        $analysis_current = $this->factoryComparisnByEngagementType($this->start_date, $this->end_date);
-        $analysis_previous = $this->factoryComparisnByEngagementType($this->start_date_previous, $this->end_date_previous);
+        $analysis_current = $this->factoryComparisnByEngagementType($resultCurrent);
+        $analysis_previous = $this->factoryComparisnByEngagementType($resultPrevious);
 
         $data['labels'] = [
             "Share",
@@ -947,19 +905,9 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function factoryComparisnByEngagementType($start_date, $end_data)
+    private function factoryComparisnByEngagementType($items)
     {
 
-        $raw_current = $this->raw_message_classification_one($this->campaign_id, $start_date, $end_data);
-
-        if ($this->keyword_id) {
-            $raw_current->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw_current->where('source_id', $this->source_id);
-        }
-        $items = $raw_current->get();
 
         $analysis = [
             "share" => 0,
@@ -1042,12 +990,10 @@ class SentimentDashboardController extends Controller
     }
 
 
-    private function factorySentimentScore($start_date, $end_data)
+    private function factorySentimentScore($items, $keywords)
     {
-        $raw_current = $this->raw_message_classification_one($this->campaign_id, $start_date, $end_data);
-            // ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
+        // ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
 
-        $items = $raw_current->get();
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
@@ -1071,7 +1017,7 @@ class SentimentDashboardController extends Controller
             } else {
                 $analysis[$item->keyword_id] = [
                     'total' => 1,
-                    'keyword_name' => $item->keyword_name,
+                    'keyword_name' => $this->matchKeywordName($keywords, $item->keyword_id),
                     'positive' => 0,
                     'neutral' => 0,
                     'negative' => 0,
@@ -1153,11 +1099,9 @@ class SentimentDashboardController extends Controller
 //            }
             $sentimentScore = round($check_sentiment_score, 2);
 
-            if ($sentimentScore == -0 ) {
+            if ($sentimentScore == -0) {
                 $sentimentScore = 0;
             }
-
-
 
 
             if ($total_positive_negative_neutral) {
@@ -1173,7 +1117,7 @@ class SentimentDashboardController extends Controller
 
                 $sentimentScore_previous = round($check_sentiment_score_previous, 2);
 
-                if ($sentimentScore_previous == -0 ) {
+                if ($sentimentScore_previous == -0) {
                     $sentimentScore_previous = 0;
                 }
             }
@@ -1217,61 +1161,52 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function factorySentimentComparison($start_date, $end_date)
+    private function factorySentimentComparison($result, $keywords)
     {
-        $raw = $this->raw_message_classification($this->campaign_id, $start_date, $end_date)
-            ->whereIn('classifications.name', ['Positive', 'Negative', 'Neutral']);
 
-        $items = $raw->get();
+
         $analysis = [];
-
-        foreach ($items as $item) {
+        foreach ($result as $item) {
             if (isset($analysis[$item->keyword_id])) {
                 $analysis[$item->keyword_id]['total'] += 1;
-
-                if ($item->classification_name === 'Positive') {
-                    $analysis[$item->keyword_id]['positive'] += 1;
-                }
-
-                if ($item->classification_name === 'Negative') {
-                    $analysis[$item->keyword_id]['negative'] += 1;
-                }
-
-                if ($item->classification_name === 'Neutral') {
-                    $analysis[$item->keyword_id]['neutral'] += 1;
-                }
             } else {
                 $analysis[$item->keyword_id] = [
                     "keyword_id" => $item->keyword_id,
-                    "keyword_name" => $item->keyword_name,
+                    "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
                     "total" => 1,
                     "positive" => 0,
                     "negative" => 0,
                     "neutral" => 0,
                 ];
+            }
 
-                if ($item->classification_name === 'Positive') {
-                    $analysis[$item->keyword_id]['positive'] += 1;
-                }
+            if ($item->classification_id == 1) {
+                $analysis[$item->keyword_id]['positive'] += 1;
+            }
 
-                if ($item->classification_name === 'Negative') {
-                    $analysis[$item->keyword_id]['negative'] += 1;
-                }
+            if ($item->classification_id == 2) {
+                $analysis[$item->keyword_id]['negative'] += 1;
+            }
 
-                if ($item->classification_name === 'Neutral') {
-                    $analysis[$item->keyword_id]['neutral'] += 1;
-                }
+            if ($item->classification_id == 3) {
+                $analysis[$item->keyword_id]['neutral'] += 1;
             }
         }
 
         return $analysis;
     }
 
-    public function SentimentComparison($raw, $only_data = false)
+    public function SentimentComparison($only_data = false)
     {
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
 
-        $analysis_current = $this->factorySentimentComparison($this->start_date, $this->end_date);
-        $analysis_previous = $this->factorySentimentComparison($this->start_date_previous, $this->end_date_previous);
+        $resultCurrent = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+        $resultPrevious = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+
+        $analysis_current = $this->factorySentimentComparison($resultCurrent, $keywords);
+        $analysis_previous = $this->factorySentimentComparison($resultPrevious, $keywords);
 
         $data = [];
 
@@ -1298,7 +1233,7 @@ class SentimentDashboardController extends Controller
                     "percentage" => $analysis_previous_key ? self::point_two_digits((($item['total'] - $analysis_previous_key) / $analysis_previous_key) * 100) : 0,
                     "type" => $item['total'] - $analysis_previous_key > 0 ? "plus" : "minus"
                 ],
-                
+
                 "positive" => [
                     "value" => $item['positive'] - $analysis_previous_positive,
                     "percentage" => $analysis_previous_positive ? self::point_two_digits((($item['positive'] - $analysis_previous_positive) / $analysis_previous_positive) * 100) : 0,
@@ -1337,20 +1272,21 @@ class SentimentDashboardController extends Controller
 
     public function SummaryBy(Request $request)
     {
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $sources =$this->getAllSource();
+        $resultCurrent = $this->raw_message_classification($keywords, 1, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+
         return parent::handleRespond([
-            "SummaryScoreAccount" => $this->SummaryScoreAccount($request, true),
-            "SummaryScoreChannel" => $this->SummaryScoreChannel($request, true),
-            "SummaryKeyword" => $this->SummaryKeyword($request, true),
+            "SummaryScoreAccount" => $this->SummaryScoreAccount($resultCurrent, true),
+            "SummaryScoreChannel" => $this->SummaryScoreChannel($resultCurrent,$sources, true),
+            "SummaryKeyword" => $this->SummaryKeyword($resultCurrent, $keywords,true),
         ]);
     }
 
-    public function SummaryScoreAccount(Request $request, $only_data = false)
+    public function SummaryScoreAccount($items, $only_data = false)
     {
 
-        $raw = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        $raw = $raw->where('message_type', 'Post');
-
-        $items = $raw->get();
         $analysis = [];
         $message_total = 0;
         $max = ['value' => 0, 'hightlightColor' => ''];
@@ -1358,13 +1294,6 @@ class SentimentDashboardController extends Controller
             $message_total += 1;
             if (isset($analysis[$item->author])) {
                 $analysis[$item->author]['total'] += 1;
-                if ($item->classification_id === 1) {
-                    $analysis[$item->author]['positive'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis[$item->author]['negative'] += 1;
-                } else if ($item->classification_id === 3) {
-                    $analysis[$item->author]['neutral'] += 1;
-                }
             } else {
                 $analysis[$item->author] = [
                     'total' => 1,
@@ -1373,13 +1302,13 @@ class SentimentDashboardController extends Controller
                     'neutral' => 0,
                     'negative' => 0,
                 ];
-                if ($item->classification_id === 1) {
-                    $analysis[$item->author]['positive'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis[$item->author]['negative'] += 1;
-                } else if ($item->classification_id === 3) {
-                    $analysis[$item->author]['neutral'] += 1;
-                }
+            }
+            if ($item->classification_id === 1) {
+                $analysis[$item->author]['positive'] += 1;
+            } else if ($item->classification_id === 2) {
+                $analysis[$item->author]['negative'] += 1;
+            } else if ($item->classification_id === 3) {
+                $analysis[$item->author]['neutral'] += 1;
             }
 
         }
@@ -1396,7 +1325,7 @@ class SentimentDashboardController extends Controller
             ];
 
         }
-        
+
         if ($data) {
             usort($data, function ($a, $b) {
                 return $b['total'] - $a['total'];
@@ -1410,7 +1339,7 @@ class SentimentDashboardController extends Controller
 //            "neutral" => 70,
 //            "negative" => 10,
 //        ];
-        
+
         if ($only_data) {
             return $data;
         }
@@ -1418,31 +1347,10 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SummaryScoreChannel(Request $request, $only_data = false)
+    public function SummaryScoreChannel($items, $sources, $only_data = false)
     {
         $sources = Sources::where('status', 1)->get();
 
-
-        $raw = $this->raw_message_classification_one($this->campaign_id, $this->start_date, $this->end_date);
-        // $raw = $raw->whereIn('message_type', ['Post', 'Video']);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-
-
-            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        $items = $raw->get();
         $message_total = 0;
         $total = [];
         $analysis = [];
@@ -1453,35 +1361,25 @@ class SentimentDashboardController extends Controller
             $message_total += 1;
             if (isset($analysis[$item->source_id])) {
                 $analysis[$item->source_id]['total'] += 1;
-                if ($item->classification_id === 1) {
-                    $analysis[$item->source_id]['positive'] += 1;
-                    $total['positive'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis[$item->source_id]['negative'] += 1;
-                    $total['negative'] += 1;
-                } else if ($item->classification_id === 3) {
-                    $analysis[$item->source_id]['neutral'] += 1;
-                    $total['neutral'] += 1;
-                }
             } else {
                 $analysis[$item->source_id] = [
                     'total' => 1,
                     'source_id' => $item->source_id,
-                    'source_name' => $item->source_name,
+                    'source_name' => self::matchSourceName($sources, $item->source_id),
                     'positive' => 0,
                     'neutral' => 0,
                     'negative' => 0,
                 ];
-                if ($item->classification_id === 1) {
-                    $analysis[$item->source_id]['positive'] += 1;
-                    $total['positive'] += 1;
-                } else if ($item->classification_id === 2) {
-                    $analysis[$item->source_id]['negative'] += 1;
-                    $total['negative'] += 1;
-                } else if ($item->classification_id === 3) {
-                    $analysis[$item->source_id]['neutral'] += 1;
-                    $total['neutral'] += 1;
-                }
+            }
+            if ($item->classification_id === 1) {
+                $analysis[$item->source_id]['positive'] += 1;
+                $total['positive'] += 1;
+            } else if ($item->classification_id === 2) {
+                $analysis[$item->source_id]['negative'] += 1;
+                $total['negative'] += 1;
+            } else if ($item->classification_id === 3) {
+                $analysis[$item->source_id]['neutral'] += 1;
+                $total['neutral'] += 1;
             }
 
         }
@@ -1531,10 +1429,10 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SummaryKeyword(Request $request, $only_data = false)
+    public function SummaryKeyword($items,$keywords, $only_data = false)
     {
 
-        $analysis_current = $this->factorySentimentScore($this->start_date, $this->end_date);
+        $analysis_current = $this->factorySentimentScore($items,$keywords);
 
         $data = [];
 
@@ -1623,16 +1521,9 @@ class SentimentDashboardController extends Controller
         return $n_format;
     }
 
-    private function raw_message_classification($campaign_id, $start_date, $end_date)
+    private function raw_message_classification($keywords, $classification_type_id, $classification_type_ids)
     {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
+        $keywordIds = $keywords->pluck('id')->all();
 
         $data = DB::table('messages')
             ->select([
@@ -1642,9 +1533,10 @@ class SentimentDashboardController extends Controller
                 'messages.message_datetime as date_m',
                 'messages.author as author',
                 'messages.source_id as source_id',
-                'messages.full_message as full_message',
                 'messages.message_type',
                 'messages.device as device',
+                'message_results.classification_id',
+                /*'messages.full_message as full_message',*//*
                 'messages.number_of_views as number_of_views',
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_shares as number_of_shares',
@@ -1653,19 +1545,22 @@ class SentimentDashboardController extends Controller
                 'campaigns.name AS campaign_name',
                 'keywords.name as keyword_name',
                 'classifications.classification_type_id',
-                'message_results.classification_id',
+
                 'classifications.name as classification_name',
                 'classifications.color as classification_color',
-                'sources.name as source_name',
-                'messages.created_at as created_at'
+                'sources.name as source_name',*/
+                'messages.created_at as created_at', DB::raw('COALESCE(number_of_comments, 0) +
+                    COALESCE(number_of_shares, 0) +
+                    COALESCE(number_of_reactions, 0) AS total_engagement'),
             ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereIn('keyword_id', $keywordIds);
+
+        if ($classification_type_ids) {
+            $data->whereIn('message_results.classification_type_id', $classification_type_ids);
+        } else {
+            $data->where('message_results.classification_type_id', $classification_type_id);
+        }
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
