@@ -72,18 +72,14 @@ class SentimentDashboardController extends Controller
         $resultPrevious = $this->raw_message_classification($keywords, 1, null)
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
 
-        /* $results = $this->raw_message_classification($keywords, null, [2,3])
-             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);*/
-
         return parent::handleRespond([
             "SentimentByDay" => $this->SentimentByDay($resultCurrent, $classifications, true),
             "SentimentByTime" => $this->SentimentByTime($resultCurrent, $classifications, true),
             "SentimentByDevice" => $this->SentimentByDevice($resultCurrent, $classifications, $sources, true),
             "SentimentByAccount" => $this->SentimentByAccount($resultCurrent, $classifications, true),
             "SentimentByChannel" => $this->SentimentByChannel($resultCurrent, $classifications, $sources, true),
-
-            /*"SentimentBullyType" => $this->SentimentBullyType($results, true),
-            "SentimentBullyLevel" => $this->SentimentBullyLevel($results, true),*/
+            "SentimentBullyType" => $this->SentimentBullyType($resultCurrent, $classifications, $keywords),
+            "SentimentBullyLevel" => $this->SentimentBullyLevel($resultCurrent, $classifications, $keywords),
             "SentimentScore" => $this->SentimentScore($resultCurrent, $resultPrevious, $keywords, true),
             "SentimentComparison" => $this->SentimentComparisonData($resultCurrent, $resultPrevious, $keywords),
         ]);
@@ -473,147 +469,91 @@ class SentimentDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function SentimentBullyLevel($raw, $only_data = false)
+    public function SentimentBullyLevel($items, $classification, $keywords)
     {
-
         $data['labels'] = [
             "Level 0",
             "Level 1",
             "Level 2",
             "Level 3",
         ];
-
-        $data['value'] = [
-            [
-                'id' => 1,
-                'keyword_name' => 'Negative',
-                'data' => [0, 0, 0, 0]
-            ],
-            [
-                'id' => 2,
-                'keyword_name' => 'Neutral',
-                'data' => [0, 0, 0, 0]
-            ],
-            [
-                'id' => 3,
-                'keyword_name' => 'Positive',
-                'data' => [0, 0, 0, 0]
-            ],
-        ];
-        $classification = Classification::whereIn('classification_type_id', [1, 2])->get();
-        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $raw = $this->raw_message_classification($keywords, null, [1, 2], $this->start_date, $this->end_date);
-        $items = $raw->get();
-
-
         $anylsys = [];
 
-        foreach ($items as $item) {
+        $group = $this->raw_message_classification($keywords, 3, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
+        foreach ($group as $item) {
             $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
-
-        foreach ($anylsys as $anylsy) {
-            $index_data = 0;
-            if ($anylsy[1] === 'Positive') {
-                $index_data = 2;
-            }
-
-            if ($anylsy[1] === 'Neutral') {
-                $index_data = 1;
-            }
-
-
-            $index_label = array_search($anylsy[3], $data['labels']);
-            $data['value'][$index_data]['data'][$index_label] += 1;
-
-        }
-
-        if ($only_data) {
-            return $data;
-        }
-
-        return parent::handleRespond($data);
-    }
-
-    public function SentimentBullyType($raw, $only_data = false)
-    {
-
-        $sentiment = Classification::where('classification_type_id', 2)->get();
-        $data['labels'] = [];
-
-        foreach ($sentiment as $item) {
-            $data['labels'][] = $item->name;
+        foreach ($items as $item) {
+            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
         $data['value'] = [
-            [
-                'id' => 1,
-                'keyword_name' => 'Negative',
-
-            ],
-            [
-                'id' => 2,
-                'keyword_name' => 'Neutral',
-
-            ],
-            [
-                'id' => 3,
-                'keyword_name' => 'Positive',
-
-            ],
+            ['data' => [0, 0, 0, 0]], // Level 0
+            ['data' => [0, 0, 0, 0]], // Level 1
+            ['data' => [0, 0, 0, 0]], // Level 2
+            ['data' => [0, 0, 0, 0]], // Level 3
         ];
 
-        for ($i = 0; $i < count($data['labels']); $i++) {
-            $data['value'][0]['data'][$i] = 0;
-            $data['value'][1]['data'][$i] = 0;
-            $data['value'][2]['data'][$i] = 0;
-        }
-
-        $raw = $this->raw_message_classification($this->campaign_id, $this->start_date, $this->end_date);
-        $raw = $raw->whereIn('classifications.classification_type_id', [1, 2]);
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
-        }
-
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
-
-        $items = $raw->get();
-
-
-        $anylsys = [];
-
-        foreach ($items as $item) {
-
-            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
-        }
-
-//        dd($anylsys);
         foreach ($anylsys as $anylsy) {
             $index_data = 0;
             if ($anylsy[1] === 'Positive') {
                 $index_data = 2;
+            } elseif ($anylsy[1] === 'Neutral') {
+                $index_data = 1;
             }
 
-            if ($anylsy[1] === 'Neutral') {
+            $index_label = array_search($anylsy[3], $data['labels']);
+            $data['value'][$index_data]['data'][$index_label] += 1;
+        }
+
+        return $data;
+    }
+
+
+    public function SentimentBullyType($items, $classification, $keywords)
+    {
+        $sentiments = Classification::where('classification_type_id', 2)->pluck('name')->toArray();
+
+        $data['labels'] = $sentiments;
+
+        $data['value'] = [
+            ['id' => 1, 'keyword_name' => 'Negative', 'data' => array_fill(0, count($sentiments), 0)],
+            ['id' => 2, 'keyword_name' => 'Neutral', 'data' => array_fill(0, count($sentiments), 0)],
+            ['id' => 3, 'keyword_name' => 'Positive', 'data' => array_fill(0, count($sentiments), 0)],
+        ];
+
+        $anylsys = [];
+
+        $group = $this->raw_message_classification($keywords, 2, null)
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+
+        foreach ($group as $item) {
+            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
+        }
+
+        foreach ($items as $item) {
+            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
+        }
+
+        foreach ($anylsys as $anylsy) {
+            $index_data = 0;
+
+            if ($anylsy[1] === 'Positive') {
+                $index_data = 2;
+            } elseif ($anylsy[1] === 'Neutral') {
                 $index_data = 1;
             }
 
             $index_label = array_search($anylsy[2], $data['labels']);
             $data['value'][$index_data]['data'][$index_label] += 1;
-
-        }
-
-        if ($only_data) {
-            return $data;
         }
 
         return parent::handleRespond($data);
     }
+
 
 
     public function periodAndComparison(Request $request)
@@ -1496,6 +1436,7 @@ class SentimentDashboardController extends Controller
                 'messages.message_type',
                 'messages.device as device',
                 'message_results.classification_id',
+                'message_results.classification_type_id',
                 'messages.number_of_views as number_of_views',
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_shares as number_of_shares',
