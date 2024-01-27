@@ -536,7 +536,7 @@ class SentimentDashboardController extends Controller
             $data['value'][$index_data]['data'][$index_label] += 1;
         }
 
-        return parent::handleRespond($data);
+        return $data ;
     }
 
 
