@@ -398,14 +398,17 @@ class LevelThreeTableController extends Controller
             $request->report_number === '3.2.009'
 
         ) {
+            $classificationId = null;
 
             if ($label === 'Hate Speech') {
-                $label = 'HateSpeech';
+                $classificationId = 8;
             } else if ($label === 'No Bully') {
-                $label = 'NoBully';
+                $classificationId = 4;
             } else if ($label === 'Violence') {
-                $label = 'Violence';
+                $classificationId = 9;
             }
+            if ($classificationId)
+                $raw->where('message_results.classification_id', $classificationId);
             /*$classificationIds = DB::table('classifications')
                 ->select('classifications.id')
                 ->where('classifications.name', '=', $label)
