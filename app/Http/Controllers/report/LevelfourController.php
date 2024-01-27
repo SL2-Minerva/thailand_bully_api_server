@@ -217,25 +217,25 @@ class LevelfourController extends Controller
             $limit = $request->limit;
         }
 
-        if ($message_id) {
-            $raw = $this->message($keywordIds, $this->campaign_id, $this->start_date, $this->end_date, $this->report_number)->limit(1000);
-        } else {
-            $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
-                ->where('message_results.classification_type_id', $type)
-                ->where('reference_message_id', '')->limit(1000);
-        }
 
         if ($is_child) {
             $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
                 //->where('reference_message_id', '!=','')
                 ->whereIn('messages.reference_message_id', $messageId);
-                //->orderBy("total_engagement", "desc")
-
+            //->orderBy("total_engagement", "desc")
             //->limit(30000);
+        } else {
+            if ($message_id) {
+                $raw = $this->message($message_id, $type);
+                $raw->where("message_results.classification_type_id", $type);
+            } else {
+                $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
+                    ->where('message_results.classification_type_id', $type)
+                    ->where('reference_message_id', '')->limit(1000);
+            }
+            error_log($raw->toSql());
         }
-
-
 
 
         if ($message_id && !$is_child) {
@@ -277,8 +277,8 @@ class LevelfourController extends Controller
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement *5 : 0;
-            error_log($influent_rate);
+            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 5 : 0;
+            error_log(json_encode($item));
             $data_push = [
                 "id" => $item->message_id,
                 "label_name" => $item->author,
@@ -317,64 +317,32 @@ class LevelfourController extends Controller
         return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
     }
 
-    private function message($keywordIds, $campaign_id, $start_date, $end_date, $report_number = null)
+    private function message($messageId, $classificationType)
     {
 
-        if ($report_number) {
+        //->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
-            $raw = DB::table('messages')
-                ->select([
-                    'messages.keyword_id as keyword_id',
-                    'messages.source_id as source_id',
-                    'messages.message_datetime as date_m',
-                    'messages.number_of_views as number_of_views',
-                    'messages.number_of_comments as number_of_comments',
-                    'messages.number_of_shares as number_of_shares',
-                    'messages.number_of_reactions as number_of_reactions',
-                    'messages.reference_message_id as reference_message_id',
-                    'message_results.classification_id as classification_id',
-                    'messages.author as author',
-                    'messages.message_id as message_id',
-                    'messages.link_message as link_message',
-                    DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
-                    /*'sources.name as source_name',
-                    'keywords.name as keyword_name',
-                    'keywords.campaign_id AS campaign_id',
-                    'campaigns.name AS campaign_name',
-                    'classifications.name as classification_name',
-                    'classifications.color as classification_color',*/
-                ])
-                /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
-                //->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-                ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-                //->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
-                //->where('campaigns.id', $campaign_id)
-                ->whereIn('keyword_id', $keywordIds)
-                ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-        } else {
-            $raw = DB::table('messages')
-                ->select([
-                    'messages.keyword_id as keyword_id',
-                    /*'keywords.name as keyword_name',
-                    'keywords.campaign_id AS campaign_id',
-                    'campaigns.name AS campaign_name',*/
-                    'messages.source_id as source_id',
-                    /*'sources.name as source_name',*/
-                    'messages.message_datetime as date_m',
-                    'messages.link_message as link_message',
 
-                ])
-                /*                ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-                                ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-                                ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
-
-                /*->where('campaigns.id', $campaign_id)*/
-                ->whereIn('keyword_id', $keywordIds)
-                ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-        }
-
-        return $raw;
+        return DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'messages.source_id as source_id',
+                'messages.message_datetime as date_m',
+                'messages.number_of_views as number_of_views',
+                'messages.number_of_comments as number_of_comments',
+                'messages.number_of_shares as number_of_shares',
+                'messages.number_of_reactions as number_of_reactions',
+                'messages.reference_message_id as reference_message_id',
+                'message_results.classification_id as classification_id',
+                'messages.author as author',
+                'messages.message_id as message_id',
+                'messages.link_message as link_message',
+                DB::raw('COALESCE(number_of_comments, 0) +
+                    COALESCE(number_of_shares, 0) +
+                    COALESCE(number_of_reactions, 0) AS total_engagement'),
+            ])
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
+            ->where('messages.message_id', $messageId);
     }
 
     private function message_root($keywordIds, $campaign_id, $start_date, $end_date)
