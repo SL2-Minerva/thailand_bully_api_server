@@ -257,7 +257,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('bully-by', [BullyDashboardController::class, 'bullyBy']);
             Route::get('daily-type-by', [BullyDashboardController::class, 'dailyTypeBy']);
             Route::get('bully-type-by', [BullyDashboardController::class, 'bullyTypeBy']);
-            Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
+            //Route::get('bully-chart-by', [BullyDashboardController::class, 'bullyChartBy']);
             Route::get('/level-three/', [LevelThreeBullyDashboardController::class, 'report']);
         });
         Route::group(['prefix' => 'level-three-table'], function () {

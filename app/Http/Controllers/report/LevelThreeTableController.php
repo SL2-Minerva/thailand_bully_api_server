@@ -122,7 +122,10 @@ class LevelThreeTableController extends Controller
 
             if ($request->report_number === '4.2.002') {
                 //$total->where('keywords.name', $Llabel);
-                $raw->where('keywords.name', $Llabel);
+                $keyword = Keyword::where('name', $Llabel)->first();
+                if ($keyword) {
+                    $raw->where('messages.keyword_id', $keyword->id);
+                }
             }
 
             if ($request->report_number === '4.2.012') {
