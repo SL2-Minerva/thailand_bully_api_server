@@ -158,13 +158,12 @@ class LevelfourController extends Controller
 
         $messageIds = [];
         foreach ($roots["nodes"] as $node) {
-            //error_log(json_encode($node));
             $messageIds[] = $node["id"];
         }
 
         $child = $this->getNode($keywords, $request->message_id, true, $type, $messageIds);
-        $nodes = array_merge($roots['nodes'] ?? [], $child['nodes'] ?? []);
 
+        $nodes = array_merge($roots['nodes'] ?? [], $child['nodes'] ?? []);
         $data = ['nodes' => null, 'edges' => null];
 
         $check = [];
@@ -189,9 +188,6 @@ class LevelfourController extends Controller
                         "link_message" => $node['link_message']
                     ];
                 }
-
-
-//                $check[] = $node;
             }
 
 
@@ -206,19 +202,23 @@ class LevelfourController extends Controller
         $keywordIds = $keywords->pluck('id')->all();
 
         if ($is_child) {
-            $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
+            $raw = $this->message()
                 ->where('message_results.classification_type_id', $type)
-                ->whereIn('messages.reference_message_id', $messageId);
+                //->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+                ->where('messages.reference_message_id', $messageId);
         } else {
             if ($message_id) {
-                $raw = $this->message($message_id, $type);
+                $raw = $this->message();
                 $raw->where("message_results.classification_type_id", $type);
+                $raw->where("messages.message_id", $message_id);
             } else {
                 $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                     ->where('message_results.classification_type_id', $type)
-                    ->where('reference_message_id', '')->limit(1500);
+                    ->where('messages.reference_message_id', '')->limit(1500)
+                    ->groupBy("messages.message_id");
             }
         }
+
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -232,7 +232,7 @@ class LevelfourController extends Controller
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
             $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 5 : 0;
-            error_log(json_encode($item));
+
             $data_push = [
                 "id" => $item->message_id,
                 "label_name" => $item->author,
@@ -271,7 +271,7 @@ class LevelfourController extends Controller
         return round($influent_rate) != 0 ? round($influent_rate) * 10 : 80;
     }
 
-    private function message($messageId, $classificationType)
+    private function message()
     {
 
         //->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
@@ -295,14 +295,13 @@ class LevelfourController extends Controller
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'),
             ])
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->where('messages.message_id', $messageId);
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id');
     }
 
     private function message_root($keywordIds, $start_date, $end_date)
     {
 
-        $raw = DB::table('messages')
+        return DB::table('messages')
             ->select([
                 'messages.message_id',
                 'messages.reference_message_id',
@@ -336,10 +335,7 @@ class LevelfourController extends Controller
             */ ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             //->where('campaigns.id', $campaign_id)
             ->whereIn('keyword_id', $keywordIds)
-            ->groupBy("messages.message_id")
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-
-        return $raw;
     }
 
 }

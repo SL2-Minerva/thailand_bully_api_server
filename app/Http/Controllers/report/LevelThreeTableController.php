@@ -484,7 +484,6 @@ class LevelThreeTableController extends Controller
 
         $total = $raw->count();
         $items = $raw->offset($offset)->limit($limit)->get();
-        error_log($raw->toSql());
         // $items = $raw->get();
 
         // $parents = [];
