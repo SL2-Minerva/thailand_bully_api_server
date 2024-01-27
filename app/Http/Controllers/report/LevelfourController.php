@@ -153,7 +153,8 @@ class LevelfourController extends Controller
 
     private function getSNAbyType($request, $type = 1)
     {
-        $roots = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, false, $type, []);
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $roots = $this->getNode($keywords, $request->message_id, false, $type, []);
 
         $messageIds = [];
         foreach ($roots["nodes"] as $node) {
@@ -161,8 +162,8 @@ class LevelfourController extends Controller
             $messageIds[] = $node["id"];
         }
 
-        $childs = $this->getNode($request, $request->message_id, $this->start_date, $this->end_date, true, $type, $messageIds);
-        $nodes = array_merge($roots['nodes'] ?? [], $childs['nodes'] ?? []);
+        $child = $this->getNode($keywords, $request->message_id, true, $type, $messageIds);
+        $nodes = array_merge($roots['nodes'] ?? [], $child['nodes'] ?? []);
 
         $data = ['nodes' => null, 'edges' => null];
 
@@ -199,81 +200,34 @@ class LevelfourController extends Controller
         return $data;
     }
 
-    private function getNode($request, $message_id, $start_date, $end_date, $is_child = false, $type = 1, $messageId)
+    private function getNode($keywords, $message_id, $is_child, $type, $messageId)
     {
 
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
-
-        $limit = 1000;
-
-        if ($request->limit) {
-            $limit = $request->limit;
-        }
-
+        $keywordIds = $keywords->pluck('id')->all();
 
         if ($is_child) {
-            $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
+            $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                 ->where('message_results.classification_type_id', $type)
-                //->where('reference_message_id', '!=','')
                 ->whereIn('messages.reference_message_id', $messageId);
-            //->orderBy("total_engagement", "desc")
-            //->limit(30000);
         } else {
             if ($message_id) {
                 $raw = $this->message($message_id, $type);
                 $raw->where("message_results.classification_type_id", $type);
             } else {
-                $raw = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
+                $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                     ->where('message_results.classification_type_id', $type)
-                    ->where('reference_message_id', '')->limit(1000);
+                    ->where('reference_message_id', '')->limit(1500);
             }
-            error_log($raw->toSql());
         }
-
-
-        if ($message_id && !$is_child) {
-            $raw = $raw->where('messages.message_id', $message_id);
-        }
-
-        if ($message_id && $is_child) {
-            $raw = $raw->where('reference_message_id', $message_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $raw->whereIn('source_id', $source_ids);
-        }
-
-        // $raw_total = $this->message_child($this->campaign_id, $this->start_date, $this->end_date);
-        $raw_total = $this->message_root($keywordIds, $this->campaign_id, $this->start_date, $this->end_date)
-            ->where('message_results.classification_type_id', $type)
-            ->where('reference_message_id', '!=', '');
-
-        //$total_interaction_from = (int)$raw_total->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
-            $raw_total->where('source_id', $this->source_id);
-
-        }
-
-        if ($this->keyword_id) {
-            $raw->whereIn('keyword_id', $this->keyword_id);
         }
 
         $items = $raw->get();
-
         $data = [];
         //$checkparent = [];
-        $keywordName = DB::table('keywords')->where("status", "=", 1)->get();
-        //$campaign = DB::table('campaigns')->where("id", "=", $this->campaign_id)->get()->first();
+
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
@@ -345,7 +299,7 @@ class LevelfourController extends Controller
             ->where('messages.message_id', $messageId);
     }
 
-    private function message_root($keywordIds, $campaign_id, $start_date, $end_date)
+    private function message_root($keywordIds, $start_date, $end_date)
     {
 
         $raw = DB::table('messages')
