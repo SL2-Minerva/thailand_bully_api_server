@@ -152,8 +152,13 @@ class LevelThreeTableController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
-        $keywordIds = $keywords->pluck('id')->all();
-        $raw = DB::table('messages')->whereIn('messages.keyword_id', $keywordIds);
+
+        $raw = DB::table('messages');
+        if ($keywords) {
+            $keywordIds = $keywords->pluck('id')->all();
+            if ($keywordIds)
+                $raw->whereIn('messages.keyword_id', $keywordIds);
+        }
 
         if ($request->report_number === '5.2.008' ||
             $request->report_number === '5.2.009' ||
@@ -327,17 +332,11 @@ class LevelThreeTableController extends Controller
 
             if ($request->label === 'Before 6 AM') {
                 $raw->whereRaw('HOUR(message_datetime) < ?', [6]);
-            }
-
-            if ($request->label === '6 AM-12 PM') {
+            } else if ($request->label === '6 AM-12 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [6, 12]);
-            }
-
-            if ($request->label === '12 PM-6 PM') {
+            } else if ($request->label === '12 PM-6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [12, 18]);
-            }
-
-            if ($request->label === 'After 6 PM') {
+            } else if ($request->label === 'After 6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
             }
         }
