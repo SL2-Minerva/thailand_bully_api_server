@@ -106,6 +106,27 @@ class LevelThreeTableController extends Controller
         return $raw;
     }
 
+    private function parseTarget($label, $raw)
+    {
+
+        if ($label == "") {
+            return $raw;
+        }
+
+        $target = "";
+        if ($label === 'Andriod' || $label === 'Android') {
+            $target = 'android';
+        } else if ($label === 'Iphone') {
+            $target = 'iphone';
+        } else if ($label === 'Web App' || $label === 'Web+App') {
+            $target = 'website';
+        }
+
+        if ($target != "")
+            $raw->where('device', $target);
+        return $raw;
+    }
+
     public
     function messageLevelThree(Request $request)
     {
@@ -226,6 +247,9 @@ class LevelThreeTableController extends Controller
 
         $raw = $this->parseLabelToEngagement($label, $raw);
         $raw = $this->parseLabelToEngagement($Llabel, $raw);
+        $raw = $this->parseTarget($label, $raw);
+        $raw = $this->parseTarget($Llabel, $raw);
+
 
         if ($request->report_number === '3.2.013' ||
             $request->report_number === '3.2.014'
@@ -308,34 +332,6 @@ class LevelThreeTableController extends Controller
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
             }
         }
-
-        //device Format
-        if ($request->report_number === '2.2.005' ||
-            $request->report_number === '3.2.005' ||
-            $request->report_number === '4.2.005' ||
-            $request->report_number === '4.2.015' ||
-            $request->report_number === '5.2.005' ||
-            $request->report_number === '6.2.005' ||
-            $request->report_number === '6.2.015'
-        ) {
-
-            $target = "";
-            if ($label === 'Andriod' || $label === 'Android') {
-                $target = 'android';
-            }
-
-            if ($label === 'Iphone') {
-                $target = 'iphone';
-            }
-
-            if ($label === 'Web App' || $label === 'Web+App') {
-                $target = 'website';
-            }
-
-            if ($target != "")
-                $raw->where('device', $target);
-        }
-
         //user_typr
         if ($request->report_number === '2.2.006' ||
             $request->report_number === '3.2.006' ||
