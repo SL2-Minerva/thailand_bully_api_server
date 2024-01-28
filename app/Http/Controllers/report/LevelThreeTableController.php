@@ -262,16 +262,17 @@ class LevelThreeTableController extends Controller
         $raw = $this->parseLabelToEngagement($Llabel, $raw);
         $raw = $this->parseTarget($label, $raw);
         $raw = $this->parseTarget($Llabel, $raw);
-        
+
         if ($request->sort && $request->field) {
+            error_log("sort:" . $request->sort . " / field :" . $request->field);
             $field = $request->field;
             $field_table = match ($field) {
                 'message_type' => "messages.message_type",
                 'author' => "messages.author",
                 'date' => "messages.message_datetime",
                 'device' => "messages.device",
-                'source' => "messages.sources_id",
-                'bully_type', 'sentiment' => "message_results.classification_id",
+                'source' => "messages.source_id",
+                'bully_level', 'bully_type', 'sentiment' => "message_results.classification_id",
                 default => "total_engagement",
             };
             $raw->orderBy($field_table, $request->sort);
