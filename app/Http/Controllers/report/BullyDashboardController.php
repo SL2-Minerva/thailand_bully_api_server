@@ -483,13 +483,13 @@ class BullyDashboardController extends Controller
         $current = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 2)->get();
         $currentSentiment = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 1)->get();
 
-        //$previous = $this->raw_message_classification_name($keywords, $this->start_date_previous, $this->end_date_previous, 3)->get();
+        $previous = $this->raw_message_classification_name($keywords, $this->start_date_previous, $this->end_date_previous, 2)->get();
 
-        /*$prcentage_of_messages_current['prcentage_of_messages_current'] = $this->PercentageToCal($current, $classifications, $this->start_date, $this->end_date);
+        $prcentage_of_messages_current['prcentage_of_messages_current'] = $this->PercentageToCal($current, $classifications, $this->start_date, $this->end_date);
         $prcentage_of_messages_current['prcentage_of_messages_previous'] = $this->PercentageToCal($previous, $classifications, $this->start_date_previous, $this->end_date_previous);
 
 
-        $data['bully_type_percentage'] = $prcentage_of_messages_current;*/
+        $data['bully_type_percentage'] = $prcentage_of_messages_current;
         $data['bully_type_daily'] = $this->BullyTypeDailyGroup($current, $classifications, $sources, $keywords);
         $data['bully_type_by_day'] = $this->BullyTypeByDayGroup($current, $classifications);
         $data['bully_type_by_time'] = $this->BullyTypeByTimeGroup($current, $classifications);
@@ -906,85 +906,65 @@ class BullyDashboardController extends Controller
 
     private function BullyLevelLevelGroup($items, $classifications, $sourceArr)
     {
+        $sources = parent::listSource();
+        $analysis = [];
 
-        $soures = parent::listSource();
-        $anylsys = [];
-        $anylsys['all'] = [
+        $analysis['all'] = [
             'id' => -1,
             'keyword_name' => "all",
-            'total' => 0
+            'total' => 0,
+            'value' => []
         ];
 
-        for ($i = 0; $i < count($soures['labels']); $i++) {
-            $anylsys['all']['value'][$soures['labels'][$i]]['id'] = $i;
-            $anylsys['all']['value'][$soures['labels'][$i]]['channel'] = $soures['labels'][$i];
-            $anylsys['all']['value'][$soures['labels'][$i]]['percentage'] = 0;
-            $anylsys['all']['value'][$soures['labels'][$i]]['total'] = 0;
+        foreach ($sources['labels'] as $label) {
+            $analysis['all']['value'][$label] = [
+                'id' => array_search($label, $sources['labels']),
+                'channel' => $label,
+                'percentage' => 0,
+                'total' => 0
+            ];
         }
-
 
         foreach ($items as $item) {
             $sourceName = $this->matchSourceName($sourceArr, $item->source_id);
-            $classification_name = $this->matchClassificationName($classifications, $item->classification_id);
-            if (isset($anylsys['all'])) {
-                /*$anylsys['all']["campaign_id"] = $item->campaign_id;
-                $anylsys['all']["campaign_name"] = $item->campaign_name;*/
-                $anylsys['all']['total'] += 1;
-                $anylsys['all']['value'][$classification_name]['total'] += 1;
-            }
+            $classificationName = $this->matchClassificationName($classifications, $item->classification_id);
 
-
-            if (!isset($anylsys[$classification_name])) {
-                $anylsys[$classification_name] = [
+            if (!isset($analysis[$classificationName])) {
+                $analysis[$classificationName] = [
                     "id" => $item->classification_id,
-                    "keyword_name" => $classification_name,
-                    /*"campaign_id" => $item->campaign_id,
-                    "campaign_name" => $item->campaign_name,*/
+                    "keyword_name" => $classificationName,
                     "total" => 0,
+                    "value" => []
                 ];
 
-                for ($i = 0; $i < count($soures['labels']); $i++) {
-                    $anylsys[$classification_name]['value'][$soures['labels'][$i]]['id'] = $i;
-                    $anylsys[$classification_name]['value'][$soures['labels'][$i]]['channel'] = $soures['labels'][$i];
-                    $anylsys[$classification_name]['value'][$soures['labels'][$i]]['total'] = 0;
-                    $anylsys[$classification_name]['value'][$soures['labels'][$i]]['percentage'] = 0;
+                foreach ($sources['labels'] as $label) {
+                    $analysis[$classificationName]['value'][$label] = [
+                        'id' => array_search($label, $sources['labels']),
+                        'channel' => $label,
+                        'total' => 0,
+                        'percentage' => 0
+                    ];
                 }
-
             }
-            $anylsys[$classification_name]['value'][$sourceName]['total'] += 1;
-            $anylsys[$classification_name]['total'] += 1;
+
+            $analysis[$classificationName]['value'][$sourceName]['total'] += 1;
+            $analysis[$classificationName]['total'] += 1;
+            $analysis['all']['value'][$sourceName]['total'] += 1;
+            $analysis['all']['total'] += 1;
         }
 
-        $data = [];
-
-        foreach ($anylsys as $key => $item) {
+        foreach ($analysis as &$item) {
             $total = $item['total'];
-            $data[$key] = [
-                'id' => $item['id'],
-                'keyword_name' => $item['keyword_name'],
-                // 'campaign_id' => $item['campaign_id'],
-                // 'campaign_name' => $item['campaign_name'],
-                'value' => $item['value'],
-                'total' => $item['total'],
-            ];
-
-            foreach ($item['value'] as $index => $value) {
-                $data[$key]['value'][$index]['percentage'] = $total ? ($value['total'] / $total) * 100 : 0;
+            foreach ($item['value'] as &$value) {
+                $value['percentage'] = $total ? ($value['total'] / $total) * 100 : 0;
             }
-
+            unset($value); // Unset the reference variable
         }
+        unset($item); // Unset the reference variable
 
-        if ($data) {
-            $data = array_values($data);
-        }
-
-        foreach ($data as $key => $item) {
-            $data[$key]['value'] = array_values($item['value']);
-        }
-
-        return $data;
+        return array_values($analysis);
     }
-
+    
     private function BullyTableTypeGroup($items, $classifications, $sourceArr)
     {
         $soures = parent::listSource();
