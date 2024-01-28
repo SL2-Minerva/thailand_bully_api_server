@@ -433,8 +433,10 @@ class LevelThreeTableController extends Controller
 
         ) {
             // dd($raw->get());
-            //    $raw->where('sources.name', $Llabel);
-            //$total->where('sources.name', $Llabel);
+            $sourceId = $this->matchSource($source, $Llabel);
+            //$sourceId = $s->where('id', $Llabel);
+            if ($sourceId)
+                $total->where('sources_id', $sourceId);
         }
 
         if ($request->report_number === '3.2.013' ||
