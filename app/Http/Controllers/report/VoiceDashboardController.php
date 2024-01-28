@@ -489,7 +489,7 @@ class VoiceDashboardController extends Controller
             if (!isset($data['value'][$item->keyword_id])) {
                 $data['value'][$item->keyword_id] = [
                     'id' => $item->keyword_id,
-                    'keyword_name' =>$this->matchKeywordName($keywords, $item->keyword_id),
+                    'keyword_name' => $this->matchKeywordName($keywords, $item->keyword_id),
                     /*'campaign_id' => $item->campaign_id,
                     'campaign_name' => $item->campaign_name,*/
                 ];
@@ -728,11 +728,24 @@ class VoiceDashboardController extends Controller
     }
 
 
-    public function DayTimeSentiment($raw, $classifications, $only_Data = false)
+    public function DayTimeSentiment( $keywords, $only_Data = false)
     {
         $data = null;
-        $items = $raw->get();
+        $items = $this->raw_messageJoinMessageResult($keywords, $this->start_date, $this->end_date)
+            ->where('message_results.classification_type_id', 1)
+            ->get();
+        $classifications = Classification::where('classification_type_id', 1)->get();
+        foreach ($classifications as $classification) {
+            $data['day_value'][$classification->name] = [
+                "name" => $classification->name,
+                "data" => array_fill(0, 7, 0) // Initialize array with 7 elements, all set to 0
+            ];
 
+            $data['time_value'][$classification->name] = [
+                "name" => $classification->name,
+                "data" => array_fill(0, 25, 0) // Initialize array with 25 elements, all set to 0
+            ];
+        }
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
             $date_h = (int)Carbon::parse($item->date_m)->format('H');
@@ -799,11 +812,13 @@ class VoiceDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function DayTimeLevel($raw, $classifications, $only_Data = false)
+    public function DayTimeLevel( $keywords, $only_Data = false)
     {
         $data = null;
-        $items = $raw->get();
-
+        $items = $this->raw_messageJoinMessageResult($keywords, $this->start_date, $this->end_date)
+            ->where('message_results.classification_type_id', 3)
+            ->get();
+        $classifications = Classification::where('classification_type_id', 3)->get();
         // Initialize data structure
         foreach ($classifications as $classification) {
             $data['day_value'][$classification->name] = [
@@ -850,11 +865,13 @@ class VoiceDashboardController extends Controller
     }
 
 
-    public function DayTimeType($raw, $classifications, $only_Data = false)
+    public function DayTimeType( $keywords, $only_Data = false)
     {
-
         $data = null;
-        $items = $raw->get();
+        $items = $this->raw_messageJoinMessageResult($keywords, $this->start_date, $this->end_date)
+            ->where('message_results.classification_type_id', 2)
+            ->get();
+        $classifications = Classification::where('classification_type_id', 2)->get();
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
@@ -945,11 +962,12 @@ class VoiceDashboardController extends Controller
 
         $classifications = self::getClassificationMaster();
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date)->get();
+
         $data = [
             'DayTimeComparison' => $this->DayTimeComparison($raw, $sources, true),
-            //'DayTimeSentiment' => $this->DayTimeSentiment($items1, $classifications, true),
-            //'DayTimeLevel' => $this->DayTimeLevel($items3, $classifications, true),
-            //'DayTimeType' => $this->DayTimeType($items2, $classifications, true),*/
+            'DayTimeSentiment' => $this->DayTimeSentiment( $keywords, true),
+            'DayTimeLevel' => $this->DayTimeLevel( $keywords, true),
+            'DayTimeType' => $this->DayTimeType( $keywords, true),
         ];
 
         return parent::handleRespond($data);
