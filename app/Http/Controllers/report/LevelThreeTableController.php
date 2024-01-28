@@ -188,9 +188,7 @@ class LevelThreeTableController extends Controller
                 if ($Llabel === 'Share') {
                     $raw->where('number_of_shares', '>', 0);
                 }
-
             }
-
         }
 
         // time Format
@@ -534,15 +532,15 @@ class LevelThreeTableController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-                'message_results.classification_type_id',
-                'message_results.classification_id',
+                /*'message_results.classification_type_id',
+                'message_results.classification_id',*/
                 'messages.created_at AS created_at',
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
 
             ])
-            ->join('message_results', 'message_results.message_id', '=', 'messages.id')
+            /*->join('message_results', 'message_results.message_id', '=', 'messages.id')*/
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
@@ -565,27 +563,10 @@ class LevelThreeTableController extends Controller
                 'bully_type', 'sentiment' => "message_results.classification_id",
                 default => "total_engagement",
             };
-
             $data->orderBy($field_table, $request->sort);
-
         } else {
             $data->orderByDesc('total_engagement');
         }
-
-        //error_log($classification_name);
-        /*  if ($classification) {
-              $classificationId = DB::table("classifications")
-                  ->select("id")
-                  ->where('name', $classification)
-                  ->get()
-                  ->pluck('id')
-                  ->all();
-              $data->where('message_results.classification_id', $classificationId);
-          }*/
-
-        // if ($this->source_id) {
-        //     $data->where('source_id', $this->source_id);
-        // }
 
         if ($request->report_number !== '3.2.013' &&
             $request->report_number !== '3.2.014' &&
@@ -627,10 +608,14 @@ class LevelThreeTableController extends Controller
 
             ) {
                 $Llabel = self::parseLabelClassification($Llabel);
+                $data->select([
+                    'message_results.classification_type_id',
+                    'message_results.classification_id',]);
+                $data->join('message_results', 'message_results.message_id', '=', 'messages.id');
                 if ($Llabel) {
                     $data->where('message_results.classification_id', $Llabel);
                 } else {
-                    $data->whereIn('message_results.classification_id', ['1', '2', '3']);
+                    $data->where('message_results.classification_type_id', 1);
                 }
             }
         }
@@ -657,7 +642,11 @@ class LevelThreeTableController extends Controller
             // $request->report_number === '5.2.008' ||
             // $request->report_number === '5.2.009'
         ) {
+            $data->select([
+                'message_results.classification_type_id',
+                'message_results.classification_id',]);
             $Llabel = self::parseLabelClassification($Llabel);
+            $data->join('message_results', 'message_results.message_id', '=', 'messages.id');
             if ($Llabel) {
                 $data->where('message_results.classification_id', $Llabel);
             }

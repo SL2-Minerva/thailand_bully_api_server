@@ -188,8 +188,8 @@ class VoiceDashboardController extends Controller
     {
         $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
         $sources = $this->getAllSource();
-        $classifications = self::getClassificationMaster();
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
+        //error_log($raw->toSql());
         $data = [];
         $items = $raw->get();
 
