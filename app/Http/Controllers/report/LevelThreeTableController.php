@@ -122,6 +122,114 @@ class LevelThreeTableController extends Controller
             $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
         }
 
+        if ($request->report_number === '3.2.008' ||
+            $request->report_number === '3.2.007' ||
+            $request->report_number === '3.2.009'
+
+        ) {
+            $label = self::parseLabelClassification($label);
+            if ($label) {
+                $raw->where('message_results.classification_id', $label);
+            }
+        }
+
+        if ($request->report_number === '3.2.002' ||
+            $request->report_number === '3.2.003' ||
+            $request->report_number === '3.2.004' ||
+            $request->report_number === '3.2.005' ||
+            $request->report_number === '3.2.006' ||
+            $request->report_number === '3.2.007' ||
+            $request->report_number === '3.2.008' ||
+            $request->report_number === '3.2.009'
+
+        ) {
+            // dd($raw->get());
+            $sourceId = $this->matchSourceByName($source, $Llabel);
+            if ($sourceId) {
+                $raw->where('messages.source_id', $sourceId->id);
+            }
+        }
+
+
+        if ($request->report_number !== '3.2.013' &&
+            $request->report_number !== '3.2.014' &&
+            $request->report_number !== '3.2.008' &&
+            $request->report_number !== '3.2.007' &&
+            $request->report_number !== '3.2.009'&&
+            $request->report_number !== '5.2.002' &&
+            $request->report_number !== '5.2.003' &&
+            $request->report_number !== '5.2.004' &&
+            $request->report_number !== '5.2.005' &&
+            $request->report_number !== '5.2.006' &&
+            $request->report_number !== '5.2.007' &&
+            $request->report_number !== '5.2.008' &&
+            $request->report_number !== '5.2.009' &&
+            $request->report_number !== '6.2.002' &&
+            $request->report_number !== '6.2.003' &&
+            $request->report_number !== '6.2.004' &&
+            $request->report_number !== '6.2.005' &&
+            $request->report_number !== '6.2.006' &&
+            $request->report_number !== '6.2.007' &&
+            $request->report_number !== '6.2.008' &&
+            $request->report_number !== '6.2.012' &&
+            $request->report_number !== '6.2.013' &&
+            $request->report_number !== '6.2.014' &&
+            $request->report_number !== '6.2.015' &&
+            $request->report_number !== '6.2.016' &&
+            $request->report_number !== '6.2.017'
+        ) {
+            if ($request->label === 'Positive' ||
+                $request->label === 'Neutral' ||
+                $request->label === 'Negative' ||
+                $request->label === 'Level 0' ||
+                $request->label === 'Level 1' ||
+                $request->label === 'Level 2' ||
+                $request->label === 'Level 3' ||
+                $request->label === 'No Bully' ||
+                $request->label === 'Gossip' ||
+                $request->label === 'Harassment' ||
+                $request->label === 'Exclusion' ||
+                $request->label === 'Hate Speech' ||
+                $request->label === 'Violence'
+
+            ) {
+                $Llabel = self::parseLabelClassification($Llabel);
+                if ($Llabel) {
+                    $raw->where('message_results.classification_id', $Llabel);
+                } else {
+                    $raw->whereIn('message_results.classification_id', ['1', '2', '3']);
+                }
+            }
+        }
+
+        if ($request->report_number === '5.2.002' ||
+            $request->report_number === '5.2.003' ||
+            $request->report_number === '5.2.004' ||
+            $request->report_number === '5.2.005' ||
+            $request->report_number === '5.2.006' ||
+            $request->report_number === '5.2.007' ||
+            $request->report_number === '6.2.002' ||
+            $request->report_number === '6.2.003' ||
+            $request->report_number === '6.2.004' ||
+            $request->report_number === '6.2.005' ||
+            $request->report_number === '6.2.006' ||
+            $request->report_number === '6.2.007' ||
+            $request->report_number === '6.2.008' ||
+            $request->report_number === '6.2.012' ||
+            $request->report_number === '6.2.013' ||
+            $request->report_number === '6.2.014' ||
+            $request->report_number === '6.2.015' ||
+            $request->report_number === '6.2.016' ||
+            $request->report_number === '6.2.017'
+            // $request->report_number === '5.2.008' ||
+            // $request->report_number === '5.2.009'
+        ) {
+            $Llabel = self::parseLabelClassification($Llabel);
+            if ($Llabel) {
+                $data->where('message_results.classification_id', $Llabel);
+            }
+        }
+
 
         if ($request->message_id) {
             $raw->where('messages.message_id', $request->message_id);
@@ -384,34 +492,6 @@ class LevelThreeTableController extends Controller
                 $raw->where('message_results.classification_id', $Llabel);
         }
 
-        if ($request->report_number === '3.2.008' ||
-            $request->report_number === '3.2.007' ||
-            $request->report_number === '3.2.009'
-
-        ) {
-            $label = self::parseLabelClassification($label);
-            if ($label) {
-                $raw->where('message_results.classification_id', $label);
-            }
-        }
-
-        if ($request->report_number === '3.2.002' ||
-            $request->report_number === '3.2.003' ||
-            $request->report_number === '3.2.004' ||
-            $request->report_number === '3.2.005' ||
-            $request->report_number === '3.2.006' ||
-            $request->report_number === '3.2.007' ||
-            $request->report_number === '3.2.008' ||
-            $request->report_number === '3.2.009'
-
-        ) {
-            // dd($raw->get());
-            $sourceId = $this->matchSourceByName($source, $Llabel);
-            if ($sourceId) {
-                $raw->where('messages.source_id', $sourceId->id);
-            }
-        }
-
         if ($request->report_number === '3.2.013' ||
             $request->report_number === '3.2.014'
         ) {
@@ -626,83 +706,6 @@ class LevelThreeTableController extends Controller
         // if ($this->source_id) {
         //     $data->where('source_id', $this->source_id);
         // }
-
-        /*if ($request->report_number !== '3.2.013' &&
-            $request->report_number !== '3.2.014' &&
-            $request->report_number !== '5.2.002' &&
-            $request->report_number !== '5.2.003' &&
-            $request->report_number !== '5.2.004' &&
-            $request->report_number !== '5.2.005' &&
-            $request->report_number !== '5.2.006' &&
-            $request->report_number !== '5.2.007' &&
-            $request->report_number !== '5.2.008' &&
-            $request->report_number !== '5.2.009' &&
-            $request->report_number !== '6.2.002' &&
-            $request->report_number !== '6.2.003' &&
-            $request->report_number !== '6.2.004' &&
-            $request->report_number !== '6.2.005' &&
-            $request->report_number !== '6.2.006' &&
-            $request->report_number !== '6.2.007' &&
-            $request->report_number !== '6.2.008' &&
-            $request->report_number !== '6.2.012' &&
-            $request->report_number !== '6.2.013' &&
-            $request->report_number !== '6.2.014' &&
-            $request->report_number !== '6.2.015' &&
-            $request->report_number !== '6.2.016' &&
-            $request->report_number !== '6.2.017'
-        ) {
-            if ($request->label === 'Positive' ||
-                $request->label === 'Neutral' ||
-                $request->label === 'Negative' ||
-                $request->label === 'Level 0' ||
-                $request->label === 'Level 1' ||
-                $request->label === 'Level 2' ||
-                $request->label === 'Level 3' ||
-                $request->label === 'No Bully' ||
-                $request->label === 'Gossip' ||
-                $request->label === 'Harassment' ||
-                $request->label === 'Exclusion' ||
-                $request->label === 'Hate Speech' ||
-                $request->label === 'Violence'
-
-            ) {
-                $Llabel = self::parseLabelClassification($Llabel);
-                if ($Llabel) {
-                    $data->where('message_results.classification_id', $Llabel);
-                } else {
-                    $data->whereIn('message_results.classification_id', ['1', '2', '3']);
-                }
-            }
-        }*/
-
-      /*  if ($request->report_number === '5.2.002' ||
-            $request->report_number === '5.2.003' ||
-            $request->report_number === '5.2.004' ||
-            $request->report_number === '5.2.005' ||
-            $request->report_number === '5.2.006' ||
-            $request->report_number === '5.2.007' ||
-            $request->report_number === '6.2.002' ||
-            $request->report_number === '6.2.003' ||
-            $request->report_number === '6.2.004' ||
-            $request->report_number === '6.2.005' ||
-            $request->report_number === '6.2.006' ||
-            $request->report_number === '6.2.007' ||
-            $request->report_number === '6.2.008' ||
-            $request->report_number === '6.2.012' ||
-            $request->report_number === '6.2.013' ||
-            $request->report_number === '6.2.014' ||
-            $request->report_number === '6.2.015' ||
-            $request->report_number === '6.2.016' ||
-            $request->report_number === '6.2.017'
-            // $request->report_number === '5.2.008' ||
-            // $request->report_number === '5.2.009'
-        ) {
-            $Llabel = self::parseLabelClassification($Llabel);
-            if ($Llabel) {
-                $data->where('message_results.classification_id', $Llabel);
-            }
-        }*/
-
         return $data;
     }
 
