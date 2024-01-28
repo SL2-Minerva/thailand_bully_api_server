@@ -90,6 +90,22 @@ class LevelThreeTableController extends Controller
 
     }
 
+    private function parseLabelToEngagement($label, $raw)
+    {
+        if ($label == "")
+            return $raw;
+        if ($label === 'Comment') {
+            $raw->where('messages.number_of_comments', '>', 0);
+        } else if ($label === 'Reaction') {
+            $raw->where('messages.number_of_reactions', '>', 0);
+        } else if ($label === 'Share') {
+            $raw->where('messages.number_of_shares', '>', 0);
+        } else if ($label === "Share of Voice") {
+            $raw->where('messages.number_of_shares', '>', 0);
+        }
+        return $raw;
+    }
+
     public
     function messageLevelThree(Request $request)
     {
@@ -208,6 +224,8 @@ class LevelThreeTableController extends Controller
             $raw->where('source_id', $this->source_id);
         }
 
+        $raw = $this->parseLabelToEngagement($label, $raw);
+        $raw = $this->parseLabelToEngagement($Llabel, $raw);
 
         if ($request->report_number === '3.2.013' ||
             $request->report_number === '3.2.014'
@@ -249,17 +267,6 @@ class LevelThreeTableController extends Controller
                     $raw->where('messages.keyword_id', $keyword->id);
                 }
             }
-            if ($request->report_number === '4.2.012') {
-                if ($Llabel === 'Comment') {
-                    $raw->where('messages.number_of_comments', '>', 0);
-                }
-                if ($Llabel === 'Reactions') {
-                    $raw->where('messages.number_of_reactions', '>', 0);
-                }
-                if ($Llabel === 'Share') {
-                    $raw->where('messages.number_of_shares', '>', 0);
-                }
-            }
         }
 
 
@@ -272,22 +279,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.003' ||
             $request->report_number === '6.2.013'
         ) {
-
             $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
-
-            if ($request->report_number === '4.2.013') {
-                if ($Llabel === 'Comment') {
-                    $raw->where('number_of_comments', '>', 0);
-                }
-
-                if ($Llabel === 'reactions') {
-                    $raw->where('number_of_reactions', '>', 0);
-                }
-
-                if ($Llabel === 'Share') {
-                    $raw->where('number_of_shares', '>', 0);
-                }
-            }
         }
 
         // time Format
@@ -301,9 +293,7 @@ class LevelThreeTableController extends Controller
         ) {
 
             if ($request->label === 'Before 6 AM') {
-
                 $raw->whereRaw('HOUR(message_datetime) < ?', [6]);
-
             }
 
             if ($request->label === '6 AM-12 PM') {
@@ -316,20 +306,6 @@ class LevelThreeTableController extends Controller
 
             if ($request->label === 'After 6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
-            }
-
-            if ($request->report_number === '4.2.014') {
-                if ($Llabel === 'Comment') {
-                    $raw->where('messages.number_of_comments', '>', 0);
-                }
-
-                if ($Llabel === 'Reactions') {
-                    $raw->where('messages.number_of_reactions', '>', 0);
-                }
-
-                if ($Llabel === 'Share') {
-                    $raw->where('messages.number_of_shares', '>', 0);
-                }
             }
         }
 
@@ -358,20 +334,6 @@ class LevelThreeTableController extends Controller
 
             if ($target != "")
                 $raw->where('device', $target);
-
-            if ($request->report_number === '4.2.015') {
-                if ($Llabel === 'Comment') {
-                    $raw->where('messages.number_of_comments', '>', 0);
-                }
-
-                if ($Llabel === 'Reactions') {
-                    $raw->where('messages.number_of_reactions', '>', 0);
-                }
-
-                if ($Llabel === 'Share') {
-                    $raw->where('messages.number_of_shares', '>', 0);
-                }
-            }
         }
 
         //user_typr
@@ -397,64 +359,6 @@ class LevelThreeTableController extends Controller
                     $raw->where('reference_message_id', '!=', '');
                 }
             }
-
-
-            if ($request->report_number === '4.2.016') {
-                if ($Llabel === 'Comment') {
-                    $raw->where('messages.number_of_comments', '>', 0);
-                }
-
-                if ($Llabel === 'Reaction') {
-                    $raw->where('messages.number_of_reactions', '>', 0);
-                }
-
-                if ($Llabel === 'Share') {
-                    $raw->where('messages.number_of_shares', '>', 0);
-                }
-
-            }
-
-        }
-
-        //source
-        if ($request->report_number === '2.2.007' ||
-            $request->report_number === '4.2.007' ||
-            $request->report_number === '4.2.017' ||
-            $request->report_number === '5.2.007' ||
-            $request->report_number === '6.2.007' ||
-            $request->report_number === '6.2.017'
-        ) {
-            //$raw->where('sources.name', $label);
-
-
-            if ($request->report_number === '4.2.017') {
-                if ($Llabel === 'Comment') {
-                    $raw->where('messages.number_of_comments', '>', 0);
-                }
-
-                if ($Llabel === 'Reaction') {
-                    $raw->where('messages.number_of_reactions', '>', 0);
-                }
-
-                if ($Llabel === 'Share') {
-                    $raw->where('messages.number_of_shares', '>', 0);
-                }
-            }
-        }
-
-        if ($request->report_number === '4.2.008') {
-            if ($request->label === "Share of Voice") {
-                $raw->where('messages.number_of_shares', '>', 0);
-            }
-
-            if ($request->label === "Comments") {
-                $raw->where('messages.number_of_comments', '>', 0);
-            }
-
-            if ($request->label === "Reaction") {
-                $raw->where('messages.number_of_reactions', '>', 0);
-            }
-
         }
 
 
@@ -469,10 +373,7 @@ class LevelThreeTableController extends Controller
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
 
-            // if (array_search($item->message_id, $parents) !== false) {
-            //     $parent = $item->message_id;
-            // }
-            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
+            if (!$item->reference_message_id && $item->reference_message_id != '') {
                 $parent = $item->message_id;
             }
 
@@ -509,7 +410,6 @@ class LevelThreeTableController extends Controller
                     $data_push['bully_level'] = $type->classification_name;
                 }
             }
-
             $data['message'][$item->message_id] = $data_push;
         }
 
