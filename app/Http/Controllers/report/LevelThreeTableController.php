@@ -83,6 +83,8 @@ class LevelThreeTableController extends Controller
             $Llabel = 12;
         } else if ($Llabel === 'Level 3') {
             $Llabel = 13;
+        } else {
+            $Llabel = -1;
         }
         return $Llabel;
 
@@ -94,8 +96,9 @@ class LevelThreeTableController extends Controller
 
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
-        $source = $this->getAllSource();
+        $sources = $this->getAllSource();
         $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+
 
         $limit = $request->limit;
         $page = $request->page;
@@ -109,7 +112,8 @@ class LevelThreeTableController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
-
+        $keywordIds = $keywords->pluck('id')->all();
+        $raw = DB::table('messages')->whereIn('messages.keyword_id', $keywordIds);
 
         if ($request->report_number === '5.2.008' ||
             $request->report_number === '5.2.009' ||
@@ -118,7 +122,105 @@ class LevelThreeTableController extends Controller
         ) {
             return $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
         }
-        $raw = $this->raw_message_classification($request, $keywords, $this->start_date, $this->end_date);
+        $raw->select([
+            'messages.id AS id',
+            'messages.message_id AS message_id',
+            'messages.reference_message_id AS reference_message_id',
+            'messages.keyword_id AS keyword_id',
+            'messages.message_datetime AS date_m',
+            'messages.author AS author',
+            'messages.source_id AS source_id',
+            'messages.full_message AS full_message',
+            'messages.message_type',
+            'messages.link_message AS link_message',
+            'messages.device AS device',
+            'messages.number_of_views AS number_of_views',
+            'messages.number_of_comments AS number_of_comments',
+            'messages.number_of_shares AS number_of_shares',
+            'messages.number_of_reactions AS number_of_reactions',
+            /*'message_results.classification_type_id',
+            'message_results.classification_id',*/
+            'messages.created_at AS created_at',
+            DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
+                    COALESCE(tbl_messages.number_of_shares, 0) +
+                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
+
+        ]);
+
+        if ($label != "") {
+            $sourceId = Sources::where('name', $label)->first();
+            if ($sourceId) {
+                $this->source_id = $sourceId->id;
+            }
+        }
+
+        if ($Llabel) {
+            $classification = self::parseLabelClassification($Llabel);
+            //error_log('-->'.$classification);
+            if ($classification == -1) {
+                $classification = self::parseLabelClassification($label);
+            }
+            if ($classification != -1) {
+                $raw->select([
+                    'messages.id AS id',
+                    'messages.message_id AS message_id',
+                    'messages.reference_message_id AS reference_message_id',
+                    'messages.keyword_id AS keyword_id',
+                    'messages.message_datetime AS date_m',
+                    'messages.author AS author',
+                    'messages.source_id AS source_id',
+                    'messages.full_message AS full_message',
+                    'messages.message_type',
+                    'messages.link_message AS link_message',
+                    'messages.device AS device',
+                    'messages.number_of_views AS number_of_views',
+                    'messages.number_of_comments AS number_of_comments',
+                    'messages.number_of_shares AS number_of_shares',
+                    'messages.number_of_reactions AS number_of_reactions',
+                    /*'message_results.classification_type_id',
+                    'message_results.classification_id',*/
+                    'messages.created_at AS created_at',
+                    DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
+                    COALESCE(tbl_messages.number_of_shares, 0) +
+                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
+
+                ]);
+                $raw->join('message_results', 'message_results.message_id', '=', 'messages.id');
+                $raw->where('message_results.classification_id', $classification);
+            }
+
+            if ($Llabel == -1) {
+                $sourceId = $this->matchSourceByName($sources, $Llabel);
+                if ($sourceId) {
+                    $this->source_id = $sourceId->id;
+                }
+            }
+
+        }
+
+        if (isset($request->meesage_id)) {
+            $data->where('messages.message_id', $request->meesage_id);
+        }
+
+        if ($this->source_id) {
+            $data->where('source_id', $this->source_id);
+        }
+
+
+        if ($request->report_number === '3.2.013' ||
+            $request->report_number === '3.2.014'
+        ) {
+
+            if ($request->select_period === 'previous') {
+                $start_date = $this->start_date_previous;
+                $end_date = $this->end_date_previous;
+            } else {
+                $start_date = $this->start_date;
+                $end_date = $this->end_date;
+            }
+            $this->start_date = $start_date;
+            $this->end_date = $end_date;
+        }
         //Overall Dashboard
         if ($request->report_number === '1.2.002' ||
             $request->report_number === '2.2.002' ||
@@ -133,13 +235,10 @@ class LevelThreeTableController extends Controller
         ) {
 
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
-
-            $raw->whereBetween('message_datetime', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
-
+            $this->start_date = $date_request;
+            $this->end_date = $date_request;
             if ($request->report_number === '2.2.013') {
-                // $raw->whereNotNull('author')->groupBy('author');
                 return $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
-                // dd($raw->first());
             }
 
             if ($request->report_number === '4.2.002') {
@@ -148,20 +247,16 @@ class LevelThreeTableController extends Controller
                     $raw->where('messages.keyword_id', $keyword->id);
                 }
             }
-
             if ($request->report_number === '4.2.012') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
                 }
-
                 if ($Llabel === 'Reactions') {
                     $raw->where('messages.number_of_reactions', '>', 0);
                 }
-
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
                 }
-
             }
         }
 
@@ -233,9 +328,7 @@ class LevelThreeTableController extends Controller
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
                 }
-
             }
-
         }
 
         //device Format
@@ -257,7 +350,7 @@ class LevelThreeTableController extends Controller
                 $target = 'iphone';
             }
 
-            if ($label === 'Web App'|| $label === 'Web+App') {
+            if ($label === 'Web App' || $label === 'Web+App') {
                 $target = 'website';
             }
 
@@ -362,85 +455,12 @@ class LevelThreeTableController extends Controller
 
         }
 
-        // position
-        if ($request->report_number === '2.2.008' ||
-            $request->report_number === '2.2.009' ||
-            $request->report_number === '2.2.010'
-        ) {
-            $Llabel = self::parseLabelClassification($Llabel);
-            if ($Llabel)
-                $raw->where('message_results.classification_id', $Llabel);
-        }
-
-        if ($request->report_number === '3.2.008' ||
-            $request->report_number === '3.2.007' ||
-            $request->report_number === '3.2.009'
-
-        ) {
-            $label = self::parseLabelClassification($label);
-            if ($label) {
-                $raw->where('message_results.classification_id', $label);
-            }
-        }
-
-        if ($request->report_number === '3.2.002' ||
-            $request->report_number === '3.2.003' ||
-            $request->report_number === '3.2.004' ||
-            $request->report_number === '3.2.005' ||
-            $request->report_number === '3.2.006' ||
-            $request->report_number === '3.2.007' ||
-            $request->report_number === '3.2.008' ||
-            $request->report_number === '3.2.009'
-
-        ) {
-            // dd($raw->get());
-            $sourceId = $this->matchSourceByName($source, $Llabel);
-            if ($sourceId) {
-                $raw->where('messages.source_id', $sourceId->id);
-            }
-        }
-
-        if ($request->report_number === '3.2.013' ||
-            $request->report_number === '3.2.014'
-        ) {
-
-            if ($request->select_period === 'previous') {
-                $start_date = $this->start_date_previous;
-                $end_date = $this->end_date_previous;
-            } else {
-                $start_date = $this->start_date;
-                $end_date = $this->end_date;
-            }
-            $raw->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-            // $raw = $this->raw_message_classification($request, $this->campaign_id, $start_date, $end_date);
-
-            // if ($request->report_number === '3.2.013') {
-            //     $raw->addSelect([DB::raw('number_of_reactions + number_of_comments + number_of_reactions as total_engagement')])
-            //         ->havingRaw('total_engagement > ?', [0]);
-            // }
-            $sourceId = $this->matchSourceByName($source, $Llabel);
-            if ($sourceId) {
-                $raw->where('messages.source_id', $sourceId->id);
-            }
-        }
 
         // Last
-
-
+        $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         error_log($raw->toSql());
         $total = $raw->count();
         $items = $raw->offset($offset)->limit($limit)->get();
-        // $items = $raw->get();
-
-        // $parents = [];
-        // foreach ($items as $item) {
-        //     if ($item->reference_message_id) {
-        //         if (array_search($item->reference_message_id, $parents) === false) {
-        //             $parents[] = $item->reference_message_id;
-        //         }
-        //     }
-        // }
-
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
@@ -454,7 +474,7 @@ class LevelThreeTableController extends Controller
                 $parent = $item->message_id;
             }
 
-            $sourceName = $this->matchSourceName($source, $item->source_id);
+            $sourceName = $this->matchSourceName($sources, $item->source_id);
             $data_push = [
                 "id" => $item->id,
                 "message_id" => $item->message_id,
@@ -494,165 +514,10 @@ class LevelThreeTableController extends Controller
 
         if (isset($data['message'])) {
             $data['message'] = array_values($data['message']);
-            //     $total = count($data['message']) ?? 0;
-            //     usort($data['message'], function ($a, $b) {
-            //         return $b['engagement'] - $a['engagement'];
-            //     });
-
-            //     $data['total'] = $total;
-            //     $offset = 9 + 1;
-
-            //     $data['message'] = array_slice($data['message'], $start, $offset);
         }
 
         $data['total'] = $total;
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
-    }
-
-    private function raw_message_classification($request, $keywords, $start_date, $end_date)
-    {
-        $keywordIds = $keywords->pluck('id')->all();
-
-        $Llabel = str_replace("+", " ", $request->Llabel);
-
-        $data = DB::table('messages')
-            ->select([
-                'messages.id AS id',
-                'messages.message_id AS message_id',
-                'messages.reference_message_id AS reference_message_id',
-                'messages.keyword_id AS keyword_id',
-                'messages.message_datetime AS date_m',
-                'messages.author AS author',
-                'messages.source_id AS source_id',
-                'messages.full_message AS full_message',
-                'messages.message_type',
-                'messages.link_message AS link_message',
-                'messages.device AS device',
-                'messages.number_of_views AS number_of_views',
-                'messages.number_of_comments AS number_of_comments',
-                'messages.number_of_shares AS number_of_shares',
-                'messages.number_of_reactions AS number_of_reactions',
-                /*'message_results.classification_type_id',
-                'message_results.classification_id',*/
-                'messages.created_at AS created_at',
-                DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
-                    COALESCE(tbl_messages.number_of_shares, 0) +
-                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
-
-            ])
-            /*->join('message_results', 'message_results.message_id', '=', 'messages.id')*/
-            ->whereIn('messages.keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-
-        if (isset($request->meesage_id)) {
-            $data->where('messages.message_id', $request->meesage_id);
-        }
-
-        if ($this->source_id) {
-            $data->where('messages.source_id', $this->source_id);
-        }
-
-        if ($request->sort && $request->field) {
-            $field = $request->field;
-            $field_table = match ($field) {
-                'message_type' => "messages.message_type",
-                'author' => "messages.author",
-                'date' => "messages.message_datetime",
-                'device' => "messages.device",
-                'source' => "messages.sources_id",
-                'bully_type', 'sentiment' => "message_results.classification_id",
-                default => "total_engagement",
-            };
-            $data->orderBy($field_table, $request->sort);
-        } else {
-            $data->orderByDesc('total_engagement');
-        }
-
-        if ($request->report_number !== '3.2.013' &&
-            $request->report_number !== '3.2.014' &&
-            $request->report_number !== '5.2.002' &&
-            $request->report_number !== '5.2.003' &&
-            $request->report_number !== '5.2.004' &&
-            $request->report_number !== '5.2.005' &&
-            $request->report_number !== '5.2.006' &&
-            $request->report_number !== '5.2.007' &&
-            $request->report_number !== '5.2.008' &&
-            $request->report_number !== '5.2.009' &&
-            $request->report_number !== '6.2.002' &&
-            $request->report_number !== '6.2.003' &&
-            $request->report_number !== '6.2.004' &&
-            $request->report_number !== '6.2.005' &&
-            $request->report_number !== '6.2.006' &&
-            $request->report_number !== '6.2.007' &&
-            $request->report_number !== '6.2.008' &&
-            $request->report_number !== '6.2.012' &&
-            $request->report_number !== '6.2.013' &&
-            $request->report_number !== '6.2.014' &&
-            $request->report_number !== '6.2.015' &&
-            $request->report_number !== '6.2.016' &&
-            $request->report_number !== '6.2.017'
-        ) {
-            if ($request->label === 'Positive' ||
-                $request->label === 'Neutral' ||
-                $request->label === 'Negative' ||
-                $request->label === 'Level 0' ||
-                $request->label === 'Level 1' ||
-                $request->label === 'Level 2' ||
-                $request->label === 'Level 3' ||
-                $request->label === 'No Bully' ||
-                $request->label === 'Gossip' ||
-                $request->label === 'Harassment' ||
-                $request->label === 'Exclusion' ||
-                $request->label === 'Hate Speech' ||
-                $request->label === 'Violence'
-
-            ) {
-                $Llabel = self::parseLabelClassification($Llabel);
-                $data->select([
-                    'message_results.classification_type_id',
-                    'message_results.classification_id',]);
-                $data->join('message_results', 'message_results.message_id', '=', 'messages.id');
-                if ($Llabel) {
-                    $data->where('message_results.classification_id', $Llabel);
-                } else {
-                    $data->where('message_results.classification_type_id', 1);
-                }
-            }
-        }
-
-        if ($request->report_number === '5.2.002' ||
-            $request->report_number === '5.2.003' ||
-            $request->report_number === '5.2.004' ||
-            $request->report_number === '5.2.005' ||
-            $request->report_number === '5.2.006' ||
-            $request->report_number === '5.2.007' ||
-            $request->report_number === '6.2.002' ||
-            $request->report_number === '6.2.003' ||
-            $request->report_number === '6.2.004' ||
-            $request->report_number === '6.2.005' ||
-            $request->report_number === '6.2.006' ||
-            $request->report_number === '6.2.007' ||
-            $request->report_number === '6.2.008' ||
-            $request->report_number === '6.2.012' ||
-            $request->report_number === '6.2.013' ||
-            $request->report_number === '6.2.014' ||
-            $request->report_number === '6.2.015' ||
-            $request->report_number === '6.2.016' ||
-            $request->report_number === '6.2.017'
-            // $request->report_number === '5.2.008' ||
-            // $request->report_number === '5.2.009'
-        ) {
-            $data->select([
-                'message_results.classification_type_id',
-                'message_results.classification_id',]);
-            $Llabel = self::parseLabelClassification($Llabel);
-            $data->join('message_results', 'message_results.message_id', '=', 'messages.id');
-            if ($Llabel) {
-                $data->where('message_results.classification_id', $Llabel);
-            }
-        }
-
-        return $data;
     }
 
     private
