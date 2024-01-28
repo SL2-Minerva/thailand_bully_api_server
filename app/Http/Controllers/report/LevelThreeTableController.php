@@ -377,7 +377,7 @@ class LevelThreeTableController extends Controller
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
 
-            if (!$item->reference_message_id && $item->reference_message_id != '') {
+            if ($item->reference_message_id && $item->reference_message_id != '') {
                 $parent = $item->message_id;
             }
 

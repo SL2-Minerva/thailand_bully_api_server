@@ -189,8 +189,6 @@ class LevelfourController extends Controller
                     ];
                 }
             }
-
-
         }
 
         return $data;
@@ -204,7 +202,6 @@ class LevelfourController extends Controller
         if ($is_child) {
             $raw = $this->message()
                 ->where('message_results.classification_type_id', $type)
-                //->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
                 ->whereIn('messages.reference_message_id', $parentMessageIds);
         } else {
             if ($message_id) {
