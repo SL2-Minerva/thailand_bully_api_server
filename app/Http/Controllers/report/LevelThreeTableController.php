@@ -57,36 +57,39 @@ class LevelThreeTableController extends Controller
 
     function parseLabelClassification($Llabel)
     {
+        error_log("parseLabelClassification:" . $Llabel);
+        $result = -1;
+        if ($Llabel == "")
+            return $result;
         if ($Llabel === 'Positive') {
-            $Llabel = 1;
+            $result = 1;
         } else if ($Llabel === 'Neutral') {
-            $Llabel = 3;
+            $result = 3;
         } else if ($Llabel === 'Negative') {
-            $Llabel = 2;
+            $result = 2;
         } else if ($Llabel === 'No Bully') {
-            $Llabel = 4;
+            $result = 4;
         } else if ($Llabel === 'Gossip') {
-            $Llabel = 5;
+            $result = 5;
         } else if ($Llabel === 'Harassment') {
-            $Llabel = 6;
+            $result = 6;
         } else if ($Llabel === 'Exclusion') {
-            $Llabel = 7;
+            $result = 7;
         } else if ($Llabel === 'Hate Speech') {
-            $Llabel = 8;
+            $result = 8;
         } else if ($Llabel === 'Violence') {
-            $Llabel = 9;
+            $result = 9;
         } else if ($Llabel === 'Level 0') {
-            $Llabel = 10;
+            $result = 10;
         } else if ($Llabel === 'Level 1') {
-            $Llabel = 11;
+            $result = 11;
         } else if ($Llabel === 'Level 2') {
-            $Llabel = 12;
+            $result = 12;
         } else if ($Llabel === 'Level 3') {
-            $Llabel = 13;
-        } else {
-            $Llabel = -1;
+            $result = 13;
         }
-        return $Llabel;
+
+        return $result;
 
     }
 
@@ -177,13 +180,18 @@ class LevelThreeTableController extends Controller
         }
 
         if ($Llabel != '') {
-            $sourceId = $this->matchSourceByName($sources, $Llabel);
-            if ($sourceId) {
-                $this->source_id = $sourceId->id;
+            if ($this->source_id == null) {
+                $sourceId = $this->matchSourceByName($sources, $Llabel);
+                if ($sourceId) {
+                    $this->source_id = $sourceId->id;
+                }
             }
-            $classification = self::parseLabelClassification($Llabel);
+
+            if ($classification == -1)
+                $classification = self::parseLabelClassification($Llabel);
         }
 
+        error_log("$classification:" . $classification);
         if ($classification != -1) {
             $raw->select([
                 'messages.id AS id',
@@ -577,17 +585,11 @@ class LevelThreeTableController extends Controller
 
         if ($Llabel === "No Bully") {
             $Llabel = "NoBully";
-        }
-
-        if ($Llabel === "Hate Speech") {
+        } else if ($Llabel === "Hate Speech") {
             $Llabel = "HateSpeech";
-        }
-
-        if ($label === "No Bully") {
+        } else if ($label === "No Bully") {
             $label = "NoBully";
-        }
-
-        if ($label === "Hate Speech") {
+        } else if ($label === "Hate Speech") {
             $label = "HateSpeech";
         }
 
