@@ -314,7 +314,7 @@ class Controller extends BaseController
         $keyword = Keyword::where('campaign_id', $campaign_id);
 
         if ($keyword_id) {
-            $keyword = $keyword->whereIn('id', $keyword_id);
+            $keyword = $keyword->where('id', $keyword_id);
         }
 
         return $keyword->get();

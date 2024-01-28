@@ -134,7 +134,7 @@ class AuthController extends Controller
         return parent::handleRespond([
             'accessToken' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60
+            'expires_in' => auth('api')->factory()->getTTL() * 120
         ], null);
     }
 
@@ -148,11 +148,11 @@ class AuthController extends Controller
 
         $user = User::findOrFail($request->id);
 
-        if (Hash::check($request->old_password, $user->password)) { 
+        if (Hash::check($request->old_password, $user->password)) {
             $user->fill([
                 'password' => Hash::make($request->new_password)
             ])->save();
-            
+
         } else {
             return parent::handleRespond(null, null, 400, 'Old Password does not match! ');
         }

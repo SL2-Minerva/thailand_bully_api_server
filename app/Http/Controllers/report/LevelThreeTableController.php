@@ -97,6 +97,7 @@ class LevelThreeTableController extends Controller
 
         //$keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
         $source = $this->getAllSource();
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
 
         $limit = $request->limit;
         $page = $request->page;
@@ -119,12 +120,7 @@ class LevelThreeTableController extends Controller
         ) {
             return $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
         } else {
-            $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
-        }
-
-
-        if ($request->message_id) {
-            $raw->where('messages.message_id', $request->message_id);
+            $raw = $this->raw_message_classification($request, $keywords, $this->start_date, $this->end_date);
         }
 
         //Overall Dashboard
@@ -438,29 +434,6 @@ class LevelThreeTableController extends Controller
 
         // Last
 
-        if ($request->report_number !== "3.2.002" &&
-            $request->report_number !== "4.2.008" &&
-            $request->report_number !== '4.2.012' &&
-            $request->report_number !== '4.2.013' &&
-            $request->report_number !== '4.2.014' &&
-            $request->report_number !== '4.2.015' &&
-            $request->report_number !== "4.2.016" &&
-            $request->report_number !== "4.2.017" &&
-            $request->report_number !== '5.2.003' &&
-            $request->report_number !== '5.2.004' &&
-            $request->report_number !== '5.2.005' &&
-            $request->report_number !== '5.2.006' &&
-            $request->report_number !== '5.2.007' &&
-            $request->report_number !== '5.2.008'
-        ) {
-            if (isset($request->keyword_id)) {
-                $raw->where('keyword_id', $request->keyword_id);
-            }
-        }
-
-        if (isset($request->meesage_id)) {
-            $raw->where('messages.message_id', $request->meesage_id);
-        }
 
         error_log($raw->toSql());
         $total = $raw->count();
@@ -544,20 +517,11 @@ class LevelThreeTableController extends Controller
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
-    private
-    function raw_message_classification(Request $request, $campaign_id, $start_date, $end_date)
+    private function raw_message_classification($request, $keywords, $start_date, $end_date)
     {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
+        $keywordIds = $keywords->pluck('id')->all();
 
         $Llabel = str_replace("+", " ", $request->Llabel);
-
 
         $data = DB::table('messages')
             ->select([
@@ -587,6 +551,10 @@ class LevelThreeTableController extends Controller
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+
+        if (isset($request->meesage_id)) {
+            $data->where('messages.message_id', $request->meesage_id);
+        }
 
         if ($this->source_id) {
             $data->where('messages.source_id', $this->source_id);
@@ -777,32 +745,15 @@ class LevelThreeTableController extends Controller
         // dd($subquery->get()->count());
         if ($request->sort && $request->field) {
             $field = $request->field;
-            switch ($field) {
-                case 'message_type' :
-                    $field_table = "messages.message_type";
-                    break;
-                case 'author' :
-                    $field_table = "messages.author";
-                    break;
-                case 'date' :
-                    $field_table = "messages.message_datetime";
-                    break;
-                case 'device' :
-                    $field_table = "messages.device";
-                    break;
-                case 'source' :
-                    $field_table = "sources_id";
-                    break;
-                case 'sentiment':
-                case 'engagement':
-                case 'bully_type' :
-                    $field_table = "classifications_id";
-                    break;
-                default :
-                    $field_table = "total_engagement";
-                    break;
-
-            }
+            $field_table = match ($field) {
+                'message_type' => "messages.message_type",
+                'author' => "messages.author",
+                'date' => "messages.message_datetime",
+                'device' => "messages.device",
+                'source' => "sources_id",
+                'sentiment', 'engagement', 'bully_type' => "classifications_id",
+                default => "total_engagement",
+            };
 
             $subquery->orderBy($field_table, $request->sort);
 
