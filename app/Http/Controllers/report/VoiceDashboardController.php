@@ -342,8 +342,6 @@ class VoiceDashboardController extends Controller
                     }
                     $data['value'][$item->keyword_id]['data'][$index_label] += 1;
                 }
-
-
             }
         }
 

@@ -109,6 +109,8 @@ class LevelThreeTableController extends Controller
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
 
+
+
         if ($request->report_number === '5.2.008' ||
             $request->report_number === '5.2.009' ||
             $request->report_number === '6.2.008' ||
@@ -255,7 +257,7 @@ class LevelThreeTableController extends Controller
                 $target = 'iphone';
             }
 
-            if ($label === 'Web App') {
+            if ($label === 'Web App'|| $label === 'Web+App') {
                 $target = 'website';
             }
 
@@ -274,9 +276,7 @@ class LevelThreeTableController extends Controller
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
                 }
-
             }
-
         }
 
         //user_typr
