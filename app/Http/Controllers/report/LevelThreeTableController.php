@@ -199,11 +199,11 @@ class LevelThreeTableController extends Controller
         }
 
         if (isset($request->meesage_id)) {
-            $data->where('messages.message_id', $request->meesage_id);
+            $raw->where('messages.message_id', $request->meesage_id);
         }
 
         if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
+            $raw->where('source_id', $this->source_id);
         }
 
 
