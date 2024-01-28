@@ -94,10 +94,8 @@ class LevelThreeTableController extends Controller
 
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
-
-        //$keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
         $source = $this->getAllSource();
-        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
 
         $limit = $request->limit;
         $page = $request->page;
@@ -106,8 +104,6 @@ class LevelThreeTableController extends Controller
         if ($limit == null || $limit == 0)
             $limit = 10;
         $offset = $limit * ($page - 1);
-        /*$start = $page === null || $page === 1 ? null : $page * $limit;
-        $start = $start === 1 ? null : $start;*/
         $data = null;
 
         $label = str_replace("+", " ", $request->label);
@@ -119,10 +115,8 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.018'
         ) {
             return $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
-        } else {
-            $raw = $this->raw_message_classification($request, $keywords, $this->start_date, $this->end_date);
         }
-
+        $raw = $this->raw_message_classification($request, $keywords, $this->start_date, $this->end_date);
         //Overall Dashboard
         if ($request->report_number === '1.2.002' ||
             $request->report_number === '2.2.002' ||
