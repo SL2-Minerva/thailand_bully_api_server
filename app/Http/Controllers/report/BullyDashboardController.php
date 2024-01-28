@@ -475,14 +475,13 @@ class BullyDashboardController extends Controller
     public function dailyTypeBy()
     {
         $data = null;
-        //$raw = $this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']);
 
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $classifications = self::getClassificationMaster();
         $sources = self::getAllSource();
 
-        $current = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 3)->get();
-        $currentBullyType = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 2)->get();
+        $current = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 2)->get();
+        $currentSentiment = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 1)->get();
 
         //$previous = $this->raw_message_classification_name($keywords, $this->start_date_previous, $this->end_date_previous, 3)->get();
 
@@ -497,7 +496,7 @@ class BullyDashboardController extends Controller
         $data['bully_type_by_device'] = $this->BullyTypeByDeviceGroup($current, $classifications);
         $data['bully_type_by_account'] = $this->BullyTypeByAccountGroup($current, $classifications);
         $data['bully_type_by_channel'] = $this->BullyTypeByChannelGroup($current, $classifications, $sources);
-        //$data['bully_type_by_sentiment'] = $this->BullyTypeBySentimentGroup($this->raw_message_classification_name($this->campaign_id, $this->start_date, $this->end_date, ['Positive', 'Negative', 'Neutral', 'NoBully', 'Gossip', 'Harassment', 'Exclusion', 'HateSpeech', 'Violence']));
+        $data['bully_type_by_sentiment'] = $this->BullyTypeBySentimentGroup($current, $currentSentiment, $classifications);
         return parent::handleRespond($data);
     }
 
@@ -781,48 +780,45 @@ class BullyDashboardController extends Controller
         return $data;
     }
 
-    private function BullyTypeBySentimentGroup($raw)
+    private function BullyTypeBySentimentGroup($current, $currentSentiment, $classifications)
     {
-        $data['labels'] = [
-            "Positive",
-            "Neutral",
-            "Negative",
-        ];
+        $data['labels'] = ["Positive", "Neutral", "Negative"];
+        $bully_types = Classification::where('classification_type_id', 2)->get();
 
-        $bully_types = DB::table('classifications')->where('classification_type_id', 2)->get();
-
+        $data['value'] = [];
         foreach ($bully_types as $bully_type) {
             $data['value'][$bully_type->id] = [
                 'id' => $bully_type->id,
-                'classificetion_id' => $bully_type->id,
+                'classification_id' => $bully_type->id,
                 'keyword_name' => $bully_type->name,
                 'data' => [0, 0, 0]
             ];
         }
 
-        $items = $raw->orderBy('classification_id', 'asc')->get();
         $anylsys = [];
 
-        foreach ($items as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = $item->classification_name;
+        foreach ($current as $item) {
+            $anylsys[$item->message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
+        }
+
+        foreach ($currentSentiment as $item) {
+            $anylsys[$item->message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
         }
 
         foreach ($anylsys as $anylsy) {
             foreach ($bully_types as $bully_type) {
-
                 if ($anylsy[2] === $bully_type->name) {
                     $index_label = array_search($anylsy[1], $data['labels']);
-                    $data['value'][$bully_type->id]['data'][$index_label] += 1;
+                    $data['value'][$bully_type->id]['data'][$index_label]++;
                 }
             }
         }
 
-        if ($data) {
-            $data['value'] = array_values($data['value']);
-        }
+        $data['value'] = array_values($data['value']);
 
         return $data;
     }
+
 
     public function bullyTypeBy()
     {
@@ -831,9 +827,9 @@ class BullyDashboardController extends Controller
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $classifications = self::getClassificationMaster();
         $sources = self::getAllSource();
-        $currentType = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 3)->get();
+        $currentType = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 2)->get();
 
-        $currentLevel = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 2)->get();
+        $currentLevel = $this->raw_message_classification_name($keywords, $this->start_date, $this->end_date, 3)->get();
 
 
         $data['bully_type_by_level'] = $this->BullyChartLevelGroup($currentLevel, $classifications);
