@@ -275,7 +275,7 @@ class LevelThreeTableController extends Controller
                 }
             } else {
                 if ($label === 'Influencer') {
-                    $raw->where('reference_message_id', '');
+                    $raw->where('reference_message_id', '=','');
                 } else {
                     $raw->where('reference_message_id', '!=', '');
                 }
@@ -372,15 +372,7 @@ class LevelThreeTableController extends Controller
             }
             if ($classificationId)
                 $raw->where('message_results.classification_id', $classificationId);
-            /*$classificationIds = DB::table('classifications')
-                ->select('classifications.id')
-                ->where('classifications.name', '=', $label)
-                ->get()
-                ->pluck('id')
-                ->all();
-            error_log($label);*/
             $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, $label);
-            //error_log($raw->toSql());
 
         }
 
@@ -397,7 +389,7 @@ class LevelThreeTableController extends Controller
             // dd($raw->get());
             $sourceId = $this->matchSourceByName($source, $Llabel);
             if ($sourceId) {
-                $raw->where('sources_id', $sourceId->id);
+                $raw->where('messages.source_id', $sourceId->id);
             }
         }
 
