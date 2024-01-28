@@ -170,12 +170,12 @@ class LevelThreeTableController extends Controller
             if ($sourceId) {
                 $this->source_id = $sourceId->id;
             }
-
-            $sourceId = $this->matchSourceByName($sources, $Llabel);
-            if ($sourceId) {
-                $this->source_id = $sourceId->id;
+            if ($this->source_id == null) {
+                $sourceId = $this->matchSourceByName($sources, $Llabel);
+                if ($sourceId) {
+                    $this->source_id = $sourceId->id;
+                }
             }
-
             $classification = self::parseLabelClassification($label);
         }
 
@@ -191,7 +191,7 @@ class LevelThreeTableController extends Controller
                 $classification = self::parseLabelClassification($Llabel);
         }
 
-        error_log("$classification:" . $classification);
+        error_log("classification:" . $classification . " / source_id :" . $this->source_id);
         if ($classification != -1) {
             $raw->select([
                 'messages.id AS id',
@@ -273,6 +273,7 @@ class LevelThreeTableController extends Controller
             $this->start_date = $start_date;
             $this->end_date = $end_date;
         }
+
         //Overall Dashboard
         if ($request->report_number === '1.2.002' ||
             $request->report_number === '2.2.002' ||

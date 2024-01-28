@@ -755,6 +755,7 @@ class ChannelDashboardController extends Controller
     private function totalFromMessageResultSemetic($keywordIds, $start_date, $end_date, $keyword_name, $value_name)
     {
         $labels = parent::listSource();
+        $sources = self::getAllSource();
 
         $data = [
             'labels' => $labels['labels'],
@@ -764,12 +765,11 @@ class ChannelDashboardController extends Controller
         $engagement = DB::table('messages')
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->groupBy('messages.source_id')
             ->select([
                 'messages.source_id',
                 /*'sources.name as source_name',*/
                 DB::raw('COUNT(*) as count')
-            ]);
+            ])->groupBy('messages.source_id');
 
         if ($this->source_id) {
             $engagement->where('source_id', $this->source_id);
@@ -779,10 +779,10 @@ class ChannelDashboardController extends Controller
 
         $data['value'][$value_name]['keyword_name'] = $keyword_name;
         foreach ($engagement as $source_id => $count) {
-            $index_label = array_search($source_id, $data['labels']);
+            $source_name = self::matchSourceName($sources, $source_id);
+            $index_label = array_search($source_name, $data['labels']);
             $data['value'][$value_name]['data'][$index_label] = $count;
         }
-
         return $data;
     }
 
