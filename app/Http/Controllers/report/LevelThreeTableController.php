@@ -77,6 +77,33 @@ class LevelThreeTableController extends Controller
 
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
+        if ($Llabel === 'Positive') {
+            $Llabel = 1;
+        } else if ($Llabel === 'Neutral') {
+            $Llabel = 3;
+        } else if ($Llabel === 'Negative') {
+            $Llabel = 2;
+        } else if ($Llabel === 'No Bully') {
+            $Llabel = 4;
+        } else if ($Llabel === 'Gossip') {
+            $Llabel = 5;
+        } else if ($Llabel === 'Harassment') {
+            $Llabel = 6;
+        } else if ($Llabel === 'Exclusion') {
+            $Llabel = 7;
+        } else if ($Llabel === 'Hate Speech') {
+            $Llabel = 8;
+        } else if ($Llabel === 'Violence') {
+            $Llabel = 9;
+        } else if ($Llabel === 'Level 0') {
+            $Llabel = 10;
+        } else if ($Llabel === 'Level 1') {
+            $Llabel = 11;
+        } else if ($Llabel === 'Level 2') {
+            $Llabel = 12;
+        } else if ($Llabel === 'Level 3') {
+            $Llabel = 13;
+        }
 
         if ($request->report_number === '5.2.008' ||
             $request->report_number === '5.2.009' ||
@@ -275,7 +302,7 @@ class LevelThreeTableController extends Controller
                 }
             } else {
                 if ($label === 'Influencer') {
-                    $raw->where('reference_message_id', '=','');
+                    $raw->where('reference_message_id', '=', '');
                 } else {
                     $raw->where('reference_message_id', '!=', '');
                 }
@@ -345,15 +372,9 @@ class LevelThreeTableController extends Controller
             $request->report_number === '2.2.009' ||
             $request->report_number === '2.2.010'
         ) {
-            if ($label === 'Hate Speech') {
-                $classificationId = 8;
-            } else if ($label === 'No Bully') {
-                $classificationId = 4;
-            } else if ($label === 'Violence') {
-                $classificationId = 9;
-            }
-            if ($classificationId)
-                $raw->where('message_results.classification_id', $classificationId);
+
+            if ($Llabel)
+                $raw->where('message_results.classification_id', $Llabel);
         }
 
         if ($request->report_number === '3.2.008' ||
@@ -361,19 +382,10 @@ class LevelThreeTableController extends Controller
             $request->report_number === '3.2.009'
 
         ) {
-            $classificationId = null;
 
-            if ($label === 'Hate Speech') {
-                $classificationId = 8;
-            } else if ($label === 'No Bully') {
-                $classificationId = 4;
-            } else if ($label === 'Violence') {
-                $classificationId = 9;
-            }
-            if ($classificationId)
-                $raw->where('message_results.classification_id', $classificationId);
-            $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, $label);
-
+            if ($Llabel)
+                $raw->where('message_results.classification_id', $Llabel);
+            error_log($raw->toSql());
         }
 
         if ($request->report_number === '3.2.002' ||
@@ -405,7 +417,7 @@ class LevelThreeTableController extends Controller
                 $end_date = $this->end_date;
             }
 
-            $raw = $this->raw_message_classification($request, $this->campaign_id, $start_date, $end_date);
+            // $raw = $this->raw_message_classification($request, $this->campaign_id, $start_date, $end_date);
 
             // if ($request->report_number === '3.2.013') {
             //     $raw->addSelect([DB::raw('number_of_reactions + number_of_comments + number_of_reactions as total_engagement')])
@@ -646,15 +658,8 @@ class LevelThreeTableController extends Controller
 
             ) {
 
-                if ($classification === 'Hate Speech') {
-                    $classification = 8;
-                } else if ($classification === 'No Bully') {
-                    $classification = 4;
-                } else if ($classification === 'Violence') {
-                    $classification = 9;
-                }
-
-                $data->where('message_results.classification_id', $classification);
+                if ($Llabel)
+                    $data->where('message_results.classification_id', $Llabel);
             } else {
                 $data->whereIn('message_results.classification_id', ['1', '2', '3']);
             }
@@ -682,34 +687,6 @@ class LevelThreeTableController extends Controller
             // $request->report_number === '5.2.008' ||
             // $request->report_number === '5.2.009'
         ) {
-            if ($Llabel === 'Positive') {
-                $Llabel = 1;
-            } else if ($Llabel === 'Neutral') {
-                $Llabel = 3;
-            } else if ($Llabel === 'Negative') {
-                $Llabel = 2;
-            } else if ($Llabel === 'No Bully') {
-                $Llabel = 4;
-            } else if ($Llabel === 'Gossip') {
-                $Llabel = 5;
-            } else if ($Llabel === 'Harassment') {
-                $Llabel = 6;
-            } else if ($Llabel === 'Exclusion') {
-                $Llabel = 7;
-            } else if ($Llabel === 'Hate Speech') {
-                $Llabel = 8;
-            } else if ($Llabel === 'Violence') {
-                $Llabel = 9;
-            } else if ($Llabel === 'Level 0') {
-                $Llabel = 10;
-            } else if ($Llabel === 'Level 1') {
-                $Llabel = 11;
-            } else if ($Llabel === 'Level 2') {
-                $Llabel = 12;
-            } else if ($Llabel === 'Level 3') {
-                $Llabel = 13;
-            }
-
 
             $data->where('message_results.classification_id', '=', $Llabel);
         }
