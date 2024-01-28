@@ -122,81 +122,83 @@ class LevelThreeTableController extends Controller
         ) {
             return $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
         }
-        $raw->select([
-            'messages.id AS id',
-            'messages.message_id AS message_id',
-            'messages.reference_message_id AS reference_message_id',
-            'messages.keyword_id AS keyword_id',
-            'messages.message_datetime AS date_m',
-            'messages.author AS author',
-            'messages.source_id AS source_id',
-            'messages.full_message AS full_message',
-            'messages.message_type',
-            'messages.link_message AS link_message',
-            'messages.device AS device',
-            'messages.number_of_views AS number_of_views',
-            'messages.number_of_comments AS number_of_comments',
-            'messages.number_of_shares AS number_of_shares',
-            'messages.number_of_reactions AS number_of_reactions',
-            /*'message_results.classification_type_id',
-            'message_results.classification_id',*/
-            'messages.created_at AS created_at',
-            DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
-                    COALESCE(tbl_messages.number_of_shares, 0) +
-                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
 
-        ]);
+        $classification = -1;
 
         if ($label != "") {
             $sourceId = Sources::where('name', $label)->first();
             if ($sourceId) {
                 $this->source_id = $sourceId->id;
             }
+
+            $sourceId = $this->matchSourceByName($sources, $Llabel);
+            if ($sourceId) {
+                $this->source_id = $sourceId->id;
+            }
+
+            $classification = self::parseLabelClassification($label);
         }
 
-        if ($Llabel) {
-            $classification = self::parseLabelClassification($Llabel);
-            //error_log('-->'.$classification);
-            if ($classification == -1) {
-                $classification = self::parseLabelClassification($label);
+        if ($Llabel != '') {
+            $sourceId = $this->matchSourceByName($sources, $Llabel);
+            if ($sourceId) {
+                $this->source_id = $sourceId->id;
             }
-            if ($classification != -1) {
-                $raw->select([
-                    'messages.id AS id',
-                    'messages.message_id AS message_id',
-                    'messages.reference_message_id AS reference_message_id',
-                    'messages.keyword_id AS keyword_id',
-                    'messages.message_datetime AS date_m',
-                    'messages.author AS author',
-                    'messages.source_id AS source_id',
-                    'messages.full_message AS full_message',
-                    'messages.message_type',
-                    'messages.link_message AS link_message',
-                    'messages.device AS device',
-                    'messages.number_of_views AS number_of_views',
-                    'messages.number_of_comments AS number_of_comments',
-                    'messages.number_of_shares AS number_of_shares',
-                    'messages.number_of_reactions AS number_of_reactions',
-                    /*'message_results.classification_type_id',
-                    'message_results.classification_id',*/
-                    'messages.created_at AS created_at',
-                    DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
+            $classification = self::parseLabelClassification($Llabel);
+        }
+
+        if ($classification != -1) {
+            $raw->select([
+                'messages.id AS id',
+                'messages.message_id AS message_id',
+                'messages.reference_message_id AS reference_message_id',
+                'messages.keyword_id AS keyword_id',
+                'messages.message_datetime AS date_m',
+                'messages.author AS author',
+                'messages.source_id AS source_id',
+                'messages.full_message AS full_message',
+                'messages.message_type',
+                'messages.link_message AS link_message',
+                'messages.device AS device',
+                'messages.number_of_views AS number_of_views',
+                'messages.number_of_comments AS number_of_comments',
+                'messages.number_of_shares AS number_of_shares',
+                'messages.number_of_reactions AS number_of_reactions',
+                'message_results.classification_type_id',
+                'message_results.classification_id',
+                'messages.created_at AS created_at',
+                DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
 
-                ]);
-                $raw->join('message_results', 'message_results.message_id', '=', 'messages.id');
-                $raw->where('message_results.classification_id', $classification);
-            }
+            ]);
+            $raw->join('message_results', 'message_results.message_id', '=', 'messages.id');
+            $raw->where('message_results.classification_id', $classification);
+        } else {
+            $raw->select([
+                'messages.id AS id',
+                'messages.message_id AS message_id',
+                'messages.reference_message_id AS reference_message_id',
+                'messages.keyword_id AS keyword_id',
+                'messages.message_datetime AS date_m',
+                'messages.author AS author',
+                'messages.source_id AS source_id',
+                'messages.full_message AS full_message',
+                'messages.message_type',
+                'messages.link_message AS link_message',
+                'messages.device AS device',
+                'messages.number_of_views AS number_of_views',
+                'messages.number_of_comments AS number_of_comments',
+                'messages.number_of_shares AS number_of_shares',
+                'messages.number_of_reactions AS number_of_reactions',
+                'messages.created_at AS created_at',
+                DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
+                    COALESCE(tbl_messages.number_of_shares, 0) +
+                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
 
-            if ($Llabel == -1) {
-                $sourceId = $this->matchSourceByName($sources, $Llabel);
-                if ($sourceId) {
-                    $this->source_id = $sourceId->id;
-                }
-            }
-
+            ]);
         }
+
 
         if (isset($request->meesage_id)) {
             $raw->where('messages.message_id', $request->meesage_id);
