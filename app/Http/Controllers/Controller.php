@@ -269,6 +269,16 @@ class Controller extends BaseController
         return null;
     }
 
+    protected function matchSourceByName($source, $sourceId)
+    {
+        foreach ($source as $item) {
+            if ($item->name == $sourceId) {
+                return $item;
+            }
+        }
+        return null;
+    }
+
 
     protected function selectData($select)
     {

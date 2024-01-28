@@ -86,13 +86,11 @@ class LevelThreeTableController extends Controller
             return $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
         } else {
             $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
-            $total = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date);
         }
 
 
         if ($request->message_id) {
             $raw->where('messages.message_id', $request->message_id);
-            //$total->where('message_id', $request->message_id);
         }
 
         //Overall Dashboard
@@ -111,17 +109,14 @@ class LevelThreeTableController extends Controller
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
 
             $raw->whereBetween('message_datetime', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
-            //$total->whereBetween('message_datetime', [$date_request . " 00:00:00", $date_request . " 23:59:59"]);
 
             if ($request->report_number === '2.2.013') {
                 // $raw->whereNotNull('author')->groupBy('author');
                 return $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
                 // dd($raw->first());
-                //$total->whereNotNull('author')->groupBy('author');
             }
 
             if ($request->report_number === '4.2.002') {
-                //$total->where('keywords.name', $Llabel);
                 $keyword = Keyword::where('name', $Llabel)->first();
                 if ($keyword) {
                     $raw->where('messages.keyword_id', $keyword->id);
@@ -131,17 +126,14 @@ class LevelThreeTableController extends Controller
             if ($request->report_number === '4.2.012') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
-                    //$total->where('messages.number_of_comments', '>', 0);
                 }
 
                 if ($Llabel === 'Reactions') {
                     $raw->where('messages.number_of_reactions', '>', 0);
-                    //$total->where('messages.number_of_reactions', '>', 0);
                 }
 
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
-                    //$total->where('messages.number_of_shares', '>', 0);
                 }
 
             }
@@ -159,22 +151,18 @@ class LevelThreeTableController extends Controller
         ) {
 
             $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
-            //$total->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
 
             if ($request->report_number === '4.2.013') {
                 if ($Llabel === 'Comment') {
                     $raw->where('number_of_comments', '>', 0);
-                    //$total->where('number_of_comments', '>', 0);
                 }
 
                 if ($Llabel === 'reactions') {
                     $raw->where('number_of_reactions', '>', 0);
-                    //$total->where('number_of_reactions', '>', 0);
                 }
 
                 if ($Llabel === 'Share') {
                     $raw->where('number_of_shares', '>', 0);
-                    //$total->where('number_of_shares', '>', 0);
                 }
 
             }
@@ -194,39 +182,32 @@ class LevelThreeTableController extends Controller
             if ($request->label === 'Before 6 AM') {
 
                 $raw->whereRaw('HOUR(message_datetime) < ?', [6]);
-                //$total->whereRaw('HOUR(message_datetime) < ?', [6]);
 
             }
 
             if ($request->label === '6 AM-12 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [6, 12]);
-                //$total->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [6, 12]);
             }
 
             if ($request->label === '12 PM-6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [12, 18]);
-                //$total->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [12, 18]);
             }
 
             if ($request->label === 'After 6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
-                //$total->whereRaw('HOUR(message_datetime) >= ?', [18]);
             }
 
             if ($request->report_number === '4.2.014') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
-                    //$total->where('messages.number_of_comments', '>', 0);
                 }
 
                 if ($Llabel === 'Reactions') {
                     $raw->where('messages.number_of_reactions', '>', 0);
-                    //$total->where('messages.number_of_reactions', '>', 0);
                 }
 
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
-                    //$total->where('messages.number_of_shares', '>', 0);
                 }
 
             }
@@ -243,8 +224,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.015'
         ) {
 
-            $target = 'dddddd';
-
+            $target = "";
             if ($label === 'Andriod' || $label === 'Android') {
                 $target = 'android';
             }
@@ -257,23 +237,20 @@ class LevelThreeTableController extends Controller
                 $target = 'website';
             }
 
-            $raw->where('device', $target);
-            $total->where('device', $target);
+            if ($target != "")
+                $raw->where('device', $target);
 
             if ($request->report_number === '4.2.015') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
-                    //$total->where('messages.number_of_comments', '>', 0);
                 }
 
                 if ($Llabel === 'Reactions') {
                     $raw->where('messages.number_of_reactions', '>', 0);
-                    //$total->where('messages.number_of_reactions', '>', 0);
                 }
 
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
-                    //$total->where('messages.number_of_shares', '>', 0);
                 }
 
             }
@@ -293,18 +270,14 @@ class LevelThreeTableController extends Controller
             if ($request->report_number === '2.2.006') {
                 if ($request->label === 'Post Owner') {
                     $raw->where('reference_message_id', '');
-                    //$total->where('reference_message_id', '');
                 } else {
                     $raw->where('reference_message_id', '!=', '');
-                    //$total->where('reference_message_id', '!=', '');
                 }
             } else {
                 if ($label === 'Influencer') {
                     $raw->where('reference_message_id', '');
-                    //$total->where('reference_message_id', '');
                 } else {
                     $raw->where('reference_message_id', '!=', '');
-                    //$total->where('reference_message_id', '!=', '');
                 }
             }
 
@@ -312,17 +285,14 @@ class LevelThreeTableController extends Controller
             if ($request->report_number === '4.2.016') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
-                    //$total->where('messages.number_of_comments', '>', 0);
                 }
 
                 if ($Llabel === 'Reaction') {
                     $raw->where('messages.number_of_reactions', '>', 0);
-                    //$total->where('messages.number_of_reactions', '>', 0);
                 }
 
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
-                    //$total->where('messages.number_of_shares', '>', 0);
                 }
 
             }
@@ -338,22 +308,19 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.017'
         ) {
             //$raw->where('sources.name', $label);
-            //$total->where('sources.name', $label);
+
 
             if ($request->report_number === '4.2.017') {
                 if ($Llabel === 'Comment') {
                     $raw->where('messages.number_of_comments', '>', 0);
-                    //$total->where('messages.number_of_comments', '>', 0);
                 }
 
                 if ($Llabel === 'Reaction') {
                     $raw->where('messages.number_of_reactions', '>', 0);
-                    //$total->where('messages.number_of_reactions', '>', 0);
                 }
 
                 if ($Llabel === 'Share') {
                     $raw->where('messages.number_of_shares', '>', 0);
-                    //$total->where('messages.number_of_shares', '>', 0);
                 }
             }
         }
@@ -361,17 +328,14 @@ class LevelThreeTableController extends Controller
         if ($request->report_number === '4.2.008') {
             if ($request->label === "Share of Voice") {
                 $raw->where('messages.number_of_shares', '>', 0);
-                //$total->where('messages.number_of_shares', '>', 0);
             }
 
             if ($request->label === "Comments") {
                 $raw->where('messages.number_of_comments', '>', 0);
-                //$total->where('messages.number_of_comments', '>', 0);
             }
 
             if ($request->label === "Reaction") {
                 $raw->where('messages.number_of_reactions', '>', 0);
-                //$total->where('messages.number_of_reactions', '>', 0);
             }
 
         }
@@ -382,15 +346,14 @@ class LevelThreeTableController extends Controller
             $request->report_number === '2.2.010'
         ) {
             if ($label === 'Hate Speech') {
-                $label = 'HateSpeech';
+                $classificationId = 8;
             } else if ($label === 'No Bully') {
-                $label = 'NoBully';
+                $classificationId = 4;
             } else if ($label === 'Violence') {
-                $label = 'Violence';
+                $classificationId = 9;
             }
-
-            //$total->where('classifications.name', '=', $label);
-            //$raw->where('classifications.name', '=', $label);
+            if ($classificationId)
+                $raw->where('message_results.classification_id', $classificationId);
         }
 
         if ($request->report_number === '3.2.008' ||
@@ -418,7 +381,6 @@ class LevelThreeTableController extends Controller
             error_log($label);*/
             $raw = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, $label);
             //error_log($raw->toSql());
-            //$total = $this->raw_message_classification($request, $this->campaign_id, $this->start_date, $this->end_date, [$label]);
 
         }
 
@@ -433,10 +395,10 @@ class LevelThreeTableController extends Controller
 
         ) {
             // dd($raw->get());
-            $sourceId = $this->matchSource($source, $Llabel);
-            //$sourceId = $s->where('id', $Llabel);
-            if ($sourceId)
-                $total->where('sources_id', $sourceId);
+            $sourceId = $this->matchSourceByName($source, $Llabel);
+            if ($sourceId) {
+                $raw->where('sources_id', $sourceId->id);
+            }
         }
 
         if ($request->report_number === '3.2.013' ||
@@ -457,7 +419,7 @@ class LevelThreeTableController extends Controller
             //     $raw->addSelect([DB::raw('number_of_reactions + number_of_comments + number_of_reactions as total_engagement')])
             //         ->havingRaw('total_engagement > ?', [0]);
             // }
-            $sourceId = Sources::where('id', $this->source_id)->first();
+            $sourceId = $this->matchSourceByName($source, $Llabel);
             if ($sourceId) {
                 $raw->where('messages.source_id', $sourceId->id);
             }
@@ -482,13 +444,11 @@ class LevelThreeTableController extends Controller
         ) {
             if (isset($request->keyword_id)) {
                 $raw->where('keyword_id', $request->keyword_id);
-                //$total->where('keyword_id', $request->keyword_id);
             }
         }
 
         if (isset($request->meesage_id)) {
             $raw->where('messages.message_id', $request->meesage_id);
-            //$total->where('message_id', $request->meesage_id);
         }
 
         $total = $raw->count();
@@ -569,7 +529,6 @@ class LevelThreeTableController extends Controller
         }
 
         $data['total'] = $total;
-        // $data['total'] = $total;
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
