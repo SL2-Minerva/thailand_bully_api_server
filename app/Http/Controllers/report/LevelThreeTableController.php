@@ -55,28 +55,8 @@ class LevelThreeTableController extends Controller
 
     }
 
-    public function messageLevelThree(Request $request)
+    function parseLabelClassification($Llabel)
     {
-
-        /*$classificationTypes = self::getClassificationJoinTypeMaster();
-        $classification = self::getClassificationMaster();*/
-
-        //$keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
-        $source = $this->getAllSource();
-
-        $limit = $request->limit;
-        $page = $request->page;
-        if ($page == null || $page == 0)
-            $page = 1;
-        if ($limit == null || $limit == 0)
-            $limit = 10;
-        $offset = $limit * ($page - 1);
-        /*$start = $page === null || $page === 1 ? null : $page * $limit;
-        $start = $start === 1 ? null : $start;*/
-        $data = null;
-
-        $label = str_replace("+", " ", $request->label);
-        $Llabel = str_replace("+", " ", $request->Llabel);
         if ($Llabel === 'Positive') {
             $Llabel = 1;
         } else if ($Llabel === 'Neutral') {
@@ -104,6 +84,33 @@ class LevelThreeTableController extends Controller
         } else if ($Llabel === 'Level 3') {
             $Llabel = 13;
         }
+        return $Llabel;
+
+    }
+
+    public
+    function messageLevelThree(Request $request)
+    {
+
+        /*$classificationTypes = self::getClassificationJoinTypeMaster();
+        $classification = self::getClassificationMaster();*/
+
+        //$keyword = DB::table('keywords')->where('campaign_id', $this->campaign_id);
+        $source = $this->getAllSource();
+
+        $limit = $request->limit;
+        $page = $request->page;
+        if ($page == null || $page == 0)
+            $page = 1;
+        if ($limit == null || $limit == 0)
+            $limit = 10;
+        $offset = $limit * ($page - 1);
+        /*$start = $page === null || $page === 1 ? null : $page * $limit;
+        $start = $start === 1 ? null : $start;*/
+        $data = null;
+
+        $label = str_replace("+", " ", $request->label);
+        $Llabel = str_replace("+", " ", $request->Llabel);
 
         if ($request->report_number === '5.2.008' ||
             $request->report_number === '5.2.009' ||
@@ -372,7 +379,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '2.2.009' ||
             $request->report_number === '2.2.010'
         ) {
-
+            $Llabel = self::parseLabelClassification($Llabel);
             if ($Llabel)
                 $raw->where('message_results.classification_id', $Llabel);
         }
@@ -382,10 +389,10 @@ class LevelThreeTableController extends Controller
             $request->report_number === '3.2.009'
 
         ) {
-
-            if ($Llabel)
-                $raw->where('message_results.classification_id', $Llabel);
-            error_log($raw->toSql());
+            $label = self::parseLabelClassification($label);
+            if ($label) {
+                $raw->where('message_results.classification_id', $label);
+            }
         }
 
         if ($request->report_number === '3.2.002' ||
@@ -536,7 +543,8 @@ class LevelThreeTableController extends Controller
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
-    private function raw_message_classification(Request $request, $campaign_id, $start_date, $end_date, $classification = null)
+    private
+    function raw_message_classification(Request $request, $campaign_id, $start_date, $end_date, $classification = null)
     {
         $keyword = Keyword::where('campaign_id', $campaign_id);
 
@@ -657,7 +665,7 @@ class LevelThreeTableController extends Controller
                 $request->label === 'Violence'
 
             ) {
-
+                $Llabel = self::parseLabelClassification($Llabel);
                 if ($Llabel)
                     $data->where('message_results.classification_id', $Llabel);
             } else {
@@ -687,14 +695,15 @@ class LevelThreeTableController extends Controller
             // $request->report_number === '5.2.008' ||
             // $request->report_number === '5.2.009'
         ) {
-
+            $Llabel = self::parseLabelClassification($Llabel);
             $data->where('message_results.classification_id', '=', $Llabel);
         }
 
         return $data;
     }
 
-    private function getClassificationName($message_id)
+    private
+    function getClassificationName($message_id)
     {
         return DB::table('messages')
             ->select([
@@ -708,7 +717,8 @@ class LevelThreeTableController extends Controller
             ->get(['classifications.classification_type_id', 'classification_name']);
     }
 
-    private function raw_account(Request $request, $campaign_id, $start_date, $end_date, $report_number)
+    private
+    function raw_account(Request $request, $campaign_id, $start_date, $end_date, $report_number)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -854,7 +864,8 @@ class LevelThreeTableController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function classifacation_multiple(Request $request, $campaign_id, $start_date, $end_date, $report_number)
+    private
+    function classifacation_multiple(Request $request, $campaign_id, $start_date, $end_date, $report_number)
     {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
@@ -1016,7 +1027,8 @@ class LevelThreeTableController extends Controller
         return parent::handleRespond($data);
     }
 
-    public function deleteMessage(Request $request)
+    public
+    function deleteMessage(Request $request)
     {
         if ($request->id) {
             $originalMessage = Message::find($request->id);
