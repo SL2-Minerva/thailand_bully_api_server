@@ -834,7 +834,7 @@ class BullyDashboardController extends Controller
 
         $data['bully_type_by_level'] = $this->BullyChartLevelGroup($currentLevel, $classifications);
         $data['bully_chart_type'] = $this->BullyChartTypeGroup($currentType, $classifications);
-        //$data['bully_chart_level'] = $this->BullyLevelLevelGroup($currentLevel, $classifications, $sources);
+        $data['bully_chart_level'] = $this->BullyLevelLevelGroup($currentLevel, $classifications, $sources);
         $data['bully_table_type'] = $this->BullyTableTypeGroup($currentType, $classifications, $sources);
 
         return parent::handleRespond($data);
