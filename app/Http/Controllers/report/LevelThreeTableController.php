@@ -386,9 +386,11 @@ class LevelThreeTableController extends Controller
         $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         error_log($raw->toSql());
         $total = $raw->count();
+        error_log("total:" . $total.' $offset:'.$offset.' $limit:'.$limit);
         $items = $raw->offset($offset)->limit($limit)->get();
 
         foreach ($items as $item) {
+            error_log("item:" . $item->id);
             $date_d = Carbon::parse($item->date_m)->format('D');
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
@@ -430,7 +432,8 @@ class LevelThreeTableController extends Controller
                     $data_push['bully_level'] = $type->classification_name;
                 }
             }
-            $data['message'][$item->message_id] = $data_push;
+            error_log("item: push");
+            $data['message'][$item->id] = $data_push;
         }
 
 
@@ -439,6 +442,7 @@ class LevelThreeTableController extends Controller
         }
 
         $data['total'] = $total;
+        error_log("item:" . count($data['message']));
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
