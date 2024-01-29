@@ -516,7 +516,8 @@ class MonitoringController extends Controller
 
     public function topInfluencerPost(Request $request)
     {
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date, $request->limit, $request->page);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         if (count($result) > 5) {
             $result = array_slice($result, 0, 5);
@@ -578,7 +579,8 @@ class MonitoringController extends Controller
             $limit = 10;
         if ($page == null || $page == 0)
             $page = 1;
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         $count = count($result);
         if (count($result) > $limit) {
@@ -707,22 +709,16 @@ class MonitoringController extends Controller
 
     public function influencerExport(Request $request)
     {
-        $raw = self::rawMessageInfluencerCampaign($request->campaign_id, $this->start_date, $this->end_date);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         return Excel::download(new MonitoringExport($result, 'sentiment'), 'monitoring-sentiment-' . Carbon::now() . '.xlsx');
     }
 
-    private function rawMessageInfluencerCampaign($campaign_id, $start_date, $end_date)
+    private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
     {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
 
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-
-        $keywordIds = $keyword->pluck('id')->all();
+        $keywordIds = $keywords->pluck('id')->all();
 
 
         $sourceQuery = "";
@@ -730,6 +726,9 @@ class MonitoringController extends Controller
             $sourceQuery = "m.source_id = $this->source_id AND ";
         }
 
+        $keywordQuery = "";
+        if ($keywordIds)
+            $keywordQuery = "keyword_id IN (" . implode(",", $keywordIds) . ") AND ";
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $sourceQuery = "m.source_id IN (" . implode(",", $source_ids) . ") AND ";
@@ -742,8 +741,8 @@ FROM
     LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
 WHERE
     $sourceQuery
-    keyword_id IN (" . implode(",", $keywordIds) . ")
-    AND author != ''
+    $keywordQuery
+    author != ''
    AND mr.classification_type_id=1
     AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
         $newGroupedData = [];
