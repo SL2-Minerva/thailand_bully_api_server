@@ -56,17 +56,8 @@ class MonitoringController extends Controller
         }
     }
 
-    private function rawMessageCampaign($campaign_id, $start_date, $end_date)
+    private function rawMessageCampaign($keywords, $start_date, $end_date)
     {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-
-        $keywordIds = $keyword->pluck('id')->all();
 
         $data = DB::table('messages')
             ->select([
@@ -104,7 +95,7 @@ class MonitoringController extends Controller
             //->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             /*->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
-            ->whereIn('keyword_id', $keywordIds)
+
             ->where(function ($query) {
                 $query->where('message_type', '=', 'Post')
                     ->orWhere('message_type', '=', 'post');
@@ -114,6 +105,10 @@ class MonitoringController extends Controller
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
         // ->orderByDesc('total_engagement');
         // ->get();
+
+        $keywordIds = $keywords->pluck('id')->all();
+        if ($keywordIds)
+            $data->whereIn('messages.keyword_id', $keywordIds);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
@@ -304,7 +299,8 @@ class MonitoringController extends Controller
     {
 
         // $classificationTypes = self::getClassificationMaster();
-        $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(5)->get();
         $source = DB::table('sources')->where("status", "=", 1)->get();
         foreach ($raw_data as $item) {
@@ -313,8 +309,8 @@ class MonitoringController extends Controller
             $types = $this->getClassificationName($item->id);
             $parent = null;
 
-            if (!$item->reference_message_id || $item->reference_message_id === null || $item->reference_message_id === '') {
-                $parent = $item->message_id;
+            if ($item->reference_message_id && $item->reference_message_id != '') {
+                $parent = $item->reference_message_id;
             }
 
             $data_push = [
@@ -358,7 +354,8 @@ class MonitoringController extends Controller
 
     public function engagementOfPost(Request $request)
     {
-        $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $query = $raw->orderByDesc('total_engagement');
 
         $limit = self::selectData($request->select);
@@ -386,7 +383,8 @@ class MonitoringController extends Controller
 
     public function engagementExport(Request $request)
     {
-        $raw = self::rawMessageCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw = $raw->orderByDesc('total_engagement');
         $raw_data = $raw->limit(self::selectData($request->select))->get();
         $result = self::parseEngamement($raw_data);
@@ -617,15 +615,9 @@ class MonitoringController extends Controller
 
     public function influencerAuthor(Request $request)
     {
-        $keyword = Keyword::where('campaign_id', $this->campaign_id);
+        $keywords = $this->findKeywords($request->campaign_id,$request->keyword_id);
 
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-
-        $keywordIds = $keyword->pluck('id')->all();
+        $keywordIds = $keywords->pluck('id')->all();
         $query = DB::table('messages')
             ->select('messages.*', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
@@ -715,7 +707,7 @@ class MonitoringController extends Controller
 
     public function influencerExport(Request $request)
     {
-        $raw = self::rawMessageInfluencerCampaign($this->campaign_id, $this->start_date, $this->end_date);
+        $raw = self::rawMessageInfluencerCampaign($request->campaign_id, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         return Excel::download(new MonitoringExport($result, 'sentiment'), 'monitoring-sentiment-' . Carbon::now() . '.xlsx');
     }

@@ -40,7 +40,6 @@ class LevethreeOverAllDashboardController extends Controller
             $this->start_date_previous = $this->date_carbon($request->start_date_period);
             $this->end_date_previous = $this->date_carbon($request->end_date_period);
         }
-
     }
 
     public function dailyMessageLevelThree(Request $request)
