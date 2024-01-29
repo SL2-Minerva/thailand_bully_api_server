@@ -154,8 +154,11 @@ class LevelfourController extends Controller
     private function getSNAbyType($request, $type = 1)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $roots = $this->getNode($keywords, $request->message_id, false, $type, []);
 
+
+        $roots = $this->getNode($keywords, $request->message_id, false, $type, []);
+        //error_log(json_encode($keywords));
+        //return null;
         $messageIds = [];
         foreach ($roots["nodes"] as $node) {
             $messageIds[] = $node["id"];
@@ -202,7 +205,7 @@ class LevelfourController extends Controller
         if ($is_child) {
             $raw = $this->message()
                 ->where('message_results.classification_type_id', $type)
-                ->whereIn('messages.reference_message_id', $parentMessageIds);
+                ->whereIn('messages.reference_message_id', $parentMessageIds)->limit(10000);
         } else {
             if ($message_id) {
                 $raw = $this->message();
@@ -211,7 +214,7 @@ class LevelfourController extends Controller
             } else {
                 $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                     ->where('message_results.classification_type_id', $type)
-                    ->where('messages.reference_message_id', '')->limit(1500)
+                    ->where('messages.reference_message_id', '')->limit(1000)
                     ->groupBy("messages.message_id");
             }
         }
