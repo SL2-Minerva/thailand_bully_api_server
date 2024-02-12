@@ -301,7 +301,7 @@ class MonitoringController extends Controller
         // $classificationTypes = self::getClassificationMaster();
         $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
-        $raw_data = $raw->orderByDesc('total_engagement')->limit(5)->get();
+        $raw_data = $raw->orderByDesc('total_engagement')->limit(6)->get();
         $source = DB::table('sources')->where("status", "=", 1)->get();
         foreach ($raw_data as $item) {
 
@@ -328,6 +328,9 @@ class MonitoringController extends Controller
                 "link_message" => $item->link_message,
                 "parent" => $parent,
                 "total_engagement" => $item->total_engagement,
+                "number_of_shares" => $item->number_of_shares,
+                "number_of_reactions" => $item->number_of_reactions,
+                "number_of_comments" => $item->number_of_comments,
             ];
 
 
