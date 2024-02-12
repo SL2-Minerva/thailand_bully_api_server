@@ -295,6 +295,10 @@ class LevelThreeTableController extends Controller
             $this->end_date = $end_date;
         }
 
+        if ($request->page_name === 'monitoringDashboard'
+        ) {
+            $raw->whereIn('messages.message_type', ["Post","Video","post"]);
+        }
         //Overall Dashboard
         if ($request->report_number === '1.2.002' ||
             $request->report_number === '2.2.002' ||
@@ -384,13 +388,12 @@ class LevelThreeTableController extends Controller
 
         // Last
         $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-        error_log($raw->toSql());
+
         $total = $raw->count();
         error_log("total:" . $total.' $offset:'.$offset.' $limit:'.$limit);
         $items = $raw->offset($offset)->limit($limit)->get();
 
         foreach ($items as $item) {
-            error_log("item:" . $item->id);
             $date_d = Carbon::parse($item->date_m)->format('D');
             $types = $this->getClassificationName($item->message_id);
             $parent = null;
