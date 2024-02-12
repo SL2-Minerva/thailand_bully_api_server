@@ -485,7 +485,7 @@ class MonitoringController extends Controller
                     "number_of_shares" => $item->number_of_shares,
                     "number_of_reactions" => $item->number_of_reactions,
                     "number_of_comments" => $item->number_of_comments,
-                    "number_of_views" => $item->number_of_views,
+                    /*"number_of_views" => $item->number_of_views,*/
                     "link_message" => $item->link_message];
                 $commentData[] = $rs;
             }
@@ -522,7 +522,7 @@ class MonitoringController extends Controller
         $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
         $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
-        if (count($result) > 5) {
+        if (count($result) > 6) {
             $result = array_slice($result, 0, 5);
         }
         return parent::handleRespondPage($result, ['total_rows' => count($result), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
