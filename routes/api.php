@@ -255,7 +255,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('/', [LevelThreeTableController::class, 'messageLevelThree']);
         });
 
-
+/*
         Route::group(['prefix' => 'export'], function () {
             Route::get('export-overall', [LevelthreeController::class, 'exportOverAll']);
             Route::get('export-voice', [LevelthreeController::class, 'exportVoice']);
@@ -264,6 +264,18 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('export-sentiment', [LevelthreeController::class, 'exportSentiment']);
             Route::get('export-bully', [LevelthreeController::class, 'exportBully']);
             Route::get('export-excel-overall', [ExportExcelOverallController::class, 'exportOverAll']);
+            Route::get('monitoring', [LevelThreeTableController::class, 'exportMonitoring']);
+
+        });*/
+
+        Route::group(['prefix' => 'export'], function () {
+            Route::get('export-overall', [LevelThreeTableController::class, 'exportMonitoring']);
+            Route::get('export-voice', [LevelThreeTableController::class, 'exportMonitoring']);
+            Route::get('export-channel',[LevelThreeTableController::class, 'exportMonitoring']);
+            Route::get('export-engagement', [LevelThreeTableController::class, 'exportMonitoring']);
+            Route::get('export-sentiment', [LevelThreeTableController::class, 'exportMonitoring']);
+            Route::get('export-bully', [LevelThreeTableController::class, 'exportMonitoring']);
+            Route::get('export-excel-overall', [LevelThreeTableController::class, 'exportMonitoring']);
             Route::get('monitoring', [LevelThreeTableController::class, 'exportMonitoring']);
 
         });
