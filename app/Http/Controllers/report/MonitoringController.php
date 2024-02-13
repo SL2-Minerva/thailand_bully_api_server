@@ -299,7 +299,7 @@ class MonitoringController extends Controller
     {
 
         // $classificationTypes = self::getClassificationMaster();
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(6)->get();
         $source = DB::table('sources')->where("status", "=", 1)->get();
@@ -357,7 +357,7 @@ class MonitoringController extends Controller
 
     public function engagementOfPost(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $query = $raw->orderByDesc('total_engagement');
 
@@ -386,7 +386,7 @@ class MonitoringController extends Controller
 
     public function engagementExport(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw = $raw->orderByDesc('total_engagement');
         $raw_data = $raw->limit(self::selectData($request->select))->get();
@@ -519,7 +519,7 @@ class MonitoringController extends Controller
 
     public function topInfluencerPost(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         if (count($result) > 6) {
@@ -582,7 +582,7 @@ class MonitoringController extends Controller
             $limit = 10;
         if ($page == null || $page == 0)
             $page = 1;
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         $count = count($result);
@@ -620,7 +620,7 @@ class MonitoringController extends Controller
 
     public function influencerAuthor(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id,$request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id,$this->keyword_id);
 
         $keywordIds = $keywords->pluck('id')->all();
         $query = DB::table('messages')
@@ -712,7 +712,7 @@ class MonitoringController extends Controller
 
     public function influencerExport(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         return Excel::download(new MonitoringExport($result, 'sentiment'), 'monitoring-sentiment-' . Carbon::now() . '.xlsx');

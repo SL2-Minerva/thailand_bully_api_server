@@ -904,7 +904,7 @@ class DashboardController extends Controller
     public function wordClouds(Request $request)
     {
         $data = null;
-        $campaign_id = $request->campaign_id ?? "";
+        $campaign_id = $this->campaign_id ?? "";
 
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');
@@ -982,7 +982,7 @@ GROUP BY
     public function wordCloudsPlateform(Request $request)
     {
         $data = null;
-        $campaign_id = $request->campaign_id ?? "";
+        $campaign_id = $this->campaign_id ?? "";
 
         //$select = $request->select ?? null;
         $keywords = self::findKeywords($campaign_id, $this->keyword_id);
@@ -1066,7 +1066,7 @@ GROUP BY
     public function wordCloudsPosition(Request $request)
     {
         $data = null;
-        $campaign_id = $request->campaign_id ?? "";
+        $campaign_id = $this->campaign_id ?? "";
 
         if (!$campaign_id) {
             return parent::handleNotFound('Campaign id is required');

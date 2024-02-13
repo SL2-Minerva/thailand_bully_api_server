@@ -64,7 +64,7 @@ class VoiceDashboardController extends Controller
 
     public function PercentageOfMessage(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $data = null;
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
         $raw_previous = $this->raw_message($keywords, $this->start_date_previous, $this->end_date_previous);
@@ -121,7 +121,7 @@ class VoiceDashboardController extends Controller
 
     public function DailyMessage(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
         $sources = $this->getAllSource();
 
@@ -186,7 +186,7 @@ class VoiceDashboardController extends Controller
      */
     public function messageBy(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
         $raw = $this->raw_message($keywords, $this->start_date, $this->end_date);
         //error_log($raw->toSql());
@@ -552,7 +552,7 @@ class VoiceDashboardController extends Controller
 
     public function NumberOfAccountPeriodOverPeriod(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
 
         $raw = $this->raw_message(
@@ -942,7 +942,7 @@ class VoiceDashboardController extends Controller
     public function DayTimeBy(Request $request)
     {
 
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
         //$raw_classification = $this->raw_message_classification($keywords, $this->start_date, $this->end_date)->get();
         /* $items1 = [];
@@ -974,7 +974,7 @@ class VoiceDashboardController extends Controller
 
     public function channelPlatformChannelDevice(Request $request)
     {
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
 
         $raw = $this->raw_message(
             $keywords,
@@ -1149,7 +1149,7 @@ class VoiceDashboardController extends Controller
     {
 
 
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
         $raw_classification = $this->raw_message_classification($keywords, $this->start_date, $this->end_date)->get();
         $items1 = [];

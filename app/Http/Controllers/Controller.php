@@ -316,7 +316,6 @@ class Controller extends BaseController
         if ($keyword_id) {
             $keyword->whereIn('id', $keyword_id);
         }
-
         return $keyword->get();
     }
 

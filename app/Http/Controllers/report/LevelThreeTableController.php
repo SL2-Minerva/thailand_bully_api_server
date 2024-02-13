@@ -137,7 +137,7 @@ class LevelThreeTableController extends Controller
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
         $sources = $this->getAllSource();
-        $keywords = $this->findKeywords($request->campaign_id, $request->keyword_id);
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
 
 
         $limit = $request->limit;
