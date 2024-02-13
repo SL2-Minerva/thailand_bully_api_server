@@ -590,7 +590,10 @@ class MonitoringController extends Controller
             $offset = $limit * ($page - 1);
             $result = array_slice($result, $offset, $limit);
         }
-        return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => intval($limit), 'page' => intval($page)]);
+        if ($request->select != 'all') {
+            $count = $limit;
+        }
+        return parent::handleRespondPage($result, ['total_rows' => $count, 'limit' => $limit, 'page' => intval($page)]);
     }
 
     /*
