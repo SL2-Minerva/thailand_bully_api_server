@@ -219,7 +219,7 @@ class LevelThreeTableController extends Controller
     {
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
-
+        $isHasMessageDate = false;
 
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
@@ -388,17 +388,19 @@ class LevelThreeTableController extends Controller
 
         ) {
 
-            $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
-            $this->start_date = $date_request;
-            $this->end_date = $date_request;
-            if ($request->report_number === '2.2.013') {
-                return $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
-            }
+            if ($request->label) {
+                $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
+                $this->start_date = $date_request;
+                $this->end_date = $date_request;
+                if ($request->report_number === '2.2.013') {
+                    return $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
+                }
 
-            if ($request->report_number === '4.2.002') {
-                $keyword = Keyword::where('name', $Llabel)->first();
-                if ($keyword) {
-                    $raw->where('messages.keyword_id', $keyword->id);
+                if ($request->report_number === '4.2.002') {
+                    $keyword = Keyword::where('name', $Llabel)->first();
+                    if ($keyword) {
+                        $raw->where('messages.keyword_id', $keyword->id);
+                    }
                 }
             }
         }
@@ -413,6 +415,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.003' ||
             $request->report_number === '6.2.013'
         ) {
+            $isHasMessageDate = true;
             $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
         }
 
@@ -435,6 +438,7 @@ class LevelThreeTableController extends Controller
             } else if ($request->label === 'After 6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
             }
+            $isHasMessageDate = true;
         }
         //user_typr
         if ($request->report_number === '2.2.006' ||
@@ -461,9 +465,9 @@ class LevelThreeTableController extends Controller
             }
         }
 
-
-        // Last
-        $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        if (!$isHasMessageDate) {
+            $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+        }
         return $raw;
     }
 
@@ -823,9 +827,8 @@ class LevelThreeTableController extends Controller
         }
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
 
-
         $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
-        $data = $raw->get();
+        $data = $raw->limit(10000)->get();
         $messageIds = $data->pluck('id')->all();
 
         $messageResult = DB::table('message_results')
