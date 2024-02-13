@@ -144,16 +144,6 @@ Route::group(['middleware' => ['api']], function () {
             Route::post('/delete', [OrganizationContentController::class, 'destroy']);
         });
 
-//todo for check
-//        Route::group(['prefix' => 'campaign'], function () {
-//            Route::get('/', [CampaignController::class, 'show']);
-//            Route::get('/list', [CampaignController::class, 'index']);
-//            Route::post('/create', [CampaignController::class, 'store']);
-//            Route::put('/update', [CampaignController::class, 'update']);
-//            Route::put('/delete', [CampaignController::class, 'destroy']);
-//            Route::get('/search', [CampaignController::class, 'search']);
-//        });
-
 
         Route::group(['prefix' => 'domain'], function () {
             Route::get('/', [DomainController::class, 'show']);
