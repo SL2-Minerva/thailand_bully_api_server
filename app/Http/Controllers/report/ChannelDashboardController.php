@@ -123,15 +123,7 @@ class ChannelDashboardController extends Controller
         // Resetting keys of value arrays
 
 
-        $result = [];
-        foreach ($sources as $source) {
-            foreach ($data as $item) {
-                if ($item['source_id'] == $source->id) {
-                    $result[] = $item;
-                }
-            }
-        }
-        return $result;
+        return  self::fetchSourceOrder($sources, $data);
     }
 
 
@@ -160,6 +152,11 @@ class ChannelDashboardController extends Controller
             $data[$source_id]['value'][] = $nestData;
         }
 
+        return self::fetchSourceOrder($sources, $data);
+    }
+
+    function fetchSourceOrder($sources,$data)
+    {
         $result = [];
         foreach ($sources as $source) {
             foreach ($data as $item) {
@@ -168,7 +165,6 @@ class ChannelDashboardController extends Controller
                 }
             }
         }
-
         return $result;
     }
 
@@ -195,6 +191,19 @@ class ChannelDashboardController extends Controller
         return parent::handleRespond($data);
     }
 
+
+    function fetchChannelBySourceOrder($sources, $data)
+    {
+        $result = [];
+        foreach ($sources as $source) {
+            foreach ($data['value'] as $item) {
+                if ($item['source_id']== $source->id) {
+                    $result[] = $item;
+                }
+            }
+        }
+        return $result;
+    }
 
     public function ChannelBullyTypeGroup($result2, $sources, $keywords, $classification)
     {
@@ -226,6 +235,8 @@ class ChannelDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
+
+        $data['value'] = self::fetchChannelBySourceOrder($sources, $data);
         return $data;
     }
 
@@ -264,6 +275,7 @@ class ChannelDashboardController extends Controller
             $data['value'] = array_values($data['value']);
         }
 
+        $data['value'] = self::fetchChannelBySourceOrder($sources, $data);
         return $data;
     }
 
@@ -304,6 +316,7 @@ class ChannelDashboardController extends Controller
             $data['value'] = array_values($data['value']);
         }
 
+        $data['value'] = self::fetchChannelBySourceOrder($sources, $data);
         return $data;
     }
 
@@ -342,9 +355,10 @@ class ChannelDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
-
+        $data['value'] = self::fetchChannelBySourceOrder($sources, $data);
         return $data;
     }
+
 
     public function ChannelByTimeGroup($raw, $sources, $keywords)
     {
@@ -398,6 +412,7 @@ class ChannelDashboardController extends Controller
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
         }
+        $data['value'] = self::fetchChannelBySourceOrder($sources, $data);
 
         return $data;
     }
@@ -437,7 +452,7 @@ class ChannelDashboardController extends Controller
                         'id' => $item->keyword_id,
                         'source_id' => $item->source_id,
                         'source_name' => self::matchSourceName($sources, $item->source_id),
-                        'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+                     //   'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
                         'data' => [0, 0, 0]
                     ];
 
@@ -452,6 +467,7 @@ class ChannelDashboardController extends Controller
             $data['value'] = array_values($data['value']);
         }
 
+        $data['value'] = self::fetchChannelBySourceOrder($sources, $data);
         return $data;
 
     }
