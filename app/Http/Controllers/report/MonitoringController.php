@@ -173,10 +173,6 @@ class MonitoringController extends Controller
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
 
-        if ($this->source_id) {
-            $total_keywords->where('source_id', $this->source_id);
-        }
-
 
         $sources = DB::table('sources')->where("status", "=", 1)->get();
         $keywords = DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();
@@ -720,6 +716,30 @@ class MonitoringController extends Controller
         $result = self::parseInfluencer($raw);
         return Excel::download(new MonitoringExport($result, 'sentiment'), 'monitoring-sentiment-' . Carbon::now() . '.xlsx');
     }
+
+    public function dailyExport(Request $request)
+    {
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
+        $total_keywords = DB::table('messages')
+            ->select([
+                'messages.keyword_id as keyword_id',
+                'messages.source_id as source_id',
+                'messages.message_datetime as date_m',
+                'messages.reference_message_id as reference_message_id',
+            ])
+            ->whereIn('keyword_id', $keywords->pluck('id')->all())
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($this->source_id) {
+            $total_keywords->where('source_id', $this->source_id);
+        }
+        $sources =self::getAllSource();
+        $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
+
+        return Excel::download(new MonitoringExport($this->dailyMessage($total_keywords, $sources, $keywords, $campaign), 'dailyMessage'), 'monitoring_daily-message-' . Carbon::now() . '.xlsx');
+    }
+
+
 
     private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
     {

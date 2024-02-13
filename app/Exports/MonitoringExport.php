@@ -57,8 +57,30 @@ class MonitoringExport implements FromCollection, WithHeadings
     public function collection()
     {
         $excel = [];
-        if ($this->report_type === 'sentiment') {
+        if ($this->report_type === 'dailyMessage') {
             foreach ($this->report as $position => $item) {
+                $date_d = Carbon::parse($item->date_m)->format('D');
+
+                $row = array();
+                $row["no"] = $position + 1;
+                $row["message_id"] = $item->message_id;
+                $row["keyword_name"] = $item->keyword_name;
+                $row["message_detail"] = $item->full_message;
+                $row["account_name"] = $item->author;
+                $row["post_date"] = Carbon::parse($item->date_m)->format('Y/m/d');
+                $row["post_time"] = Carbon::parse($item->date_m)->format('H:i');
+                $row["day"] = $date_d;
+                $row["message_type"] = $item->message_type;
+                $row["device"] = $item->device;
+                $row["channel"] = $item->source_name;
+                $row["source_name"] = $item->source_name;
+                $row["link_message"] = $item->link_message;
+                $row[$item->classification_type_id] = $item->classification_name;
+            }
+
+        } else if ($this->report_type === 'sentiment') {
+            foreach ($this->report as $position => $item) {
+
                 $row = array();
                 $row["no"] = $position + 1;
                 $row["account_name"] = $item["account_name"];

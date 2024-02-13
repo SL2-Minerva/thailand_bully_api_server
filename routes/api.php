@@ -202,6 +202,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('engagements/export', [MonitoringController::class, 'engagementExport']);
             Route::get('influencers/export', [MonitoringController::class, 'influencerExport']);
             Route::get('influencers/author', [MonitoringController::class, 'influencerAuthor']);
+            Route::get('daily/export', [MonitoringController::class, 'dailyExport']);
 
         });
 
@@ -263,6 +264,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('export-sentiment', [LevelthreeController::class, 'exportSentiment']);
             Route::get('export-bully', [LevelthreeController::class, 'exportBully']);
             Route::get('export-excel-overall', [ExportExcelOverallController::class, 'exportOverAll']);
+            Route::get('monitoring', [LevelthreeController::class, 'exportMonitoring']);
 
         });
 
