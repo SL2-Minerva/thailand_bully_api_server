@@ -147,76 +147,7 @@ class LevelThreeTableController extends Controller
         if ($limit == null || $limit == 0)
             $limit = 10;
         $offset = $limit * ($page - 1);
-
-        $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
-
-        $total = $raw->count();
-        error_log("total:" . $total . ' $offset:' . $offset . ' $limit:' . $limit);
-        $items = $raw->offset($offset)->limit($limit)->get();
-
-        foreach ($items as $item) {
-            $date_d = Carbon::parse($item->date_m)->format('D');
-            $types = $this->getClassificationName($item->message_id);
-            $parent = null;
-
-            if ($item->reference_message_id && $item->reference_message_id != '') {
-                $parent = $item->message_id;
-            }
-
-            $sourceName = $this->matchSourceName($sources, $item->source_id);
-            $data_push = [
-                "id" => $item->id,
-                "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
-                "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
-                "day" => $date_d,
-                "message_type" => $item->message_type,
-                "device" => $item->device,
-                "channel" => $sourceName,
-                "source_name" => $sourceName,
-                "link_message" => $item->link_message,
-                "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
-            ];
-
-
-            // loop for get classification name
-            foreach ($types as $type) {
-                if ($type->classification_type_id == 1) {
-                    $data_push['sentiment'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 2) {
-                    $data_push['bully_type'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 3) {
-                    $data_push['bully_level'] = $type->classification_name;
-                }
-            }
-            error_log("item: push");
-            $data['message'][$item->id] = $data_push;
-        }
-
-
-        if (isset($data['message'])) {
-            $data['message'] = array_values($data['message']);
-        }
-
-        $data['total'] = $total;
-        error_log("item:" . count($data['message']));
-        return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
-    }
-
-    public
-    function messageLevelThreeRaw(Request $request, $sources, $keywords)
-    {
-
-        /*$classificationTypes = self::getClassificationJoinTypeMaster();
-        $classification = self::getClassificationMaster();*/
-
+        $data = null;
 
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
@@ -366,7 +297,7 @@ class LevelThreeTableController extends Controller
 
         if ($request->page_name === 'monitoringDashboard'
         ) {
-            $raw->whereIn('messages.message_type', ["Post", "Video", "post"]);
+            $raw->whereIn('messages.message_type', ["Post","Video","post"]);
         }
         //Overall Dashboard
         if ($request->report_number === '1.2.002' ||
@@ -457,7 +388,65 @@ class LevelThreeTableController extends Controller
 
         // Last
         $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-        return $raw;
+
+        $total = $raw->count();
+        error_log("total:" . $total.' $offset:'.$offset.' $limit:'.$limit);
+        $items = $raw->offset($offset)->limit($limit)->get();
+
+        foreach ($items as $item) {
+            $date_d = Carbon::parse($item->date_m)->format('D');
+            $types = $this->getClassificationName($item->message_id);
+            $parent = null;
+
+            if ($item->reference_message_id && $item->reference_message_id != '') {
+                $parent = $item->message_id;
+            }
+
+            $sourceName = $this->matchSourceName($sources, $item->source_id);
+            $data_push = [
+                "id" => $item->id,
+                "message_id" => $item->message_id,
+                "message_detail" => $item->full_message,
+                "account_name" => $item->author,
+                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
+                "day" => $date_d,
+                "message_type" => $item->message_type,
+                "device" => $item->device,
+                "channel" => $sourceName,
+                "source_name" => $sourceName,
+                "link_message" => $item->link_message,
+                "parent" => $parent,
+                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+            ];
+
+
+            // loop for get classification name
+            foreach ($types as $type) {
+                if ($type->classification_type_id == 1) {
+                    $data_push['sentiment'] = $type->classification_name;
+                }
+
+                if ($type->classification_type_id == 2) {
+                    $data_push['bully_type'] = $type->classification_name;
+                }
+
+                if ($type->classification_type_id == 3) {
+                    $data_push['bully_level'] = $type->classification_name;
+                }
+            }
+            error_log("item: push");
+            $data['message'][$item->id] = $data_push;
+        }
+
+
+        if (isset($data['message'])) {
+            $data['message'] = array_values($data['message']);
+        }
+
+        $data['total'] = $total;
+        error_log("item:" . count($data['message']));
+        return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
     }
 
     private
