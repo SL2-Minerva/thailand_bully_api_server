@@ -686,7 +686,7 @@ class MonitoringController extends Controller
         $result = array();
         if (count($messageIds) > 0) {
             $messageResult = DB::table('message_results')
-                ->select('message_id,classification_id, classification_type_id')
+                ->select(['message_id','classification_id', 'classification_type_id'])
                 ->whereIn('message_id', $messageIds)->get();
 
             foreach ($data as $message) {
