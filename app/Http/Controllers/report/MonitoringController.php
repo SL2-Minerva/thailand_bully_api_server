@@ -439,13 +439,13 @@ class MonitoringController extends Controller
 
 
         $post = self:: rawQueryMessage()->where('messages.id', $messageId)->first();
-        $comment = self::rawQueryMessage()->where('messages.message_type', '=', "Comment")
-            ->where('messages.reference_message_id', '=', $post->message_id)
-            ->get();
+
         if (!$post) {
             return parent::handleNotFound(null);
         }
-
+        $comment = self::rawQueryMessage()->where('messages.message_type', '=', "Comment")
+            ->where('messages.reference_message_id', '=', $post->message_id)
+            ->get();
         $post->sentiment = "";
         $post->bully_type = "";
         $post->bully_level = "";
