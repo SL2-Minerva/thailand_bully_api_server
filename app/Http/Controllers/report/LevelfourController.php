@@ -154,11 +154,8 @@ class LevelfourController extends Controller
     private function getSNAbyType($request, $type = 1)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-
-
         $roots = $this->getNode($keywords, $request->message_id, false, $type, []);
-        //error_log(json_encode($keywords));
-        //return null;
+
         $messageIds = [];
         foreach ($roots["nodes"] as $node) {
             $messageIds[] = $node["id"];
@@ -233,7 +230,7 @@ class LevelfourController extends Controller
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
             $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 5 : 0;
+            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 10 : 0;
 
             $data_push = [
                 "id" => $item->message_id,
@@ -247,9 +244,11 @@ class LevelfourController extends Controller
 
 
 //            if ($is_child) {
-            $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 5;
-            //$data_push["length"] = (int)$influent_rate ?? 1;
-
+            if ($influent_rate){
+                $data_push["length"] = (int)$influent_rate ?? 1;
+            }else{
+                $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 5;
+            }
             $data_push["parent_id"] = $item->reference_message_id;
 //            }
 
