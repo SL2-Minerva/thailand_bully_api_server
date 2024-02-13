@@ -300,7 +300,7 @@ class Controller extends BaseController
     {
         $source_group = $this->organization_group->platform;
         if ($this->user_login->is_admin) {
-            return Sources::where('status', 1)->get();
+            return Sources::where('status', 1)->orderBy("id","asc")->get();
         } else {
             return Sources::where('status', 1)
                 ->whereIn('name', $source_group)

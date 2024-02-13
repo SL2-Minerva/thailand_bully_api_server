@@ -121,11 +121,17 @@ class ChannelDashboardController extends Controller
         $data = array_values($data);
 
         // Resetting keys of value arrays
-        foreach ($data as &$item) {
-            $item['value'] = array_values($item['value']);
-        }
 
-        return $data;
+
+        $result = [];
+        foreach ($sources as $source) {
+            foreach ($data as $item) {
+                if ($item['source_id'] == $source->id) {
+                    $result[] = $item;
+                }
+            }
+        }
+        return $result;
     }
 
 
@@ -154,11 +160,16 @@ class ChannelDashboardController extends Controller
             $data[$source_id]['value'][] = $nestData;
         }
 
-        if ($data) {
-            return array_values($data);
+        $result = [];
+        foreach ($sources as $source) {
+            foreach ($data as $item) {
+                if ($item['source_id'] == $source->id) {
+                    $result[] = $item;
+                }
+            }
         }
 
-        return $data;
+        return $result;
     }
 
     public function channelBy()
