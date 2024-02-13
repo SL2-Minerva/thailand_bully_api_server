@@ -386,6 +386,34 @@ class Controller extends BaseController
         return $message;
     }
 
+    protected function packObjectClassificationTypeName($classificationTypes, $item, $message)
+    {
+        if ($item->classification_type_id == 1) {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $message->sentiment = $classificationType->name;
+                    break;
+                }
+            }
+        } else if ($item->classification_type_id == 2) {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $message->bully_type= $classificationType->name;
+                    break;
+                }
+            }
+        } else {
+            foreach ($classificationTypes as $classificationType) {
+                if ($classificationType->id == $item->classification_id) {
+                    $message->bully_level = $classificationType->name;
+                    break;
+                }
+            }
+        }
+        return $message;
+    }
+
+
     protected function getClassificationJoinTypeMaster()
     {
         return DB::table('classifications')->select("classifications.*", "classification_types.name as classification_type_name")

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\report;
 
+use App\Exports\MonitoringExport;
 use App\Http\Controllers\Controller;
 use App\Models\Keyword;
 use App\Models\Message;
@@ -12,6 +13,7 @@ use App\Models\UserOrganizationGroup;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
 
 class LevelThreeTableController extends Controller
 {
@@ -215,7 +217,6 @@ class LevelThreeTableController extends Controller
     public
     function messageLevelThreeRaw(Request $request, $sources, $keywords)
     {
-
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
 
@@ -228,10 +229,10 @@ class LevelThreeTableController extends Controller
         if ($keywords) {
             $keywordIds = $keywords->pluck('id')->all();
             if ($keywordIds) {
-                error_log("keywords: not null".json_encode($keywordIds));
+                error_log("keywords: not null" . json_encode($keywordIds));
                 $raw->whereIn('messages.keyword_id', $keywordIds);
             }
-        }else{
+        } else {
             error_log("keywords: null");
         }
 
@@ -807,4 +808,49 @@ class LevelThreeTableController extends Controller
 
         return parent::handleRespond(null, null, 404, 'Plase send id of message');
     }
+
+
+    public function exportMonitoring(Request $request)
+    {
+
+        $classificationTypes = self::getClassificationJoinTypeMaster();
+
+        //$source = parent::listSource();
+        $sources = $this->getAllSource();
+        $fillter_keywords = $request->keyword_id;
+
+        if ($fillter_keywords && $fillter_keywords !== 'all') {
+            $this->keyword_id = explode(',', $fillter_keywords);
+        }
+        $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
+
+
+        $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
+        $data = $raw->get();
+        $messageIds = $data->pluck('id')->all();
+
+        $messageResult = DB::table('message_results')
+            ->select(['message_id', 'classification_id', 'classification_type_id'])
+            ->whereIn('message_id', $messageIds)->get();
+        $result = [];
+        foreach ($data as $message) {
+            $message->sentiment = "";
+            $message->bully_type = "";
+            $message->bully_level = "";
+            $count = 0;
+            foreach ($messageResult as $item) {
+                if ($message->id == $item->message_id) {
+                    $count++;
+                    $message = $this->packObjectClassificationTypeName($classificationTypes, $item, $message);
+                }
+                if ($count > 2) {
+                    break;
+                }
+            }
+            $result[] = $message;
+        }
+        //return parent::handleRespond($result);
+        return Excel::download(new MonitoringExport($result, "dailyMessage", $sources, $keywords), 'Monitoring-' . Carbon::now() . '.xlsx');
+    }
+
 }

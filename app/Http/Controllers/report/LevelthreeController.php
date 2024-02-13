@@ -168,13 +168,6 @@ class LevelthreeController extends Controller
         return Excel::download(new BullyExport($report, $request->report_number), 'Bully-' . Carbon::now() . '.xlsx');
     }
 
-    public function exportMonitoring(Request $request)
-    {
-        //$source = parent::listSource();
-        $report = $this->messageFullData($this->start_date, $this->end_date, $this->campaign_id, $request->report_number);
-        //return  parent::handleRespond($report->get());
-        return Excel::download(new MonitoringExport($report->get(), "dailyMessage"), 'Monitoring-' . Carbon::now() . '.xlsx');
-    }
 }
 
 

@@ -264,7 +264,7 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('export-sentiment', [LevelthreeController::class, 'exportSentiment']);
             Route::get('export-bully', [LevelthreeController::class, 'exportBully']);
             Route::get('export-excel-overall', [ExportExcelOverallController::class, 'exportOverAll']);
-            Route::get('monitoring', [LevelthreeController::class, 'exportMonitoring']);
+            Route::get('monitoring', [LevelThreeTableController::class, 'exportMonitoring']);
 
         });
 
