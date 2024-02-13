@@ -523,7 +523,7 @@ class MonitoringController extends Controller
         $raw = self::rawMessageInfluencerCampaign($keywords, $this->start_date, $this->end_date);
         $result = self::parseInfluencer($raw);
         if (count($result) > 6) {
-            $result = array_slice($result, 0, 5);
+            $result = array_slice($result, 0, 6);
         }
         return parent::handleRespondPage($result, ['total_rows' => count($result), 'limit' => intval($request->limit), 'page' => intval($request->page)]);
     }
