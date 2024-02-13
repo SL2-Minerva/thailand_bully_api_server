@@ -1477,61 +1477,6 @@ class VoiceDashboardController extends Controller
         return $data;
     }
 
-    private function raw_message_classification_id($campaign_id, $start_date, $end_date)
-    {
-        $keyword = Keyword::where('campaign_id', $campaign_id);
-
-        if ($this->keyword_id) {
-            $keyword = $keyword->whereIn('id', $this->keyword_id);
-        }
-
-        $keyword = $keyword->get();
-        $keywordIds = $keyword->pluck('id')->all();
-
-        $data = DB::table('messages')
-            ->select([
-                'messages.message_id as message_id',
-                'messages.reference_message_id as reference_message_id',
-                'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
-                'messages.author as author',
-                'messages.source_id as source_id',
-                'messages.full_message as full_message',
-                'messages.message_type',
-                'messages.device as device',
-                'messages.number_of_views as number_of_views',
-                'messages.number_of_comments as number_of_comments',
-                'messages.number_of_shares as number_of_shares',
-                'messages.number_of_reactions as number_of_reactions',
-                'keywords.campaign_id AS campaign_id',
-                'campaigns.name AS campaign_name',
-                'keywords.name as keyword_name',
-                'classifications.classification_type_id',
-                'message_results.classification_id',
-                'classifications.name as classification_name',
-                'classifications.color as classification_color',
-                'sources.name as source_name',
-                'messages.created_at as created_at'
-            ])
-            ->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
-            ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
-            ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
-            ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
-
-        if ($this->source_id) {
-            $data->where('source_id', $this->source_id);
-        }
-
-        if (!$this->user_login->is_admin) {
-            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
-            $data->whereIn('source_id', $source_ids);
-        }
-
-        return $data;
-    }
 
 
 }
