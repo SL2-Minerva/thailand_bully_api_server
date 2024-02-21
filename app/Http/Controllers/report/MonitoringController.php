@@ -9,6 +9,7 @@ use App\Models\Organization;
 use App\Models\Sources;
 use App\Models\UserOrganizationGroup;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -151,7 +152,8 @@ class MonitoringController extends Controller
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
-            ->whereIn('message_type', ["Post", "Video", "post"]);
+            ->whereIn('message_type', ["Post", "Video", "post"])
+        ->orderBy('date_m', 'asc');
 
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
@@ -169,7 +171,7 @@ class MonitoringController extends Controller
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
-            ->whereIn('message_type', ["Post", "Video", "post"]);
+            ->whereIn('message_type', ["Post", "Video", "post"])->orderBy('date_m', 'asc');
 
         /*error_log($this->start_date . " 00:00:00   ". $this->end_date . " 23:59:59");
         error_log("source_id: " . $this->source_id);
@@ -178,7 +180,7 @@ class MonitoringController extends Controller
         $sources = self::getAllSource();
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
-        $data['daily_message'] = $this->dailyMessage($total_keywords, $sources, $keywords, $campaign);
+        $data['daily_message'] = $this->dailyMessage($total_keywords, $this->start_date, $this->end_date, $sources, $keywords, $campaign);
         $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
         $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');
         $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
@@ -187,7 +189,7 @@ class MonitoringController extends Controller
         return parent::handleRespond($data);
     }
 
-    private function dailyMessage($total_keywords, $sources, $keywords, $campaign)
+    private function dailyMessage($total_keywords, $start_date, $end_date, $sources, $keywords, $campaign)
     {
         $data = [];
 
@@ -216,27 +218,32 @@ class MonitoringController extends Controller
 
             $data[$keyword]['value'][$date_format]['total_at_date'] += 1;
         }
-
-        if (!$data) {
-            $date_format = Carbon::now()->format('Y-m-d');
+        $startDate = new DateTime($start_date);
+        $endDate = new DateTime($end_date);
+        $currentDate = $startDate;
+        while ($currentDate <= $endDate) {
+            $currentDate->modify('+1 day');
+            $date_format = $currentDate->format('Y-m-d');
             foreach ($keywords as $item) {
-                $data[$item->name]['keyword_id'] = $item->id;
-                $data[$item->name]['keyword_name'] = $item->name;
-                $data[$item->name]['campaign_id'] = $campaign->id;
-                $data[$item->name]['campaign_name'] = $campaign->name;
-                $data[$item->name]['source_id'] = 0;
-                $data[$item->name]['source_name'] = "";
-
                 if (!isset($data[$item->name]['value'][$date_format])) {
-                    $data[$item->name]['value'][$date_format] = [
-                        'keyword_id' => $item->id,
-                        'keyword_name' => $item->name,
-                        'date_m' => $date_format,
-                        'total_at_date' => 0,
-                    ];
-                }
+                    $data[$item->name]['keyword_id'] = $item->id;
+                    $data[$item->name]['keyword_name'] = $item->name;
+                    $data[$item->name]['campaign_id'] = $campaign->id;
+                    $data[$item->name]['campaign_name'] = $campaign->name;
+                    $data[$item->name]['source_id'] = 0;
+                    $data[$item->name]['source_name'] = "";
 
-                //$data[$item->name]['value'][$date_format]['total_at_date'] += 0;
+                    if (!isset($data[$item->name]['value'][$date_format])) {
+                        $data[$item->name]['value'][$date_format] = [
+                            'keyword_id' => $item->id,
+                            'keyword_name' => $item->name,
+                            'date_m' => $date_format,
+                            'total_at_date' => 0,
+                        ];
+                    }
+
+                    //$data[$item->name]['value'][$date_format]['total_at_date'] += 0;
+                }
             }
         }
 
@@ -770,7 +777,8 @@ class MonitoringController extends Controller
                 'messages.reference_message_id as reference_message_id',
             ])
             ->whereIn('keyword_id', $keywords->pluck('id')->all())
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->orderBy('date_m', 'asc');
 
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
@@ -778,7 +786,7 @@ class MonitoringController extends Controller
         $sources = self::getAllSource();
         $campaign = DB::table('campaigns')->where('id', $this->campaign_id)->first();
 
-        return Excel::download(new MonitoringExport($this->dailyMessage($total_keywords, $sources, $keywords, $campaign), 'dailyMessage'), 'monitoring_daily-message-' . Carbon::now() . '.xlsx');
+        return Excel::download(new MonitoringExport($this->dailyMessage($total_keywords, $this->start_date, $this->end_date, $sources, $keywords, $campaign), 'dailyMessage'), 'monitoring_daily-message-' . Carbon::now() . '.xlsx');
     }
 
 
