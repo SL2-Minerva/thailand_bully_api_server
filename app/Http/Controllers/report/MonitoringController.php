@@ -173,6 +173,9 @@ class MonitoringController extends Controller
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('message_type', ["Post", "Video", "post"])->orderBy('date_m', 'asc');
 
+        if ($this->source_id) {
+            $total_keywords_previous->where('source_id', $this->source_id);
+        }
         /*error_log($this->start_date . " 00:00:00   ". $this->end_date . " 23:59:59");
         error_log("source_id: " . $this->source_id);
         error_log($total_keywords->toSql());*/
