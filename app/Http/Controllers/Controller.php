@@ -180,31 +180,16 @@ class Controller extends BaseController
 
     public static function get_previous_date($date, $period)
     {
-        switch ($period) {
-            case "daily":
-                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
-                break;
-            case "yesterday":
-                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
-                break;
-            case "last7days":
-                $date = Carbon::parse($date)->subDays(7)->format('Y-m-d');
-                break;
-            case "last30days":
-                $date = Carbon::parse($date)->subDays(30)->format('Y-m-d');
-                break;
-            case "thismonth":
-                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
-                break;
-            case "lastmonth":
-                $date = Carbon::parse($date)->subMonths(1)->format('Y-m-d');
-                break;
-            case "customrange":
-                $date = Carbon::parse($date)->format('Y-m-d');
-                break;
-            default:
-                $date = Carbon::parse($date)->subDays(1)->format('Y-m-d');
-        }
+        $date = match ($period) {
+            "daily" => Carbon::parse($date)->subDays(7)->format('Y-m-d'),
+            "yesterday" => Carbon::parse($date)->subDays(8)->format('Y-m-d'),
+            "last7days" => Carbon::parse($date)->subDays(7)->format('Y-m-d'),
+            "last30days" => Carbon::parse($date)->subDays(30)->format('Y-m-d'),
+            "thismonth" => Carbon::parse($date)->subMonths(1)->format('Y-m-d'),
+            "lastmonth" => Carbon::parse($date)->subMonths(1)->format('Y-m-d'),
+            "customrange" => Carbon::parse($date)->format('Y-m-d'),
+            default => Carbon::parse($date)->subDays(1)->format('Y-m-d'),
+        };
 
         return $date;
     }
