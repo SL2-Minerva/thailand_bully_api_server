@@ -216,6 +216,7 @@ class MonitoringController extends Controller
 
             $data[$keyword]['value'][$date_format]['total_at_date'] += 1;
         }
+
         if (!$data) {
             $date_format = Carbon::now()->format('Y-m-d');
             foreach ($keywords as $item) {
@@ -224,7 +225,7 @@ class MonitoringController extends Controller
                 $data[$item->name]['campaign_id'] = $campaign->id;
                 $data[$item->name]['campaign_name'] = $campaign->name;
                 $data[$item->name]['source_id'] = 0;
-                $data[$item->name]['source_name'] = "All";
+                $data[$item->name]['source_name'] = "";
 
                 if (!isset($data[$item->name]['value'][$date_format])) {
                     $data[$item->name]['value'][$date_format] = [
@@ -235,7 +236,7 @@ class MonitoringController extends Controller
                     ];
                 }
 
-                $data[$item->name]['value'][$date_format]['total_at_date'] += 1;
+                //$data[$item->name]['value'][$date_format]['total_at_date'] += 0;
             }
         }
 
@@ -292,7 +293,6 @@ class MonitoringController extends Controller
         }
 
         if (!$data) {
-
             foreach ($keywords as $item) {
                 $keyword_id = $item->id;
                 $data[$keyword_id]['value'][] = [
