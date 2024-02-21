@@ -376,7 +376,7 @@ class LevelThreeTableController extends Controller
             $raw->whereIn('messages.message_type', ["Post", "Video", "post"]);
         }
         //Overall Dashboard
-        if ($request->report_number === '1.2.002' ||
+        if (
             $request->report_number === '2.2.002' ||
             $request->report_number === '2.2.013' ||
             $request->report_number === '3.2.002' ||
@@ -468,6 +468,7 @@ class LevelThreeTableController extends Controller
         if (!$isHasMessageDate) {
             $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
+
         return $raw;
     }
 
