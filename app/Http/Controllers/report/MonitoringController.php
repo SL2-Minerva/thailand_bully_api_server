@@ -150,7 +150,8 @@ class MonitoringController extends Controller
             /*->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereIn('message_type', ["Post", "Video", "post"]);
 
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
@@ -171,8 +172,12 @@ class MonitoringController extends Controller
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"]);
+            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
+        ->whereIn('message_type', ["Post", "Video", "post"]);
 
+        /*error_log($this->start_date . " 00:00:00   ". $this->end_date . " 23:59:59");
+        error_log("source_id: " . $this->source_id);
+        error_log($total_keywords->toSql());*/
 
         $sources = DB::table('sources')->where("status", "=", 1)->get();
         $keywords = DB::table("keywords")->where('campaign_id', $this->campaign_id)->get();

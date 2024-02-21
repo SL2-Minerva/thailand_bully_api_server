@@ -468,7 +468,6 @@ class LevelThreeTableController extends Controller
         if (!$isHasMessageDate) {
             $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
         }
-
         return $raw;
     }
 
