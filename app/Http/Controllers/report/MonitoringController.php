@@ -299,6 +299,7 @@ class MonitoringController extends Controller
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(6)->get();
         $source = DB::table('sources')->where("status", "=", 1)->get();
+        $data = array();
         foreach ($raw_data as $item) {
 
             $date_d = Carbon::parse($item->date_m)->format('D');
@@ -839,7 +840,7 @@ WHERE
                 }
             }
         }
-
+        $groupedResults = [];
         foreach ($newGroupedData as $messageData) {
             $author = $messageData['author'];
             if (!isset($groupedResults[$author])) {
