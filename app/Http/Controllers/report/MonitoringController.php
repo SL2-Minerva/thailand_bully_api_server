@@ -221,8 +221,7 @@ class MonitoringController extends Controller
         $startDate = new DateTime($start_date);
         $endDate = new DateTime($end_date);
         $currentDate = $startDate;
-        while ($currentDate < $endDate) {
-            $currentDate->modify('+1 day');
+        while ($currentDate <= $endDate) {
             $date_format = $currentDate->format('Y-m-d');
             foreach ($keywords as $item) {
                 if (!isset($data[$item->name]['value'][$date_format])) {
@@ -245,6 +244,7 @@ class MonitoringController extends Controller
                     //$data[$item->name]['value'][$date_format]['total_at_date'] += 0;
                 }
             }
+            $currentDate->modify('+1 day');
         }
 
         $data = array_values($data);
