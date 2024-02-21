@@ -108,8 +108,9 @@ class MonitoringController extends Controller
         // ->get();
 
         $keywordIds = $keywords->pluck('id')->all();
-        if ($keywordIds)
+        if ($keywordIds){
             $data->whereIn('messages.keyword_id', $keywordIds);
+        }
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
@@ -348,8 +349,10 @@ class MonitoringController extends Controller
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(6)->get();
-        $source = DB::table('sources')->where("status", "=", 1)->get();
+        $source = $this->getAllSource();
         $data = array();
+        error_log($raw->toSql());
+
         foreach ($raw_data as $item) {
 
             $date_d = Carbon::parse($item->date_m)->format('D');
