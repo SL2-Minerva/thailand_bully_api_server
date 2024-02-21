@@ -664,6 +664,7 @@ class MonitoringController extends Controller
                 "account_name" => $item->author,
                 "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
                 "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
+                "keyword_name" => self::matchKeywordName($keywords,$item->keyword_id),
                 "icon" => "",
                 "cover_image" => "",
                 "message_type" => $item->message_type,
