@@ -221,7 +221,7 @@ class MonitoringController extends Controller
         $startDate = new DateTime($start_date);
         $endDate = new DateTime($end_date);
         $currentDate = $startDate;
-        while ($currentDate <= $endDate) {
+        while ($currentDate < $endDate) {
             $currentDate->modify('+1 day');
             $date_format = $currentDate->format('Y-m-d');
             foreach ($keywords as $item) {
