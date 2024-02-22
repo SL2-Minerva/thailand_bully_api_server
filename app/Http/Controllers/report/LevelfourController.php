@@ -32,7 +32,7 @@ class LevelfourController extends Controller
         $this->period = $request->period;
         $this->start_date_previous = $this->get_previous_date($this->start_date, $this->period);
         $this->end_date_previous = $this->get_previous_date($this->end_date, $this->period);
-        $this->source_id = $request->source === "all" ? "" : $request->source;
+        $this->source_id = $request->source_id === "all" ? "" : $request->source_id;
 
         $fillter_keywords = $request->fillter_keywords;
 
@@ -154,14 +154,17 @@ class LevelfourController extends Controller
     private function getSNAbyType($request, $type = 1)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $roots = $this->getNode($keywords, $request->message_id, false, $type, []);
+        $roots = $this->getNode($keywords, $request->message_id, $request->limit,false, $type, []);
 
         $messageIds = [];
-        foreach ($roots["nodes"] as $node) {
-            $messageIds[] = $node["id"];
+        if ($roots && $roots["nodes"]) {
+
+            foreach ($roots["nodes"] as $node) {
+                $messageIds[] = $node["id"];
+            }
         }
 
-        $child = $this->getNode($keywords, $request->message_id, true, $type, $messageIds);
+        $child = $this->getNode($keywords, $request->message_id, $request->limit,true, $type, $messageIds);
 
         $nodes = array_merge($roots['nodes'] ?? [], $child['nodes'] ?? []);
         $data = ['nodes' => null, 'edges' => null];
@@ -194,7 +197,7 @@ class LevelfourController extends Controller
         return $data;
     }
 
-    private function getNode($keywords, $message_id, $is_child, $type, $parentMessageIds)
+    private function getNode($keywords, $message_id,$limit, $is_child, $type, $parentMessageIds)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -202,7 +205,7 @@ class LevelfourController extends Controller
         if ($is_child) {
             $raw = $this->message()
                 ->where('message_results.classification_type_id', $type)
-                ->whereIn('messages.reference_message_id', $parentMessageIds)->limit(8000);
+                ->whereIn('messages.reference_message_id', $parentMessageIds)->limit($limit);
         } else {
             if ($message_id) {
                 $raw = $this->message();
@@ -211,18 +214,18 @@ class LevelfourController extends Controller
             } else {
                 $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                     ->where('message_results.classification_type_id', $type)
-                    ->where('messages.reference_message_id', '')->limit(700)
+                    ->where('messages.reference_message_id', '')->limit(500)
                     ->groupBy("messages.message_id");
             }
         }
 
         error_log("source ID: ".$this->source_id);
 
-        if ($this->source_id) {
-            $raw->where('source_id', $this->source_id);
-        }
         error_log($raw->toSql());
 
+        if ($this->source_id) {
+            $raw->where('messages.source_id', $this->source_id);
+        }
         $items = $raw->get();
         $data = [];
         //$checkparent = [];
