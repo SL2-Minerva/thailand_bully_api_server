@@ -674,17 +674,22 @@ class MonitoringController extends Controller
     public function influencerAuthor(Request $request)
     {
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
+        $sentiment_type = $request->sentiment_type;
 
         $keywordIds = $keywords->pluck('id')->all();
         $query = DB::table('messages')
             ->select('messages.*', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'))
-            //->leftJoin('sources as s', 's.id', '=', 'messages.source_id')
+            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->where('message_type', '!=', 'Comment')
             ->where('message_type', '!=', 'Reply Comment')
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+
+        if ($sentiment_type) {
+            $query->where('message_results.classification_id', $sentiment_type);
+        }
 
         if ($this->source_id) {
             $query->where('source_id', $this->source_id);
@@ -797,6 +802,149 @@ class MonitoringController extends Controller
 
 
     private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
+    {
+
+        $keywordIds = $keywords->pluck('id')->all();
+
+
+        $sourceQuery = "";
+        if ($this->source_id) {
+            $sourceQuery = "m.source_id = $this->source_id AND ";
+        }
+
+        $keywordQuery = "";
+        if ($keywordIds)
+            $keywordQuery = "keyword_id IN (" . implode(",", $keywordIds) . ") AND ";
+        if (!$this->user_login->is_admin) {
+            $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
+            $sourceQuery = "m.source_id IN (" . implode(",", $source_ids) . ") AND ";
+        }
+
+        $rows = DB::select("SELECT m.id,m.source_id,
+    m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
+FROM
+    tbl_messages m
+    LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
+WHERE
+    $sourceQuery
+    $keywordQuery
+    author != ''
+   AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post') 
+    AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
+        $newGroupedData = [];
+
+
+        foreach ($rows as $message) {
+            if ($message->reference_message_id === "") {
+                $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
+                //if ($totalEngagement > 10) {
+                $messageId = $message->message_id;
+                $author = $message->author;
+
+                // Increment post count for the author
+                if (!isset($authorPostCount[$author])) {
+                    $authorPostCount[$author] = 1;
+                } else {
+                    $authorPostCount[$author]++;
+                }
+
+                if (!isset($newGroupedData[$messageId])) {
+                    $newGroupedData[$messageId] = [
+                        'author' => $author,
+                        'number_of_comments' => 0,
+                        'number_of_shares' => 0,
+                        'source_id' => 0,
+                        'negative' => 0,
+                        'positive' => 0,
+                        'neutral' => 0,
+                        'total_sentiment' => 0,
+                        'number_of_reactions' => 0,
+                        'message_datetime' => '',
+                        'total_engagement' => 0,
+                        'classification' => [],
+                        'total_post' => 0
+                    ];
+                }
+
+                switch ($message->classification_id) {
+                    case 1:
+                        $newGroupedData[$messageId]['positive'] = $newGroupedData[$messageId]['positive'] + 1;
+                        break;
+                    case 2:
+                        $newGroupedData[$messageId]['negative'] = $newGroupedData[$messageId]['negative'] + 1;
+                        break;
+                    case 3:
+                        $newGroupedData[$messageId]['neutral'] = $newGroupedData[$messageId]['neutral'] + 1;
+                        break;
+                }
+
+                $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
+                $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
+                $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
+                $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
+
+                if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
+                    $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
+                }
+
+                $newGroupedData[$messageId]['source_id'] = $message->source_id;
+
+                $newGroupedData[$messageId]['total_engagement'] += $totalEngagement;
+                $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
+                //   }
+            }/*  else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
+                if (isset($newGroupedData[$message->reference_message_id])) {
+                    $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
+                }
+            } */
+        }
+        $groupedResults = [];
+        foreach ($newGroupedData as $messageData) {
+            $author = $messageData['author'];
+            if (!isset($groupedResults[$author])) {
+                $groupedResults[$author] = [
+                    'author' => $author,
+                    'number_of_comments' => 0,
+                    'number_of_shares' => 0,
+                    'number_of_reactions' => 0,
+                    'negative' => 0,
+                    'positive' => 0,
+                    'neutral' => 0,
+                    'total_sentiment' => 0,
+                    'source_id' => 0,
+                    'message_datetime' => '',
+                    'total_engagement' => 0,
+                    'classification' => [],
+                    'total_post' => 0, // Initialize post count
+                ];
+            }
+
+            $groupedResults[$author]['number_of_comments'] += $messageData['number_of_comments'];
+            $groupedResults[$author]['number_of_shares'] += $messageData['number_of_shares'];
+            $groupedResults[$author]['number_of_reactions'] += $messageData['number_of_reactions'];
+            $groupedResults[$author]['negative'] += $messageData['negative'];
+            $groupedResults[$author]['neutral'] += $messageData['neutral'];
+            $groupedResults[$author]['positive'] += $messageData['positive'];
+            $groupedResults[$author]['total_sentiment'] += $messageData['total_sentiment'];
+            $groupedResults[$author]['source_id'] = $messageData['source_id'];
+
+            if ($messageData['message_datetime'] > $groupedResults[$author]['message_datetime']) {
+                $groupedResults[$author]['message_datetime'] = $messageData['message_datetime'];
+            }
+
+            $groupedResults[$author]['total_engagement'] += $messageData['total_engagement'];
+            $groupedResults[$author]['classification'] = array_merge($groupedResults[$author]['classification'], $messageData['classification']);
+            $groupedResults[$author]['total_post'] = $messageData['total_post'];
+        }
+
+// Convert associative array to indexed array
+        $result = array_values($groupedResults);
+        usort($result, function ($a, $b) {
+            return $b['total_engagement'] <=> $a['total_engagement'];
+        });
+        return $result;
+    }
+    private function rawMessageInfluencerCampaigns($keywords, $start_date, $end_date)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
