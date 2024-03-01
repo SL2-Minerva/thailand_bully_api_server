@@ -681,13 +681,13 @@ class MonitoringController extends Controller
             ->select('messages.*', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
                     COALESCE(number_of_reactions, 0) AS total_engagement'))
-            ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->where('message_type', '!=', 'Comment')
             ->where('message_type', '!=', 'Reply Comment')
             ->whereIn('messages.keyword_id', $keywordIds)
             ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($sentiment_type) {
+            $query->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id');
             $query->where('message_results.classification_id', $sentiment_type);
         }
 
@@ -801,7 +801,7 @@ class MonitoringController extends Controller
     }
 
 
-    private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
+    private function rawMessageInfluencerCampaigns($keywords, $start_date, $end_date)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -944,7 +944,7 @@ WHERE
         });
         return $result;
     }
-    private function rawMessageInfluencerCampaigns($keywords, $start_date, $end_date)
+    private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
