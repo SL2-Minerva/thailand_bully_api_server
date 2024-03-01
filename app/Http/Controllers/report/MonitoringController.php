@@ -801,7 +801,7 @@ class MonitoringController extends Controller
     }
 
 
-    private function rawMessageInfluencerCampaigns($keywords, $start_date, $end_date)
+    private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -944,7 +944,7 @@ WHERE
         });
         return $result;
     }
-    private function rawMessageInfluencerCampaign($keywords, $start_date, $end_date)
+    private function rawMessageInfluencerCampaigs($keywords, $start_date, $end_date)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
