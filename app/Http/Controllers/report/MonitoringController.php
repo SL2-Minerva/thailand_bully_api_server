@@ -101,6 +101,7 @@ class MonitoringController extends Controller
                 $query->where('message_type', '=', 'Post')
                     ->orWhere('message_type', '=', 'post');
             })
+            ->where("reference_message_id", "=", "")
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
@@ -809,7 +810,7 @@ class MonitoringController extends Controller
 
         $sourceQuery = "";
         if ($this->source_id) {
-            $sourceQuery = "m.source_id = $this->source_id AND ";
+            $sourceQuery = "m.source_id = ".$this->source_id ." AND ";
         }
 
         $keywordQuery = "";
@@ -820,20 +821,22 @@ class MonitoringController extends Controller
             $sourceQuery = "m.source_id IN (" . implode(",", $source_ids) . ") AND ";
         }
 
-        $rows = DB::select("SELECT m.id,m.source_id,
-    m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
-FROM
-    tbl_messages m
-    LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
-WHERE
-    $sourceQuery
-    $keywordQuery
-    author != ''
-   AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post') 
-    AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
+        $query = "SELECT m.id,m.source_id,
+        m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
+    FROM
+        tbl_messages m
+        LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
+    WHERE
+        $sourceQuery
+        $keywordQuery
+        author != ''
+       AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post') AND reference_message_id='' 
+        AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ";
+        $rows = DB::select($query);
         $newGroupedData = [];
 
-
+error_log  ($query);
+error_log  ($sourceQuery);
         foreach ($rows as $message) {
             if ($message->reference_message_id === "") {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
