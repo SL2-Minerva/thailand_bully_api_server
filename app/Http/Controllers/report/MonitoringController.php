@@ -693,7 +693,7 @@ class MonitoringController extends Controller
                 $query->where('message_results.classification_id', 1);
             } else if ($sentiment_type == "negative") {
                 $query->where('message_results.classification_id', 2);
-            } else if ($sentiment_type == "nuetral") {
+            } else {
                 $query->where('message_results.classification_id', 3);
             }
         }
