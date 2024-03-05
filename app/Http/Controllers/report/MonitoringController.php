@@ -689,7 +689,13 @@ class MonitoringController extends Controller
 
         if ($sentiment_type) {
             $query->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id');
-            $query->where('message_results.classification_id', $sentiment_type);
+            if ($sentiment_type == "positive") {
+                $query->where('message_results.classification_id', 1);
+            } else if ($sentiment_type == "negative") {
+                $query->where('message_results.classification_id', 2);
+            } else if ($sentiment_type == "nuetral") {
+                $query->where('message_results.classification_id', 3);
+            }
         }
 
         if ($this->source_id) {
