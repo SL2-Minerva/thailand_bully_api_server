@@ -526,7 +526,7 @@ class MonitoringController extends Controller
                     "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
                     "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                     "icon" => "",
-                    "cover_image" => $item->link_image,
+                    "cover_image" => "",
                     "source_id" => $item->source_id,
                     "account_name" => $item->author,
                     "message_type" => $item->message_type,
@@ -549,7 +549,7 @@ class MonitoringController extends Controller
             "post_date" => Carbon::parse($post->message_datetime)->format('Y/m/d'),
             "post_time" => Carbon::parse($post->message_datetime)->format('H:i'),
             "icon" => "",
-            "cover_image" => $post->link_image,
+            "cover_image" => "",
             "source_id" => $post->source_id,
             "account_name" => $post->author,
             "message_type" => $post->message_type,
@@ -614,6 +614,7 @@ class MonitoringController extends Controller
                 $messages['neutral'] = round(($neutralCount / $totalSentiment) * 100, 2);
                 $messages['total_sentiment'] = $totalSentiment;
                 $messages["icon"] = "";
+                $messages["cover_image"] = "";
                 $messages["account_name"] = $messages['author'];
                 $messages["source_name"] = self::matchSourceName($source, $messages['source_id']);
                 unset($messages["classification"]);
@@ -731,7 +732,7 @@ class MonitoringController extends Controller
                 "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                 "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
                 "icon" => "",
-                "cover_image" => $item->link_image,
+                "cover_image" => "",
                 "message_type" => $item->message_type,
                 "device" => $item->device,
                 "source_name" => self::matchSourceName($source, $item->source_id),
@@ -826,7 +827,7 @@ class MonitoringController extends Controller
             $sourceQuery = "m.source_id IN (" . implode(",", $source_ids) . ") AND ";
         }
 
-        $query = "SELECT m.id,m.source_id,m.link_image,
+        $query = "SELECT m.id,m.source_id,
         m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
     FROM
         tbl_messages m
@@ -865,7 +866,6 @@ error_log  ($sourceQuery);
                         'negative' => 0,
                         'positive' => 0,
                         'neutral' => 0,
-                        'cover_image'=>"",
                         'total_sentiment' => 0,
                         'number_of_reactions' => 0,
                         'message_datetime' => '',
@@ -887,7 +887,6 @@ error_log  ($sourceQuery);
                         break;
                 }
 
-                $newGroupedData[$messageId]['cover_image'] += $message->link_image;
                 $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
                 $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
                 $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
@@ -933,7 +932,6 @@ error_log  ($sourceQuery);
             $groupedResults[$author]['number_of_shares'] += $messageData['number_of_shares'];
             $groupedResults[$author]['number_of_reactions'] += $messageData['number_of_reactions'];
             $groupedResults[$author]['negative'] += $messageData['negative'];
-            $groupedResults[$author]['cover_image'] += $messageData['cover_image'];
             $groupedResults[$author]['neutral'] += $messageData['neutral'];
             $groupedResults[$author]['positive'] += $messageData['positive'];
             $groupedResults[$author]['total_sentiment'] += $messageData['total_sentiment'];
