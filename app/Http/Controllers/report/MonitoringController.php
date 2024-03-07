@@ -614,7 +614,6 @@ class MonitoringController extends Controller
                 $messages['neutral'] = round(($neutralCount / $totalSentiment) * 100, 2);
                 $messages['total_sentiment'] = $totalSentiment;
                 $messages["icon"] = "";
-                $messages["cover_image"] =$messages['link_image'];
                 $messages["account_name"] = $messages['author'];
                 $messages["source_name"] = self::matchSourceName($source, $messages['source_id']);
                 unset($messages["classification"]);
@@ -866,6 +865,7 @@ error_log  ($sourceQuery);
                         'negative' => 0,
                         'positive' => 0,
                         'neutral' => 0,
+                        'cover_image'=>"",
                         'total_sentiment' => 0,
                         'number_of_reactions' => 0,
                         'message_datetime' => '',
