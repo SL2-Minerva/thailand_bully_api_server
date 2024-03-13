@@ -102,8 +102,8 @@ class OrganizationController extends Controller
 
         $data = Organization::join('user_organization_types', 'user_organization_types.id', '=', 'organizations.organization_type_id')
             ->join('user_organization_groups', 'user_organization_groups.id', '=', 'organizations.organization_group_id')
-            ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group')
-            ->offset($start)->limit($limit);
+            ->select('organizations.*', 'user_organization_types.organization_type_name as type', 'user_organization_groups.organization_group_name as group');
+            /* ->offset($start)->limit($limit); */
 
         if ($request->name) {
             $data->where('organizations.name','like', "%$request->name%");
