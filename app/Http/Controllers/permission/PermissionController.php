@@ -643,6 +643,11 @@ class PermissionController extends Controller
                 "groupName" => "Bully Dashboard",
                 "title" => "Share of Channel",
                 "id" => "109"
+            ],
+            [
+                "groupName" => "Monitoring Dashboard",
+                "title" => "Monitoring",
+                "id" => "111"
             ]
         ];
 
