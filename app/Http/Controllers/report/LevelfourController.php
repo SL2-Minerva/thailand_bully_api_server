@@ -154,7 +154,7 @@ class LevelfourController extends Controller
     private function getSNAbyType($request, $type = 1)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $roots = $this->getNode($keywords, $request->message_id, $request->limit,false, $type, []);
+        $roots = $this->getNode($keywords, $request->source_id, $request->message_id, $request->limit,false, $type, []);
 
         $messageIds = [];
         if ($roots && $roots["nodes"]) {
@@ -164,7 +164,7 @@ class LevelfourController extends Controller
             }
         }
 
-        $child = $this->getNode($keywords, $request->message_id, $request->limit,true, $type, $messageIds);
+        $child = $this->getNode($keywords, $request->source_id, $request->message_id, $request->limit,true, $type, $messageIds);
 
         $nodes = array_merge($roots['nodes'] ?? [], $child['nodes'] ?? []);
         $data = ['nodes' => null, 'edges' => null];
@@ -197,7 +197,7 @@ class LevelfourController extends Controller
         return $data;
     }
 
-    private function getNode($keywords, $message_id,$limit, $is_child, $type, $parentMessageIds)
+    private function getNode($keywords,$source_id, $message_id,$limit, $is_child, $type, $parentMessageIds)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -219,12 +219,12 @@ class LevelfourController extends Controller
             }
         }
 
-        error_log("source ID: ".$this->source_id);
+        error_log("source ID: ".$source_id);
 
         error_log($raw->toSql());
 
-        if ($this->source_id) {
-            $raw->where('messages.source_id', $this->source_id);
+        if ($source_id) {
+            $raw->where('messages.source_id', $source_id);
         }
         $items = $raw->get();
         $data = [];
