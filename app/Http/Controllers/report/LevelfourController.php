@@ -221,10 +221,11 @@ class LevelfourController extends Controller
 
         error_log("source ID: ".$source);
 
-        error_log($raw->toSql());
+        
 
-        if ($source) {
-            $raw->where('messages.source_id', $source);
+        if ($source != "all") {
+            $raw= $raw->where('messages.source_id', $source);
+            error_log($raw->toSql());
         }
         $items = $raw->get();
         $data = [];
