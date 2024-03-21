@@ -203,18 +203,23 @@ class LevelfourController extends Controller
         $keywordIds = $keywords->pluck('id')->all();
 
         if ($is_child) {
+        
             $raw = $this->message()
-                ->where('message_results.classification_type_id', $type)
-                ->whereIn('messages.reference_message_id', $parentMessageIds)->limit($limit);
+                ->where('message_results.classification_type_id', $type);
+                if  ($parentMessageIds!=null){
+                    $raw = $raw->whereIn('messages.reference_message_id', $parentMessageIds);
+                }
+                $raw =$raw->limit($limit);
         } else {
             if ($message_id) {
-                $raw = $this->message();
-                $raw->where("message_results.classification_type_id", $type);
-                $raw->where("messages.message_id", $message_id);
+                $raw = $this->message()
+                ->where("message_results.classification_type_id", $type)
+                ->where("messages.message_id", $message_id);
             } else {
                 $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                     ->where('message_results.classification_type_id', $type)
-                    ->where('messages.reference_message_id', '')->limit(500)
+                    ->where('messages.reference_message_id', '')
+                    ->limit(500)
                     ->groupBy("messages.message_id");
             }
         }
