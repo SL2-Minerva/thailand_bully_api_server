@@ -138,7 +138,6 @@ class LevelThreeTableController extends Controller
 
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
-    
         $sources = $this->getAllSource();
         $fillter_keywords = $request->keyword_id;
 
@@ -416,12 +415,8 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.003' ||
             $request->report_number === '6.2.013'
         ) {
-            
-    
-            $isHasMessageDate = true;
-           $classification = self::parseLabelClassification($Llabel);
-           //error_log("classification:" . $classification);
-            $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', $label);
+            //$isHasMessageDate = false;
+            $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
         }
 
         // time Format
@@ -443,7 +438,7 @@ class LevelThreeTableController extends Controller
             } else if ($request->label === 'After 6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
             }
-            $isHasMessageDate = true;
+           // $isHasMessageDate = true;
         }
         //user_typr
         if ($request->report_number === '2.2.006' ||
@@ -470,9 +465,9 @@ class LevelThreeTableController extends Controller
             }
         }
 
-        if (!$isHasMessageDate) {
+        //if (!$isHasMessageDate) {
             $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
-        }
+        //}
         return $raw;
     }
 
