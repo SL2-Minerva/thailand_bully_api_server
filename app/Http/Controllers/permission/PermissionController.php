@@ -411,11 +411,6 @@ class PermissionController extends Controller
             ],
             [
                 "groupName" => "Engagement Dashboard",
-                "title"  =>  "Engagement Trans by Engagement Type",
-                "id"  =>  "110"
-            ],
-            [
-                "groupName" => "Engagement Dashboard",
                 "title" => "Percentage of Engagement Type ",
                 "id" => "64"
             ],
@@ -643,6 +638,11 @@ class PermissionController extends Controller
                 "groupName" => "Bully Dashboard",
                 "title" => "Share of Channel",
                 "id" => "109"
+            ],
+            [
+                "groupName" => "Engagement Dashboard",
+                "title"  =>  "Engagement Trans by Engagement Type",
+                "id"  =>  "110"
             ],
             [
                 "groupName" => "Monitoring Dashboard",

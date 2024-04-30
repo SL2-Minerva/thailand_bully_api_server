@@ -138,6 +138,7 @@ class LevelThreeTableController extends Controller
 
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
+    
         $sources = $this->getAllSource();
         $fillter_keywords = $request->keyword_id;
 
@@ -415,8 +416,12 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.003' ||
             $request->report_number === '6.2.013'
         ) {
+            
+    
             $isHasMessageDate = true;
-            $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
+           $classification = self::parseLabelClassification($Llabel);
+           //error_log("classification:" . $classification);
+            $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', $label);
         }
 
         // time Format
