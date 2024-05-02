@@ -98,10 +98,7 @@ class MonitoringController extends Controller
             /*->join('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
 
-            ->where(function ($query) {
-                $query->where('message_type', '=', 'Post')
-                    ->orWhere('message_type', '=', 'post');
-            })
+            ->whereIn('message_type', ["Post", "Video", "post"])
             ->where("reference_message_id", "=", "")
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')

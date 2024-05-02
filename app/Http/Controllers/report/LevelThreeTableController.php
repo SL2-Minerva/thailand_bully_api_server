@@ -155,6 +155,7 @@ class LevelThreeTableController extends Controller
         $offset = $limit * ($page - 1);
 
         $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
+        //error_log("raw:" . $raw->toSql());
 
         $total = $raw->count();
         //error_log("total:" . $total . ' $offset:' . $offset . ' $limit:' . $limit);
@@ -466,7 +467,7 @@ class LevelThreeTableController extends Controller
         }
 
         //if (!$isHasMessageDate) {
-            $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
         //}
         return $raw;
     }
