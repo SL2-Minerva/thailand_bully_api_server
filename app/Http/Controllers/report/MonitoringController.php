@@ -834,7 +834,7 @@ class MonitoringController extends Controller
         $sourceQuery
         $keywordQuery
         author != ''
-       AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post') AND reference_message_id='' 
+       AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post' OR message_type='Video') AND reference_message_id='' 
         AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ";
         $rows = DB::select($query);
         $newGroupedData = [];
