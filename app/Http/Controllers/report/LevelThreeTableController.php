@@ -133,8 +133,9 @@ class LevelThreeTableController extends Controller
     }
 
     public
-    function messageLevelThree(Request $request)
-    {
+        function messageLevelThree(
+        Request $request
+    ) {
 
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
@@ -154,70 +155,83 @@ class LevelThreeTableController extends Controller
             $limit = 10;
         $offset = $limit * ($page - 1);
 
-        $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
-        //error_log("raw:" . $raw->toSql());
+        if ($request->report_number === '2.2.013') {
+            $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
+            $this->start_date = $date_request;
+            $this->end_date = $date_request;
+            $data= $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
+            $total = $data['total'];
+        } else {
+            $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
+            //error_log("raw:" . $raw->toSql());
 
-        $total = $raw->count();
-        //error_log("total:" . $total . ' $offset:' . $offset . ' $limit:' . $limit);
-        $items = $raw->offset($offset)->limit($limit)->get();
+            $total = $raw->count();
+            //error_log("total:" . $total . ' $offset:' . $offset . ' $limit:' . $limit);
+            $items = $raw->offset($offset)->limit($limit)->get();
 
-        foreach ($items as $item) {
-            $date_d = Carbon::parse($item->date_m)->format('D');
-            $types = $this->getClassificationName($item->message_id);
-            $parent = null;
+            foreach ($items as $item) {
+                $date_d = Carbon::parse($item->date_m)->format('D');
+                $types = $this->getClassificationName($item->message_id);
+                $parent = null;
 
-            if ($item->reference_message_id && $item->reference_message_id != '') {
-                $parent = $item->message_id;
+                if ($item->reference_message_id && $item->reference_message_id != '') {
+                    $parent = $item->message_id;
+                }
+
+                $sourceName = $this->matchSourceName($sources, $item->source_id);
+                $data_push = [
+                    "id" => $item->id,
+                    "message_id" => $item->message_id,
+                    "message_detail" => $item->full_message,
+                    "account_name" => $item->author,
+                    "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
+                    "post_time" => Carbon::parse($item->date_m)->format('H:i'),
+                    "day" => $date_d,
+                    "message_type" => $item->message_type,
+                    "device" => $item->device,
+                    "channel" => $sourceName,
+                    "source_name" => $sourceName,
+                    "link_message" => $item->link_message,
+                    "parent" => $parent,
+                    "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+                ];
+
+
+                // loop for get classification name
+                foreach ($types as $type) {
+                    if ($type->classification_type_id == 1) {
+                        $data_push['sentiment'] = $type->classification_name;
+                    }
+
+                    if ($type->classification_type_id == 2) {
+                        $data_push['bully_type'] = $type->classification_name;
+                    }
+
+                    if ($type->classification_type_id == 3) {
+                        $data_push['bully_level'] = $type->classification_name;
+                    }
+                }
+                $data['message'][$item->id] = $data_push;
             }
 
-            $sourceName = $this->matchSourceName($sources, $item->source_id);
-            $data_push = [
-                "id" => $item->id,
-                "message_id" => $item->message_id,
-                "message_detail" => $item->full_message,
-                "account_name" => $item->author,
-                "post_date" => Carbon::parse($item->date_m)->format('Y/m/d'),
-                "post_time" => Carbon::parse($item->date_m)->format('H:i'),
-                "day" => $date_d,
-                "message_type" => $item->message_type,
-                "device" => $item->device,
-                "channel" => $sourceName,
-                "source_name" => $sourceName,
-                "link_message" => $item->link_message,
-                "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
-            ];
 
-
-            // loop for get classification name
-            foreach ($types as $type) {
-                if ($type->classification_type_id == 1) {
-                    $data_push['sentiment'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 2) {
-                    $data_push['bully_type'] = $type->classification_name;
-                }
-
-                if ($type->classification_type_id == 3) {
-                    $data_push['bully_level'] = $type->classification_name;
-                }
+            if (isset($data['message'])) {
+                $data['message'] = array_values($data['message']);
             }
-            $data['message'][$item->id] = $data_push;
+
+            $data['total'] = $total;
+            
         }
-
-
-        if (isset($data['message'])) {
-            $data['message'] = array_values($data['message']);
-        }
-
-        $data['total'] = $total;
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
+
     }
 
     public
-    function messageLevelThreeRaw(Request $request, $sources, $keywords)
-    {
+        function messageLevelThreeRaw(
+        Request $request,
+        $sources,
+        $keywords
+    ) {
         /*$classificationTypes = self::getClassificationJoinTypeMaster();
         $classification = self::getClassificationMaster();*/
         $isHasMessageDate = false;
@@ -237,7 +251,8 @@ class LevelThreeTableController extends Controller
             error_log("keywords: null");
         }
 
-        if ($request->report_number === '5.2.008' ||
+        if (
+            $request->report_number === '5.2.008' ||
             $request->report_number === '5.2.009' ||
             $request->report_number === '6.2.008' ||
             $request->report_number === '6.2.018'
@@ -357,7 +372,8 @@ class LevelThreeTableController extends Controller
             $raw->orderByDesc('total_engagement');
         }
 
-        if ($request->report_number === '3.2.013' ||
+        if (
+            $request->report_number === '3.2.013' ||
             $request->report_number === '3.2.014'
         ) {
 
@@ -372,7 +388,8 @@ class LevelThreeTableController extends Controller
             $this->end_date = $end_date;
         }
 
-        if ($request->page_name === 'monitoringDashboard'
+        if (
+            $request->page_name === 'monitoringDashboard'
         ) {
             $raw->whereIn('messages.message_type', ["Post", "Video", "post"]);
         }
@@ -393,9 +410,6 @@ class LevelThreeTableController extends Controller
                 $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
                 $this->start_date = $date_request;
                 $this->end_date = $date_request;
-                if ($request->report_number === '2.2.013') {
-                    return $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
-                }
 
                 if ($request->report_number === '4.2.002') {
                     $keyword = Keyword::where('name', $Llabel)->first();
@@ -408,7 +422,8 @@ class LevelThreeTableController extends Controller
 
 
         // Date Format
-        if ($request->report_number === '2.2.003' ||
+        if (
+            $request->report_number === '2.2.003' ||
             $request->report_number === '3.2.003' ||
             $request->report_number === '4.2.003' ||
             $request->report_number === '4.2.013' ||
@@ -421,7 +436,8 @@ class LevelThreeTableController extends Controller
         }
 
         // time Format
-        if ($request->report_number === '2.2.004' ||
+        if (
+            $request->report_number === '2.2.004' ||
             $request->report_number === '3.2.004' ||
             $request->report_number === '4.2.004' ||
             $request->report_number === '4.2.014' ||
@@ -439,10 +455,11 @@ class LevelThreeTableController extends Controller
             } else if ($request->label === 'After 6 PM') {
                 $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
             }
-           // $isHasMessageDate = true;
+            // $isHasMessageDate = true;
         }
         //user_typr
-        if ($request->report_number === '2.2.006' ||
+        if (
+            $request->report_number === '2.2.006' ||
             $request->report_number === '3.2.006' ||
             $request->report_number === '4.2.006' ||
             $request->report_number === '4.2.016' ||
@@ -467,14 +484,15 @@ class LevelThreeTableController extends Controller
         }
 
         //if (!$isHasMessageDate) {
-            $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
+        $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
         //}
         return $raw;
     }
 
     private
-    function getClassificationName($message_id)
-    {
+        function getClassificationName(
+        $message_id
+    ) {
         return DB::table('messages')
             ->select([
                 'classifications.name AS classification_name',
@@ -488,8 +506,13 @@ class LevelThreeTableController extends Controller
     }
 
     private
-    function raw_account(Request $request, $campaign_id, $start_date, $end_date, $report_number)
-    {
+        function raw_account(
+        Request $request,
+        $campaign_id,
+        $start_date,
+        $end_date,
+        $report_number
+    ) {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -504,11 +527,10 @@ class LevelThreeTableController extends Controller
         $keyword = $keyword->get();
         $keywordIds = $keyword->pluck('id')->all();
 
-        $Llabel = str_replace("+", " ", $request->Llabel);
-        $label = str_replace("+", " ", $request->label);
 
         $subquery = DB::table('messages')
             ->select([
+                'messages.id',
                 'messages.author AS author',
                 'messages.message_id AS message_id',
                 'messages.reference_message_id AS reference_message_id',
@@ -614,12 +636,17 @@ class LevelThreeTableController extends Controller
         }
 
         $data['total'] = $total;
-        return parent::handleRespond($data);
+        return $data;
     }
 
     private
-    function classifacation_multiple(Request $request, $campaign_id, $start_date, $end_date, $report_number)
-    {
+        function classifacation_multiple(
+        Request $request,
+        $campaign_id,
+        $start_date,
+        $end_date,
+        $report_number
+    ) {
         $page = $request->page ?? null;
         $limit = $request->limit ?? 10;
         $start = $page === null || $page === 1 ? null : $page * $limit;
@@ -775,8 +802,9 @@ class LevelThreeTableController extends Controller
     }
 
     public
-    function deleteMessage(Request $request)
-    {
+        function deleteMessage(
+        Request $request
+    ) {
         if ($request->id) {
             $originalMessage = Message::find($request->id);
 
