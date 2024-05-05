@@ -99,7 +99,10 @@ class MonitoringController extends Controller
             /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
 
             ->whereIn('message_type', ["Post", "Video", "post"])
-            ->where("reference_message_id", "=", "")
+            ->where(function($query) {
+                $query->whereNull('reference_message_id')
+                      ->orWhere('reference_message_id', '');
+            })
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
@@ -348,6 +351,7 @@ class MonitoringController extends Controller
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(6)->get();
+        return parent::handleRespond($raw_data);
         $source = $this->getAllSource();
         $data = array();
         //error_log($raw->toSql());
@@ -834,15 +838,12 @@ class MonitoringController extends Controller
         $sourceQuery
         $keywordQuery
         author != ''
-       AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post' OR message_type='Video') AND reference_message_id='' 
+       AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post' OR message_type='Video') AND  (reference_message_id IS NULL OR reference_message_id='')
         AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ";
         $rows = DB::select($query);
         $newGroupedData = [];
-
-error_log  ($query);
-error_log  ($sourceQuery);
         foreach ($rows as $message) {
-            if ($message->reference_message_id === "") {
+            if ($message->reference_message_id === "" || $message->reference_message_id === null) {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
                 //if ($totalEngagement > 10) {
                 $messageId = $message->message_id;
@@ -988,7 +989,7 @@ WHERE
 
 
         foreach ($rows as $message) {
-            if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && $message->reference_message_id === "") {
+            if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && ($message->reference_message_id === ""|| $message->reference_message_id === null)) {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
                 //if ($totalEngagement > 10) {
                 $messageId = $message->message_id;
