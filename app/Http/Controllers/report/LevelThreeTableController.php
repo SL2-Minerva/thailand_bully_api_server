@@ -155,13 +155,21 @@ class LevelThreeTableController extends Controller
             $limit = 10;
         $offset = $limit * ($page - 1);
 
-        if ($request->report_number === '2.2.013') {
+       /* if ($request->report_number === '2.2.013') {
             $date_request = Carbon::createFromFormat('d/m/Y', $request->label)->format('Y-m-d');
             $this->start_date = $date_request;
             $this->end_date = $date_request;
-            $data= $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
+            $data = $this->raw_account($request, $this->campaign_id, $date_request, $date_request, $request->report_number);
             $total = $data['total'];
-        } else {
+        }  else if (
+            $request->report_number === '5.2.008' ||
+            $request->report_number === '5.2.009' ||
+            $request->report_number === '6.2.008' ||
+            $request->report_number === '6.2.018'
+        ) {
+            $data = $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
+            $total = $data['total'];
+        }  else {*/
             $raw = self::messageLevelThreeRaw($request, $sources, $keywords);
             //error_log("raw:" . $raw->toSql());
 
@@ -220,8 +228,8 @@ class LevelThreeTableController extends Controller
             }
 
             $data['total'] = $total;
-            
-        }
+
+       // }
         return parent::handleRespondPage($data, ["total_rows" => $total, "limit" => intval($limit), "page" => intval($page)]);
 
     }
@@ -244,20 +252,8 @@ class LevelThreeTableController extends Controller
         if ($keywords) {
             $keywordIds = $keywords->pluck('id')->all();
             if ($keywordIds) {
-                error_log("keywords: not null" . json_encode($keywordIds));
                 $raw->whereIn('messages.keyword_id', $keywordIds);
             }
-        } else {
-            error_log("keywords: null");
-        }
-
-        if (
-            $request->report_number === '5.2.008' ||
-            $request->report_number === '5.2.009' ||
-            $request->report_number === '6.2.008' ||
-            $request->report_number === '6.2.018'
-        ) {
-            return $this->classifacation_multiple($request, $this->campaign_id, $this->start_date, $this->end_date, $request->report_number);
         }
 
         $classification = -1;
@@ -660,10 +656,10 @@ class LevelThreeTableController extends Controller
             $Llabel = "NoBully";
         } else if ($Llabel === "Hate Speech") {
             $Llabel = "HateSpeech";
-        } else if ($label === "No Bully") {
-            $label = "NoBully";
-        } else if ($label === "Hate Speech") {
-            $label = "HateSpeech";
+        } else if ($Llabel === "No Bully") {
+            $Llabel = "NoBully";
+        } else if ($Llabel === "Hate Speech") {
+            $Llabel = "HateSpeech";
         }
 
         $rawQuery = "SELECT
@@ -682,34 +678,27 @@ class LevelThreeTableController extends Controller
             tbl_messages.number_of_comments as number_of_comments,
             tbl_messages.number_of_shares as number_of_shares,
             tbl_messages.number_of_reactions as number_of_reactions,
-            /*tbl_keywords.campaign_id AS campaign_id,
-            tbl_campaigns.name AS campaign_name,
-            tbl_keywords.name as keyword_name,*/
+        
             tbl_message_results.classification_type_id,
             tbl_message_results.classification_id,
-            tbl_classifications.name as classification_name,
-            tbl_classifications.color as classification_color,
-            tbl_messages.created_at as created_at,
-            /*tbl_sources.name as source_name*/
+            tbl_messages.created_at as created_at
+    
         FROM
             tbl_messages
-            /*JOIN tbl_keywords ON tbl_messages.keyword_id = tbl_keywords.id
-            JOIN tbl_sources ON tbl_messages.source_id = tbl_sources.id
-            JOIN tbl_campaigns ON tbl_keywords.campaign_id = tbl_campaigns.id*/
             JOIN tbl_message_results ON tbl_message_results.message_id = tbl_messages.id
-            /*JOIN tbl_classifications ON tbl_message_results.classification_id = tbl_classifications.id*/
         WHERE
-            /*tbl_keywords.campaign_id = $campaign_id AND */tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
+            tbl_messages.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'";
 
         if ($this->source_id) {
             $rawQuery .= " AND tbl_messages.source_id = " . $this->source_id;
         }
 
-        $query = DB::table(DB::raw("($rawQuery) as subquery"));
+        error_log("label:" . $label . " / ---> :" . $rawQuery);
+        $rows = DB::select(DB::raw($rawQuery));
 
-        $raw = $query->get();
+        //$raw = $query->get();
         $parents = [];
-        foreach ($raw as $item) {
+        foreach ($rows as $item) {
             if ($item->reference_message_id) {
                 if (array_search($item->reference_message_id, $parents) === false) {
                     $parents[] = $item->reference_message_id;
@@ -719,7 +708,7 @@ class LevelThreeTableController extends Controller
         $sources = $this->getAllSource();
         $anylsys = [];
 
-        foreach ($raw as $item) {
+        foreach ($rows as $item) {
             // dd($item);
             $date_d = Carbon::parse($item->date_m)->format('D');
             $parent = null;
@@ -798,7 +787,7 @@ class LevelThreeTableController extends Controller
             $data['message'] = array_slice($data['message'], $start, $offset);
         }
 
-        return parent::handleRespond($data);
+        return $data;
     }
 
     public
