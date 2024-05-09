@@ -1165,7 +1165,7 @@ class VoiceDashboardController extends Controller
             }
         }
 
-        $data['keywordChannel'] = $this->getKeywordChannel($raw_classification, $keywords, $sources);
+        $data['keywordChannel'] = $this->getKeywordChannel($raw_classification, $sources,$keywords);
         $data['keywordSentiment'] = $this->getKeywordSentiment($items1, $keywords);
         $data['keywordBullyLevel'] = $this->getKeywordBullyLevel($items3, $keywords);
         $data['keywordBullyType'] = $this->getKeywordBullyType($items2, $keywords);
@@ -1179,13 +1179,14 @@ class VoiceDashboardController extends Controller
 
         $data = parent::listSource();
         // $raw = $conditions['raw'] ?? null;
-        $meesage_total = 0;
+        //$message_total = 0;
 
 
         if ($items) {
             foreach ($items as $item) {
                 $SourceName = self::matchSourceName($sources, $item->source_id);
                 $index_label = array_search($SourceName, $data['labels']);
+                //$message_total += 1;
                 if (!isset($data['value'][$item->keyword_id])) {
                     $data['value'][$item->keyword_id] = [
                         'id' => $item->keyword_id,

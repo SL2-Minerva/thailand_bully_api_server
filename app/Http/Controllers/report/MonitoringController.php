@@ -468,7 +468,7 @@ class MonitoringController extends Controller
                 "date_m" => $item->date_m,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
-                //"source_name" => $item->source_name,
+                "author" => $item->author,
                 "source_id" => $item->source_id,
                 "source_name" => self::matchSourceName($source, $item->source_id),
                 "keyword_name" => self::matchKeywordName($keywordName, $item->keyword_id),
