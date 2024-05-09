@@ -351,7 +351,7 @@ class MonitoringController extends Controller
         $keywords = $this->findKeywords($this->campaign_id, $this->keyword_id);
         $raw = self::rawMessageCampaign($keywords, $this->start_date, $this->end_date);
         $raw_data = $raw->orderByDesc('total_engagement')->limit(6)->get();
-        return parent::handleRespond($raw_data);
+        //return parent::handleRespond($raw_data);
         $source = $this->getAllSource();
         $data = array();
         //error_log($raw->toSql());
