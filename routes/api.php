@@ -203,8 +203,11 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('influencers/export', [MonitoringController::class, 'influencerExport']);
             Route::get('influencers/author', [MonitoringController::class, 'influencerAuthor']);
             Route::get('daily/export', [MonitoringController::class, 'dailyExport']);
+            
 
         });
+        
+        Route::get('image-loader', [MonitoringController::class, 'imageLoader']);
 
         Route::group(['prefix' => 'dashboard-channel'], function () {
             Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);

@@ -99,9 +99,9 @@ class MonitoringController extends Controller
             /*->join('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
 
             ->whereIn('message_type', ["Post", "Video", "post"])
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('reference_message_id')
-                      ->orWhere('reference_message_id', '');
+                    ->orWhere('reference_message_id', '');
             })
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
@@ -110,7 +110,7 @@ class MonitoringController extends Controller
         // ->get();
 
         $keywordIds = $keywords->pluck('id')->all();
-        if ($keywordIds){
+        if ($keywordIds) {
             $data->whereIn('messages.keyword_id', $keywordIds);
         }
 
@@ -156,7 +156,7 @@ class MonitoringController extends Controller
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('message_type', ["Post", "Video", "post"])
-        ->orderBy('date_m', 'asc');
+            ->orderBy('date_m', 'asc');
 
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
@@ -344,6 +344,43 @@ class MonitoringController extends Controller
     }
 
 
+    // Function to fetch the Instagram image URL
+    function fetchInstagramImage($imageurl)
+    {
+        header("Access-Control-Allow-Origin: *");
+        // URL of the Instagram image
+
+        $instagramUrl = $imageurl.'/media/?size=l&short_redirect=1';
+
+        // Fetch the Instagram image URL
+        // Fetch the Instagram image URL
+        //$response = file_get_contents($instagramUrl);
+
+        // Get the headers of the response to find the final redirected URL
+        $headers = get_headers($instagramUrl, 1);
+
+        // Check if the 'Location' header exists, which indicates a redirect
+        if (isset($headers['Location'])) {
+            // Get the final redirected URL
+            $redirectedUrl = $headers['Location'];
+
+            // Return the final redirected URL
+            return $redirectedUrl;
+        }
+        // If there's no redirect, return the original URL
+        return $instagramUrl;
+
+    }
+
+
+    public function imageLoader(Request $request)
+    {
+         error_log($request->image_url);
+        $imageUrl = self::fetchInstagramImage($request->image_url);
+        $imageBuffer = file_get_contents($imageUrl);
+        echo $imageBuffer;
+    }
+
     public function topEngagementOfPost(Request $request)
     {
 
@@ -492,7 +529,7 @@ class MonitoringController extends Controller
         $messageId = $request->message_id;
 
 
-        $post = self:: rawQueryMessage()->where('messages.id', $messageId)->first();
+        $post = self::rawQueryMessage()->where('messages.id', $messageId)->first();
 
         if (!$post) {
             return parent::handleNotFound(null);
@@ -523,7 +560,8 @@ class MonitoringController extends Controller
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
             foreach ($comment as $item) {
-                $rs = ["id" => $item->id ?? null,
+                $rs = [
+                    "id" => $item->id ?? null,
                     "message_id" => $item->message_id,
                     "message_detail" => $item->full_message,
                     "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
@@ -540,13 +578,15 @@ class MonitoringController extends Controller
                     "number_of_reactions" => $item->number_of_reactions,
                     "number_of_comments" => $item->number_of_comments,
                     /*"number_of_views" => $item->number_of_views,*/
-                    "link_message" => $item->link_message];
+                    "link_message" => $item->link_message
+                ];
                 $commentData[] = $rs;
             }
 
             $resultComment = self::parseEngagementLevel($messageIds, $commentData);
         }
-        $data = ["id" => $post->id ?? null,
+        $data = [
+            "id" => $post->id ?? null,
             "message_id" => $post->message_id,
             "message_detail" => $post->full_message,
             "post_date" => Carbon::parse($post->message_datetime)->format('Y/m/d'),
@@ -567,7 +607,9 @@ class MonitoringController extends Controller
             "sentiment" => $post->sentiment,
             "bully_type" => $post->bully_type,
             "bully_level" => $post->bully_level,
-            "link_message" => $post->link_message, "comments" => $resultComment];
+            "link_message" => $post->link_message,
+            "comments" => $resultComment
+        ];
         return parent::handleRespond($data);
     }
 
@@ -583,12 +625,11 @@ class MonitoringController extends Controller
     }
 
     function parseInfluencer($raw)
-    {
-        {
+    { {
             $source = DB::table('sources')->where("status", "=", 1)->get();
             $finalResults = [];
 
-// Loop through each author's messages
+            // Loop through each author's messages
             foreach ($raw as $messages) {
                 $positiveCount = $messages["positive"];
                 $negativeCount = $messages["negative"];
@@ -818,7 +859,7 @@ class MonitoringController extends Controller
 
         $sourceQuery = "";
         if ($this->source_id) {
-            $sourceQuery = "m.source_id = ".$this->source_id ." AND ";
+            $sourceQuery = "m.source_id = " . $this->source_id . " AND ";
         }
 
         $keywordQuery = "";
@@ -865,7 +906,7 @@ class MonitoringController extends Controller
                         'negative' => 0,
                         'positive' => 0,
                         'neutral' => 0,
-                        'cover_image'=>"",
+                        'cover_image' => "",
                         'total_sentiment' => 0,
                         'number_of_reactions' => 0,
                         'message_datetime' => '',
@@ -903,10 +944,10 @@ class MonitoringController extends Controller
                 $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
                 //   }
             }/*  else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
-                if (isset($newGroupedData[$message->reference_message_id])) {
-                    $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
-                }
-            } */
+              if (isset($newGroupedData[$message->reference_message_id])) {
+                  $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
+              }
+          } */
         }
         $groupedResults = [];
         foreach ($newGroupedData as $messageData) {
@@ -948,7 +989,7 @@ class MonitoringController extends Controller
             $groupedResults[$author]['total_post'] = $messageData['total_post'];
         }
 
-// Convert associative array to indexed array
+        // Convert associative array to indexed array
         $result = array_values($groupedResults);
         usort($result, function ($a, $b) {
             return $b['total_engagement'] <=> $a['total_engagement'];
@@ -989,7 +1030,7 @@ WHERE
 
 
         foreach ($rows as $message) {
-            if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && ($message->reference_message_id === ""|| $message->reference_message_id === null)) {
+            if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && ($message->reference_message_id === "" || $message->reference_message_id === null)) {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
                 //if ($totalEngagement > 10) {
                 $messageId = $message->message_id;
@@ -1091,7 +1132,7 @@ WHERE
             $groupedResults[$author]['total_post'] = $messageData['total_post'];
         }
 
-// Convert associative array to indexed array
+        // Convert associative array to indexed array
         $result = array_values($groupedResults);
         usort($result, function ($a, $b) {
             return $b['total_engagement'] <=> $a['total_engagement'];
