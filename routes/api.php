@@ -48,10 +48,12 @@ use Illuminate\Support\Facades\Route;
 Route::post('user/forget_password', [UserController::class, 'forget_password']);
 Route::post('user/reset_password', [UserController::class, 'reset_password']);
 
+Route::get('image-loader', [MonitoringController::class, 'imageLoader']);
+
 Route::group(['middleware' => ['api']], function () {
     Route::get('health-check', [HeathCheckController::class, 'index']);
 
-    Route::get('image-loader', [MonitoringController::class, 'imageLoader']);
+    
     // group only auth
     Route::group(['prefix' => 'auth'], function () {
         Route::post('/login', [AuthController::class, 'login']);
