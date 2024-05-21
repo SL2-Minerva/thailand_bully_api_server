@@ -902,7 +902,7 @@ class MonitoringController extends Controller
         }
 
         $query = "SELECT m.id,m.source_id,m.link_image,
-        m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
+        m.author,m.message_id,m.link_message,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
     FROM
         tbl_messages m
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
@@ -917,7 +917,7 @@ class MonitoringController extends Controller
         foreach ($rows as $message) {
             if ($message->reference_message_id === "" || $message->reference_message_id === null) {
                 $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
-                //if ($totalEngagement > 10) {
+                if ($totalEngagement > 0) {
                 $messageId = $message->message_id;
                 $author = $message->author;
 
@@ -981,7 +981,7 @@ class MonitoringController extends Controller
 
                 $newGroupedData[$messageId]['total_engagement'] += $totalEngagement;
                 $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
-                //   }
+                   }
             }/*  else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
            if (isset($newGroupedData[$message->reference_message_id])) {
                $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
