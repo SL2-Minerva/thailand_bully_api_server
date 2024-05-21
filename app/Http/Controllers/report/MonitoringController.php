@@ -350,7 +350,7 @@ class MonitoringController extends Controller
         header("Access-Control-Allow-Origin: *");
         // URL of the Instagram image
 
-        $instagramUrl = $imageurl.'/media/?size=l&short_redirect=1';
+        $instagramUrl = $imageurl . '/media/?size=l&short_redirect=1';
 
         // Fetch the Instagram image URL
         // Fetch the Instagram image URL
@@ -375,7 +375,7 @@ class MonitoringController extends Controller
 
     public function imageLoader(Request $request)
     {
-         error_log($request->image_url);
+        error_log($request->image_url);
         $imageUrl = self::fetchInstagramImage($request->image_url);
         $imageBuffer = file_get_contents($imageUrl);
         echo $imageBuffer;
@@ -405,8 +405,8 @@ class MonitoringController extends Controller
 
 
             $cover_image = $item->link_image;
-            if ($item->source_id == 4) {
-                $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+            if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
+                $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
             }
 
             $data_push = [
@@ -566,8 +566,9 @@ class MonitoringController extends Controller
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
             foreach ($comment as $item) {
-                if ($item->source_id == 4) {
-                    $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+                $cover_image = $item->link_image;
+                if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
+                    $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
                 }
                 $rs = [
                     "id" => $item->id ?? null,
@@ -594,8 +595,9 @@ class MonitoringController extends Controller
 
             $resultComment = self::parseEngagementLevel($messageIds, $commentData);
         }
-        if ($item->source_id == 4) {
-            $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+        $cover_image = $item->link_image;
+                if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
+            $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
         }
 
         $data = [
@@ -779,8 +781,9 @@ class MonitoringController extends Controller
         $data = array();
         $messageIds = $dataRaw->pluck('id')->all();
         foreach ($dataRaw as $item) {
-            if ($item->source_id == 4) {
-                $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+            $cover_image = $item->link_image;
+            if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
+                $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
             }
             $data_push = [
                 "id" => $item->id ?? null,
@@ -943,9 +946,12 @@ class MonitoringController extends Controller
                         $newGroupedData[$messageId]['neutral'] = $newGroupedData[$messageId]['neutral'] + 1;
                         break;
                 }
-                if ($message->source_id == 4) {
-                    $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$message->link_image;
+
+                $cover_image = $message->link_image;
+                if ($message->source_id == 4 && $cover_image != null && $cover_image != "") {
+                    $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
                 }
+
                 $newGroupedData[$messageId]['cover_image'] = $cover_image;
                 $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
                 $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
@@ -962,10 +968,10 @@ class MonitoringController extends Controller
                 $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
                 //   }
             }/*  else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
-              if (isset($newGroupedData[$message->reference_message_id])) {
-                  $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
-              }
-          } */
+             if (isset($newGroupedData[$message->reference_message_id])) {
+                 $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
+             }
+         } */
         }
         $groupedResults = [];
         foreach ($newGroupedData as $messageData) {
