@@ -562,6 +562,10 @@ class MonitoringController extends Controller
         }
         $resultComment = [];
 
+        $cover_image = $post->link_image;
+                if ($post->source_id == 4 && $cover_image != null && $cover_image != "") {
+            $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
+        }
         if ($comment != null && count($comment) > 0) {
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
@@ -594,10 +598,6 @@ class MonitoringController extends Controller
             }
 
             $resultComment = self::parseEngagementLevel($messageIds, $commentData);
-        }
-        $cover_image = $item->link_image;
-                if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
-            $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
         }
 
         $data = [
