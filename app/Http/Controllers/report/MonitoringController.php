@@ -405,8 +405,11 @@ class MonitoringController extends Controller
 
 
             $cover_image = $item->link_image;
-            if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
-                $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+            if ($item->source_id == 4) {
+                $cover_image = $item->link_message;
+                if ($cover_image != null && $cover_image != "") {
+                    $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                }
             }
 
             $data_push = [
@@ -563,16 +566,22 @@ class MonitoringController extends Controller
         $resultComment = [];
 
         $cover_image = $post->link_image;
-                if ($post->source_id == 4 && $cover_image != null && $cover_image != "") {
-            $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
+        if ($post->source_id == 4) {
+            $cover_image = $post->link_message;
+            if ($cover_image != null && $cover_image != "") {
+                $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+            }
         }
         if ($comment != null && count($comment) > 0) {
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
             foreach ($comment as $item) {
                 $cover_image = $item->link_image;
-                if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
-                    $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
+                if ($item->source_id == 4 ) {    
+                    $cover_image = $item->link_message;
+                    if ($cover_image != null && $cover_image != "") {
+                        $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                    }
                 }
                 $rs = [
                     "id" => $item->id ?? null,
@@ -782,8 +791,11 @@ class MonitoringController extends Controller
         $messageIds = $dataRaw->pluck('id')->all();
         foreach ($dataRaw as $item) {
             $cover_image = $item->link_image;
-            if ($item->source_id == 4 && $cover_image != null && $cover_image != "") {
-                $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" .$cover_image;
+            if ($item->source_id == 4) {
+                $cover_image = $item->link_message;
+                if ($cover_image != null && $cover_image != "") {
+                    $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                }
             }
             $data_push = [
                 "id" => $item->id ?? null,
@@ -948,8 +960,11 @@ class MonitoringController extends Controller
                 }
 
                 $cover_image = $message->link_image;
-                if ($message->source_id == 4 && $cover_image != null && $cover_image != "") {
-                    $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                if ($message->source_id == 4) {
+                    $cover_image = $message->link_message;
+                    if ($cover_image != null && $cover_image != "") {
+                        $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                    }
                 }
 
                 $newGroupedData[$messageId]['cover_image'] = $cover_image;
@@ -968,10 +983,10 @@ class MonitoringController extends Controller
                 $newGroupedData[$messageId]['total_post'] = $authorPostCount[$author];
                 //   }
             }/*  else if ($message->reference_message_id !== null && $message->reference_message_id !== "") {
-             if (isset($newGroupedData[$message->reference_message_id])) {
-                 $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
-             }
-         } */
+           if (isset($newGroupedData[$message->reference_message_id])) {
+               $newGroupedData[$message->reference_message_id]['classification'][] = $message->classification_id;
+           }
+       } */
         }
         $groupedResults = [];
         foreach ($newGroupedData as $messageData) {
