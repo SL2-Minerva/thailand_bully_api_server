@@ -403,6 +403,12 @@ class MonitoringController extends Controller
                 $parent = $item->reference_message_id;
             }
 
+
+            $cover_image = $item->link_image;
+            if ($item->source_id == 4) {
+                $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+            }
+
             $data_push = [
                 "id" => $item->id ?? null,
                 "message_id" => $item->message_id,
@@ -416,7 +422,7 @@ class MonitoringController extends Controller
                 "device" => $item->device,
                 "source_name" => parent::matchSourceName($source, $item->source_id),
                 "link_message" => $item->link_message,
-                "cover_image" => $item->link_image,
+                "cover_image" => $cover_image,
                 "parent" => $parent,
                 "total_engagement" => $item->total_engagement,
                 "number_of_shares" => $item->number_of_shares,
@@ -560,6 +566,9 @@ class MonitoringController extends Controller
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
             foreach ($comment as $item) {
+                if ($item->source_id == 4) {
+                    $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+                }
                 $rs = [
                     "id" => $item->id ?? null,
                     "message_id" => $item->message_id,
@@ -567,7 +576,7 @@ class MonitoringController extends Controller
                     "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
                     "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                     "icon" => "",
-                    "cover_image" => $item->link_image,
+                    "cover_image" => $cover_image,
                     "source_id" => $item->source_id,
                     "account_name" => $item->author,
                     "message_type" => $item->message_type,
@@ -585,6 +594,10 @@ class MonitoringController extends Controller
 
             $resultComment = self::parseEngagementLevel($messageIds, $commentData);
         }
+        if ($item->source_id == 4) {
+            $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+        }
+
         $data = [
             "id" => $post->id ?? null,
             "message_id" => $post->message_id,
@@ -592,7 +605,7 @@ class MonitoringController extends Controller
             "post_date" => Carbon::parse($post->message_datetime)->format('Y/m/d'),
             "post_time" => Carbon::parse($post->message_datetime)->format('H:i'),
             "icon" => "",
-            "cover_image" => $post->link_image,
+            "cover_image" => $cover_image,
             "source_id" => $post->source_id,
             "account_name" => $post->author,
             "message_type" => $post->message_type,
@@ -766,6 +779,9 @@ class MonitoringController extends Controller
         $data = array();
         $messageIds = $dataRaw->pluck('id')->all();
         foreach ($dataRaw as $item) {
+            if ($item->source_id == 4) {
+                $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$item->link_image;
+            }
             $data_push = [
                 "id" => $item->id ?? null,
                 "message_id" => $item->message_id,
@@ -775,7 +791,7 @@ class MonitoringController extends Controller
                 "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                 "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
                 "icon" => "",
-                "cover_image" => $item->link_image,
+                "cover_image" => $cover_image,
                 "message_type" => $item->message_type,
                 "device" => $item->device,
                 "source_name" => self::matchSourceName($source, $item->source_id),
@@ -927,8 +943,10 @@ class MonitoringController extends Controller
                         $newGroupedData[$messageId]['neutral'] = $newGroupedData[$messageId]['neutral'] + 1;
                         break;
                 }
-
-                $newGroupedData[$messageId]['cover_image'] = $message->link_image;
+                if ($message->source_id == 4) {
+                    $cover_image ="https://cornea-analysis.com/api/image-loader?image_url=".$message->link_image;
+                }
+                $newGroupedData[$messageId]['cover_image'] = $cover_image;
                 $newGroupedData[$messageId]['total_sentiment'] = $newGroupedData[$messageId]['total_sentiment'] + 1;
                 $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
                 $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
