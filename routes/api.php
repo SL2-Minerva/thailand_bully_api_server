@@ -169,7 +169,7 @@ Route::group(['middleware' => ['api']], function () {
         });
 
         Route::get('/keywords', [KeywordController::class, 'keywords']);
-
+        Route::get('/sna', [LevelfourController::class, 'getSNA']);
         Route::group(['prefix' => 'dashboard-overall'], function () {
             Route::get('/', [DashboardController::class, 'overAll']);
 //            Route::get('/daily-message/level-three/', [LevelthreeController::class, 'dailyMessageLevelThree']);
@@ -204,10 +204,10 @@ Route::group(['middleware' => ['api']], function () {
             Route::get('influencers/export', [MonitoringController::class, 'influencerExport']);
             Route::get('influencers/author', [MonitoringController::class, 'influencerAuthor']);
             Route::get('daily/export', [MonitoringController::class, 'dailyExport']);
-            
+
 
         });
-        
+
 
         Route::group(['prefix' => 'dashboard-channel'], function () {
             Route::get('daily-by', [ChannelDashboardController::class, 'dailyBy']);

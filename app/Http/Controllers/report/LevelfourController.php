@@ -203,7 +203,7 @@ class LevelfourController extends Controller
         $keywordIds = $keywords->pluck('id')->all();
 
         if ($is_child) {
-        
+
             $raw = $this->message()
                 ->where('message_results.classification_type_id', $type);
                 if  ($parentMessageIds!=null){
@@ -226,7 +226,7 @@ class LevelfourController extends Controller
 
         error_log("source ID: ".$source);
 
-        
+
 
         if ($source != "all") {
             $raw= $raw->where('messages.source_id', $source);
@@ -348,4 +348,95 @@ class LevelfourController extends Controller
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
     }
 
+
+    public function getSNA(Request $request)
+    {
+
+        if ($request->sna_type === 'sentiment') {
+            $snaType = 1;
+        } else if ($request->sna_type === 'bullyLevel') {
+            $snaType = 2;
+        } else {
+            $snaType = 3;
+        }
+
+        $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
+        $data = self::getSNANode($keywords, $request->source, $snaType);
+
+        return parent::handleRespond($data);
+    }
+
+    private function getSNANode($keywords, $source, $type)
+    {
+        $keywordIds = $keywords->pluck('id')->all();
+        error_log("Keyword ");
+        $classification = parent::getClassificationMaster();
+        error_log("classification ");
+        $rawParent = $this->message_root($keywordIds, $this->start_date, $this->end_date)
+            ->where('message_results.classification_type_id', $type)
+            ->where('messages.reference_message_id', '')
+            ->limit(500)
+            ->groupBy("messages.message_id");
+
+        if ($source != "all") {
+            $rawParent = $rawParent->where('messages.source_id', $source);
+        }
+        $parentItems = $rawParent->get();
+
+        error_log($rawParent->toSql());
+        error_log("parentItems: " . $parentItems->count());
+
+        $nodes = [];
+        $parentMessageIds = [];
+
+        foreach ($parentItems as $item) {
+            $parentMessageIds[] = $item->message_id;
+
+            $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 10 : 0;
+            $length = max(1, (int)$influent_rate) ?: 10;
+
+            $nodes[] = [
+                "id" => $item->message_id,
+                "title" => $item->author,
+                "color" => parent::matchClassificationColor($classification, $item->classification_id),
+                "size" => $this->factorNodeSize($length, false),
+                'link' => $item->link_message ?? "",
+                "items" => []
+            ];
+        }
+
+        $rawChild = $this->message()->where('message_results.classification_type_id', $type);
+        if (!empty($parentMessageIds)) {
+            $rawChild = $rawChild->whereIn('messages.reference_message_id', $parentMessageIds);
+        }
+
+        if ($source != "all") {
+            $rawChild = $rawChild->where('messages.source_id', $source);
+        }
+        $rawChild = $rawChild->limit(5000);
+
+        $childItems = $rawChild->get();
+        error_log("Count " . $childItems->count());
+
+        foreach ($childItems as $item) {
+            $influent_rate = $item->total_engagement > 0 ? ($item->total_engagement / $item->total_engagement) * 10 : 0;
+          //  $length = max(1, (int)$influent_rate) ?: 10;
+
+            foreach ($nodes as &$parentNode) {
+                if ($parentNode['id'] == $item->reference_message_id) {
+                    $parentNode['items'][] = [
+                        "id" => $item->message_id,
+                        "title" => $item->author,
+                        "color" => parent::matchClassificationColor($classification, $item->classification_id),
+                        "size" => $this->factorNodeSize($influent_rate, true),
+                        "items" => []
+                    ];
+                    break;
+                }
+            }
+        }
+
+        return $nodes;
+    }
 }
