@@ -154,7 +154,7 @@ class LevelfourController extends Controller
     private function getSNAbyType($request, $type = 1)
     {
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
-        $roots = $this->getNode($keywords, $request->source, $request->message_id, $request->limit,false, $type, []);
+        $roots = $this->getNode($keywords, $request->source, $request->message_id, $request->limit, false, $type, []);
 
         $messageIds = [];
         if ($roots && $roots["nodes"]) {
@@ -164,7 +164,7 @@ class LevelfourController extends Controller
             }
         }
 
-        $child = $this->getNode($keywords, $request->source, $request->message_id, $request->limit,true, $type, $messageIds);
+        $child = $this->getNode($keywords, $request->source, $request->message_id, $request->limit, true, $type, $messageIds);
 
         $nodes = array_merge($roots['nodes'] ?? [], $child['nodes'] ?? []);
         $data = ['nodes' => null, 'edges' => null];
@@ -197,7 +197,7 @@ class LevelfourController extends Controller
         return $data;
     }
 
-    private function getNode($keywords,$source, $message_id,$limit, $is_child, $type, $parentMessageIds)
+    private function getNode($keywords, $source, $message_id, $limit, $is_child, $type, $parentMessageIds)
     {
 
         $keywordIds = $keywords->pluck('id')->all();
@@ -206,15 +206,15 @@ class LevelfourController extends Controller
 
             $raw = $this->message()
                 ->where('message_results.classification_type_id', $type);
-                if  ($parentMessageIds!=null){
-                    $raw = $raw->whereIn('messages.reference_message_id', $parentMessageIds);
-                }
-                $raw =$raw->limit($limit);
+            if ($parentMessageIds != null) {
+                $raw = $raw->whereIn('messages.reference_message_id', $parentMessageIds);
+            }
+            $raw = $raw->limit($limit);
         } else {
             if ($message_id) {
                 $raw = $this->message()
-                ->where("message_results.classification_type_id", $type)
-                ->where("messages.message_id", $message_id);
+                    ->where("message_results.classification_type_id", $type)
+                    ->where("messages.message_id", $message_id);
             } else {
                 $raw = $this->message_root($keywordIds, $this->start_date, $this->end_date)
                     ->where('message_results.classification_type_id', $type)
@@ -224,12 +224,11 @@ class LevelfourController extends Controller
             }
         }
 
-        error_log("source ID: ".$source);
-
+        error_log("source ID: " . $source);
 
 
         if ($source != "all") {
-            $raw= $raw->where('messages.source_id', $source);
+            $raw = $raw->where('messages.source_id', $source);
             error_log($raw->toSql());
         }
         $items = $raw->get();
@@ -253,9 +252,9 @@ class LevelfourController extends Controller
 
 
 //            if ($is_child) {
-            if ($influent_rate){
+            if ($influent_rate) {
                 $data_push["length"] = (int)$influent_rate ?? 1;
-            }else{
+            } else {
                 $data_push["length"] = (int)$influent_rate <= 0 ? 10 : (int)$influent_rate + 5;
             }
             $data_push["parent_id"] = $item->reference_message_id;
@@ -354,7 +353,7 @@ class LevelfourController extends Controller
 
         if ($request->sna_type === 'sentiment') {
             $snaType = 1;
-        } else if ($request->sna_type === 'bullyLevel') {
+        } else if ($request->sna_type === 'bully-level') {
             $snaType = 2;
         } else {
             $snaType = 3;
@@ -375,16 +374,13 @@ class LevelfourController extends Controller
         $rawParent = $this->message_root($keywordIds, $this->start_date, $this->end_date)
             ->where('message_results.classification_type_id', $type)
             ->where('messages.reference_message_id', '')
-            ->limit(500)
-            ->groupBy("messages.message_id");
+            ->limit(500)->groupBy("messages.message_id");
 
         if ($source != "all") {
             $rawParent = $rawParent->where('messages.source_id', $source);
         }
         $parentItems = $rawParent->get();
 
-        error_log($rawParent->toSql());
-        error_log("parentItems: " . $parentItems->count());
 
         $nodes = [];
         $parentMessageIds = [];
@@ -392,15 +388,12 @@ class LevelfourController extends Controller
         foreach ($parentItems as $item) {
             $parentMessageIds[] = $item->message_id;
 
-            $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
-            $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 10 : 0;
-            $length = max(1, (int)$influent_rate) ?: 10;
-
             $nodes[] = [
                 "id" => $item->message_id,
+                "total_engagement" => $item->total_engagement,
                 "title" => $item->author,
                 "color" => parent::matchClassificationColor($classification, $item->classification_id),
-                "size" => $this->factorNodeSize($length, false),
+                "size" => self::getSizeParent($item->total_engagement),
                 'link' => $item->link_message ?? "",
                 "items" => []
             ];
@@ -414,29 +407,120 @@ class LevelfourController extends Controller
         if ($source != "all") {
             $rawChild = $rawChild->where('messages.source_id', $source);
         }
-        $rawChild = $rawChild->limit(5000);
+        $rawChild = $rawChild->groupBy("messages.message_id")->limit(3000);
+
 
         $childItems = $rawChild->get();
-        error_log("Count " . $childItems->count());
+
+        error_log("childItems " . count($childItems));
+
+        $childMessageIds = [];
 
         foreach ($childItems as $item) {
-            $influent_rate = $item->total_engagement > 0 ? ($item->total_engagement / $item->total_engagement) * 10 : 0;
-          //  $length = max(1, (int)$influent_rate) ?: 10;
+            $childMessageIds[] = $item->message_id;
+        }
 
-            foreach ($nodes as &$parentNode) {
+        $rawReply = $this->message()->where('message_results.classification_type_id', $type);
+        if (!empty($childMessageIds)) {
+            $rawReply = $rawReply->whereIn('messages.reference_message_id', $childMessageIds);
+        }
+
+        if ($source != "all") {
+            $rawReply = $rawReply->groupBy("messages.message_id")->where('messages.source_id', $source);
+        }
+
+        $rawReply = $rawReply->limit(1000);
+        $replyData = $rawReply->get();
+        error_log("replyData " . count($replyData));
+        /* foreach ($replyData as $item) {
+             foreach ($childItems as $childItem) {
+                 $influent_rate = $item->total_engagement > 0 ? ($item->total_engagement / $item->total_engagement) * 10 : 0;
+                 if ($childItem['id'] == $item->reference_message_id) {
+                     $childItem['items'][] = [
+                         "id" => $item->message_id,
+                         "title" => $item->author,
+                         "color" => parent::matchClassificationColor($classification, $item->classification_id),
+                         "size" => $this->factorNodeSize($influent_rate, true),
+                         "items" => []
+                     ];
+                 }else{
+                     $childItem['id'][] = [
+                         "id" => $item->message_id,
+                         "title" => $item->author,
+                         "color" => parent::matchClassificationColor($classification, $item->classification_id),
+                         "size" => $this->factorNodeSize($influent_rate, true),
+                         "items" => []
+                     ];
+                 }
+                 break;
+             }
+         }*/
+        $nodeNew = [];
+        foreach ($nodes as $parentNode) {
+            foreach ($childItems as $item) {
                 if ($parentNode['id'] == $item->reference_message_id) {
                     $parentNode['items'][] = [
                         "id" => $item->message_id,
+                        "total_engagement" => $item->total_engagement,
                         "title" => $item->author,
                         "color" => parent::matchClassificationColor($classification, $item->classification_id),
-                        "size" => $this->factorNodeSize($influent_rate, true),
+                        "size" => self::getSizeChild($item->total_engagement),
+                        //"length" => $lengthSum,
                         "items" => []
                     ];
-                    break;
                 }
             }
+            $nodeNew[] = $parentNode;
         }
 
-        return $nodes;
+        return $nodeNew;
+    }
+
+    function getSizeParent($total_engagement)
+    {
+        if ($total_engagement > 5000) {
+            $size = 100;
+        } else if ($total_engagement > 1000) {
+            $size = 95;
+        } else if ($total_engagement > 550) {
+            $size = 90;
+        } else if ($total_engagement > 305) {
+            $size = 85;
+        } else if ($total_engagement > 200) {
+            $size = 80;
+        } else if ($total_engagement > 120) {
+            $size = 75;
+        } else if ($total_engagement > 85) {
+            $size = 70;
+        } else if ($total_engagement > 30) {
+            $size = 65;
+        } else if ($total_engagement > 10) {
+            $size = 60;
+        } else if ($total_engagement > 0) {
+            $size = 55;
+        } else {
+            $size = 50;
+        }
+        return $size;
+    }
+
+    function getSizeChild($total_engagement)
+    {
+        if ($total_engagement > 350) {
+            $size = 40;
+        } else if ($total_engagement > 170) {
+            $size = 35;
+        } else if ($total_engagement > 85) {
+            $size = 30;
+        } else if ($total_engagement > 30) {
+            $size = 25;
+        } else if ($total_engagement > 10) {
+            $size = 20;
+        } else if ($total_engagement > 0) {
+            $size = 15;
+        } else {
+            $size = 10;
+        }
+        return $size;
     }
 }
