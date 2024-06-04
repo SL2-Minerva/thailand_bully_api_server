@@ -411,27 +411,27 @@ class LevelfourController extends Controller
 
 
         $childItems = $rawChild->get();
+        /*
+                error_log("childItems " . count($childItems));
 
-        error_log("childItems " . count($childItems));
+                $childMessageIds = [];
 
-        $childMessageIds = [];
+                foreach ($childItems as $item) {
+                    $childMessageIds[] = $item->message_id;
+                }
 
-        foreach ($childItems as $item) {
-            $childMessageIds[] = $item->message_id;
-        }
+                $rawReply = $this->message()->where('message_results.classification_type_id', $type);
+                if (!empty($childMessageIds)) {
+                    $rawReply = $rawReply->whereIn('messages.reference_message_id', $childMessageIds);
+                }
 
-        $rawReply = $this->message()->where('message_results.classification_type_id', $type);
-        if (!empty($childMessageIds)) {
-            $rawReply = $rawReply->whereIn('messages.reference_message_id', $childMessageIds);
-        }
+                if ($source != "all") {
+                    $rawReply = $rawReply->groupBy("messages.message_id")->where('messages.source_id', $source);
+                }
 
-        if ($source != "all") {
-            $rawReply = $rawReply->groupBy("messages.message_id")->where('messages.source_id', $source);
-        }
-
-        $rawReply = $rawReply->limit(1000);
-        $replyData = $rawReply->get();
-        error_log("replyData " . count($replyData));
+                $rawReply = $rawReply->limit(1000);
+                $replyData = $rawReply->get();
+                error_log("replyData " . count($replyData));*/
         /* foreach ($replyData as $item) {
              foreach ($childItems as $childItem) {
                  $influent_rate = $item->total_engagement > 0 ? ($item->total_engagement / $item->total_engagement) * 10 : 0;
@@ -459,15 +459,17 @@ class LevelfourController extends Controller
         foreach ($nodes as $parentNode) {
             foreach ($childItems as $item) {
                 if ($parentNode['id'] == $item->reference_message_id) {
-                    $parentNode['items'][] = [
-                        "id" => $item->message_id,
-                        "total_engagement" => $item->total_engagement,
-                        "title" => $item->author,
-                        "color" => parent::matchClassificationColor($classification, $item->classification_id),
-                        "size" => self::getSizeChild($item->total_engagement),
-                        //"length" => $lengthSum,
-                        "items" => []
-                    ];
+                    if (count($parentNode['items']) < 100) {
+                        $parentNode['items'][] = [
+                            "id" => $item->message_id,
+                            "total_engagement" => $item->total_engagement,
+                            "title" => $item->author,
+                            "color" => parent::matchClassificationColor($classification, $item->classification_id),
+                            "size" => self::getSizeChild($item->total_engagement),
+                            //"length" => $lengthSum,
+                            "items" => []
+                        ];
+                    }
                 }
             }
             $nodeNew[] = $parentNode;
@@ -478,23 +480,23 @@ class LevelfourController extends Controller
 
     function getSizeParent($total_engagement)
     {
-        if ($total_engagement > 5000) {
+        if ($total_engagement > 1000) {
             $size = 100;
-        } else if ($total_engagement > 1000) {
+        } else if ($total_engagement > 600) {
             $size = 95;
-        } else if ($total_engagement > 550) {
+        } else if ($total_engagement > 480) {
             $size = 90;
-        } else if ($total_engagement > 305) {
+        } else if ($total_engagement > 240) {
             $size = 85;
-        } else if ($total_engagement > 200) {
-            $size = 80;
         } else if ($total_engagement > 120) {
+            $size = 80;
+        } else if ($total_engagement > 60) {
             $size = 75;
-        } else if ($total_engagement > 85) {
-            $size = 70;
         } else if ($total_engagement > 30) {
+            $size = 70;
+        } else if ($total_engagement > 15) {
             $size = 65;
-        } else if ($total_engagement > 10) {
+        } else if ($total_engagement > 5) {
             $size = 60;
         } else if ($total_engagement > 0) {
             $size = 55;
@@ -506,18 +508,20 @@ class LevelfourController extends Controller
 
     function getSizeChild($total_engagement)
     {
-        if ($total_engagement > 350) {
+        if ($total_engagement > 100) {
+            $size = 50;
+        } else if ($total_engagement > 60) {
+            $size = 45;
+        } else if ($total_engagement > 40) {
             $size = 40;
-        } else if ($total_engagement > 170) {
+        } else if ($total_engagement > 25) {
             $size = 35;
-        } else if ($total_engagement > 85) {
-            $size = 30;
-        } else if ($total_engagement > 30) {
-            $size = 25;
         } else if ($total_engagement > 10) {
-            $size = 20;
+            $size = 30;
+        } else if ($total_engagement > 5) {
+            $size = 25;
         } else if ($total_engagement > 0) {
-            $size = 15;
+            $size = 20;
         } else {
             $size = 10;
         }
