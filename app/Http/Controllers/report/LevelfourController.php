@@ -351,9 +351,9 @@ class LevelfourController extends Controller
     public function getSNA(Request $request)
     {
 
-        if ($request->sna_type === 'sentiment') {
+        if ($request->type === 'sentiment') {
             $snaType = 1;
-        } else if ($request->sna_type === 'bully-level') {
+        } else if ($request->type === 'bully-type') {
             $snaType = 2;
         } else {
             $snaType = 3;
