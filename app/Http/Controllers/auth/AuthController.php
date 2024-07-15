@@ -22,19 +22,19 @@ class AuthController extends Controller
         $username = $request->username;
         $password = $request->password;
 
-        $user = User::where(BaseModel::EMAIL, $username)
+       /* $user = User::where(BaseModel::EMAIL, $username)
             ->where('password', $password)
             ->where('status', 1)
             ->orWhere('is_admin', 1)
             ->first();
 
-        if ($user) {
+         if ($user) {
             if (!$token = auth('api')->attempt(['email' => $username, 'password' => $password])) {
                 return parent::handleRespond(null, [], 404, 'Unauthorized');
             }
 
             return $this->respondWithToken($token);
-        }
+        } */
 
         return parent::handleNotFound(['email' => $username]);
     }
