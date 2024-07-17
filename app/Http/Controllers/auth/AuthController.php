@@ -22,7 +22,7 @@ class AuthController extends Controller
         $username = $request->username;
         $password = $request->password;
 
-       /* $user = User::where(BaseModel::EMAIL, $username)
+       $user = User::where(BaseModel::EMAIL, $username)
             ->where('password', $password)
             ->where('status', 1)
             ->orWhere('is_admin', 1)
@@ -34,7 +34,7 @@ class AuthController extends Controller
             }
 
             return $this->respondWithToken($token);
-        } */
+        }
 
         return parent::handleNotFound(['email' => $username]);
     }

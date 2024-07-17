@@ -411,6 +411,31 @@ class LevelfourController extends Controller
 
 
         $childItems = $rawChild->get();
+
+
+        $childMessageIds = [];
+        //error_log("Init reply message ");
+            foreach ($childItems as $item) {
+                $childMessageIds[] = $item->message_id;
+            }
+
+            $rawReply = $this->message()->where('message_results.classification_type_id', $type);
+        
+            $rawReply = $rawReply->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            if (!empty($childMessageIds)) {
+                $rawReply = $rawReply->whereIn('messages.reference_message_id', $childMessageIds);
+            }
+            $rawReply = $rawReply->where('messages.message_type', 'reply_comment');
+            
+
+            if ($source != "all") {
+                $rawReply = $rawReply->groupBy("messages.message_id")->where('messages.source_id', $source);
+            }
+
+            $rawReply = $rawReply->limit(1000);
+            $replyData = $rawReply->get();
+           // error_log("replyData " . count($replyData));
+
         /*
                 error_log("childItems " . count($childItems));
 
@@ -459,6 +484,22 @@ class LevelfourController extends Controller
         foreach ($nodes as $parentNode) {
             foreach ($childItems as $item) {
                 if ($parentNode['id'] == $item->reference_message_id) {
+
+                    $itemReply =[];
+                    foreach ($replyData as $replyItem) {
+                        if ($replyItem->reference_message_id == $item->message_id) {
+                             error_log("replyItem:".$replyItem->message_id);
+                            $itemReply[] = [
+                                "id" => $replyItem->message_id,
+                                "total_engagement" => $replyItem->total_engagement,
+                                "title" => $replyItem->author,
+                                "color" => parent::matchClassificationColor($classification, $replyItem->classification_id),
+                                "size" => self::getSizeChild($replyItem->total_engagement),
+                                //"length" => $lengthSum,
+                            ];
+                        }
+                    }
+
                     if (count($parentNode['items']) < 100) {
                         $parentNode['items'][] = [
                             "id" => $item->message_id,
@@ -467,9 +508,11 @@ class LevelfourController extends Controller
                             "color" => parent::matchClassificationColor($classification, $item->classification_id),
                             "size" => self::getSizeChild($item->total_engagement),
                             //"length" => $lengthSum,
-                            "items" => []
+                            "items" => $itemReply
                         ];
                     }
+
+               
                 }
             }
             $nodeNew[] = $parentNode;
