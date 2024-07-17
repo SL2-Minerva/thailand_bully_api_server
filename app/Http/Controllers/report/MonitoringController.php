@@ -156,6 +156,10 @@ class MonitoringController extends Controller
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('message_type', ["Post", "Video", "post"])
+            ->where(function ($query) {
+                $query->whereNull('reference_message_id')
+                    ->orWhere('reference_message_id', '');
+            })
             ->orderBy('date_m', 'asc');
 
         if ($this->source_id) {
