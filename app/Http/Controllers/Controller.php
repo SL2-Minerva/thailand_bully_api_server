@@ -181,7 +181,7 @@ class Controller extends BaseController
     public static function get_previous_date($date, $period)
     {
         $date = match ($period) {
-            "daily" => Carbon::parse($date)->subDays(7)->format('Y-m-d'),
+            "daily" => Carbon::parse($date)->subDays(1)->format('Y-m-d'),
             "yesterday" => Carbon::parse($date)->subDays(8)->format('Y-m-d'),
             "last7days" => Carbon::parse($date)->subDays(7)->format('Y-m-d'),
             "last30days" => Carbon::parse($date)->subDays(30)->format('Y-m-d'),
