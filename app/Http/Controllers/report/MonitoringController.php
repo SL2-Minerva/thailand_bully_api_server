@@ -178,7 +178,12 @@ class MonitoringController extends Controller
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
-            ->whereIn('message_type', ["Post", "Video", "post"])->orderBy('date_m', 'asc');
+            ->whereIn('message_type', ["Post", "Video", "post"])->orderBy('date_m', 'asc')
+            ->where(function ($query) {
+                $query->whereNull('reference_message_id')
+                    ->orWhere('reference_message_id', '');
+            })
+            ->orderBy('date_m', 'asc');
 
         if ($this->source_id) {
             $total_keywords_previous->where('source_id', $this->source_id);
@@ -193,8 +198,8 @@ class MonitoringController extends Controller
         $data['daily_message'] = $this->dailyMessage($total_keywords, $this->start_date, $this->end_date, $sources, $keywords, $campaign);
         $data['date_of_messages_current'] = Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y');
         $data['date_of_messages_previous'] = Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y');
-        $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
-        $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous, $sources, $keywords, $campaign);
+      $data['prcentage_of_messages_current'] = $this->percentageOfMessages($this->start_date, $this->end_date, $total_keywords, $sources, $keywords, $campaign);
+      $data['prcentage_of_messages_previous'] = $this->percentageOfMessages($this->start_date_previous, $this->end_date_previous, $total_keywords_previous, $sources, $keywords, $campaign);
 
         return parent::handleRespond($data);
     }
@@ -297,6 +302,8 @@ class MonitoringController extends Controller
                 'date' => Carbon::createFromFormat('Y-m-d', $start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $end_date)->format('d/m/Y'),
                 'percentage' => $percentage,
             ];
+
+        
 
         }
 
