@@ -96,10 +96,10 @@ class DashboardController extends Controller
             ->select([
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
             ])
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', ["$startDate 00:00:00", "$endDate 23:59:59"])
+            ->whereBetween('messages.created_at', ["$startDate 00:00:00", "$endDate 23:59:59"])
             ->when($sourceId, function ($query) use ($sourceId) {
                 return $query->where('source_id', $sourceId);
             })

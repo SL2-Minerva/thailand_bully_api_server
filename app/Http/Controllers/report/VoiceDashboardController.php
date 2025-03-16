@@ -1364,7 +1364,7 @@ class VoiceDashboardController extends Controller
                 'sources.name as source_name',*/
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
                 'messages.author as author',
@@ -1373,7 +1373,7 @@ class VoiceDashboardController extends Controller
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);

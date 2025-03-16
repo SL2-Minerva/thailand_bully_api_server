@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon;
 use App\Models\Sources;
 use Illuminate\Support\Facades\DB;
 use App\Models\Keyword;
+use Illuminate\Support\Facades\Log;
 
 class ChannelDashboardController extends Controller
 {
@@ -67,10 +68,10 @@ class ChannelDashboardController extends Controller
             ->select([
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
             ])
             ->whereIn('keyword_id', $keywords->pluck('id')->all())
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $raw->where('source_id', $this->source_id);
@@ -158,6 +159,13 @@ class ChannelDashboardController extends Controller
     function fetchSourceOrder($sources,$data)
     {
         $result = [];
+        Log::info('fetchSourceOrder received data', ['data' => $data]);
+
+        if (!is_array($data) || empty($data)) {
+            Log::error('fetchSourceOrder received null or non-array data', ['data' => $data]);
+            return [];
+        }
+        $data = array_values($data);
         foreach ($sources as $source) {
             foreach ($data as $item) {
                 if ($item['source_id'] == $source->id) {
@@ -820,13 +828,13 @@ class ChannelDashboardController extends Controller
             ->select([
                 'messages.source_id as source_id',
                 'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
                 'messages.author as author',
             ])
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($source_id) {
             $data->where('source_id', $source_id);
@@ -858,13 +866,13 @@ class ChannelDashboardController extends Controller
                 'messages.id as id',
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
                 DB::raw('count(id) as total_messages'),
             ])
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);
@@ -886,12 +894,12 @@ class ChannelDashboardController extends Controller
                 'messages.id as id',
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
             ])
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);

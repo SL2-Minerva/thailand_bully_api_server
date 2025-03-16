@@ -73,6 +73,7 @@ class MonitoringController extends Controller
                 'messages.message_type',
                 'messages.link_message',
                 'messages.link_image',
+                'messages.link_profile_image',
                 'messages.device',
                 'messages.number_of_views',
                 'messages.number_of_comments',
@@ -80,7 +81,7 @@ class MonitoringController extends Controller
                 'messages.number_of_reactions',
                 /*'message_results.classification_id',
                 'message_results.classification_type_id',*/
-                'messages.created_at',
+                'messages.created_at AS scraping_time',
                 /*'keywords.name AS keyword_name',
                 'keywords.campaign_id AS campaign_id',
                 'campaigns.name AS campaign_name',
@@ -147,14 +148,14 @@ class MonitoringController extends Controller
                 'campaigns.name AS campaign_name',
                 'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',*/
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.reference_message_id as reference_message_id',
             ])
             //->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             /*->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])
             ->whereIn('message_type', ["Post", "Video", "post"])
             ->where(function ($query) {
                 $query->whereNull('reference_message_id')
@@ -170,14 +171,14 @@ class MonitoringController extends Controller
             ->select([
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.reference_message_id as reference_message_id',
             ])
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])
             ->whereIn('message_type', ["Post", "Video", "post"])->orderBy('date_m', 'asc')
             ->where(function ($query) {
                 $query->whereNull('reference_message_id')
@@ -524,6 +525,8 @@ class MonitoringController extends Controller
                 "day" => $date_d,
                 "date_m" => $item->date_m,
                 "message_type" => $item->message_type,
+                "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
+                "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                 "device" => $item->device,
                 "author" => $item->author,
                 "source_id" => $item->source_id,
@@ -801,7 +804,7 @@ class MonitoringController extends Controller
         $data = array();
         $messageIds = $dataRaw->pluck('id')->all();
         foreach ($dataRaw as $item) {
-            $cover_image = $item->link_image;
+            $cover_image = $item->link_profile_image;
             if ($item->source_id == 4) {
                 $cover_image = $item->link_message;
                 if ($cover_image != null && $cover_image != "") {
@@ -819,6 +822,8 @@ class MonitoringController extends Controller
                 "icon" => "",
                 "cover_image" => $cover_image,
                 "message_type" => $item->message_type,
+                "scrape_date" => Carbon::parse($item->created_at)->format('Y/m/d'),
+                "scrape_time" => Carbon::parse($item->created_at)->format('H:i'),
                 "device" => $item->device,
                 "source_name" => self::matchSourceName($source, $item->source_id),
                 "source_id" => $item->source_id,
@@ -912,7 +917,7 @@ class MonitoringController extends Controller
             $sourceQuery = "m.source_id IN (" . implode(",", $source_ids) . ") AND ";
         }
 
-        $query = "SELECT m.id,m.source_id,m.link_image,
+        $query = "SELECT m.id,m.source_id,m.link_profile_image,
         m.author,m.message_id,m.link_message,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
     FROM
         tbl_messages m
@@ -970,7 +975,7 @@ class MonitoringController extends Controller
                         break;
                 }
 
-                $cover_image = $message->link_image;
+                $cover_image = $message->link_profile_image;
                 if ($message->source_id == 4) {
                     $cover_image = $message->link_message;
                     if ($cover_image != null && $cover_image != "") {

@@ -197,6 +197,8 @@ class LevelThreeTableController extends Controller
                 "post_time" => Carbon::parse($item->date_m)->format('H:i'),
                 "day" => $date_d,
                 "message_type" => $item->message_type,
+                "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
+                "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                 "device" => $item->device,
                 "channel" => $sourceName,
                 "source_name" => $sourceName,
@@ -310,7 +312,7 @@ class LevelThreeTableController extends Controller
                 'messages.number_of_reactions AS number_of_reactions',
                 'message_results.classification_type_id',
                 'message_results.classification_id',
-                'messages.created_at AS created_at',
+                'messages.created_at AS scraping_time',
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
@@ -335,7 +337,7 @@ class LevelThreeTableController extends Controller
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
                 'messages.number_of_reactions AS number_of_reactions',
-                'messages.created_at AS created_at',
+                'messages.created_at AS scraping_time',
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
                     COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
@@ -434,7 +436,7 @@ class LevelThreeTableController extends Controller
             $request->report_number === '6.2.013'
         ) {
             //$isHasMessageDate = false;
-            $raw->whereRaw('DATE_FORMAT(message_datetime, "%a") = ?', [$request->label]);
+            $raw->whereRaw('DATE_FORMAT(tbl_messages.created_at, "%a") = ?', [$request->label]);
         }
 
         // time Format
@@ -449,13 +451,13 @@ class LevelThreeTableController extends Controller
         ) {
 
             if ($request->label === 'Before 6 AM') {
-                $raw->whereRaw('HOUR(message_datetime) < ?', [6]);
+                $raw->whereRaw('HOUR(tbl_messages.created_at) < ?', [6]);
             } else if ($request->label === '6 AM-12 PM') {
-                $raw->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [6, 12]);
+                $raw->whereRaw('HOUR(tbl_messages.created_at) >= ? AND HOUR(tbl_messages.created_at) < ?', [6, 12]);
             } else if ($request->label === '12 PM-6 PM') {
-                $raw->whereRaw('HOUR(message_datetime) >= ? AND HOUR(message_datetime) < ?', [12, 18]);
+                $raw->whereRaw('HOUR(tbl_messages.created_at) >= ? AND HOUR(tbl_messages.created_at) < ?', [12, 18]);
             } else if ($request->label === 'After 6 PM') {
-                $raw->whereRaw('HOUR(message_datetime) >= ?', [18]);
+                $raw->whereRaw('HOUR(tbl_messages.created_at) >= ?', [18]);
             }
             // $isHasMessageDate = true;
         }
@@ -486,7 +488,7 @@ class LevelThreeTableController extends Controller
         }
 
         //if (!$isHasMessageDate) {
-        $raw->whereBetween('message_datetime', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
+        $raw->whereBetween('messages.created_at', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
         //}
         return $raw;
     }

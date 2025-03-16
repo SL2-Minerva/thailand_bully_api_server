@@ -1741,12 +1741,12 @@ $classifications = $this->getClassificationMaster();
                 /*'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',
                 'campaigns.name AS campaign_name',*/
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
             ])
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $totalKeyword->where('source_id', $this->source_id);
@@ -1798,7 +1798,7 @@ $classifications = $this->getClassificationMaster();
             ->select([
                 DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
                 'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 /*'campaigns.name AS campaign_name',
                                 'keywords.name as keyword_name',
                                 'keywords.campaign_id AS campaign_id',*/
@@ -1806,7 +1806,7 @@ $classifications = $this->getClassificationMaster();
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $totalKeyword->where('source_id', $this->source_id);
@@ -1869,6 +1869,10 @@ $classifications = $this->getClassificationMaster();
             return 0;
         }
 
+        if ($previous == 0) {
+            return 0; // หลีกเลี่ยงการหารด้วยศูนย์
+        }
+
         return (float)self::point_two_digits((($current - $previous) / $previous) * 100);
     }
 
@@ -1901,7 +1905,7 @@ $classifications = $this->getClassificationMaster();
                 'keywords.campaign_id AS campaign_id',
                 'campaigns.name AS campaign_name',
                 'sources.name as source_name',*/
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.message_id as message_id',
                 'messages.reference_message_id as reference_message_id',
@@ -1917,7 +1921,7 @@ $classifications = $this->getClassificationMaster();
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('messages.keyword_id', $keywordIds)
-            ->whereBetween('messages.message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);

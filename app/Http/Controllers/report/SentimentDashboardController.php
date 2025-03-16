@@ -93,9 +93,9 @@ class SentimentDashboardController extends Controller
 
 
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
         $resultPrevious = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
 
         error_log(count($resultCurrent));
         error_log(count($resultPrevious));
@@ -1415,7 +1415,7 @@ class SentimentDashboardController extends Controller
                 'messages.message_id as message_id',
                 'messages.reference_message_id as reference_message_id',
                 'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.author as author',
                 'messages.source_id as source_id',
                 'messages.message_type',
