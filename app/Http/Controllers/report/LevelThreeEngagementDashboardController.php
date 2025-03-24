@@ -107,6 +107,11 @@ class LevelThreeEngagementDashboardController extends Controller
                     $total->where('number_of_shares', '>', 0);
                 }
 
+                if ($Llabel === 'Views') {
+                    $raw->where('number_of_views', '>', 0);
+                    $total->where('number_of_views', '>', 0);
+                }
+
             }
 
         }
@@ -132,6 +137,11 @@ class LevelThreeEngagementDashboardController extends Controller
                 if ($Llabel === 'Share') {
                     $raw->where('number_of_shares', '>', 0);
                     $total->where('number_of_shares', '>', 0);
+                }
+
+                if ($Llabel === 'Views') {
+                    $raw->where('number_of_views', '>', 0);
+                    $total->where('number_of_views', '>', 0);
                 }
 
             }
@@ -181,6 +191,11 @@ class LevelThreeEngagementDashboardController extends Controller
                     $total->where('number_of_shares', '>', 0);
                 }
 
+                if ($Llabel === 'Views') {
+                    $raw->where('number_of_views', '>', 0);
+                    $total->where('number_of_views', '>', 0);
+                }
+
             }
 
         }
@@ -222,6 +237,11 @@ class LevelThreeEngagementDashboardController extends Controller
                     $total->where('number_of_shares', '>', 0);
                 }
 
+                if ($Llabel === 'Views') {
+                    $raw->where('number_of_views', '>', 0);
+                    $total->where('number_of_views', '>', 0);
+                }
+
             }
 
         }
@@ -256,6 +276,11 @@ class LevelThreeEngagementDashboardController extends Controller
                     $total->where('number_of_shares', '>', 0);
                 }
 
+                if ($Llabel === 'Views') {
+                    $raw->where('number_of_views', '>', 0);
+                    $total->where('number_of_views', '>', 0);
+                }
+
             }
 
 
@@ -282,6 +307,11 @@ class LevelThreeEngagementDashboardController extends Controller
                     $raw->where('number_of_shares', '>', 0);
                     $total->where('number_of_shares', '>', 0);
                 }
+
+                if ($Llabel === 'Views') {
+                    $raw->where('number_of_views', '>', 0);
+                    $total->where('number_of_views', '>', 0);
+                }
             }
 
         }
@@ -300,6 +330,11 @@ class LevelThreeEngagementDashboardController extends Controller
             if ($request->Llabel === "Reaction") {
                 $raw->where('number_of_reactions', '>', 0);
                 $total->where('number_of_reactions', '>', 0);
+            }
+
+            if ($request->Llabel === "Views") {
+                $raw->where('number_of_views', '>', 0);
+                $total->where('number_of_views', '>', 0);
             }
 
         }

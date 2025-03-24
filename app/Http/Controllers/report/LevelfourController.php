@@ -237,7 +237,7 @@ class LevelfourController extends Controller
 
         $classification = parent::getClassificationMaster();
         foreach ($items as $item) {
-            $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $influent_rate = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions + $item->number_of_views;
             $influent_rate = $item->total_engagement > 0 ? $influent_rate / $item->total_engagement * 10 : 0;
 
             $data_push = [
@@ -302,7 +302,8 @@ class LevelfourController extends Controller
                 'messages.link_message as link_message',
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement'),
+                    COALESCE(number_of_reactions, 0) +
+                    COALESCE(number_of_views, 0) AS total_engagement'),
             ])
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id');
     }
@@ -334,7 +335,7 @@ class LevelfourController extends Controller
                 'keywords.name as keyword_name',
                 'classifications.name as classification_name',
                 'classifications.color as classification_color',*/
-                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total_engagement'),
 
             ])
             /*->join('keywords', 'messages.keyword_id', '=', 'keywords.id')
@@ -344,7 +345,7 @@ class LevelfourController extends Controller
             */ ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             //->where('campaigns.id', $campaign_id)
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
     }
 
 

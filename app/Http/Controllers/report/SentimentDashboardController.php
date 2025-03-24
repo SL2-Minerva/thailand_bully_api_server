@@ -827,11 +827,11 @@ class SentimentDashboardController extends Controller
 
 
             if ($item->classification_id === 1) {
-                $analysis['positive'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $analysis['positive'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views + $item->number_of_views;
             } else if ($item->classification_id === 2) {
-                $analysis['negative'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $analysis['negative'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views + $item->number_of_views;
             } else if ($item->classification_id === 3) {
-                $analysis['neutral'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $analysis['neutral'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views + $item->number_of_views;
             }
 
             if ($item->number_of_shares) {
@@ -867,11 +867,22 @@ class SentimentDashboardController extends Controller
                 }
             }
 
+            if ($item->number_of_views) {
+                if ($item->classification_id === 1) {
+                    $analysis['comment_data']['positive'] += $item->number_of_views;
+                } else if ($item->classification_id === 2) {
+                    $analysis['comment_data']['negative'] += $item->number_of_views;
+                } else if ($item->classification_id === 3) {
+                    $analysis['comment_data']['neutral'] += $item->number_of_views;
+                }
+            }
+
 
             $analysis['share'] += $item->number_of_shares;
             $analysis['comment'] += $item->number_of_comments;
             $analysis['reaction'] += $item->number_of_reactions;
-            $analysis['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+            $analysis['views'] += $item->number_of_views;
+            $analysis['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
         }
 
         return $analysis;
@@ -1437,7 +1448,8 @@ class SentimentDashboardController extends Controller
                 'sources.name as source_name',*/
                 'messages.created_at as created_at', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement'),
+                    COALESCE(number_of_reactions, 0) +
+                    COALESCE(number_of_views, 0) AS total_engagement'),
             ])
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('keyword_id', $keywordIds);

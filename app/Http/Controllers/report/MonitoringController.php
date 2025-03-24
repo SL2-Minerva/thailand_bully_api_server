@@ -91,7 +91,8 @@ class MonitoringController extends Controller
                 'sources.name AS source_name',*/
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement')
+                    COALESCE(number_of_reactions, 0) +
+                    COALESCE(number_of_views, 0) AS total_engagement')
             ])
             //->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             //->leftJoin('sources', 'messages.source_id', '=', 'sources.id')
@@ -443,6 +444,7 @@ class MonitoringController extends Controller
                 "number_of_shares" => $item->number_of_shares,
                 "number_of_reactions" => $item->number_of_reactions,
                 "number_of_comments" => $item->number_of_comments,
+                "number_of_views" => $item->number_of_views,
             ];
 
 
@@ -614,7 +616,7 @@ class MonitoringController extends Controller
                     "number_of_shares" => $item->number_of_shares,
                     "number_of_reactions" => $item->number_of_reactions,
                     "number_of_comments" => $item->number_of_comments,
-                    /*"number_of_views" => $item->number_of_views,*/
+                    "number_of_views" => $item->number_of_views,
                     "link_message" => $item->link_message
                 ];
                 $commentData[] = $rs;
@@ -762,7 +764,8 @@ class MonitoringController extends Controller
         $query = DB::table('messages')
             ->select('messages.*', DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement'))
+                    COALESCE(number_of_reactions, 0) +
+                    COALESCE(number_of_views, 0) AS total_engagement'))
             ->where('message_type', '!=', 'Comment')
             ->where('message_type', '!=', 'Reply Comment')
             ->whereIn('messages.keyword_id', $keywordIds)
@@ -918,7 +921,7 @@ class MonitoringController extends Controller
         }
 
         $query = "SELECT m.id,m.source_id,m.link_profile_image,
-        m.author,m.message_id,m.link_message,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
+        m.author,m.message_id,m.link_message,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,m.number_of_views,mr.classification_id,m.reference_message_id
     FROM
         tbl_messages m
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
@@ -932,7 +935,7 @@ class MonitoringController extends Controller
         $newGroupedData = [];
         foreach ($rows as $message) {
             if ($message->reference_message_id === "" || $message->reference_message_id === null) {
-                $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
+                $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares + $message->number_of_views;
                 if ($totalEngagement > 0) {
                 $messageId = $message->message_id;
                 $author = $message->author;
@@ -949,6 +952,7 @@ class MonitoringController extends Controller
                         'author' => $author,
                         'number_of_comments' => 0,
                         'number_of_shares' => 0,
+                        'number_of_views' => 0,
                         'source_id' => 0,
                         'negative' => 0,
                         'positive' => 0,
@@ -988,6 +992,7 @@ class MonitoringController extends Controller
                 $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
                 $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
                 $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
+                $newGroupedData[$messageId]['number_of_views'] += $message->number_of_views;
 
                 if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
                     $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
@@ -1013,6 +1018,7 @@ class MonitoringController extends Controller
                     'number_of_comments' => 0,
                     'number_of_shares' => 0,
                     'number_of_reactions' => 0,
+                    'number_of_views' => 0,
                     'negative' => 0,
                     'positive' => 0,
                     'neutral' => 0,
@@ -1028,6 +1034,7 @@ class MonitoringController extends Controller
             $groupedResults[$author]['number_of_comments'] += $messageData['number_of_comments'];
             $groupedResults[$author]['number_of_shares'] += $messageData['number_of_shares'];
             $groupedResults[$author]['number_of_reactions'] += $messageData['number_of_reactions'];
+            $groupedResults[$author]['number_of_views'] += $messageData['number_of_views'];
             $groupedResults[$author]['negative'] += $messageData['negative'];
             $groupedResults[$author]['cover_image'] = $messageData['cover_image'];
             $groupedResults[$author]['neutral'] += $messageData['neutral'];
@@ -1071,7 +1078,7 @@ class MonitoringController extends Controller
         }
 
         $rows = DB::select("SELECT m.id,m.source_id,
-    m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,mr.classification_id,m.reference_message_id
+    m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,m.number_of_views,mr.classification_id,m.reference_message_id
 FROM
     tbl_messages m
     LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
@@ -1086,7 +1093,7 @@ WHERE
 
         foreach ($rows as $message) {
             if (($message->message_type !== 'Comment' && $message->message_type !== 'comment' && $message->message_type !== 'Reply Comment') && ($message->reference_message_id === "" || $message->reference_message_id === null)) {
-                $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares;
+                $totalEngagement = $message->number_of_comments + $message->number_of_reactions + $message->number_of_shares + $message->number_of_views;
                 //if ($totalEngagement > 10) {
                 $messageId = $message->message_id;
                 $author = $message->author;
@@ -1103,6 +1110,7 @@ WHERE
                         'author' => $author,
                         'number_of_comments' => 0,
                         'number_of_shares' => 0,
+                        'number_of_views' => 0,
                         'source_id' => 0,
                         'negative' => 0,
                         'positive' => 0,
@@ -1132,6 +1140,7 @@ WHERE
                 $newGroupedData[$messageId]['number_of_comments'] += $message->number_of_comments;
                 $newGroupedData[$messageId]['number_of_shares'] += $message->number_of_shares;
                 $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
+                $newGroupedData[$messageId]['number_of_views'] += $message->number_of_views;
 
                 if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
                     $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
@@ -1157,6 +1166,7 @@ WHERE
                     'number_of_comments' => 0,
                     'number_of_shares' => 0,
                     'number_of_reactions' => 0,
+                    'number_of_views' => 0,
                     'negative' => 0,
                     'positive' => 0,
                     'neutral' => 0,
@@ -1172,6 +1182,7 @@ WHERE
             $groupedResults[$author]['number_of_comments'] += $messageData['number_of_comments'];
             $groupedResults[$author]['number_of_shares'] += $messageData['number_of_shares'];
             $groupedResults[$author]['number_of_reactions'] += $messageData['number_of_reactions'];
+            $groupedResults[$author]['number_of_views'] += $messageData['number_of_views'];
             $groupedResults[$author]['negative'] += $messageData['negative'];
             $groupedResults[$author]['neutral'] += $messageData['neutral'];
             $groupedResults[$author]['positive'] += $messageData['positive'];

@@ -129,7 +129,7 @@ class EngagementDashboardController extends Controller
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
             }
-            $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions + $item->number_of_views;
         }
 
         if (isset($data['value'])) {
@@ -186,7 +186,7 @@ class EngagementDashboardController extends Controller
                 ];
 
             }
-            $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $data['value'][$item->keyword_id]['data'][$index_label] += $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions + $item->number_of_views;
         }
 
         if (isset($data['value'])) {
@@ -221,7 +221,7 @@ class EngagementDashboardController extends Controller
         $keywordIds = $keyword->pluck('id')->all();
         $totalKeyword = DB::table('messages')
             ->select([
-                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total_engagement'),
                 'messages.keyword_id as keyword_id',
                 'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',
@@ -315,7 +315,7 @@ class EngagementDashboardController extends Controller
                     ];
 
                 }
-                $data['value'][$infulencer->keyword_id]['data'][0] += $infulencer->number_of_comments + $infulencer->number_of_shares + $infulencer->number_of_reactions;
+                $data['value'][$infulencer->keyword_id]['data'][0] += $infulencer->number_of_comments + $infulencer->number_of_shares + $infulencer->number_of_reactions + $infulencer->number_of_views;
             }
         }
 
@@ -363,7 +363,7 @@ class EngagementDashboardController extends Controller
         $keywordIds = $keyword->pluck('id')->all();
         $totalKeyword = DB::table('messages')
             ->select([
-                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total_engagement'),
                 'messages.keyword_id as keyword_id',
                 'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',
@@ -420,7 +420,7 @@ class EngagementDashboardController extends Controller
     public function keywordByEngagementType($items, $keywords, $sources, $only_data = false)
     {
 
-        $data['labels'] = ["Share of Voice", "Comments", "Reaction"];
+        $data['labels'] = ["Share of Voice", "Comments", "Reaction", "Views"];
         // $items = $raw->get();
         /*
                 $keyword = Keyword::where('campaign_id', $this->campaign_id);
@@ -437,6 +437,7 @@ class EngagementDashboardController extends Controller
                         DB::raw('SUM(number_of_shares) as number_of_shares'),
                         DB::raw('SUM(number_of_comments) as number_of_comments'),
                         DB::raw('SUM(number_of_reactions) as number_of_reactions'),
+                        DB::raw('SUM(number_of_views) as number_of_views'),
                         'messages.keyword_id as keyword_id',
                         'keywords.name as keyword_name',
                         'keywords.campaign_id AS campaign_id',
@@ -463,6 +464,7 @@ class EngagementDashboardController extends Controller
             //     $data['value'][$item->keyword_id]['data'][0] += $item->number_of_shares;
             //     $data['value'][$item->keyword_id]['data'][1] += $item->number_of_comments;
             //     $data['value'][$item->keyword_id]['data'][2] += $item->number_of_reactions;
+            //     $data['value'][$item->keyword_id]['data'][3] += $item->number_of_views;
             // } else {
             $data['value'][$item->keyword_id] = [
                 'id' => $item->keyword_id,
@@ -479,6 +481,7 @@ class EngagementDashboardController extends Controller
             $data['value'][$item->keyword_id]['data'][0] += $item->number_of_shares;
             $data['value'][$item->keyword_id]['data'][1] += $item->number_of_comments;
             $data['value'][$item->keyword_id]['data'][2] += $item->number_of_reactions;
+            $data['value'][$item->keyword_id]['data'][3] += $item->number_of_views;
             // }
         }
 
@@ -539,6 +542,11 @@ class EngagementDashboardController extends Controller
             'date' => Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y'),
         ];
 
+        $percentages_views_current = [
+            'total' => 0,
+            'date' => Carbon::createFromFormat('Y-m-d', $this->start_date)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date)->format('d/m/Y'),
+        ];
+
         $percentages_share_previous = [
             'total' => 0,
             'date' => Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y'),
@@ -554,18 +562,25 @@ class EngagementDashboardController extends Controller
             'date' => Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y'),
         ];
 
+        $percentages_views_previous = [
+            'total' => 0,
+            'date' => Carbon::createFromFormat('Y-m-d', $this->start_date_previous)->format('d/m/Y') . ' - ' . Carbon::createFromFormat('Y-m-d', $this->end_date_previous)->format('d/m/Y'),
+        ];
+
         foreach ($items_previous as $items_previou) {
-            $total_engaement_previous += $items_previou->number_of_shares + $items_previou->number_of_comments + $items_previou->number_of_reactions;
+            $total_engaement_previous += $items_previou->number_of_shares + $items_previou->number_of_comments + $items_previou->number_of_reactions + $items_previou->number_of_views;
             $percentages_share_previous['total'] += $items_previou->number_of_shares;
             $percentages_comment_previous['total'] += $items_previou->number_of_comments;
             $percentages_reactions_previous['total'] += $items_previou->number_of_reactions;
+            $percentages_views_previous['total'] += $items_previou->number_of_views;
         }
 
         foreach ($items as $item) {
-            $total_engaement += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+            $total_engaement += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
             $percentages_share_current['total'] += $item->number_of_shares;
             $percentages_comment_current['total'] += $item->number_of_comments;
             $percentages_reactions_current['total'] += $item->number_of_reactions;
+            $percentages_views_current['total'] += $item->number_of_views;
         }
 
 
@@ -594,8 +609,15 @@ class EngagementDashboardController extends Controller
                 "total_at_date" => $item->number_of_reactions,
             ];
 
+            $views = [
+                "source_id" => $item->source_id,
+                "source_name" => self::matchSourceName($sources, $item->source_id),
+                "date_m" => $date_m,
+                "total_at_date" => $item->number_of_views,
+            ];
 
-            if (isset($data['engagement'][1]) || isset($data['engagement'][2]) || isset($data['engagement'][3])) {
+
+            if (isset($data['engagement'][1]) || isset($data['engagement'][2]) || isset($data['engagement'][3]) || isset($data['engagement'][4])) {
                 if ($item->number_of_shares > 0) {
                     if (isset($data['engagement'][1]['value'][$date_m])) {
                         $data['engagement'][1]['value'][$date_m]['total_at_date'] += $item->number_of_shares;
@@ -619,6 +641,15 @@ class EngagementDashboardController extends Controller
                         $data['engagement'][3]['value'][$date_m]['total_at_date'] += $item->number_of_reactions;
                     } else {
                         $data['engagement'][3]['value'][$date_m] = $reactions;
+                    }
+
+                }
+
+                if ($item->number_of_views > 0) {
+                    if (isset($data['engagement'][4]['value'][$date_m])) {
+                        $data['engagement'][4]['value'][$date_m]['total_at_date'] += $item->number_of_views;
+                    } else {
+                        $data['engagement'][4]['value'][$date_m] = $reactions;
                     }
 
                 }
@@ -650,11 +681,20 @@ class EngagementDashboardController extends Controller
                     "value" => []
                 ];
 
+                $data['engagement'][4] = [
+                    "id" => 4,
+                    "name" => 'Views',
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
+                    "value" => []
+                ];
+
                 // engagement
 
                 // $data['engagement'][1]['value'][] = $shared;
                 // $data['engagement'][2]['value'][] = $comment;
                 // $data['engagement'][3]['value'][] = $reactions;
+                // $data['engagement'][4]['value'][] = $views;
 
                 // prcentage_of_engagement_current
 
@@ -677,6 +717,14 @@ class EngagementDashboardController extends Controller
                 $data['prcentage_of_engagement_current'][3] = [
                     "id" => 3,
                     "name" => 'Reactions',
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
+                    "value" => []
+                ];
+
+                $data['prcentage_of_engagement_current'][4] = [
+                    "id" => 4,
+                    "name" => 'Views',
                     /*"campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,*/
                     "value" => []
@@ -706,6 +754,14 @@ class EngagementDashboardController extends Controller
                     "campaign_name" => $item->campaign_name,*/
                     "value" => []
                 ];
+
+                $data['prcentage_of_engagement_previous'][4] = [
+                    "id" => 4,
+                    "name" => 'Views',
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
+                    "value" => []
+                ];
             }
         }
 
@@ -726,6 +782,11 @@ class EngagementDashboardController extends Controller
             "date" => $percentages_share_current['date'],
             'total' => self::point_two_digits($total_engaement, 0)
         ];
+        $data['prcentage_of_engagement_current'][4]['value'] = [
+            "percentage" => $total_engaement ? self::point_two_digits(($percentages_views_current['total'] / $total_engaement) * 100) : 0,
+            "date" => $percentages_share_current['date'],
+            'total' => self::point_two_digits($total_engaement, 0)
+        ];
 
 
         $data['prcentage_of_engagement_previous'][1]['value'] = [
@@ -741,6 +802,11 @@ class EngagementDashboardController extends Controller
         ];
         $data['prcentage_of_engagement_previous'][3]['value'] = [
             "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_reactions_previous['total'] / $total_engaement_previous) * 100) : 0,
+            "date" => $percentages_share_previous['date'],
+            'total' => self::point_two_digits($total_engaement_previous, 0)
+        ];
+        $data['prcentage_of_engagement_previous'][4]['value'] = [
+            "percentage" => $total_engaement_previous ? self::point_two_digits(($percentages_views_previous['total'] / $total_engaement_previous) * 100) : 0,
             "date" => $percentages_share_previous['date'],
             'total' => self::point_two_digits($total_engaement_previous, 0)
         ];
@@ -806,10 +872,17 @@ class EngagementDashboardController extends Controller
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];
 
+                $data['value'][3] = [
+                    'id' => 3,
+                    'keyword_name' => 'Views',
+                    'data' => [0, 0, 0, 0, 0, 0, 0]
+                ];
+
             }
             $data['value'][0]['data'][$index_label] += $item->number_of_shares;
             $data['value'][1]['data'][$index_label] += $item->number_of_comments;
             $data['value'][2]['data'][$index_label] += $item->number_of_reactions;
+            $data['value'][3]['data'][$index_label] += $item->number_of_views;
         }
 
 
@@ -867,6 +940,7 @@ class EngagementDashboardController extends Controller
                 $data['value'][1]['data'][$index_label] += $item->number_of_shares;
                 $data['value'][2]['data'][$index_label] += $item->number_of_comments;
                 $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+                $data['value'][4]['data'][$index_label] += $item->number_of_views;
 
 
             } else {
@@ -890,6 +964,14 @@ class EngagementDashboardController extends Controller
                 $data['value'][3] = [
                     "id" => 3,
                     "keyword_name" => 'Reactions',
+                    /*"campaign_id" => $this->campaign_id,
+                    "campaign_name" => $item->campaign_name,*/
+                    'data' => [0, 0, 0, 0]
+                ];
+
+                $data['value'][4] = [
+                    "id" => 4,
+                    "keyword_name" => 'Views',
                     /*"campaign_id" => $this->campaign_id,
                     "campaign_name" => $item->campaign_name,*/
                     'data' => [0, 0, 0, 0]
@@ -963,10 +1045,20 @@ class EngagementDashboardController extends Controller
                         'data' => [0, 0, 0]
                     ];
 
+                    $data['value'][4] = [
+                        "id" => 4,
+                        "keyword_name" => 'Views',
+                        /*"campaign_id" => $this->campaign_id,
+                        "campaign_name" => $item->campaign_name,*/
+                        'data' => [0, 0, 0]
+                    ];
+
+
                 }
                 $data['value'][1]['data'][$index_label] += $item->number_of_shares;
                 $data['value'][2]['data'][$index_label] += $item->number_of_comments;
                 $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+                $data['value'][4]['data'][$index_label] += $item->number_of_views;
             }
 
         }
@@ -1002,6 +1094,7 @@ class EngagementDashboardController extends Controller
                         $data['value'][1]['data'][0] += $infulencer->number_of_shares;
                         $data['value'][2]['data'][0] += $infulencer->number_of_comments;
                         $data['value'][3]['data'][0] += $infulencer->number_of_reactions;
+                        $data['value'][4]['data'][0] += $infulencer->number_of_views;
                     } else {
                         $data['value'][1] = [
                             'id' => 1,
@@ -1021,6 +1114,12 @@ class EngagementDashboardController extends Controller
                             "data" => [$infulencer->number_of_reactions, 0]
                         ];
 
+                        $data['value'][4] = [
+                            'id' => 4,
+                            "keyword_name" => "Views",
+                            "data" => [$infulencer->number_of_views, 0]
+                        ];
+
                     }
                 }
             }
@@ -1036,6 +1135,7 @@ class EngagementDashboardController extends Controller
                     $data['value'][1]['data'][1] += $follower->number_of_shares;
                     $data['value'][2]['data'][1] += $follower->number_of_comments;
                     $data['value'][3]['data'][1] += $follower->number_of_reactions;
+                    $data['value'][4]['data'][1] += $follower->number_of_views;
                 }
             }
         }
@@ -1067,6 +1167,7 @@ class EngagementDashboardController extends Controller
                 $data['value'][1]['data'][$index_label] += $item->number_of_shares;
                 $data['value'][2]['data'][$index_label] += $item->number_of_comments;
                 $data['value'][3]['data'][$index_label] += $item->number_of_reactions;
+                $data['value'][4]['data'][$index_label] += $item->number_of_views;
             } else {
                 $data['value'][1] = [
                     'id' => 1,
@@ -1083,16 +1184,23 @@ class EngagementDashboardController extends Controller
                     'name' => "Reaction",
                 ];
 
+                $data['value'][4] = [
+                    'id' => 4,
+                    'name' => "Views",
+                ];
+
                 for ($i = 0; $i < count($data['labels']); $i++) {
 
                     $data['value'][1]['data'][$i] = 0;
                     $data['value'][2]['data'][$i] = 0;
                     $data['value'][3]['data'][$i] = 0;
+                    $data['value'][4]['data'][$i] = 0;
                 }
 
                 $data['value'][1]['data'][$index_label] = $item->number_of_shares;
                 $data['value'][2]['data'][$index_label] = $item->number_of_comments;
                 $data['value'][3]['data'][$index_label] = $item->number_of_reactions;
+                $data['value'][4]['data'][$index_label] = $item->number_of_views;
             }
         }
 
@@ -1143,18 +1251,20 @@ class EngagementDashboardController extends Controller
         $raw_previous = $this->raw_message($keywords, $this->start_date_previous, $this->end_date_previous);
 
         $totalEngagement_current = $raw_current->select([
-            DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as totalEngagement_current'),
+            DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as totalEngagement_current'),
             DB::raw('SUM(number_of_shares) as total_share_current'),
             DB::raw('SUM(number_of_comments) as total_comment_current'),
             DB::raw('SUM(number_of_reactions) as total_reactions_current'),
+            DB::raw('SUM(number_of_views) as total_views_current'),
         ]);
         $totalEngagement_current = $totalEngagement_current->first();
 
         $totalEngagement_previous = $raw_previous->select([
-            DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as totalEngagement_previous'),
+            DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as totalEngagement_previous'),
             DB::raw('SUM(number_of_shares) as total_share_previous'),
             DB::raw('SUM(number_of_comments) as total_comment_previous'),
             DB::raw('SUM(number_of_reactions) as total_reactions_previous'),
+            DB::raw('SUM(number_of_views) as total_views_previous'),
         ]);
         $totalEngagement_previous = $totalEngagement_previous->first();
 
@@ -1166,6 +1276,9 @@ class EngagementDashboardController extends Controller
 
         $total_reactions_current = $totalEngagement_current->total_reactions_current;
         $total_reactions_previous = $totalEngagement_previous->total_reactions_previous;
+
+        $total_views_current = $totalEngagement_current->total_views_current;
+        $total_views_previous = $totalEngagement_previous->total_views_previous;
 
         $totalEngagement_current = $totalEngagement_current->totalEngagement_current;
         $totalEngagement_previous = $totalEngagement_previous->totalEngagement_previous;
@@ -1194,6 +1307,12 @@ class EngagementDashboardController extends Controller
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
+        $data['views'] = [
+            "totalValue" => $this->custom_number_format((int)$total_views_current),
+            "comparison" => $total_views_previous !== 0 ? (float)parent::point_two_digits($total_views_current - $total_views_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0,
+            "type" => $total_views_current - $total_views_previous > 0 ? "plus" : "minus",
+        ];
+
         if ($only_data) {
             return $data;
         }
@@ -1215,6 +1334,9 @@ class EngagementDashboardController extends Controller
         $current_reaction = [];
         $previous_reaction = [];
 
+        $current_views = [];
+        $previous_views = [];
+
         $debug = null;
 
         foreach ($raw_current as $item) {
@@ -1222,10 +1344,11 @@ class EngagementDashboardController extends Controller
             $index_label = array_search($sourceName, $data['labels']);
 
             if (isset($data['value'][2])) {
-                $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);;
+                $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views);;
                 $current_share[$index_label] += $item->number_of_shares;
                 $current_comment[$index_label] += $item->number_of_comments;
                 $current_reaction[$index_label] += $item->number_of_reactions;
+                $current_views[$index_label] += $item->number_of_views;
 
             } else {
                 $data['value'][1] = [
@@ -1245,6 +1368,7 @@ class EngagementDashboardController extends Controller
                     $data['share'][$i] = 0;
                     $data['comment'][$i] = 0;
                     $data['reaction'][$i] = 0;
+                    $data['views'][$i] = 0;
 
                     $current_share[$i] = 0;
                     $current_share[$index_label] = $item->number_of_shares;
@@ -1252,13 +1376,16 @@ class EngagementDashboardController extends Controller
                     $current_comment[$index_label] = $item->number_of_comments;
                     $current_reaction[$i] = 0;
                     $current_reaction[$index_label] = $item->number_of_reactions;
+                    $current_views[$i] = 0;
+                    $current_views[$index_label] = $item->number_of_views;
 
                     $previous_share[$i] = 0;
                     $previous_comment[$i] = 0;
                     $previous_reaction[$i] = 0;
+                    $previous_views[$i] = 0;
                 }
 
-                $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);
+                $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views);
             }
         }
 
@@ -1268,7 +1395,7 @@ class EngagementDashboardController extends Controller
             $index_label = array_search($sourceName, $data['labels']);
 
             if (isset($data['value'][1])) {
-                $data['value'][1]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);
+                $data['value'][1]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views);
             } else {
 
             }
@@ -1276,6 +1403,7 @@ class EngagementDashboardController extends Controller
             $previous_share[$index_label] += $item->number_of_shares;
             $previous_comment[$index_label] += $item->number_of_comments;
             $previous_reaction[$index_label] += $item->number_of_reactions;
+            $previous_views[$index_label] += $item->number_of_views;
         }
 
 
@@ -1290,6 +1418,7 @@ class EngagementDashboardController extends Controller
                 $data['share'][$i] = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
                 $data['comment'][$i] = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
                 $data['reaction'][$i] = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+                $data['views'][$i] = $this->overPeriodComparison($current_views[$i], $previous_views[$i]);
             } else {
 //                $data['share'][$i] = [
 //                    "totalValue" => 0,
@@ -1304,6 +1433,11 @@ class EngagementDashboardController extends Controller
 //                ];
 //
 //                $data['reaction'][$i] = [
+//                    "totalValue" => 0,
+//                    "comparison" => 0,
+//                    "type" => "minus",
+//                ];
+//                $data['views'][$i] = [
 //                    "totalValue" => 0,
 //                    "comparison" => 0,
 //                    "type" => "minus",
@@ -1338,6 +1472,8 @@ class EngagementDashboardController extends Controller
         $previous_comment = [];
         $current_reaction = [];
         $previous_reaction = [];
+        $current_views = [];
+        $previous_views = [];
 
         $debug = null;
         $data['value'][1] = [
@@ -1357,15 +1493,18 @@ class EngagementDashboardController extends Controller
             $data['share'][$i] = 0;
             $data['comment'][$i] = 0;
             $data['reaction'][$i] = 0;
+            $data['views'][$i] = 0;
 
             $current_share[$i] = 0;
             $current_comment[$i] = 0;
             $current_reaction[$i] = 0;
+            $current_views[$i] = 0;
 
 
             $previous_share[$i] = 0;
             $previous_comment[$i] = 0;
             $previous_reaction[$i] = 0;
+            $previous_views[$i] = 0;
         }
 $classifications = $this->getClassificationMaster();
         foreach ($items_current as $item) {
@@ -1373,10 +1512,11 @@ $classifications = $this->getClassificationMaster();
             $index_label = array_search($classificationName, $data['labels']);
 
             if (isset($data['value'][2])) {
-                $data['value'][2]['data'][$index_label] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $data['value'][2]['data'][$index_label] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
                 $current_share[$index_label] += $item->number_of_shares;
                 $current_comment[$index_label] += $item->number_of_comments;
                 $current_reaction[$index_label] += $item->number_of_reactions;
+                $current_views[$index_label] += $item->number_of_views;
 
             } else {
 
@@ -1388,6 +1528,7 @@ $classifications = $this->getClassificationMaster();
 //                    $data['share'][$i] = 0;
 //                    $data['comment'][$i] = 0;
 //                    $data['reaction'][$i] = 0;
+//                    $data['views'][$i] = 0;
 //
 //                    $current_share[$i] = 0;
                 $current_share[$index_label] = $item->number_of_shares;
@@ -1395,13 +1536,15 @@ $classifications = $this->getClassificationMaster();
                 $current_comment[$index_label] = $item->number_of_comments;
 //                    $current_reaction[$i] = 0;
                 $current_reaction[$index_label] = $item->number_of_reactions;
-//
+                $current_views[$index_label] = $item->number_of_views;
+
                 $previous_share[$i] = 0;
                 $previous_comment[$i] = 0;
                 $previous_reaction[$i] = 0;
+                $previous_views[$i] = 0;
 //                }
 
-                $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);
+                $data['value'][2]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views);
             }
         }
 
@@ -1412,12 +1555,13 @@ $classifications = $this->getClassificationMaster();
 
             if (isset($data['value'][1])) {
 
-                $data['value'][1]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions);
+                $data['value'][1]['data'][$index_label] += ($item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views);
             }
 
             $previous_share[$index_label] += $item->number_of_shares;
             $previous_comment[$index_label] += $item->number_of_comments;
             $previous_reaction[$index_label] += $item->number_of_reactions;
+            $previous_views[$index_label] += $item->number_of_views;
         }
 
 
@@ -1430,6 +1574,7 @@ $classifications = $this->getClassificationMaster();
             $data['share'][$i] = $this->overPeriodComparison($current_share[$i], $previous_share[$i]);
             $data['comment'][$i] = $this->overPeriodComparison($current_comment[$i], $previous_comment[$i]);
             $data['reaction'][$i] = $this->overPeriodComparison($current_reaction[$i], $previous_reaction[$i]);
+            $data['views'][$i] = $this->overPeriodComparison($current_views[$i], $previous_views[$i]);
         }
 
         if (isset($data['value'])) {
@@ -1481,30 +1626,34 @@ $classifications = $this->getClassificationMaster();
 
         foreach ($items_current as $item) {
             if (isset($current[$item->keyword_id]) && $current[$item->keyword_id]) {
-                $current[$item->keyword_id]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $current[$item->keyword_id]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
                 $current[$item->keyword_id]['share'] += $item->number_of_shares;
                 $current[$item->keyword_id]['comment'] += $item->number_of_comments;
                 $current[$item->keyword_id]['reaction'] += $item->number_of_reactions;
+                $current[$item->keyword_id]['views'] += $item->number_of_views;
             } else {
                 $current[$item->keyword_id]['keyword_name'] = self::matchKeywordName($keywords,$item->keyword_id);
-                $current[$item->keyword_id]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $current[$item->keyword_id]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
                 $current[$item->keyword_id]['share'] = $item->number_of_shares;
                 $current[$item->keyword_id]['comment'] = $item->number_of_comments;
                 $current[$item->keyword_id]['reaction'] = $item->number_of_reactions;
+                $current[$item->keyword_id]['views'] = $item->number_of_views;
             }
         }
 
         foreach ($items_previous as $item) {
             if (isset($previous[$item->keyword_id]) && $previous[$item->keyword_id]) {
-                $previous[$item->keyword_id]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $previous[$item->keyword_id]['total'] += $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
                 $previous[$item->keyword_id]['share'] += $item->number_of_shares;
                 $previous[$item->keyword_id]['comment'] += $item->number_of_comments;
                 $previous[$item->keyword_id]['reaction'] += $item->number_of_reactions;
+                $previous[$item->keyword_id]['views'] += $item->number_of_views;
             } else {
-                $previous[$item->keyword_id]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions;
+                $previous[$item->keyword_id]['total'] = $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views;
                 $previous[$item->keyword_id]['share'] = $item->number_of_shares;
                 $previous[$item->keyword_id]['comment'] = $item->number_of_comments;
                 $previous[$item->keyword_id]['reaction'] = $item->number_of_reactions;
+                $previous[$item->keyword_id]['views'] = $item->number_of_views;
             }
         }
 
@@ -1517,12 +1666,14 @@ $classifications = $this->getClassificationMaster();
                 $s_total = 0;
                 $c_total = 0;
                 $r_total = 0;
+                $v_total = 0;
 
                 if (isset($previous[$key])) {
                     $p_total = $previous[$key]['total'];
                     $s_total = $previous[$key]['share'];
                     $c_total = $previous[$key]['comment'];
                     $r_total = $previous[$key]['reaction'];
+                    $v_total = $previous[$key]['views'];
                 }
 
                 $data[] = [
@@ -1552,6 +1703,12 @@ $classifications = $this->getClassificationMaster();
                         "percentage" => $r_total ? self::point_two_digits((($item['reaction'] - $r_total) / $r_total) * 100) : 0,
                         "type" => $item['reaction'] - $r_total > 0 ? "plus" : "minus",
                     ],
+                    'views' => [
+                        "value" => $item['views'] - $v_total,
+                        // "percentage" => $this->overPeriodComparison($item['views'], $v_total),
+                        "percentage" => $v_total ? self::point_two_digits((($item['views'] - $v_total) / $v_total) * 100) : 0,
+                        "type" => $item['views'] - $v_total > 0 ? "plus" : "minus",
+                    ],
                 ];
             }
         }
@@ -1570,14 +1727,16 @@ $classifications = $this->getClassificationMaster();
         $percentages = null;
         foreach ($engagement_actions as $engagement_action) {
             if (isset($percentages[$engagement_action->keyword_id])) {
-                $engagements = ($engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions);
-                $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
+                $engagements = ($engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions + $engagement_action->number_of_views);
+                $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions + $engagement_action->number_of_views;
                 $percentages[$engagement_action->keyword_id]['share_r'] += (float)$engagement_action->number_of_shares;
                 $percentages[$engagement_action->keyword_id]['comment_r'] += (float)$engagement_action->number_of_comments;
                 $percentages[$engagement_action->keyword_id]['reaction_r'] += (float)$engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['views_r'] += (float)$engagement_action->number_of_views;
                 $percentages[$engagement_action->keyword_id]['share'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagements) * 100) : 0;
                 $percentages[$engagement_action->keyword_id]['comment'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagements) * 100) : 0;
                 $percentages[$engagement_action->keyword_id]['reaction'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_reactions / (float)$engagements) * 100) : 0;
+                $percentages[$engagement_action->keyword_id]['views'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_views / (float)$engagements) * 100) : 0;
             } else {
                 $percentages[$engagement_action->keyword_id] = [
                     'share' => 0,
@@ -1586,6 +1745,8 @@ $classifications = $this->getClassificationMaster();
                     'comment_r' => 0,
                     'reaction' => 0,
                     'reaction_r' => 0,
+                    'views' => 0,
+                    'views_r' => 0,
                     'total' => 0,
                     "keyword_id" => $engagement_action->keyword_id,
                     "keyword_name" => self::matchKeywordName($keywords,$engagement_action->keyword_id),
@@ -1593,14 +1754,16 @@ $classifications = $this->getClassificationMaster();
                     "campaign_name" => $engagement_action->campaign_name,*/
                 ];
 
-                $engagements = ($engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions);
+                $engagements = ($engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions + $engagement_action->number_of_views);
                 $percentages[$engagement_action->keyword_id]['share_r'] += (float)$engagement_action->number_of_shares;
                 $percentages[$engagement_action->keyword_id]['comment_r'] += (float)$engagement_action->number_of_comments;
                 $percentages[$engagement_action->keyword_id]['reaction_r'] += (float)$engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['views_r'] += (float)$engagement_action->number_of_views;
                 $percentages[$engagement_action->keyword_id]['share'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_shares / (float)$engagements) * 100) : 0;
                 $percentages[$engagement_action->keyword_id]['comment'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_comments / (float)$engagements) * 100) : 0;
                 $percentages[$engagement_action->keyword_id]['reaction'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_reactions / (float)$engagements) * 100) : 0;
-                $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions;
+                $percentages[$engagement_action->keyword_id]['views'] = $engagements !== 0 ? (float)self::point_two_digits(($engagement_action->number_of_views / (float)$engagements) * 100) : 0;
+                $percentages[$engagement_action->keyword_id]['total'] += $engagement_action->number_of_shares + $engagement_action->number_of_comments + $engagement_action->number_of_reactions + $engagement_action->number_of_views;
             }
         }
 
@@ -1645,6 +1808,7 @@ $classifications = $this->getClassificationMaster();
                     $current[$item->author]['share'] += $item->number_of_shares;
                     $current[$item->author]['comment'] += $item->number_of_comments;
                     $current[$item->author]['reaction'] += $item->number_of_reactions;
+                    $current[$item->author]['views'] += $item->number_of_views;
                 } else {
                     $current[$item->author]['message_id'] = $item->message_id;
                     $current[$item->author]['infulencer'] = $item->author;
@@ -1652,6 +1816,7 @@ $classifications = $this->getClassificationMaster();
                     $current[$item->author]['share'] = $item->number_of_shares;
                     $current[$item->author]['comment'] = $item->number_of_comments;
                     $current[$item->author]['reaction'] = $item->number_of_reactions;
+                    $current[$item->author]['views'] = $item->number_of_views;
                 }
             }
 
@@ -1663,11 +1828,13 @@ $classifications = $this->getClassificationMaster();
                 $previous[$item->author]['share'] += $item->number_of_shares;
                 $previous[$item->author]['comment'] += $item->number_of_comments;
                 $previous[$item->author]['reaction'] += $item->number_of_reactions;
+                $previous[$item->author]['views'] += $item->number_of_views;
             } else {
                 $previous[$item->author]['total'] = $item->total_engagement;
                 $previous[$item->author]['share'] = $item->number_of_shares;
                 $previous[$item->author]['comment'] = $item->number_of_comments;
                 $previous[$item->author]['reaction'] = $item->number_of_reactions;
+                $previous[$item->author]['views'] = $item->number_of_views;
             }
         }
 
@@ -1684,6 +1851,7 @@ $classifications = $this->getClassificationMaster();
                     "share" => $item['share'],
                     "comment" => $item['comment'],
                     "reaction" => $item['reaction'],
+                    "views" => $item['views'],
                     "period_over_preiod" => $item['total'] - $previous_total,
                     "period_over_period_percentage" => $this->overPeriodComparison($item['total'], $previous_total),
 
@@ -1736,7 +1904,7 @@ $classifications = $this->getClassificationMaster();
 
         $totalKeyword = DB::table('messages')
             ->select([
-                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total_engagement'),
                 'messages.keyword_id as keyword_id',
                 /*'keywords.name as keyword_name',
                 'keywords.campaign_id AS campaign_id',
@@ -1796,7 +1964,7 @@ $classifications = $this->getClassificationMaster();
         $data = null;
         $totalKeyword = DB::table('messages')
             ->select([
-                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total_engagement'),
                 'messages.keyword_id as keyword_id',
                 'messages.created_at as date_m',
                 /*'campaigns.name AS campaign_name',
@@ -1913,9 +2081,11 @@ $classifications = $this->getClassificationMaster();
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_shares as number_of_shares',
                 'messages.number_of_reactions as number_of_reactions',
+                'messages.number_of_views as number_of_views',
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement')
+                    COALESCE(number_of_reactions, 0) +
+                    COALESCE(number_of_views, 0) AS total_engagement')
             ])
             /*->leftJoin('keywords', 'messages.keyword_id', '=', 'keywords.id')
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
@@ -1955,6 +2125,7 @@ $classifications = $this->getClassificationMaster();
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_reactions as number_of_reactions',
                 'messages.number_of_shares as number_of_shares',
+                'messages.number_of_views as number_of_views',
                 'message_results.classification_id as classification_id',
             ])
 

@@ -322,7 +322,7 @@ class DashboardController extends Controller
             ->when($source_id, function ($query, $source_id) {
                 return $query->where('source_id', $source_id);
             })
-            ->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions'));
+            ->sum(DB::raw('number_of_comments + number_of_shares + number_of_reactions + number_of_views'));
     }
 
     public function sentimentScore(Request $request)
@@ -476,7 +476,7 @@ class DashboardController extends Controller
         $totalKeyword = DB::table('messages')
             ->select([
                 'keyword_id', DB::raw('COUNT(*) as row_count'),
-                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total_engagement'),
+                DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total_engagement'),
                 'author', DB::raw('COUNT(DISTINCT author) as author_count'),
             ])
             ->whereIn('keyword_id', $keywordIds)
@@ -694,7 +694,7 @@ class DashboardController extends Controller
             ->leftJoin('campaigns', 'keywords.campaign_id', '=', 'campaigns.id')
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $total_keywords->where('source_id', $this->source_id);
@@ -719,6 +719,10 @@ class DashboardController extends Controller
             $keyword_id = $item->keyword_id;
             if (isset($data[$keyword_id]['value'])) {
 
+                // $data[$keyword_id]['value'][$item->source_id]['number_of_message'] += 1;
+                if (!isset($data[$keyword_id]['value'][$item->source_id]['number_of_message'])) {
+                    $data[$keyword_id]['value'][$item->source_id]['number_of_message'] = 0;
+                }
                 $data[$keyword_id]['value'][$item->source_id]['number_of_message'] += 1;
                 $data[$keyword_id]['total'] += 1;
             } else {
@@ -772,6 +776,10 @@ class DashboardController extends Controller
                 if ($total_percentage != 100) {
                     $diff = 100 - $total_percentage;
                     $value = &$item_share['value'][$last_index];
+                    // $value["percentage"] += $diff;
+                    if (!isset($value["percentage"])) {
+                        $value["percentage"] = 0; 
+                    }
                     $value["percentage"] += $diff;
                     $value["percentage"] = self::point_two_digits($value["percentage"]);
 
@@ -1024,7 +1032,7 @@ GROUP BY
     {
         $sources = Sources::where('status', 1)->get();
 
-        //SUM(number_of_shares + number_of_comments + number_of_reactions) as total')
+        //SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total')
         $messageIds = [];
         $data = [];
         foreach ($wordclouds as $wordcloud) {
@@ -1047,7 +1055,7 @@ GROUP BY
     private function getEngagements($data, $messageIds)
     {
         $engagements = DB::table('messages')
-            ->select("message_id", DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions) as total'))
+            ->select("message_id", DB::raw('SUM(number_of_shares + number_of_comments + number_of_reactions + number_of_views) as total'))
             ->whereIn('message_id', $messageIds)->groupBy('message_id')
             ->get();
         $result = [];

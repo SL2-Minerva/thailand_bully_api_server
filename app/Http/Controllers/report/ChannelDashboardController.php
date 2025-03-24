@@ -644,7 +644,7 @@ class ChannelDashboardController extends Controller
         $engagement = DB::table('messages')
             ->select([
                 'messages.source_id as source_id',
-                DB::raw('SUM(tbl_messages.number_of_comments + tbl_messages.number_of_shares + tbl_messages.number_of_reactions) as engagement_count')
+                DB::raw('SUM(tbl_messages.number_of_comments + tbl_messages.number_of_shares + tbl_messages.number_of_reactions + tbl_messages.number_of_views ) as engagement_count')
             ])
             ->whereIn('keyword_id', $keywordIds)
             ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);

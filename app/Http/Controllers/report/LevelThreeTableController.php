@@ -107,6 +107,8 @@ class LevelThreeTableController extends Controller
             $raw->where('messages.number_of_shares', '>', 0);
         } else if ($label === "Share of Voice") {
             $raw->where('messages.number_of_shares', '>', 0);
+        } else if ($label === "Views") {
+            $raw->where('messages.number_of_views', '>', 0);
         }
         return $raw;
     }
@@ -204,7 +206,7 @@ class LevelThreeTableController extends Controller
                 "source_name" => $sourceName,
                 "link_message" => $item->link_message,
                 "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views,
             ];
 
 
@@ -315,7 +317,8 @@ class LevelThreeTableController extends Controller
                 'messages.created_at AS scraping_time',
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
-                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
+                    COALESCE(tbl_messages.number_of_reactions, 0) +
+                    COALESCE(tbl_messages.number_of_views, 0) AS total_engagement')
 
             ]);
             $raw->join('message_results', 'message_results.message_id', '=', 'messages.id');
@@ -340,7 +343,8 @@ class LevelThreeTableController extends Controller
                 'messages.created_at AS scraping_time',
                 DB::raw('COALESCE(tbl_messages.number_of_comments, 0) +
                     COALESCE(tbl_messages.number_of_shares, 0) +
-                    COALESCE(tbl_messages.number_of_reactions, 0) AS total_engagement')
+                    COALESCE(tbl_messages.number_of_reactions, 0) +
+                    COALESCE(tbl_messages.number_of_views, 0) AS total_engagement')
 
             ]);
         }
@@ -553,7 +557,8 @@ class LevelThreeTableController extends Controller
                 'messages.created_at AS created_at',
                 DB::raw('COALESCE(number_of_comments, 0) +
                     COALESCE(number_of_shares, 0) +
-                    COALESCE(number_of_reactions, 0) AS total_engagement')
+                    COALESCE(number_of_reactions, 0) + 
+                    COALESCE(number_of_views, 0) AS total_engagement')
             ])
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('keyword_id', $keywordIds)
@@ -612,7 +617,7 @@ class LevelThreeTableController extends Controller
                 "source_name" => $item->source_name,*/
                 "link_message" => $item->link_message,
                 "parent" => $parent,
-                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions,
+                "engagement" => $item->number_of_shares + $item->number_of_comments + $item->number_of_reactions + $item->number_of_views,
             ];
 
 
@@ -739,7 +744,7 @@ class LevelThreeTableController extends Controller
             // $anylsys[$item->message_id]["bully_type"] = $item->classification_id;
             $anylsys[$item->message_id]["channel"] = self::matchSourceName($sources, $item->source_id);
             $anylsys[$item->message_id]["link_message"] = $item->link_message;
-            $anylsys[$item->message_id]["engagement"] = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions;
+            $anylsys[$item->message_id]["engagement"] = $item->number_of_comments + $item->number_of_shares + $item->number_of_reactions + $item->number_of_views;
             $anylsys[$item->message_id]["parent"] = $parent;
 
 
