@@ -509,7 +509,7 @@ class LevelThreeTableController extends Controller
             ->where('messages.message_id', $message_id)
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
-            ->limit(3)
+            // ->limit(3)
             ->get(['classifications.classification_type_id', 'classification_name']);
     }
 
