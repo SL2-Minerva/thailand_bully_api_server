@@ -741,7 +741,7 @@ class VoiceDashboardController extends Controller
 
             $data['time_value'][$classification->name] = [
                 "name" => $classification->name,
-                "data" => array_fill(0, 25, 0) // Initialize array with 25 elements, all set to 0
+                "data" => array_fill(0, 24, 0) // Initialize array with 24 elements, all set to 0
             ];
         }
         foreach ($items as $item) {
@@ -761,7 +761,7 @@ class VoiceDashboardController extends Controller
                      $data['day_value'][$classificationName]["data"][$i] = 0;
                  }
 
-                 for ($i = 0; $i < 25; $i++) {
+                 for ($i = 0; $i < 24; $i++) {
                      $data['time_value'][$classificationName]["data"][$i] = 0;
                  }*/
 
@@ -826,7 +826,7 @@ class VoiceDashboardController extends Controller
 
             $data['time_value'][$classification->name] = [
                 "name" => $classification->name,
-                "data" => array_fill(0, 25, 0) // Initialize array with 25 elements, all set to 0
+                "data" => array_fill(0, 24, 0) // Initialize array with 24 elements, all set to 0
             ];
         }
 
@@ -836,11 +836,17 @@ class VoiceDashboardController extends Controller
             $date_h = (int)Carbon::parse($item->date_m)->format('H');
             $classificationName = self::matchClassificationName($classifications, $item->classification_id);
 
-            // Update day_value data
-            $data['day_value'][$classificationName]["data"][date('N', strtotime($date_d)) - 1] += 1;
+            // // Update day_value data
+            // $data['day_value'][$classificationName]["data"][date('N', strtotime($date_d)) - 1] += 1;
 
-            // Update time_value data
-            $data['time_value'][$classificationName]["data"][$date_h] += 1;
+            // // Update time_value data
+            // $data['time_value'][$classificationName]["data"][$date_h] += 1;
+
+            if (!empty($classificationName) && isset($data['day_value'][$classificationName])) {
+                $data['day_value'][$classificationName]["data"][date('N', strtotime($date_d)) - 1] += 1;
+                $data['time_value'][$classificationName]["data"][$date_h] += 1;
+            }
+            
         }
 
         // Convert arrays to indexed arrays
@@ -888,7 +894,7 @@ class VoiceDashboardController extends Controller
                     $data['day_value'][$classificationName]["data"][$i] = 0;
                 }
 
-                for ($i = 0; $i < 25; $i++) {
+                for ($i = 0; $i < 24; $i++) {
                     $data['time_value'][$classificationName]["data"][$i] = 0;
                 }
 
@@ -1399,7 +1405,7 @@ class VoiceDashboardController extends Controller
                 'sources.name as source_name',*/
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
                 'messages.author as author',
@@ -1410,7 +1416,7 @@ class VoiceDashboardController extends Controller
             ->leftJoin('sources', 'messages.source_id', '=', 'sources.id')*/
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);

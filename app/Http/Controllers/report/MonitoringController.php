@@ -439,6 +439,7 @@ class MonitoringController extends Controller
                 "source_name" => parent::matchSourceName($source, $item->source_id),
                 "link_message" => $item->link_message,
                 "cover_image" => $cover_image,
+                "profile_image" => $item->link_profile_image,
                 "parent" => $parent,
                 "total_engagement" => $item->total_engagement,
                 "number_of_shares" => $item->number_of_shares,

@@ -69,7 +69,7 @@ class LevelThreeTableController extends Controller
             $result = 3;
         } else if ($Llabel === 'Negative') {
             $result = 2;
-        } else if ($Llabel === 'No Bully') {
+        } else if ($Llabel === 'NoBully') {
             $result = 4;
         } else if ($Llabel === 'Gossip') {
             $result = 5;
@@ -77,7 +77,7 @@ class LevelThreeTableController extends Controller
             $result = 6;
         } else if ($Llabel === 'Exclusion') {
             $result = 7;
-        } else if ($Llabel === 'Hate Speech') {
+        } else if ($Llabel === 'HateSpeech') {
             $result = 8;
         } else if ($Llabel === 'Violence') {
             $result = 9;
@@ -173,8 +173,8 @@ class LevelThreeTableController extends Controller
 
         foreach ($items as $item) {
             $date_d = Carbon::parse($item->date_m)->format('D');
-            $types = $this->getClassificationName($item->message_id);
-
+            // $types = $this->getClassificationName($item->message_id);
+            $types = $this->getClassificationName($item->id);
             /*   if (
                   $request->report_number === '5.2.008' ||
                   $request->report_number === '5.2.009' ||
@@ -251,7 +251,7 @@ class LevelThreeTableController extends Controller
 
         $label = str_replace("+", " ", $request->label);
         $Llabel = str_replace("+", " ", $request->Llabel);
-
+        $ylabel = str_replace("+", " ", $request->ylabel);
 
         $raw = DB::table('messages');
         if ($keywords) {
@@ -292,6 +292,18 @@ class LevelThreeTableController extends Controller
 
             if ($classification == -1)
                 $classification = self::parseLabelClassification($Llabel);
+        }
+
+        if ($ylabel != '') {
+            if ($this->source_id == null) {
+                $sourceId = $this->matchSourceByName($sources, $ylabel);
+                if ($sourceId) {
+                    $this->source_id = $sourceId->id;
+                }
+            }
+
+            if ($classification == -1)
+                $classification = self::parseLabelClassification($ylabel);
         }
 
         error_log("classification:" . $classification . " / source_id :" . $this->source_id);
@@ -491,6 +503,23 @@ class LevelThreeTableController extends Controller
             }
         }
 
+        if(
+            $request->report_number === '2.2.016' ||
+            $request->report_number === '2.2.017' ||
+            $request->report_number === '2.2.018' ||
+            $request->report_number === '2.2.019' 
+        ) {
+            if (isset($request->label) && is_numeric($request->label)) {
+                if($request->report_number === '2.2.016'){
+                    $raw->whereRaw('DATE_FORMAT(tbl_messages.created_at, "%a") = ?', [$request->ylabel]);
+                }
+                $raw->whereRaw('HOUR(tbl_messages.created_at) >= ? AND HOUR(tbl_messages.created_at) < ?', [$request->label, $request->label + 1]);
+               
+            } else {
+                $raw->whereRaw('DATE_FORMAT(tbl_messages.created_at, "%a") = ?', [$request->label]);
+            }
+        }
+
         //if (!$isHasMessageDate) {
         $raw->whereBetween('messages.created_at', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
         //}
@@ -499,14 +528,16 @@ class LevelThreeTableController extends Controller
 
     private
         function getClassificationName(
-        $message_id
+        // $message_id
+        $id
     ) {
         return DB::table('messages')
             ->select([
                 'classifications.name AS classification_name',
                 'classifications.classification_type_id AS classification_type_id'
             ])
-            ->where('messages.message_id', $message_id)
+            // ->where('messages.message_id', $message_id)
+            ->where('messages.id', $id)
             ->join('message_results', 'message_results.message_id', '=', 'messages.id')
             ->join('classifications', 'message_results.classification_id', '=', 'classifications.id')
             // ->limit(3)

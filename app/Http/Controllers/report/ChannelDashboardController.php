@@ -200,16 +200,32 @@ class ChannelDashboardController extends Controller
     }
 
 
+    // function fetchChannelBySourceOrder($sources, $data)
+    // {
+    //     $result = [];
+    //     foreach ($sources as $source) {
+    //         foreach ($data['value'] as $item) {
+    //             if ($item['source_id']== $source->id) {
+    //                 $result[] = $item;
+    //             }
+    //         }
+    //     }
+    //     return $result;
+    // }
+
     function fetchChannelBySourceOrder($sources, $data)
     {
         $result = [];
+        $values = $data['value'] ?? []; 
+
         foreach ($sources as $source) {
-            foreach ($data['value'] as $item) {
-                if ($item['source_id']== $source->id) {
+            foreach ($values as $item) {
+                if ($item['source_id'] == $source->id) {
                     $result[] = $item;
                 }
             }
         }
+
         return $result;
     }
 
