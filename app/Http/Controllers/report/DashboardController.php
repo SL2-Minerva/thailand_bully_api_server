@@ -581,6 +581,7 @@ class DashboardController extends Controller
         $totalKeyword = $totalKeyword->get();
         $messageAll = count($totalKeyword);
         $mainLink = [];
+        $data = []; 
 
         foreach ($totalKeyword as $object) {
             $item = (array)$object;

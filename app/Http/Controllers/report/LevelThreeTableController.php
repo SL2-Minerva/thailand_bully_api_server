@@ -69,7 +69,7 @@ class LevelThreeTableController extends Controller
             $result = 3;
         } else if ($Llabel === 'Negative') {
             $result = 2;
-        } else if ($Llabel === 'NoBully') {
+        } else if ($Llabel === 'NoBully' || $Llabel === 'No Bully') {
             $result = 4;
         } else if ($Llabel === 'Gossip') {
             $result = 5;
@@ -77,7 +77,7 @@ class LevelThreeTableController extends Controller
             $result = 6;
         } else if ($Llabel === 'Exclusion') {
             $result = 7;
-        } else if ($Llabel === 'HateSpeech') {
+        } else if ($Llabel === 'HateSpeech' || $Llabel === 'Hate Speech') {
             $result = 8;
         } else if ($Llabel === 'Violence') {
             $result = 9;
@@ -202,6 +202,7 @@ class LevelThreeTableController extends Controller
                 "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
                 "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                 "device" => $item->device,
+                "imageUrl" => $item->screen_capture_image,
                 "channel" => $sourceName,
                 "source_name" => $sourceName,
                 "link_message" => $item->link_message,
@@ -320,6 +321,7 @@ class LevelThreeTableController extends Controller
                 'messages.message_type',
                 'messages.link_message AS link_message',
                 'messages.device AS device',
+                'messages.screen_capture_image AS screen_capture_image',
                 'messages.number_of_views AS number_of_views',
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
@@ -348,6 +350,7 @@ class LevelThreeTableController extends Controller
                 'messages.message_type',
                 'messages.link_message AS link_message',
                 'messages.device AS device',
+                'messages.screen_capture_image AS screen_capture_image',
                 'messages.number_of_views AS number_of_views',
                 'messages.number_of_comments AS number_of_comments',
                 'messages.number_of_shares AS number_of_shares',
@@ -875,6 +878,28 @@ class LevelThreeTableController extends Controller
         return parent::handleRespond(null, null, 404, 'Plase send id of message');
     }
 
+    public function showImage(Request $request)
+    {
+        if ($request->id) {
+            $originalMessage = Message::find($request->id);
+    
+            if ($originalMessage) {
+                $imagePath = $originalMessage->screen_capture_image;
+
+                if ($imagePath) {
+                    return response()->json([
+                        'status' => 'success',
+                        'image_url' => asset($imagePath)
+                    ]);
+                }
+            }
+    
+            return parent::handleRespond(null, null, 404, 'Message id not found');
+        }
+    
+        return parent::handleRespond(null, null, 404, 'Please send id of message');
+    }
+    
 
     public function exportMonitoring(Request $request)
     {

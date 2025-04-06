@@ -513,12 +513,36 @@ class ChannelDashboardController extends Controller
             ];
         }
 
+        // foreach ($result as $key => $item) {
+        //     //error_log($item->reference_message_id);
+        //     $sources_name = self::matchSourceName($sources, $item->source_id);
+        //     if ($item->reference_message_id == "") {
+        //         $data['value'][$sources_name]['data'][0] += 1;
+        //     } else {
+        //         $data['value'][$sources_name]['data'][1] += 1;
+        //     }
+        // }
+
+        // if ($data['value']) {
+        //     $value = array_values($data['value']);
+        //     $data['value'] = $this->filteredData($value);
+        // }
         foreach ($result as $key => $item) {
             //error_log($item->reference_message_id);
             $sources_name = self::matchSourceName($sources, $item->source_id);
+            if (empty($sources_name)) {
+                continue; 
+            }
+        
             if ($item->reference_message_id == "") {
+                if (!isset($data['value'][$sources_name]['data'][0])) {
+                    $data['value'][$sources_name]['data'][0] = 0; 
+                }
                 $data['value'][$sources_name]['data'][0] += 1;
             } else {
+                if (!isset($data['value'][$sources_name]['data'][1])) {
+                    $data['value'][$sources_name]['data'][1] = 0; 
+                }
                 $data['value'][$sources_name]['data'][1] += 1;
             }
         }
@@ -527,6 +551,7 @@ class ChannelDashboardController extends Controller
             $value = array_values($data['value']);
             $data['value'] = $this->filteredData($value);
         }
+        
 
         return $data;
     }
@@ -781,9 +806,14 @@ class ChannelDashboardController extends Controller
             $i['positive_total'] = $positive;
             $i['negative_total'] = $negative;
             $i['neutral_total'] = $neutral;
-            $i['positive'] = self::point_two_digits(($positive / $total) * 100);
-            $i['negative'] = self::point_two_digits(($negative / $total) * 100);
-            $i['neutral'] = self::point_two_digits(($neutral / $total) * 100);
+            // $i['positive'] = self::point_two_digits(($positive / $total) * 100);
+            // $i['negative'] = self::point_two_digits(($negative / $total) * 100);
+            // $i['neutral'] = self::point_two_digits(($neutral / $total) * 100);
+
+            $i['positive'] = $total ? self::point_two_digits(($positive / $total) * 100) : 0;
+            $i['negative'] = $total ? self::point_two_digits(($negative / $total) * 100) : 0;
+            $i['neutral'] = $total ? self::point_two_digits(($neutral / $total) * 100) : 0;
+
             $totals['positive'] += intval($item->positive);
             $totals['negative'] += intval($item->negative);
             $totals['neutral'] += intval($item->neutral);

@@ -1291,25 +1291,29 @@ class EngagementDashboardController extends Controller
 
         $data['share'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
-            "comparison" => $total_share_previous !== 0 ? (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0) : 0,
+            // "comparison" => $total_share_previous !== 0 ? (float)parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0) : 0,
+            "comparison" => $total_share_previous != 0 ? (float)parent::point_two_digits(($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0,
             "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
         ];
 
         $data['comment'] = [
             "totalValue" => $this->custom_number_format((int)$total_comment_current),
-            "comparison" => $total_comment_previous !== 0 ? (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0,
+            // "comparison" => $total_comment_previous !== 0 ? (float)parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0,
+            "comparison" => $total_comment_previous != 0 ? (float)parent::point_two_digits(($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0,
             "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
         ];
 
         $data['reaction'] = [
             "totalValue" => $this->custom_number_format((int)$total_reactions_current),
-            "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous * 100) : 0,
+            // "comparison" => $total_reactions_previous ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous * 100) : 0,
+            "comparison" => $total_reactions_previous != 0 ? (float)parent::point_two_digits(($total_reactions_current - $total_reactions_previous) / $total_reactions_previous * 100) : 0,
             "type" => $total_reactions_current - $total_reactions_previous > 0 ? "plus" : "minus",
         ];
 
         $data['views'] = [
             "totalValue" => $this->custom_number_format((int)$total_views_current),
-            "comparison" => $total_views_previous !== 0 ? (float)parent::point_two_digits($total_views_current - $total_views_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0,
+            // "comparison" => $total_views_previous !== 0 ? (float)parent::point_two_digits($total_views_current - $total_views_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0) : 0,
+            "comparison" => $total_views_previous != 0 ? (float)parent::point_two_digits(($total_views_current - $total_views_previous) / $total_views_previous * 100) : 0,
             "type" => $total_views_current - $total_views_previous > 0 ? "plus" : "minus",
         ];
 

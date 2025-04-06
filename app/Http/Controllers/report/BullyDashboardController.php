@@ -156,7 +156,8 @@ class BullyDashboardController extends Controller
                 $data[$item->classification_id]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
                     "keyword_name" => $this->matchKeywordName($keywords, $item->keyword_id),
-                    'date_m' => $item->date_m,
+                    // 'date_m' => $item->date_m,
+                    'date_m' => $date_format,
                     'total_at_date' => 1
                 ];
             }
@@ -363,7 +364,8 @@ class BullyDashboardController extends Controller
                 } else {
                     $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
                     $data['value'][$follower->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $follower->classification_id);
-                    $data['value'][$follower->classification_id]['data'][1] = 0;
+                    // $data['value'][$follower->classification_id]['data'][1] = 0;
+                    $data['value'][$follower->classification_id]['data'] = [0 => 0, 1 => 0];
 
                     if ($follower->reference_message_id) {
                         $data['value'][$follower->classification_id]['data'][0] += 1;
@@ -532,7 +534,8 @@ class BullyDashboardController extends Controller
                 $data[$item->classification_id]['value'][$date_format] = [
                     'keyword_id' => $item->keyword_id,
                     'keyword_name' => $this->matchKeywordName($keywords, $item->keyword_id),
-                    'date_m' => $item->date_m,
+                    // 'date_m' => $item->date_m,
+                    'date_m' => $date_format,
                     'total_at_date' => 1
                 ];
             }

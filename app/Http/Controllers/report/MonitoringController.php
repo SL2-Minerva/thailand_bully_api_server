@@ -583,12 +583,20 @@ class MonitoringController extends Controller
         $resultComment = [];
 
         $cover_image = $post->link_image;
+        $profile_image = $post->link_profile_image;
         if ($post->source_id == 4) {
             $cover_image = $post->link_message;
             if ($cover_image != null && $cover_image != "") {
                 $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
             }
         }
+        if ($post->source_id == 4) {
+            $profile_image = $post->link_profile_image;
+            if ($profile_image != null && $profile_image != "") {
+                $profile_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $profile_image;
+            }
+        }
+
         if ($comment != null && count($comment) > 0) {
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
@@ -600,6 +608,12 @@ class MonitoringController extends Controller
                         $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
                     }
                 }
+                if ($item->source_id == 4 ) {    
+                    $profile_image = $item->link_profile_image;
+                    if ($profile_image != null && $profile_image != "") {
+                        $profile_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                    }
+                }
                 $rs = [
                     "id" => $item->id ?? null,
                     "message_id" => $item->message_id,
@@ -608,6 +622,7 @@ class MonitoringController extends Controller
                     "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                     "icon" => "",
                     "cover_image" => $cover_image,
+                    "profile_image" => $profile_image,
                     "source_id" => $item->source_id,
                     "account_name" => $item->author,
                     "message_type" => $item->message_type,
@@ -634,6 +649,7 @@ class MonitoringController extends Controller
             "post_time" => Carbon::parse($post->message_datetime)->format('H:i'),
             "icon" => "",
             "cover_image" => $cover_image,
+            "profile_image" => $profile_image,
             "source_id" => $post->source_id,
             "account_name" => $post->author,
             "message_type" => $post->message_type,
