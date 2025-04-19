@@ -671,7 +671,7 @@ class ChannelDashboardController extends Controller
         }
 
         $result->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
+            ->whereBetween('messages.created_at', [$start_date . ' 00:00:00', $end_date . ' 23:59:59'])
             ->groupBy('source_id')
             ->select('source_id', DB::raw('COUNT(*) as total_messages'));
 
@@ -688,7 +688,7 @@ class ChannelDashboardController extends Controller
                 DB::raw('SUM(tbl_messages.number_of_comments + tbl_messages.number_of_shares + tbl_messages.number_of_reactions + tbl_messages.number_of_views ) as engagement_count')
             ])
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $engagement->where('source_id', $this->source_id);
@@ -779,7 +779,7 @@ class ChannelDashboardController extends Controller
             LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
         WHERE m.source_id IN ($sourcesIds)
             AND m.keyword_id IN ($keywordIdsString)
-            AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
+            AND m.created_at BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'
         GROUP BY m.source_id;";
 
         $data = DB::select($query);
@@ -845,7 +845,7 @@ class ChannelDashboardController extends Controller
 
         $engagement = DB::table('messages')
             ->whereIn('messages.keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->select([
                 'messages.source_id',
                 /*'sources.name as source_name',*/

@@ -259,7 +259,7 @@ class LevelThreeTableController extends Controller
             if ($request->keyword_id) {
                 $raw->where('messages.keyword_id', $request->keyword_id);
             } else {
-
+                
                 $keywordIds = $keywords->pluck('id')->all();
                 if ($keywordIds) {
                      $raw->whereIn('messages.keyword_id', $keywordIds);
@@ -418,6 +418,7 @@ class LevelThreeTableController extends Controller
         }
         //Overall Dashboard
         if (
+            $request->report_number === '1.2.002' ||
             $request->report_number === '2.2.002' ||
             $request->report_number === '2.2.013' ||
             $request->report_number === '3.2.002' ||
@@ -434,7 +435,8 @@ class LevelThreeTableController extends Controller
                 $this->start_date = $date_request;
                 $this->end_date = $date_request;
 
-                if ($request->report_number === '4.2.002') {
+                if ($request->report_number === '1.2.002' ||
+                    $request->report_number === '4.2.002') {
                     $keyword = Keyword::where('name', $Llabel)->first();
                     if ($keyword) {
                         $raw->where('messages.keyword_id', $keyword->id);
@@ -506,6 +508,7 @@ class LevelThreeTableController extends Controller
             }
         }
 
+        //Day&Time
         if(
             $request->report_number === '2.2.016' ||
             $request->report_number === '2.2.017' ||

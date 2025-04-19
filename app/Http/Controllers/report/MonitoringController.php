@@ -105,7 +105,7 @@ class MonitoringController extends Controller
                 $query->whereNull('reference_message_id')
                     ->orWhere('reference_message_id', '');
             })
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->groupBy('messages.author')
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
         // ->orderByDesc('total_engagement');
@@ -123,8 +123,7 @@ class MonitoringController extends Controller
         if (!$this->user_login->is_admin) {
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $data->whereIn('source_id', $source_ids);
-        }
-        // $data->dd();
+        } 
         return $data;
     }
 
@@ -435,6 +434,8 @@ class MonitoringController extends Controller
                 "day" => $date_d,
                 "message_type" => $item->message_type,
                 "full_message" => $item->full_message,
+                "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
+                "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                 "device" => $item->device,
                 "source_name" => parent::matchSourceName($source, $item->source_id),
                 "link_message" => $item->link_message,
@@ -547,8 +548,11 @@ class MonitoringController extends Controller
 
     private function rawQueryMessage()
     {
-        return DB::table('messages')->select(['messages.*']);
-    }
+        return DB::table('messages')->select([
+            'messages.*',
+            'messages.created_at AS scraping_time',
+        ]);
+    }    
 
     public function detailOfPost(Request $request)
     {
@@ -626,6 +630,8 @@ class MonitoringController extends Controller
                     "source_id" => $item->source_id,
                     "account_name" => $item->author,
                     "message_type" => $item->message_type,
+                    "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
+                    "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                     "device" => $item->device,
                     "message_datetime" => $item->message_datetime,
                     "author" => $item->author,
@@ -653,6 +659,8 @@ class MonitoringController extends Controller
             "source_id" => $post->source_id,
             "account_name" => $post->author,
             "message_type" => $post->message_type,
+            "scrape_date" => Carbon::parse($post->scraping_time)->format('Y/m/d'),
+            "scrape_time" => Carbon::parse($post->scraping_time)->format('H:i'),
             "device" => $post->device,
             "message_datetime" => $post->message_datetime,
             "author" => $post->author,

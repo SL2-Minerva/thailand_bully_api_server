@@ -67,10 +67,10 @@ class SentimentDashboardController extends Controller
         $sources = $this->getAllSource();
 
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         $resultPrevious = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
 
         return parent::handleRespond([
             "SentimentByDay" => $this->SentimentByDay($resultCurrent, $classifications, true),
@@ -465,7 +465,7 @@ class SentimentDashboardController extends Controller
         $anylsys = [];
 
         $group = $this->raw_message_classification($keywords, 3, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         foreach ($group as $item) {
             $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
@@ -513,7 +513,7 @@ class SentimentDashboardController extends Controller
         $anylsys = [];
 
         $group = $this->raw_message_classification($keywords, 2, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         foreach ($group as $item) {
             $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
@@ -548,9 +548,9 @@ class SentimentDashboardController extends Controller
         $sources = $this->getAllSource();
 
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
         $resultPrevious = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
 
 
         return parent::handleRespond([
@@ -615,13 +615,19 @@ class SentimentDashboardController extends Controller
 
         $data['neutral'] = [
             "totalValue" => $this->custom_number_format((int)$total_comment_current),
-            "comparison" => parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
+            // "comparison" => parent::point_two_digits($total_comment_current - $total_comment_previous !== 0 ? (($total_comment_current - $total_comment_previous) / $total_comment_previous * 100) : 0),
+            "comparison" => $total_comment_previous != 0
+            ? parent::point_two_digits((($total_comment_current - $total_comment_previous) / $total_comment_previous) * 100)
+            : 0,
             "type" => $total_comment_current - $total_comment_previous > 0 ? "plus" : "minus",
         ];
 
         $data['positive'] = [
             "totalValue" => $this->custom_number_format((int)$total_share_current),
-            "comparison" => parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0),
+            // "comparison" => parent::point_two_digits($total_share_current - $total_share_previous !== 0 ? (($total_share_current - $total_share_previous) / $total_share_previous * 100) : 0),
+            "comparison" => $total_share_previous != 0
+            ? parent::point_two_digits((($total_share_current - $total_share_previous) / $total_share_previous) * 100)
+            : 0,
             "type" => $total_share_current - $total_share_previous > 0 ? "plus" : "minus",
         ];
 
@@ -742,7 +748,8 @@ class SentimentDashboardController extends Controller
         $data['labels'] = [
             "Share",
             "Comment",
-            "Reaction"
+            "Reaction",
+            "Views"
         ];
 
         $data['value'][0] = [
@@ -1104,9 +1111,9 @@ class SentimentDashboardController extends Controller
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
 
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
         $resultPrevious = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date_previous . " 00:00:00", $this->end_date_previous . " 23:59:59"])->get();
         $data = self::SentimentComparisonData($resultCurrent, $resultPrevious, $keywords);
 
         return parent::handleRespond($data);
@@ -1182,7 +1189,7 @@ class SentimentDashboardController extends Controller
         $keywords = self::findKeywords($this->campaign_id, $this->keyword_id);
         $sources = $this->getAllSource();
         $resultCurrent = $this->raw_message_classification($keywords, 1, null)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         return parent::handleRespond([
             "SummaryScoreAccount" => $this->SummaryScoreAccount($resultCurrent, true),

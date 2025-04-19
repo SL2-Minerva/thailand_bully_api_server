@@ -303,7 +303,8 @@ class EngagementDashboardController extends Controller
 
         foreach ($result as $infulencer) {
 
-            if ($infulencer) {
+            // if ($infulencer) 
+            if ($infulencer && empty($infulencer->reference_message_id)){
 
                 if (!isset($data['value'][$infulencer->keyword_id])) {
                     $data['value'][$infulencer->keyword_id] = [
@@ -420,7 +421,7 @@ class EngagementDashboardController extends Controller
     public function keywordByEngagementType($items, $keywords, $sources, $only_data = false)
     {
 
-        $data['labels'] = ["Share of Voice", "Comments", "Reaction", "Views"];
+        $data['labels'] = ["Share", "Comments", "Reaction", "Views"];
         // $items = $raw->get();
         /*
                 $keyword = Keyword::where('campaign_id', $this->campaign_id);
@@ -459,31 +460,50 @@ class EngagementDashboardController extends Controller
 
                 $totalKeyword = $totalKeyword->groupBy('keyword_id')->get();*/
 
+        // foreach ($items as $item) {
+        //     // if (isset($data['value'][$item->keyword_id])) {
+        //     //     $data['value'][$item->keyword_id]['data'][0] += $item->number_of_shares;
+        //     //     $data['value'][$item->keyword_id]['data'][1] += $item->number_of_comments;
+        //     //     $data['value'][$item->keyword_id]['data'][2] += $item->number_of_reactions;
+        //     //     $data['value'][$item->keyword_id]['data'][3] += $item->number_of_views;
+        //     // } else {
+        //     $data['value'][$item->keyword_id] = [
+        //         'id' => $item->keyword_id,
+        //         'name' => self::matchKeywordName($keywords, $item->keyword_id),
+        //         'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+        //         /*'campaign_id' => $item->campaign_id,
+        //         'campaign_name' => $item->campaign_name,*/
+        //     ];
+
+        //     for ($i = 0; $i < count($data['labels']); $i++) {
+        //         $data['value'][$item->keyword_id]['data'][$i] = 0;
+        //     }
+
+        //     $data['value'][$item->keyword_id]['data'][0] += $item->number_of_shares;
+        //     $data['value'][$item->keyword_id]['data'][1] += $item->number_of_comments;
+        //     $data['value'][$item->keyword_id]['data'][2] += $item->number_of_reactions;
+        //     $data['value'][$item->keyword_id]['data'][3] += $item->number_of_views;
+        //     // }
+        // }
+
         foreach ($items as $item) {
-            // if (isset($data['value'][$item->keyword_id])) {
-            //     $data['value'][$item->keyword_id]['data'][0] += $item->number_of_shares;
-            //     $data['value'][$item->keyword_id]['data'][1] += $item->number_of_comments;
-            //     $data['value'][$item->keyword_id]['data'][2] += $item->number_of_reactions;
-            //     $data['value'][$item->keyword_id]['data'][3] += $item->number_of_views;
-            // } else {
-            $data['value'][$item->keyword_id] = [
-                'id' => $item->keyword_id,
-                'name' => self::matchKeywordName($keywords, $item->keyword_id),
-                'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
-                /*'campaign_id' => $item->campaign_id,
-                'campaign_name' => $item->campaign_name,*/
-            ];
-
-            for ($i = 0; $i < count($data['labels']); $i++) {
-                $data['value'][$item->keyword_id]['data'][$i] = 0;
+            $keywordId = $item->keyword_id;
+        
+            if (!isset($data['value'][$keywordId])) {
+                $data['value'][$keywordId] = [
+                    'id' => $keywordId,
+                    'name' => self::matchKeywordName($keywords, $keywordId),
+                    'keyword_name' => self::matchKeywordName($keywords, $keywordId),
+                    'data' => [0, 0, 0, 0],
+                ];
             }
-
-            $data['value'][$item->keyword_id]['data'][0] += $item->number_of_shares;
-            $data['value'][$item->keyword_id]['data'][1] += $item->number_of_comments;
-            $data['value'][$item->keyword_id]['data'][2] += $item->number_of_reactions;
-            $data['value'][$item->keyword_id]['data'][3] += $item->number_of_views;
-            // }
+        
+            $data['value'][$keywordId]['data'][0] += (int) $item->number_of_shares;
+            $data['value'][$keywordId]['data'][1] += (int) $item->number_of_comments;
+            $data['value'][$keywordId]['data'][2] += (int) $item->number_of_reactions;
+            $data['value'][$keywordId]['data'][3] += (int) $item->number_of_views;
         }
+        
 
         if (isset($data['value'])) {
             $data['value'] = array_values($data['value']);
@@ -649,7 +669,7 @@ class EngagementDashboardController extends Controller
                     if (isset($data['engagement'][4]['value'][$date_m])) {
                         $data['engagement'][4]['value'][$date_m]['total_at_date'] += $item->number_of_views;
                     } else {
-                        $data['engagement'][4]['value'][$date_m] = $reactions;
+                        $data['engagement'][4]['value'][$date_m] = $views;
                     }
 
                 }
@@ -873,7 +893,7 @@ class EngagementDashboardController extends Controller
                 ];
 
                 $data['value'][3] = [
-                    'id' => 3,
+                    'id' => 4,
                     'keyword_name' => 'Views',
                     'data' => [0, 0, 0, 0, 0, 0, 0]
                 ];

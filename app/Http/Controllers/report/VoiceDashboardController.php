@@ -1440,7 +1440,7 @@ class VoiceDashboardController extends Controller
                 'messages.message_id as message_id',
                 'messages.reference_message_id as reference_message_id',
                 'messages.keyword_id as keyword_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.author as author',
                 'messages.source_id as source_id',
                 'messages.full_message as full_message',
@@ -1469,7 +1469,7 @@ class VoiceDashboardController extends Controller
             ->leftJoin('classifications', 'message_results.classification_id', '=', 'classifications.id')*/
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
         //->whereIn('message_results.classification_type_id', $classification_type_ids);
 
         if ($this->source_id) {

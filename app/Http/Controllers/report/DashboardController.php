@@ -243,7 +243,7 @@ class DashboardController extends Controller
     {
         return DB::table('messages')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->when($source_id, function ($query, $source_id) {
                 return $query->where('source_id', $source_id);
             })
@@ -282,7 +282,7 @@ class DashboardController extends Controller
     {
         return DB::table('messages')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->when($source_id, function ($query, $source_id) {
                 return $query->where('source_id', $source_id);
             })
@@ -318,7 +318,7 @@ class DashboardController extends Controller
     {
         return DB::table('messages')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->when($source_id, function ($query, $source_id) {
                 return $query->where('source_id', $source_id);
             })
@@ -368,7 +368,7 @@ class DashboardController extends Controller
             tbl_messages m
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
         WHERE $sourceQuery
-            m.keyword_id IN ($convert_id) AND m.message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
+            m.keyword_id IN ($convert_id) AND m.created_at BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59'"));
         /*AND c.name IN ('Positive', 'Negative', 'Neutral')*/
         return $results;
     }
@@ -480,7 +480,7 @@ class DashboardController extends Controller
                 'author', DB::raw('COUNT(DISTINCT author) as author_count'),
             ])
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $totalKeyword->where('source_id', $this->source_id);
@@ -537,7 +537,7 @@ class DashboardController extends Controller
         $totalKeyword = DB::table('messages')
             ->select('keyword_id', DB::raw('COUNT(*) as row_count'))
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $totalKeyword->where('source_id', $this->source_id);
