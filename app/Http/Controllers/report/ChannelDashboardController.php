@@ -91,6 +91,9 @@ class ChannelDashboardController extends Controller
         $items = $raw->get();
         $data = [];
 
+        // ตรวจสอบว่ามี keyword เดียวหรือหลาย keyword
+        $isSingleKeyword = $keywords->count() === 1;
+
         foreach ($items as $item) {
             $date_format = Carbon::parse($item->date_m)->format('Y-m-d');
 
@@ -106,14 +109,19 @@ class ChannelDashboardController extends Controller
             $valueIndex = array_search($date_format, array_column($data[$item->source_id]['value'], 'date_m'));
 
             if ($valueIndex === false) {
-                $data[$item->source_id]['value'][] = [
-                    'keyword_id' => $item->keyword_id,
-                    'keyword_name' => self::matchKeywordName($keywords, $item->keyword_id),
+                $entry = [
                     'date_m' => $date_format,
-                    'total_at_date' => 1 // Initialize count for this date
+                    'total_at_date' => 1
                 ];
+
+                // เพิ่ม keyword_id และ keyword_name เฉพาะกรณีมี keyword เดียว
+                if ($isSingleKeyword) {
+                    $entry['keyword_id'] = $item->keyword_id;
+                    $entry['keyword_name'] = self::matchKeywordName($keywords, $item->keyword_id);
+                }
+
+                $data[$item->source_id]['value'][] = $entry;
             } else {
-                // Increment the count for this date
                 $data[$item->source_id]['value'][$valueIndex]['total_at_date']++;
             }
         }
@@ -121,11 +129,9 @@ class ChannelDashboardController extends Controller
         // Resetting keys to numeric
         $data = array_values($data);
 
-        // Resetting keys of value arrays
-
-
-        return  self::fetchSourceOrder($sources, $data);
+        return self::fetchSourceOrder($sources, $data);
     }
+
 
 
     private function PercentageToCal($keyword, $start_date, $end_date)
@@ -967,14 +973,14 @@ class ChannelDashboardController extends Controller
                 'messages.id as id',
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.reference_message_id as reference_message_id',
                 'message_results.classification_id as classification_id',
             ])
             ->whereIn('keyword_id', $keywordIds)
             ->join('message_results', 'messages.id', '=', 'message_results.message_id')
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"]);
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);

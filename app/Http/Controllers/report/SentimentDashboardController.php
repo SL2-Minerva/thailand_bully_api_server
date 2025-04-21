@@ -468,18 +468,17 @@ class SentimentDashboardController extends Controller
             ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         foreach ($group as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
         foreach ($items as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
         $data['value'] = [
-            ['data' => [0, 0, 0, 0]], // Level 0
-            ['data' => [0, 0, 0, 0]], // Level 1
-            ['data' => [0, 0, 0, 0]], // Level 2
-            ['data' => [0, 0, 0, 0]], // Level 3
+            ['keyword_name' => 'Negative', 'data' => [0, 0, 0, 0]],
+            ['keyword_name' => 'Neutral',  'data' => [0, 0, 0, 0]],
+            ['keyword_name' => 'Positive', 'data' => [0, 0, 0, 0]],
         ];
 
         foreach ($anylsys as $anylsy) {
@@ -489,10 +488,13 @@ class SentimentDashboardController extends Controller
             } elseif ($anylsy[1] === 'Neutral') {
                 $index_data = 1;
             }
-
+            // error_log('anylsy[3]: '.json_encode($anylsy[3]));
             $index_label = array_search($anylsy[3], $data['labels']);
+            // error_log('index_label: '.json_encode($index_label));
+            // error_log('index_data: '.json_encode($index_data));
             $data['value'][$index_data]['data'][$index_label] += 1;
         }
+        // error_log('data: '.$data)
 
         return $data;
     }
@@ -516,11 +518,11 @@ class SentimentDashboardController extends Controller
             ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"])->get();
 
         foreach ($group as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
         foreach ($items as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = self::matchClassificationName($classification, $item->classification_id);
         }
 
         foreach ($anylsys as $anylsy) {
@@ -1461,6 +1463,7 @@ class SentimentDashboardController extends Controller
                 'messages.source_id as source_id',
                 'messages.message_type',
                 'messages.device as device',
+                'message_results.message_id as result_message_id',
                 'message_results.classification_id',
                 'message_results.classification_type_id',
                 'messages.number_of_views as number_of_views',

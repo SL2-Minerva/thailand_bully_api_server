@@ -559,7 +559,9 @@ class VoiceDashboardController extends Controller
             $keywords,
             $this->start_date,
             $this->end_date,
-        )->groupBy('author')->get();
+        )
+        // ->groupBy('author')->get();
+        ->get();
 
         $data['numberOfAccount'] = $this->factoryNumberOfAccountPeriodOverPeriod('numberOfAccount', $raw, $keywords, $sources);
         $data['PeriodOverPeriod'] = $this->factoryNumberOfAccountPeriodOverPeriod('PeriodOverPeriod', $raw, $keywords, $sources);
@@ -570,55 +572,101 @@ class VoiceDashboardController extends Controller
     private function factoryNumberOfAccountPeriodOverPeriod($type, $raw, $keywords, $sources)
     {
 
+        // if ($type === 'numberOfAccount') {
+        //     $data = null;
+        //     foreach ($raw as $item) {
+        //         $keyword_id = $item->keyword_id;
+        //         $date_m = Carbon::parse($item->date_m)->format('Y-m-d');
+
+        //         if (isset($data[$keyword_id])) {
+        //             if (isset($data[$keyword_id]['value'][$date_m])) {
+        //                 $data[$keyword_id]['value'][$date_m]['total_at_date'] += 1;
+        //             } else {
+        //                 $data[$keyword_id]['value'][$date_m] = [
+        //                     "keyword_id" => $item->keyword_id,
+        //                     "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
+        //                     "date" => $date_m,
+        //                     'total_at_date' => 1
+        //                 ];
+        //             }
+        //         } else {
+
+        //             $data[$keyword_id] = [
+        //                 // 'date' => $date_m,
+        //                 /*"campaign_id" => $item->campaign_id,
+        //                 "campaign_name" => $item->campaign_name,*/
+        //                 "source_id" => $item->source_id,
+        //                 "source_name" => self::matchSourceName($sources, $item->source_id),
+
+        //             ];
+        //             $data[$keyword_id]['value'][$date_m] = [
+        //                 "keyword_id" => $item->keyword_id,
+        //                 "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
+        //                 'date' => $date_m,
+        //                 'total_at_date' => 1
+        //             ];
+        //         }
+        //     }
+
+
+        //     if ($data) {
+
+        //         foreach ($data as $k => $value) {
+        //             if ($value['value']) {
+        //                 $data[$k]['value'] = array_values($value['value']);
+        //             }
+        //         }
+
+        //         $data = array_values($data);
+        //     }
+
+        //     return $data;
+        // }
+
         if ($type === 'numberOfAccount') {
-            $data = null;
+            $data = [];
+            $authorTracker = [];
+    
             foreach ($raw as $item) {
                 $keyword_id = $item->keyword_id;
                 $date_m = Carbon::parse($item->date_m)->format('Y-m-d');
-
-                if (isset($data[$keyword_id])) {
-                    if (isset($data[$keyword_id]['value'][$date_m])) {
-                        $data[$keyword_id]['value'][$date_m]['total_at_date'] += 1;
-                    } else {
-                        $data[$keyword_id]['value'][$date_m] = [
-                            "keyword_id" => $item->keyword_id,
-                            "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
-                            "date" => $date_m,
-                            'total_at_date' => 1
-                        ];
-                    }
-                } else {
-
+                $source_id = $item->source_id;
+                $author = $item->author;
+    
+                // ตรวจสอบว่าเคยเจอ author นี้ใน keyword/date/source เดิมหรือยัง
+                $trackKey = "{$keyword_id}|{$date_m}|{$source_id}|{$author}";
+                if (isset($authorTracker[$trackKey])) {
+                    continue; // ถ้าเจอแล้ว ข้ามไป
+                }
+                $authorTracker[$trackKey] = true;
+    
+                // สร้างโครงสร้างข้อมูลถ้ายังไม่มี
+                if (!isset($data[$keyword_id])) {
                     $data[$keyword_id] = [
-                        // 'date' => $date_m,
-                        /*"campaign_id" => $item->campaign_id,
-                        "campaign_name" => $item->campaign_name,*/
-                        "source_id" => $item->source_id,
-                        "source_name" => self::matchSourceName($sources, $item->source_id),
-
+                        "source_id" => $source_id,
+                        "source_name" => self::matchSourceName($sources, $source_id),
+                        "value" => []
                     ];
+                }
+    
+                if (isset($data[$keyword_id]['value'][$date_m])) {
+                    $data[$keyword_id]['value'][$date_m]['total_at_date'] += 1;
+                } else {
                     $data[$keyword_id]['value'][$date_m] = [
-                        "keyword_id" => $item->keyword_id,
-                        "keyword_name" => self::matchKeywordName($keywords, $item->keyword_id),
-                        'date' => $date_m,
-                        'total_at_date' => 1
+                        "keyword_id" => $keyword_id,
+                        "keyword_name" => self::matchKeywordName($keywords, $keyword_id),
+                        "date" => $date_m,
+                        "total_at_date" => 1
                     ];
                 }
             }
-
-
-            if ($data) {
-
-                foreach ($data as $k => $value) {
-                    if ($value['value']) {
-                        $data[$k]['value'] = array_values($value['value']);
-                    }
-                }
-
-                $data = array_values($data);
+    
+            // แปลง value ให้เป็น array
+            foreach ($data as $k => $value) {
+                $data[$k]['value'] = array_values($value['value']);
             }
-
-            return $data;
+    
+            return array_values($data);
         }
 
         if ($type === 'PeriodOverPeriod') {
@@ -634,7 +682,8 @@ class VoiceDashboardController extends Controller
             $total_message_previous = $raw_previous->count();
 
             $items_current = $raw;
-            $items_previous = $raw_previous->groupBy('author')->get();
+            // $items_previous = $raw_previous->groupBy('author')->get();
+            $items_previous = $raw_previous->get();
 
             // $total_account_current = [];
             // $total_account_previous = [];
@@ -662,6 +711,25 @@ class VoiceDashboardController extends Controller
 
             $total_account_current = $total_message_current ?? 0;
             $total_account_previous = $items_previous->count() ?? 0;
+
+            // นับ author ไม่ซ้ำ แยกตาม keyword_id + source_id แล้วค่อยรวม
+            $total_account_current = collect($items_current)
+                ->groupBy(function ($item) {
+                    return $item->keyword_id . '-' . $item->source_id;
+                })
+                ->map(function ($group) {
+                    return $group->pluck('author')->unique()->count();
+                })
+                ->sum();
+
+            $total_account_previous = collect($items_previous)
+                ->groupBy(function ($item) {
+                    return $item->keyword_id . '-' . $item->source_id;
+                })
+                ->map(function ($group) {
+                    return $group->pluck('author')->unique()->count();
+                })
+                ->sum();
 
             $data['total_messages'] = [
                 "total_message" => $total_message_current,

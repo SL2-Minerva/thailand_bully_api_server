@@ -1245,7 +1245,7 @@ class EngagementDashboardController extends Controller
             "EngagementComparison" => $this->EngagementComparison($request, true),
             "EngagementPeriodPlarform" => $this->EngagementPeriodPlarform($raw, $raw_previous, $sources, true),
             "EngagementPeriodSentiment" => $this->EngagementPeriodSentiment($request, true),
-            "EngagementTypeComparison" => $this->EngagementTypeComparison($raw, $raw_previous, $sources,$keywords,  true),
+            "EngagementTypeComparison" => $this->EngagementTypeComparison($raw, $raw_previous,$keywords,  true),
             "EngagementActionComparison" => $this->EngagementActionComparison($raw,$keywords, true),
         ]);
     }
@@ -1813,8 +1813,8 @@ $classifications = $this->getClassificationMaster();
         // $start = $page === null || $page === 1 ? null : $page * $limit;
         // $start = $start === 1 ? null : $start - 1;
 
-        $raw_current = $raw_current->groupBy('author');
-        $raw_previous = $raw_previous->groupBy('author');
+        // $raw_current = $raw_current->groupBy('author');
+        // $raw_previous = $raw_previous->groupBy('author');
 
         $items_current = $raw_current->get();
         $items_previous = $raw_previous->get();
@@ -2144,7 +2144,7 @@ $classifications = $this->getClassificationMaster();
             ->select([
                 'messages.keyword_id as keyword_id',
                 'messages.source_id as source_id',
-                'messages.message_datetime as date_m',
+                'messages.created_at as date_m',
                 'messages.device as device',
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_reactions as number_of_reactions',
@@ -2155,7 +2155,7 @@ $classifications = $this->getClassificationMaster();
 
             ->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id')
             ->whereIn('keyword_id', $keywordIds)
-            ->whereBetween('message_datetime', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
+            ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->whereIn('message_results.classification_id', ['1', '2', '3']);
 
         if ($this->source_id) {
