@@ -344,7 +344,8 @@ class BullyDashboardController extends Controller
                     $data['value'][$infulencer->classification_id]['id'] = $infulencer->classification_id;
                     $data['value'][$infulencer->classification_id]['classification_id'] = $infulencer->classification_id;
                     $data['value'][$infulencer->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $infulencer->classification_id);
-                    $data['value'][$infulencer->classification_id]['data'][0] = 0;
+                    // $data['value'][$infulencer->classification_id]['data'][0] = 0;
+                    $data['value'][$infulencer->classification_id]['data'] = [0, 0];
 
 
                 }
@@ -365,7 +366,8 @@ class BullyDashboardController extends Controller
                     $data['value'][$follower->classification_id]['id'] = $follower->classification_id;
                     $data['value'][$follower->classification_id]['keyword_name'] = $this->matchClassificationName($classifications, $follower->classification_id);
                     // $data['value'][$follower->classification_id]['data'][1] = 0;
-                    $data['value'][$follower->classification_id]['data'] = [0 => 0, 1 => 0];
+                    // $data['value'][$follower->classification_id]['data'] = [0 => 0, 1 => 0];
+                    $data['value'][$follower->classification_id]['data'] = [0, 0];
 
                     if ($follower->reference_message_id) {
                         $data['value'][$follower->classification_id]['data'][0] += 1;
@@ -436,17 +438,15 @@ class BullyDashboardController extends Controller
         $anylsys = [];
         foreach ($current as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
         }
 
         foreach ($currentSentiment as $item) {
 
-            $anylsys[$item->message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
         }
 
-
         foreach ($anylsys as $anylsy) {
-
             $index_data = 10;
 
             if ($anylsy[3] === 'Level 1') {
@@ -740,10 +740,19 @@ class BullyDashboardController extends Controller
         }
 
 
-        if (isset($data['value'])) {
-            $data['value'] = array_values($data['value']);
-        }
-
+        // if (isset($data['value'])) {
+        //     $data['value'] = array_values($data['value']);
+        // }
+            if (isset($data['value'])) {
+                foreach ($data['value'] as &$val) {
+                    // บังคับให้ data เป็น array ที่มี index 0 และ 1 เสมอ
+                    $val['data'][0] = $val['data'][0] ?? 0;
+                    $val['data'][1] = $val['data'][1] ?? 0;
+                    ksort($val['data']); // เรียงตาม index
+                    $val['data'] = array_values($val['data']); // เปลี่ยนเป็น array ปกติ [0 => x, 1 => y]
+                }
+                $data['value'] = array_values($data['value']);
+            }
 
         return $data;
     }
@@ -801,11 +810,11 @@ class BullyDashboardController extends Controller
         $anylsys = [];
 
         foreach ($current as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
         }
 
         foreach ($currentSentiment as $item) {
-            $anylsys[$item->message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
+            $anylsys[$item->result_message_id][$item->classification_type_id] = $this->matchClassificationName($classifications, $item->classification_id);
         }
 
         foreach ($anylsys as $anylsy) {
@@ -1129,8 +1138,18 @@ class BullyDashboardController extends Controller
     private function raw_message_classification_name($keywords, $start_date, $end_date, $classification_type)
     {
 
-        $keywordIds = $keywords->pluck('id')->all();
+        // $classification_fixed = [];
+        // if($classification_type == 3){
+        //     $classification_fixed = [10,11,12,13];
+        // }
+        // if($classification_type == 2){
+        //     $classification_fixed = [4,5,6,7,8,9];
+        // }
+        // if($classification_type == 1){
+        //     $classification_fixed = [1,2,3];
+        // }
 
+        $keywordIds = $keywords->pluck('id')->all();
         $data = DB::table('messages')
             ->select([
                 'messages.message_id as message_id',
@@ -1146,6 +1165,7 @@ class BullyDashboardController extends Controller
                 'messages.number_of_comments as number_of_comments',
                 'messages.number_of_shares as number_of_shares',
                 'messages.number_of_reactions as number_of_reactions',
+                'message_results.message_id as result_message_id',
                 'message_results.classification_id',
                 'message_results.classification_type_id'
             ])
@@ -1154,6 +1174,9 @@ class BullyDashboardController extends Controller
             ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
             ->where('message_results.classification_type_id', $classification_type)
             ->orderBy('message_results.classification_id', 'asc');
+            // if (!empty($classification)) {
+            //     $data->whereIn('message_results.classification_id', $classification_fixed);
+            // }
 
         if ($this->source_id) {
             $data->where('source_id', $this->source_id);

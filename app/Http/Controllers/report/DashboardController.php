@@ -707,7 +707,9 @@ class DashboardController extends Controller
             $source_ids = Sources::whereIn('name', $this->organization_group->platform)->pluck('id')->toArray();
             $total_keywords->whereIn('source_id', $source_ids);
 
-            $source = Sources::whereIn('id', $source_ids)->get();
+            $source = Sources::whereIn('id', $source_ids)
+            ->where('status',1)
+            ->get();
         }
 
         foreach ($source as $source_id) {
@@ -769,25 +771,28 @@ class DashboardController extends Controller
 
                 foreach ($item_share['value'] as &$value) {
                     $percentage = !$total ? 0 : ($value['number_of_message'] / $total) * 100;
+                    // $value['percentage'] = self::point_two_digits($percentage);
+                    // $total_percentage += self::point_two_digits($percentage);
                     $value['percentage'] = self::point_two_digits($percentage);
                     $total_percentage += self::point_two_digits($percentage);
+                    
                 }
 
-                $last_index = count($item_share['value']) - 1;
-                if ($total_percentage != 100) {
-                    $diff = 100 - $total_percentage;
-                    $value = &$item_share['value'][$last_index];
-                    // $value["percentage"] += $diff;
-                    if (!isset($value["percentage"])) {
-                        $value["percentage"] = 0; 
-                    }
-                    $value["percentage"] += $diff;
-                    $value["percentage"] = self::point_two_digits($value["percentage"]);
+                // $last_index = count($item_share['value']) - 1;
+                // if ($total_percentage != 100) {
+                //     $diff = 100 - $total_percentage;
+                //     $value = &$item_share['value'][$last_index];
+                //     // $value["percentage"] += $diff;
+                //     if (!isset($value["percentage"])) {
+                //         $value["percentage"] = 0; 
+                //     }
+                //     $value["percentage"] += $diff;
+                //     $value["percentage"] = self::point_two_digits($value["percentage"]);
 
-                    if ($value['percentage'] > 100) {
-                        $value['percentage'] = 100;
-                    }
-                }
+                //     if ($value['percentage'] > 100) {
+                //         $value['percentage'] = 100;
+                //     }
+                // }
 
                 if (isset($data[$keyword_id]['value'])) {
                     $data[$keyword_id]['value'] = array_values($data[$keyword_id]['value']);

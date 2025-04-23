@@ -84,6 +84,9 @@ class UserController extends Controller
     {
 
         $user = auth('api')->user();
+        $role_id = $user->role_id;
+        
+        $role_info = UserRole::where('id', $role_id)->first();
         $permissions = null;
 
         if ($user->role_id) {
@@ -110,7 +113,7 @@ class UserController extends Controller
             $data['organization_group'] = $this->organization_group($user->organization_id);
             $data['organization'] = $this->organization_name($user->organization_id);
             $data['role_description'] = 'ssss';
-            $data['role_name'] = $user->is_admin ?? null;
+            $data['role_name'] = $role_info->user_role_name; 
             $data['permission'] = $permissions;
             $data['menu'] = ['all'];
             $data['is_admin'] = $user->is_admin;

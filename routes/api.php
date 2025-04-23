@@ -165,7 +165,7 @@ Route::group(['middleware' => ['api']], function () {
 
 
         Route::group(['prefix' => 'source'], function () {
-            Route::get('/list', [SourceController::class, 'index']);
+            Route::get('/index', [SourceController::class, 'index']);
         });
 
         Route::get('/keywords', [KeywordController::class, 'keywords']);

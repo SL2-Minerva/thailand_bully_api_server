@@ -10,19 +10,23 @@ use Illuminate\Http\Request;
 class SourceController extends Controller
 {
     public function index() {
-       $sources = Sources::all();
+        $sources = Sources::all();
 
         if (!$this->user_login->is_admin) {
-            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+            $sources = Sources::whereIn('name', $this->organization_group->platform)
+            ->where('status', 1)
+            ->get();
         }
        return parent::handleRespond($sources);
     }
 
     public function public_source() {
-        $sources = Sources::where('status', 1);
+        $sources = Sources::where('status', 1)->get();
  
          if (!$this->user_login->is_admin) {
-             $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+            $sources = Sources::whereIn('name', $this->organization_group->platform)
+            ->where('status', 1)
+            ->get();
          }
 
         if ($sources) {
@@ -33,10 +37,13 @@ class SourceController extends Controller
      }
 
     public function data(Request $request) {
-        $sources = Sources::all();
+        // $sources = Sources::all();
+        $sources = Sources::where('status', 1)->get();
 
         if (!$this->user_login->is_admin) {
-            $sources = Sources::whereIn('name', $this->organization_group->platform)->get();
+            $sources = Sources::whereIn('name', $this->organization_group->platform)
+            ->where('status', 1)
+            ->get();
         }
 
         return parent::handleRespond($sources);

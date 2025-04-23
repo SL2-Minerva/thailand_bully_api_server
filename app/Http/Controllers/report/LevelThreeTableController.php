@@ -254,6 +254,57 @@ class LevelThreeTableController extends Controller
         $Llabel = str_replace("+", " ", $request->Llabel);
         $ylabel = str_replace("+", " ", $request->ylabel);
 
+        if (
+            $request->report_number === '5.2.008' ||
+            $request->report_number === '5.2.009' ||
+            $request->report_number === '6.2.008' ||
+            $request->report_number === '6.2.018'
+        ) {
+            $raw_class = DB::table('messages');
+            $classification_2 = -1;
+            if ($keywords) {
+                if ($request->keyword_id) {
+                    $raw_class->where('messages.keyword_id', $request->keyword_id);
+                } else {
+                    
+                    $keywordIds = $keywords->pluck('id')->all();
+                    if ($keywordIds) {
+                         $raw_class->whereIn('messages.keyword_id', $keywordIds);
+                    }
+                }
+            }
+            if ($Llabel != '') {
+                if ($this->source_id == null) {
+                    $sourceId = $this->matchSourceByName($sources, $Llabel);
+                    if ($sourceId) {
+                        $this->source_id = $sourceId->id;
+                    }
+                }
+    
+                if ($classification_2 == -1)
+                    $classification_2 = self::parseLabelClassification($Llabel);
+            }
+
+            if ($classification_2 != -1) {
+                $raw_class->select([
+                    'messages.id AS id',
+                    'messages.message_id AS message_id',
+                    'messages.reference_message_id AS reference_message_id',
+                    'message_results.classification_type_id',
+                    'message_results.classification_id',
+                    'messages.created_at AS scraping_time',
+                ]);
+                $raw_class->join('message_results', 'message_results.message_id', '=', 'messages.id');
+                $raw_class->where('message_results.classification_id', $classification_2);
+                $raw_class->whereBetween('messages.created_at', [$this->start_date . " 00:00:01", $this->end_date . " 23:59:59"]);
+                if ($this->source_id) {
+                    $raw_class->where('source_id', $this->source_id);
+                }
+
+                $multiclassi_que = $raw_class->get();
+            }
+        }
+
         $raw = DB::table('messages');
         if ($keywords) {
             if ($request->keyword_id) {
@@ -337,6 +388,10 @@ class LevelThreeTableController extends Controller
             ]);
             $raw->join('message_results', 'message_results.message_id', '=', 'messages.id');
             $raw->where('message_results.classification_id', $classification);
+            if (isset($multiclassi_que) && count($multiclassi_que) > 0) {
+                $multi_ids = $multiclassi_que->pluck('id')->all(); // ดึง id ทั้งหมดออกมา
+                $raw->whereIn('messages.id', $multi_ids);
+            }
         } else {
             $raw->select([
                 'messages.id AS id',
@@ -880,30 +935,7 @@ class LevelThreeTableController extends Controller
 
         return parent::handleRespond(null, null, 404, 'Plase send id of message');
     }
-
-    public function showImage(Request $request)
-    {
-        if ($request->id) {
-            $originalMessage = Message::find($request->id);
     
-            if ($originalMessage) {
-                $imagePath = $originalMessage->screen_capture_image;
-
-                if ($imagePath) {
-                    return response()->json([
-                        'status' => 'success',
-                        'image_url' => asset($imagePath)
-                    ]);
-                }
-            }
-    
-            return parent::handleRespond(null, null, 404, 'Message id not found');
-        }
-    
-        return parent::handleRespond(null, null, 404, 'Please send id of message');
-    }
-    
-
     public function exportMonitoring(Request $request)
     {
 

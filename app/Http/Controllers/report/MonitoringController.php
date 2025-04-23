@@ -74,6 +74,7 @@ class MonitoringController extends Controller
                 'messages.link_message',
                 'messages.link_image',
                 'messages.link_profile_image',
+                'messages.screen_capture_image',
                 'messages.device',
                 'messages.number_of_views',
                 'messages.number_of_comments',
@@ -106,7 +107,8 @@ class MonitoringController extends Controller
                     ->orWhere('reference_message_id', '');
             })
             ->whereBetween('messages.created_at', [$start_date . " 00:00:00", $end_date . " 23:59:59"])
-            ->groupBy('messages.author')
+            // ->groupBy('messages.author')
+            ->groupBy('messages.message_id')
             ->havingRaw('total_engagement > 0'); // Exclude rows with total_engagement = 0 if desired
         // ->orderByDesc('total_engagement');
         // ->get();
@@ -532,6 +534,7 @@ class MonitoringController extends Controller
                 "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
                 "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                 "device" => $item->device,
+                "imageUrl" => $item->screen_capture_image,
                 "author" => $item->author,
                 "source_id" => $item->source_id,
                 "source_name" => self::matchSourceName($source, $item->source_id),
@@ -605,17 +608,18 @@ class MonitoringController extends Controller
             $messageIds = $comment->pluck('id')->all();
             $commentData = [];
             foreach ($comment as $item) {
-                $cover_image = $item->link_image;
+                $com_cover_image = $item->link_image;
+                $com_profile_image = $item->link_profile_image;
                 if ($item->source_id == 4 ) {    
-                    $cover_image = $item->link_message;
-                    if ($cover_image != null && $cover_image != "") {
-                        $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                    $com_cover_image = $item->link_message;
+                    if ($com_cover_image != null && $com_cover_image != "") {
+                        $com_cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $com_cover_image;
                     }
                 }
                 if ($item->source_id == 4 ) {    
-                    $profile_image = $item->link_profile_image;
-                    if ($profile_image != null && $profile_image != "") {
-                        $profile_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
+                    $com_profile_image = $item->link_profile_image;
+                    if ($com_profile_image != null && $com_profile_image != "") {
+                        $com_profile_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $com_profile_image;
                     }
                 }
                 $rs = [
@@ -625,8 +629,8 @@ class MonitoringController extends Controller
                     "post_date" => Carbon::parse($item->message_datetime)->format('Y/m/d'),
                     "post_time" => Carbon::parse($item->message_datetime)->format('H:i'),
                     "icon" => "",
-                    "cover_image" => $cover_image,
-                    "profile_image" => $profile_image,
+                    "cover_image" => $com_cover_image,
+                    "profile_image" => $com_profile_image,
                     "source_id" => $item->source_id,
                     "account_name" => $item->author,
                     "message_type" => $item->message_type,
@@ -794,7 +798,7 @@ class MonitoringController extends Controller
             ->where('message_type', '!=', 'Comment')
             ->where('message_type', '!=', 'Reply Comment')
             ->whereIn('messages.keyword_id', $keywordIds)
-            ->whereBetween('messages.message_datetime', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
+            ->whereBetween('messages.created_at', [$this->start_date . " 00:00:00", $this->end_date . " 23:59:59"]);
 
         if ($sentiment_type) {
             $query->leftJoin('message_results', 'message_results.message_id', '=', 'messages.id');
@@ -825,8 +829,7 @@ class MonitoringController extends Controller
         $offset = $limit * ($page - 1);
         $baseQuery = $query->where("messages.author", $request->author);
         $total = $baseQuery->count();
-        $dataRaw = $query->where("messages.author", $request->author)->limit($limit)->offset($offset)->orderByDesc("messages.message_datetime")->get();
-
+        $dataRaw = $query->where("messages.author", $request->author)->limit($limit)->offset($offset)->orderByDesc("messages.created_at")->get();
 
         $source = DB::table('sources')->where("status", "=", 1)->get();
         $data = array();
@@ -852,6 +855,7 @@ class MonitoringController extends Controller
                 "message_type" => $item->message_type,
                 "scrape_date" => Carbon::parse($item->created_at)->format('Y/m/d'),
                 "scrape_time" => Carbon::parse($item->created_at)->format('H:i'),
+                "imageUrl" => $item->screen_capture_image,
                 "device" => $item->device,
                 "source_name" => self::matchSourceName($source, $item->source_id),
                 "source_id" => $item->source_id,
@@ -946,7 +950,7 @@ class MonitoringController extends Controller
         }
 
         $query = "SELECT m.id,m.source_id,m.link_profile_image,
-        m.author,m.message_id,m.link_message,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,m.number_of_views,mr.classification_id,m.reference_message_id
+        m.author,m.message_id,m.link_message,m.message_type,m.created_at,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,m.number_of_views,mr.classification_id,m.reference_message_id
     FROM
         tbl_messages m
         LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
@@ -954,8 +958,9 @@ class MonitoringController extends Controller
         $sourceQuery
         $keywordQuery
         author != ''
-       AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post' OR message_type='Video') AND  (reference_message_id IS NULL OR reference_message_id='')
-        AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ";
+    --    AND mr.classification_type_id=1 AND (message_type='post' OR message_type='Post' OR message_type='Video') AND  (reference_message_id IS NULL OR reference_message_id='')
+        AND (mr.classification_type_id = 1 OR mr.classification_type_id IS NULL) AND (message_type='post' OR message_type='Post' OR message_type='Video')AND (reference_message_id IS NULL OR reference_message_id='')
+        AND m.created_at BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ";
         $rows = DB::select($query);
         $newGroupedData = [];
         foreach ($rows as $message) {
@@ -985,7 +990,7 @@ class MonitoringController extends Controller
                         'cover_image' => "",
                         'total_sentiment' => 0,
                         'number_of_reactions' => 0,
-                        'message_datetime' => '',
+                        'created_at' => '',
                         'total_engagement' => 0,
                         'classification' => [],
                         'total_post' => 0
@@ -1006,7 +1011,7 @@ class MonitoringController extends Controller
 
                 $cover_image = $message->link_profile_image;
                 if ($message->source_id == 4) {
-                    $cover_image = $message->link_message;
+                    $cover_image = $message->link_profile_image;
                     if ($cover_image != null && $cover_image != "") {
                         $cover_image = "https://cornea-analysis.com/api/image-loader?image_url=" . $cover_image;
                     }
@@ -1019,8 +1024,8 @@ class MonitoringController extends Controller
                 $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
                 $newGroupedData[$messageId]['number_of_views'] += $message->number_of_views;
 
-                if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
-                    $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
+                if ($message->created_at > $newGroupedData[$messageId]['created_at']) {
+                    $newGroupedData[$messageId]['created_at'] = $message->created_at;
                 }
 
                 $newGroupedData[$messageId]['source_id'] = $message->source_id;
@@ -1049,7 +1054,7 @@ class MonitoringController extends Controller
                     'neutral' => 0,
                     'total_sentiment' => 0,
                     'source_id' => 0,
-                    'message_datetime' => '',
+                    'created_at' => '',
                     'total_engagement' => 0,
                     'classification' => [],
                     'total_post' => 0, // Initialize post count
@@ -1067,8 +1072,8 @@ class MonitoringController extends Controller
             $groupedResults[$author]['total_sentiment'] += $messageData['total_sentiment'];
             $groupedResults[$author]['source_id'] = $messageData['source_id'];
 
-            if ($messageData['message_datetime'] > $groupedResults[$author]['message_datetime']) {
-                $groupedResults[$author]['message_datetime'] = $messageData['message_datetime'];
+            if ($messageData['created_at'] > $groupedResults[$author]['created_at']) {
+                $groupedResults[$author]['created_at'] = $messageData['created_at'];
             }
 
             $groupedResults[$author]['total_engagement'] += $messageData['total_engagement'];
@@ -1103,7 +1108,7 @@ class MonitoringController extends Controller
         }
 
         $rows = DB::select("SELECT m.id,m.source_id,
-    m.author,m.message_id,m.message_type,m.message_datetime,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,m.number_of_views,mr.classification_id,m.reference_message_id
+    m.author,m.message_id,m.message_type,m.created_at,m.message_id,m.number_of_comments,m.number_of_shares,m.number_of_reactions,m.number_of_views,mr.classification_id,m.reference_message_id
 FROM
     tbl_messages m
     LEFT JOIN tbl_message_results mr ON m.id = mr.message_id
@@ -1112,7 +1117,7 @@ WHERE
     $keywordQuery
     author != ''
    AND mr.classification_type_id=1
-    AND message_datetime BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
+    AND m.created_at BETWEEN '$start_date 00:00:00' AND '$end_date 23:59:59' ORDER BY message_type DESC");
         $newGroupedData = [];
 
 
@@ -1142,7 +1147,7 @@ WHERE
                         'neutral' => 0,
                         'total_sentiment' => 0,
                         'number_of_reactions' => 0,
-                        'message_datetime' => '',
+                        'created_at' => '',
                         'total_engagement' => 0,
                         'classification' => [],
                         'total_post' => 0
@@ -1167,8 +1172,8 @@ WHERE
                 $newGroupedData[$messageId]['number_of_reactions'] += $message->number_of_reactions;
                 $newGroupedData[$messageId]['number_of_views'] += $message->number_of_views;
 
-                if ($message->message_datetime > $newGroupedData[$messageId]['message_datetime']) {
-                    $newGroupedData[$messageId]['message_datetime'] = $message->message_datetime;
+                if ($message->created_at > $newGroupedData[$messageId]['created_at']) {
+                    $newGroupedData[$messageId]['created_at'] = $message->created_at;
                 }
 
                 $newGroupedData[$messageId]['source_id'] = $message->source_id;
@@ -1197,7 +1202,7 @@ WHERE
                     'neutral' => 0,
                     'total_sentiment' => 0,
                     'source_id' => 0,
-                    'message_datetime' => '',
+                    'created_at' => '',
                     'total_engagement' => 0,
                     'classification' => [],
                     'total_post' => 0, // Initialize post count
@@ -1214,8 +1219,8 @@ WHERE
             $groupedResults[$author]['total_sentiment'] += $messageData['total_sentiment'];
             $groupedResults[$author]['source_id'] = $messageData['source_id'];
 
-            if ($messageData['message_datetime'] > $groupedResults[$author]['message_datetime']) {
-                $groupedResults[$author]['message_datetime'] = $messageData['message_datetime'];
+            if ($messageData['created_at'] > $groupedResults[$author]['created_at']) {
+                $groupedResults[$author]['created_at'] = $messageData['created_at'];
             }
 
             $groupedResults[$author]['total_engagement'] += $messageData['total_engagement'];
