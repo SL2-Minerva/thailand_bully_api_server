@@ -29,9 +29,10 @@ class SourceController extends Controller
             ->get();
          }
 
-        if ($sources) {
-            $sources = $sources->get();
-        }
+        // if ($sources) {
+        //     error_log('source: '.$sources);
+        //     $sources = $sources->get();
+        // }
 
         return parent::handleRespond($sources);
      }
