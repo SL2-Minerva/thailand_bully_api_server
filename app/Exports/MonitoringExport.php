@@ -25,7 +25,7 @@ class MonitoringExport implements FromCollection, WithHeadings
         "Message Type",
         "Account Name",
         "Post Time",
-        "Device",
+        "Scraping Time",
         "Channel",
         "Engagement",
         "Sentiment",
@@ -49,6 +49,7 @@ class MonitoringExport implements FromCollection, WithHeadings
         "Account Name",
         "Message Detail",
         "Post Time",
+        "Scraping Time",
         "Channel",
         "Engagement",
         "Sentiment",
@@ -113,8 +114,9 @@ class MonitoringExport implements FromCollection, WithHeadings
                 //$row["post_time"] = Carbon::parse($item->date_m)->format('H:i');
                 /*$row["day"] = $date_d;
                 $row["message_type"] = $item->message_type;*/
-                $row["device"] = $item->device;
+                // $row["device"] = $item->device;
                 //$row["channel"] = $this->matchKeywordName($this->sources, $item->source_id);
+                $row["scrape_date"] = Carbon::parse($item->scraping_time)->format('Y/m/d, H:i');
                 $row["source_name"] = $this->matchKeywordName($this->sources, $item->source_id);
                 $row["total_engagement"] = $item->total_engagement;
                 $row["sentiment"] = $item->sentiment;
@@ -145,6 +147,8 @@ class MonitoringExport implements FromCollection, WithHeadings
                 $row["account_name"] = $item["account_name"];
                 $row["message_detail"] = $item["full_message"];
                 $row["post_time"] = Carbon::parse($item["date_m"])->format('Y/m/d H:i');
+                $row["scraping_time"] = Carbon::parse($item["scraping_at"])->format('Y/m/d, H:i');
+                // $row["scrape_time"] = Carbon::parse($item["scraping_time"])->format('Y/m/d H:i');
                 $row["source_name"] = $item["source_name"];
                 $row["total_engagement"] = $item["total_engagement"];
                 $row["sentiment"] = $item["sentiment"];

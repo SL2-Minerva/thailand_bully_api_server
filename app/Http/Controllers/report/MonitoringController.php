@@ -531,6 +531,7 @@ class MonitoringController extends Controller
                 "day" => $date_d,
                 "date_m" => $item->date_m,
                 "message_type" => $item->message_type,
+                "scraping_at" => $item->scraping_time,
                 "scrape_date" => Carbon::parse($item->scraping_time)->format('Y/m/d'),
                 "scrape_time" => Carbon::parse($item->scraping_time)->format('H:i'),
                 "device" => $item->device,
