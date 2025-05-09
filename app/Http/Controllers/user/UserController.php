@@ -280,7 +280,9 @@ class UserController extends Controller
             $campaign_per_organize = $organization_group->campaign_per_organize;
 
             if ($campaign_per_organize) {
-                $count_campaign = Campaign::where('organization_id', $organization_id)->count();
+                $count_campaign = Campaign::where('organization_id', $organization_id)
+                ->whereNotNull('privacy_campaign')
+                ->count();
                 return $campaign_per_organize - $count_campaign;
             }
 
